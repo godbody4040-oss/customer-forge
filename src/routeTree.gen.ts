@@ -28,6 +28,7 @@ import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
+import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -128,6 +129,12 @@ const AuthenticatedAppWebsiteRoute = AuthenticatedAppWebsiteRouteImport.update({
   path: '/website',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAdminClientsOrgIdRoute =
+  AuthenticatedAdminClientsOrgIdRouteImport.update({
+    id: '/$orgId',
+    path: '/$orgId',
+    getParentRoute: () => AuthenticatedAdminClientsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -139,7 +146,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
-  '/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/app/website': typeof AuthenticatedAppWebsiteRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -157,7 +165,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
-  '/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/app/website': typeof AuthenticatedAppWebsiteRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,7 +188,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
-  '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRoute
+  '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -188,6 +197,7 @@ export interface FileRoutesById {
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/app/website'
     | '/admin/'
     | '/app/'
+    | '/admin/clients/$orgId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/app/website'
     | '/admin'
     | '/app'
+    | '/admin/clients/$orgId'
   id:
     | '__root__'
     | '/'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/website'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
+    | '/_authenticated/admin/clients/$orgId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -396,16 +409,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppWebsiteRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/admin/clients/$orgId': {
+      id: '/_authenticated/admin/clients/$orgId'
+      path: '/$orgId'
+      fullPath: '/admin/clients/$orgId'
+      preLoaderRoute: typeof AuthenticatedAdminClientsOrgIdRouteImport
+      parentRoute: typeof AuthenticatedAdminClientsRoute
+    }
   }
 }
 
+interface AuthenticatedAdminClientsRouteChildren {
+  AuthenticatedAdminClientsOrgIdRoute: typeof AuthenticatedAdminClientsOrgIdRoute
+}
+
+const AuthenticatedAdminClientsRouteChildren: AuthenticatedAdminClientsRouteChildren =
+  {
+    AuthenticatedAdminClientsOrgIdRoute: AuthenticatedAdminClientsOrgIdRoute,
+  }
+
+const AuthenticatedAdminClientsRouteWithChildren =
+  AuthenticatedAdminClientsRoute._addFileChildren(
+    AuthenticatedAdminClientsRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRoute
+  AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRoute,
+  AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
