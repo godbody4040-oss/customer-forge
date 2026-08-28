@@ -135,12 +135,17 @@ function AppShell() {
             <LogoMark className="lg:hidden" />
             <div className="hidden min-w-0 sm:block">
               <p className="truncate font-display text-[14px] font-semibold">
-                {org?.name ?? "Your business"}
+                {org ? `Welcome back, ${org.name}` : "Your business"}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {data?.workspace?.role ? `Signed in as ${data.workspace.role}` : "Loading…"}
+                {supporting
+                  ? "Platform support session"
+                  : data?.workspace?.role
+                    ? `Signed in as ${data.workspace.role}`
+                    : "Loading…"}
               </p>
             </div>
+
           </div>
 
           <div className="flex items-center gap-2">
