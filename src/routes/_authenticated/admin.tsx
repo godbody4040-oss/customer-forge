@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { Building2, Globe2, LayoutGrid, LifeBuoy, Receipt, ShieldCheck } from "lucide-react";
+import { Building2, ClipboardList, Globe2, LayoutGrid, LifeBuoy, Receipt, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Pill } from "@/components/app/Bits";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutGrid, exact: true },
   { to: "/admin/clients", label: "Clients", icon: Building2, exact: false },
+  { to: "/admin/websites", label: "Websites", icon: ClipboardList, exact: false },
   { to: "/admin/domains", label: "Domains", icon: Globe2, exact: false },
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
 ] as const;

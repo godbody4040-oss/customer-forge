@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authenticated/admin.domains'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
+import { Route as AuthenticatedAdminWebsitesRouteImport } from './routes/_authenticated/admin.websites'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAutomationsRouteImport } from './routes/_authenticated/app.automations'
@@ -118,6 +119,12 @@ const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminWebsitesRoute =
+  AuthenticatedAdminWebsitesRouteImport.update({
+    id: '/websites',
+    path: '/websites',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
@@ -221,6 +229,7 @@ export interface FileRoutesByTo {
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
@@ -251,6 +260,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/_authenticated/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/plans'
+    | '/admin/websites'
     | '/app/analytics'
     | '/app/automations'
     | '/app/calendar'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/plans'
+    | '/admin/websites'
     | '/app/analytics'
     | '/app/automations'
     | '/app/calendar'
@@ -336,6 +348,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
     | '/_authenticated/admin/plans'
+    | '/_authenticated/admin/websites'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/automations'
     | '/_authenticated/app/calendar'
@@ -476,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/websites': {
+      id: '/_authenticated/admin/websites'
+      path: '/websites'
+      fullPath: '/admin/websites'
+      preLoaderRoute: typeof AuthenticatedAdminWebsitesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -574,6 +594,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminDomainsRoute: typeof AuthenticatedAdminDomainsRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
+  AuthenticatedAdminWebsitesRoute: typeof AuthenticatedAdminWebsitesRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -581,6 +602,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminDomainsRoute: AuthenticatedAdminDomainsRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
+  AuthenticatedAdminWebsitesRoute: AuthenticatedAdminWebsitesRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
