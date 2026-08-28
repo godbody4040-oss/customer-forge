@@ -1877,6 +1877,136 @@ export type Database = {
         }
         Relationships: []
       }
+      website_components: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          is_visible: boolean
+          kind: string
+          label: string | null
+          link_label: string | null
+          link_url: string | null
+          media_url: string | null
+          organization_id: string
+          section_id: string
+          settings: Json
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          kind?: string
+          label?: string | null
+          link_label?: string | null
+          link_url?: string | null
+          media_url?: string | null
+          organization_id: string
+          section_id: string
+          settings?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          kind?: string
+          label?: string | null
+          link_label?: string | null
+          link_url?: string | null
+          media_url?: string | null
+          organization_id?: string
+          section_id?: string
+          settings?: Json
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_components_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_components_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_components_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "website_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_pages: {
+        Row: {
+          created_at: string
+          id: string
+          is_visible: boolean
+          kind: string
+          organization_id: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          kind?: string
+          organization_id: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          kind?: string
+          organization_id?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_pages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_pages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       website_requests: {
         Row: {
           admin_notes: string | null
@@ -1930,6 +2060,76 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_sections: {
+        Row: {
+          body: string | null
+          created_at: string
+          heading: string | null
+          id: string
+          is_visible: boolean
+          kind: string
+          organization_id: string
+          page_id: string
+          settings: Json
+          sort_order: number
+          subheading: string | null
+          updated_at: string
+          variant: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          heading?: string | null
+          id?: string
+          is_visible?: boolean
+          kind: string
+          organization_id: string
+          page_id: string
+          settings?: Json
+          sort_order?: number
+          subheading?: string | null
+          updated_at?: string
+          variant?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          heading?: string | null
+          id?: string
+          is_visible?: boolean
+          kind?: string
+          organization_id?: string
+          page_id?: string
+          settings?: Json
+          sort_order?: number
+          subheading?: string | null
+          updated_at?: string
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_sections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_sections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_sections_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "website_pages"
             referencedColumns: ["id"]
           },
         ]

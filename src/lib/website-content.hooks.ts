@@ -1,0 +1,311 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  buildContentBlueprint,
+  type ContentComponent,
+  type ContentPage,
+  type ContentSection,
+  type SectionKind,
+} from "@/lib/website-content";
+import { readCopy } from "@/lib/site-engine";
+
+const KEY = "website_content";
+
+function useInvalidateContent(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: [KEY, organizationId] });
+}
+
+/** Loads the full page → section → component tree for a workspace. */
+export function useWebsiteContent(organizationId: string | undefined) {
+  return useQuery({
+    queryKey: [KEY, organizationId],
+    enabled: !!organizationId,
+    queryFn: async (): Promise<ContentPage[]> => {
+      const orgId = organizationId!;
+      const [pages, sections, components] = await Promise.all([
+        supabase
+          .from("website_pages")
+          .select("id, slug, title, kind, sort_order, is_visible, seo_title, seo_description")
+          .eq("organization_id", orgId)
+          .order("sort_order"),
+        supabase
+          .from("website_sections")
+          .select("id, page_id, kind, variant, heading, subheading, body, settings, sort_order, is_visible")
+          .eq("organization_id", orgId)
+          .order("sort_order"),
+        supabase
+          .from("website_components")
+          .select(
+            "id, section_id, kind, label, body, media_url, link_url, link_label, settings, sort_order, is_visible",
+          )
+          .eq("organization_id", orgId)
+          .order("sort_order"),
+      ]);
+      if (pages.error) throw pages.error;
+      if (sections.error) throw sections.error;
+      if (components.error) throw components.error;
+
+      const bySection = new Map<string, ContentComponent[]>();
+      for (const component of (components.data ?? []) as ContentComponent[]) {
+        const list = bySection.get(component.section_id) ?? [];
+        list.push(component);
+        bySection.set(component.section_id, list);
+      }
+      const byPage = new Map<string, ContentSection[]>();
+      for (const section of (sections.data ?? []) as Omit<ContentSection, "components">[]) {
+        const list = byPage.get(section.page_id) ?? [];
+        list.push({ ...section, components: bySection.get(section.id) ?? [] });
+        byPage.set(section.page_id, list);
+      }
+      return (pages.data ?? []).map((page) => ({ ...page, sections: byPage.get(page.id) ?? [] }));
+    },
+  });
+}
+
+/**
+ * Rebuilds the structure from the information the client already entered, so
+ * nothing has to be typed twice. Existing rows are replaced in one pass.
+ */
+export function useBuildWebsiteStructure(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async () => {
+      const orgId = organizationId!;
+      const [org, profile, services, media, reviews, settings] = await Promise.all([
+        supabase.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
+        supabase.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+        supabase
+          .from("services")
+          .select("name, description, price, starting_price")
+          .eq("organization_id", orgId)
+          .eq("is_active", true)
+          .order("sort_order"),
+        supabase.from("media").select("id").eq("organization_id", orgId),
+        supabase.from("reviews").select("id").eq("organization_id", orgId).eq("is_published", true),
+        supabase.from("website_settings").select("generation, seo").eq("organization_id", orgId).maybeSingle(),
+      ]);
+      const p = (profile.data ?? {}) as Record<string, unknown>;
+      const generation = (settings.data?.generation ?? null) as Record<string, unknown> | null;
+      const copy = readCopy(generation?.["copy"]);
+      const seo = (settings.data?.seo ?? {}) as Record<string, unknown>;
+
+      const blueprint = buildContentBlueprint({
+        businessName: org.data?.name ?? "",
+        industry: org.data?.industry ?? null,
+        city: (p["city"] as string) ?? null,
+        state: (p["state"] as string) ?? null,
+        serviceArea: (p["service_area"] as string) ?? null,
+        description: copy?.about || ((p["description"] as string) ?? null),
+        phone: (p["phone"] as string) ?? null,
+        email: (p["email"] as string) ?? null,
+        hasHours: Boolean(p["hours"] && Object.keys(p["hours"] as object).length),
+        photoCount: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
+        reviewCount: (reviews.data ?? []).length,
+        ctaLabel:
+          copy?.primaryCta || (seo["primary_cta_label"] as string) || "Get my price",
+        services: services.data ?? [],
+        benefits: copy?.benefits ?? [],
+        faqs: copy?.faqs ?? [],
+      });
+
+      // Replace the previous structure; cascades clear old sections/components.
+      const { error: clearError } = await supabase
+        .from("website_pages")
+        .delete()
+        .eq("organization_id", orgId);
+      if (clearError) throw clearError;
+
+      for (const [pageIndex, page] of blueprint.entries()) {
+        const { data: pageRow, error: pageError } = await supabase
+          .from("website_pages")
+          .insert({
+            organization_id: orgId,
+            slug: page.slug,
+            title: page.title,
+            kind: page.kind,
+            sort_order: pageIndex,
+            seo_title: page.seo_title ?? null,
+            seo_description: page.seo_description ?? null,
+          })
+          .select("id")
+          .single();
+        if (pageError || !pageRow) throw pageError ?? new Error("Couldn't create the page.");
+
+        for (const [sectionIndex, section] of page.sections.entries()) {
+          const { data: sectionRow, error: sectionError } = await supabase
+            .from("website_sections")
+            .insert({
+              organization_id: orgId,
+              page_id: pageRow.id,
+              kind: section.kind,
+              variant: section.variant ?? "default",
+              heading: section.heading ?? null,
+              subheading: section.subheading ?? null,
+              body: section.body ?? null,
+              sort_order: sectionIndex,
+            })
+            .select("id")
+            .single();
+          if (sectionError || !sectionRow) throw sectionError ?? new Error("Couldn't create a section.");
+
+          const components = section.components ?? [];
+          if (components.length) {
+            const { error: componentError } = await supabase.from("website_components").insert(
+              components.map((component, index) => ({
+                organization_id: orgId,
+                section_id: sectionRow.id,
+                kind: component.kind,
+                label: component.label ?? null,
+                body: component.body ?? null,
+                link_url: component.link_url ?? null,
+                link_label: component.link_label ?? null,
+                sort_order: index,
+              })),
+            );
+            if (componentError) throw componentError;
+          }
+        }
+      }
+      return blueprint.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`${count} page${count === 1 ? "" : "s"} laid out from your business information.`);
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't build your website structure."),
+  });
+}
+
+export function useSaveSection(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { error } = await supabase
+        .from("website_sections")
+        .update(patch as never)
+        .eq("id", id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't save that section."),
+  });
+}
+
+export function useSavePage(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { error } = await supabase
+        .from("website_pages")
+        .update(patch as never)
+        .eq("id", id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't save that page."),
+  });
+}
+
+export function useMoveSection(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ a, b }: { a: { id: string; sort_order: number }; b: { id: string; sort_order: number } }) => {
+      const orgId = organizationId!;
+      const first = await supabase
+        .from("website_sections")
+        .update({ sort_order: b.sort_order })
+        .eq("id", a.id)
+        .eq("organization_id", orgId);
+      if (first.error) throw first.error;
+      const second = await supabase
+        .from("website_sections")
+        .update({ sort_order: a.sort_order })
+        .eq("id", b.id)
+        .eq("organization_id", orgId);
+      if (second.error) throw second.error;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't reorder the sections."),
+  });
+}
+
+export function useAddSection(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ pageId, kind, sortOrder }: { pageId: string; kind: SectionKind; sortOrder: number }) => {
+      const { error } = await supabase.from("website_sections").insert({
+        organization_id: organizationId!,
+        page_id: pageId,
+        kind,
+        sort_order: sortOrder,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Section added.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't add that section."),
+  });
+}
+
+export function useDeleteSection(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("website_sections")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Section removed.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't remove that section."),
+  });
+}
+
+export type SectionEdit = {
+  sectionId: string;
+  sectionLabel: string;
+  field: "heading" | "subheading" | "body";
+  before: string;
+  after: string;
+};
+
+/** Applies confirmed AI edits to sections — one update per changed field. */
+export function useApplySectionEdits(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (edits: SectionEdit[]) => {
+      const orgId = organizationId!;
+      const grouped = new Map<string, Record<string, string>>();
+      for (const edit of edits) {
+        const patch = grouped.get(edit.sectionId) ?? {};
+        patch[edit.field] = edit.after;
+        grouped.set(edit.sectionId, patch);
+      }
+      for (const [id, patch] of grouped) {
+        const { error } = await supabase
+          .from("website_sections")
+          .update(patch as never)
+          .eq("id", id)
+          .eq("organization_id", orgId);
+        if (error) throw error;
+      }
+      return edits.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`${count} change${count === 1 ? "" : "s"} applied to your website.`);
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't apply those changes."),
+  });
+}
