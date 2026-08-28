@@ -1,0 +1,167 @@
+/**
+ * Server-only AI copy engine for the Revora Site Engine.
+ *
+ * Hard rule enforced in every prompt: the model may only use facts supplied by
+ * the client. It must never invent reviews, awards, certifications, licences,
+ * guarantees, business history, addresses, prices or credentials.
+ */
+
+import type { SiteCopy } from "@/lib/site-engine";
+
+const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+export const COPY_MODEL = "google/gemini-3-flash-preview";
+
+const SAFETY = `You write marketing copy for local business websites.
+ABSOLUTE RULES:
+- Use only the facts given. Never invent reviews, testimonials, ratings, awards,
+  certifications, licences, insurance, guarantees, years in business, addresses,
+  staff, prices or credentials.
+- Never write "5-star", "award-winning", "licensed", "insured", "certified",
+  "trusted by hundreds" or similar unless that exact fact is supplied.
+- If a fact is missing, write around it. Do not use placeholder brackets.
+- Plain, confident, specific. No emoji. No keyword stuffing. British or American
+  spelling consistent with the input.`;
+
+export type CopyFacts = {
+  businessName: string;
+  industry: string;
+  description: string | null;
+  city: string | null;
+  state: string | null;
+  serviceArea: string | null;
+  phone: string | null;
+  email: string | null;
+  yearsInBusiness: number | null;
+  hasHours: boolean;
+  style: string | null;
+  goals: string[];
+  ctaLabel: string;
+  services: { name: string; description?: string | null; price?: number | null; starting_price?: number | null }[];
+};
+
+async function chatJson(system: string, prompt: string): Promise<Record<string, unknown>> {
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) throw new Error("AI copywriting isn't configured for this workspace.");
+
+  const response = await fetch(GATEWAY, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model: COPY_MODEL,
+      messages: [
+        { role: "system", content: `${SAFETY}\n\n${system}` },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (response.status === 429) throw new Error("AI is busy right now. Try generating again in a moment.");
+  if (response.status === 402) throw new Error("AI credits are exhausted for this workspace.");
+  if (!response.ok) {
+    console.error("[site-engine] gateway error", response.status, await response.text().catch(() => ""));
+    throw new Error("The copy engine couldn't be reached. Try again.");
+  }
+
+  const payload = (await response.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  const raw = payload.choices?.[0]?.message?.content ?? "";
+  const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  try {
+    const parsed = JSON.parse(cleaned) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("bad shape");
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error("The copy engine returned an unexpected response. Try again.");
+  }
+}
+
+const factSheet = (facts: CopyFacts) =>
+  JSON.stringify(
+    {
+      business: facts.businessName,
+      category: facts.industry,
+      ownerDescription: facts.description,
+      location: [facts.city, facts.state].filter(Boolean).join(", ") || null,
+      serviceArea: facts.serviceArea,
+      hasPhone: Boolean(facts.phone),
+      hasEmail: Boolean(facts.email),
+      publishedHours: facts.hasHours,
+      yearsInBusiness: facts.yearsInBusiness,
+      preferredStyle: facts.style,
+      websiteGoals: facts.goals,
+      services: facts.services.map((s) => ({
+        name: s.name,
+        detail: s.description ?? null,
+        price: s.price ?? null,
+        startingPrice: s.starting_price ?? null,
+      })),
+    },
+    null,
+    2,
+  );
+
+const str = (value: unknown, fallback = "") =>
+  typeof value === "string" && value.trim() ? value.trim() : fallback;
+
+/** Full website copy pass. */
+export async function generateSiteCopy(facts: CopyFacts): Promise<SiteCopy> {
+  const data = await chatJson(
+    `Return JSON with exactly these keys: heroHeadline (max 70 chars), heroSubheadline (max 160 chars),
+primaryCta (max 24 chars), secondaryCta (max 24 chars), intro (2 sentences),
+about (2 short paragraphs, plain text with \\n\\n between), benefits (array of 3-5 short strings),
+serviceCards (array of {name, copy} — one per supplied service, copy max 220 chars, keep the exact service name),
+faqs (array of 4-6 {question, answer} relevant to this category, services and area — never promise anything not supplied),
+areaCopy (2 sentences about where they work; omit places not supplied),
+metaTitle (max 60 chars), metaDescription (max 155 chars), ogTitle (max 60 chars), ogDescription (max 155 chars).`,
+    `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.\n\nFACTS:\n${factSheet(facts)}`,
+  );
+
+  const cards = Array.isArray(data["serviceCards"]) ? (data["serviceCards"] as Record<string, unknown>[]) : [];
+  const faqs = Array.isArray(data["faqs"]) ? (data["faqs"] as Record<string, unknown>[]) : [];
+
+  return {
+    heroHeadline: str(data["heroHeadline"], facts.businessName),
+    heroSubheadline: str(data["heroSubheadline"]),
+    primaryCta: str(data["primaryCta"], facts.ctaLabel),
+    secondaryCta: str(data["secondaryCta"], "See services"),
+    intro: str(data["intro"]),
+    about: str(data["about"], facts.description ?? ""),
+    benefits: (Array.isArray(data["benefits"]) ? (data["benefits"] as unknown[]) : [])
+      .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+      .slice(0, 5),
+    serviceCards: cards
+      .map((c) => ({ name: str(c["name"]), copy: str(c["copy"]) }))
+      .filter((c) => c.name),
+    faqs: faqs
+      .map((f) => ({ question: str(f["question"]), answer: str(f["answer"]) }))
+      .filter((f) => f.question && f.answer)
+      .slice(0, 6),
+    areaCopy: str(data["areaCopy"]),
+    metaTitle: str(data["metaTitle"], facts.businessName).slice(0, 60),
+    metaDescription: str(data["metaDescription"]).slice(0, 158),
+    ogTitle: str(data["ogTitle"], str(data["metaTitle"], facts.businessName)).slice(0, 60),
+    ogDescription: str(data["ogDescription"], str(data["metaDescription"])).slice(0, 158),
+  };
+}
+
+/** Targeted rewrite: only the supplied fields change. */
+export async function rewriteCopyFields(
+  facts: CopyFacts,
+  current: Record<string, string>,
+  instruction: string,
+): Promise<Record<string, string>> {
+  const data = await chatJson(
+    `Rewrite only the fields given in "current". Return JSON with the same keys and no others.
+Keep every field's role and length limits. Do not add facts. Do not change structure.`,
+    `Instruction from the business owner: "${instruction}"\n\ncurrent:\n${JSON.stringify(current, null, 2)}\n\nFACTS:\n${factSheet(facts)}`,
+  );
+
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(current)) {
+    const value = data[key];
+    if (typeof value === "string" && value.trim()) out[key] = value.trim();
+  }
+  return out;
+}
