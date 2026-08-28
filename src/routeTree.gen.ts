@@ -22,6 +22,7 @@ import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authenticated/admin.domains'
+import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
@@ -97,6 +98,11 @@ const AuthenticatedAdminDomainsRoute =
     path: '/domains',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/s/$slug': typeof SSlugRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/s/$slug': typeof SSlugRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/s/$slug': typeof SSlugRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/admin/clients'
     | '/admin/domains'
+    | '/admin/plans'
     | '/app/analytics'
     | '/app/calendar'
     | '/app/leads'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/admin/clients'
     | '/admin/domains'
+    | '/admin/plans'
     | '/app/analytics'
     | '/app/calendar'
     | '/app/leads'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
+    | '/_authenticated/admin/plans'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/leads'
@@ -380,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDomainsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/plans': {
+      id: '/_authenticated/admin/plans'
+      path: '/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -456,12 +475,14 @@ const AuthenticatedAdminClientsRouteWithChildren =
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminDomainsRoute: typeof AuthenticatedAdminDomainsRoute
+  AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminDomainsRoute: AuthenticatedAdminDomainsRoute,
+  AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
