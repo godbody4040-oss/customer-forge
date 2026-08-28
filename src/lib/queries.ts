@@ -939,7 +939,8 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["quote_builder", organizationId] }),
       queryClient.invalidateQueries({ queryKey: ["quote_requests", organizationId] }),
     ]);
-  const wrap = <T,>(fn: (input: T) => Promise<unknown>, success?: string) =>
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed call order below
+  const useWrapped = <T,>(fn: (input: T) => Promise<unknown>, success?: string) =>
     useMutation({
       mutationFn: fn,
       onSuccess: () => {
@@ -949,7 +950,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
       onError: (error: Error) => toast.error(error.message || "Couldn't save that."),
     });
 
-  const saveForm = wrap(
+  const saveForm = useWrapped(
     async (input: {
       id?: string | undefined;
       name: string;
@@ -972,7 +973,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Quote calculator saved.",
   );
 
-  const saveQuestion = wrap(
+  const saveQuestion = useWrapped(
     async (input: {
       id?: string | undefined;
       form_id: string;
@@ -996,12 +997,12 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Question saved.",
   );
 
-  const deleteQuestion = wrap(async (id: string) => {
+  const deleteQuestion = useWrapped(async (id: string) => {
     const { error } = await supabase.from("quote_questions").delete().eq("id", id);
     if (error) throw error;
   }, "Question removed.");
 
-  const saveOption = wrap(
+  const saveOption = useWrapped(
     async (input: {
       id?: string | undefined;
       question_id: string;
@@ -1024,12 +1025,12 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Option saved.",
   );
 
-  const deleteOption = wrap(async (id: string) => {
+  const deleteOption = useWrapped(async (id: string) => {
     const { error } = await supabase.from("quote_options").delete().eq("id", id);
     if (error) throw error;
   }, "Option removed.");
 
-  const saveAddon = wrap(
+  const saveAddon = useWrapped(
     async (input: {
       id?: string | undefined;
       form_id: string;
@@ -1052,7 +1053,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Add-on saved.",
   );
 
-  const deleteAddon = wrap(async (id: string) => {
+  const deleteAddon = useWrapped(async (id: string) => {
     const { error } = await supabase.from("quote_addons").delete().eq("id", id);
     if (error) throw error;
   }, "Add-on removed.");
