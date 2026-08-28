@@ -154,7 +154,36 @@ export const getPublicSite = createServerFn({ method: "GET" })
     const resolve = (value: string | null): string | null =>
       value ? (signed.get(value) ?? value) : value;
 
+    // Structured content: the builder's page/section tree for the home page.
+    const { data: homePage } = await supabase
+      .from("website_pages")
+      .select("id, slug, title, seo_title, seo_description")
+      .eq("organization_id", orgId)
+      .eq("kind", "home")
+      .eq("is_visible", true)
+      .maybeSingle();
+
+    let sections: {
+      id: string;
+      kind: string;
+      variant: string;
+      heading: string | null;
+      subheading: string | null;
+      body: string | null;
+      sort_order: number;
+    }[] = [];
+    if (homePage?.id) {
+      const { data: rows } = await supabase
+        .from("website_sections")
+        .select("id, kind, variant, heading, subheading, body, sort_order")
+        .eq("page_id", homePage.id)
+        .eq("is_visible", true)
+        .order("sort_order");
+      sections = rows ?? [];
+    }
+
     return {
+
       org: { ...org, id: orgId, name: org.name ?? "", slug: org.slug ?? "" },
       profile: profileRow
         ? {
