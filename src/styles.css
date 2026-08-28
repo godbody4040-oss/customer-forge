@@ -3,10 +3,11 @@
 @import "tw-animate-css";
 
 /*
- * LOCAL LEAD ENGINE — design system
- * Direction: "Editorial Command Center" — near-black ink surfaces, hairline
- * borders, emerald signal accent, amber attention accent. Space Grotesk for
- * display/numerics, Inter for body. Single dark theme (no mode toggle).
+ * REVORA — design system
+ * Direction: blackened graphite surfaces, hairline borders, metallic gold as the
+ * single signature accent (CTAs, key metrics, active states), emerald reserved
+ * for success/positive deltas only. Space Grotesk for display/numerics, Inter
+ * for body. Single dark theme (no mode toggle).
  *
  * All colors are oklch semantic tokens. Never hardcode colors in components.
  */
