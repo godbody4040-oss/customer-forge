@@ -333,6 +333,30 @@ function Landing() {
           </div>
         </section>
 
+        {/* Trust */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="Who it's for"
+              title="Built for businesses that depend on local customers"
+            />
+            <ul className="mt-8 flex flex-wrap gap-2">
+              {TRUST_INDUSTRIES.map((name) => (
+                <li
+                  key={name}
+                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] text-muted-foreground"
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-[12px] text-muted-foreground">
+              Customer stories are published here only once they're real and verified with the
+              business owner.
+            </p>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section>
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
@@ -345,9 +369,10 @@ function Landing() {
             </p>
             <Button asChild variant="signal" size="lg" className="mt-8">
               <Link to="/auth" search={{ mode: "signup" }}>
-                Start growing free <ArrowRight className="size-4" />
+                Build my growth system <ArrowRight className="size-4" />
               </Link>
             </Button>
+
           </div>
         </section>
       </main>
