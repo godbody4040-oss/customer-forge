@@ -1,6 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { Building2, ClipboardList, CreditCard, Globe2, LayoutGrid, LifeBuoy, Receipt, ShieldCheck } from "lucide-react";
-} from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Pill } from "@/components/app/Bits";
