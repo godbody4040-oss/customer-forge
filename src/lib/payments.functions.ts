@@ -216,9 +216,15 @@ export const refundPayment = createServerFn({ method: "POST" })
 
     const admin = await adminClient();
     const { data: payment } = await admin.from("payments").select("*").eq("id", data.paymentId).single();
-    if (!payment?.paypal_capture_id || payment.status !== "completed") {
+    if (!payment?.paypal_capture_id || (payment.status !== "completed" && payment.status !== "partially_refunded")) {
       return { ok: false as const, error: "Only completed PayPal payments can be refunded." };
     }
+    const remaining = Number(payment.amount) - Number(payment.refunded_amount ?? 0);
+    if (remaining <= 0.005) return { ok: false as const, error: "This payment has already been fully refunded." };
+    if (data.amount && data.amount > remaining + 0.005) {
+      return { ok: false as const, error: `The most that can still be refunded is ${remaining.toFixed(2)}.` };
+    }
+
 
     try {
       const refund = await refundPayPalCapture(
