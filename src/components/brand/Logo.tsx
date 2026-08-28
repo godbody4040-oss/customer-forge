@@ -9,7 +9,7 @@ export function LogoMark({ className }: { className?: string }) {
         className,
       )}
     >
-      LL
+      CF
     </span>
   );
 }
