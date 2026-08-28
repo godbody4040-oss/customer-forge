@@ -1,81 +1,171 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import { MetricCard, Panel, Pill, SectionHeading, LoadingRows, EmptyState } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useWorkspace } from "@/lib/use-tenant";
 import {
   useAnalytics,
   useAppointments,
   useBusinessProfile,
+  useCustomers,
   useLeads,
   useServices,
 } from "@/lib/queries";
 import { currency, dateShort, relative, timeShort } from "@/lib/format";
 import { leadStatusMeta } from "@/lib/domain";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Customer Forge" },
-      { name: "description", content: "Your leads, bookings and conversion at a glance." },
+      { title: "Growth Center — Customer Forge" },
+      { name: "description", content: "Leads, bookings, revenue and conversion for any date range." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: Dashboard,
 });
 
-const WEEK = 7 * 86_400_000;
+const DAY = 86_400_000;
+
+const RANGES = [
+  { value: "1", label: "Today", days: 1 },
+  { value: "7", label: "7 days", days: 7 },
+  { value: "30", label: "30 days", days: 30 },
+  { value: "90", label: "90 days", days: 90 },
+  { value: "custom", label: "Custom", days: 30 },
+] as const;
+
+type RangeValue = (typeof RANGES)[number]["value"];
+
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
 function Dashboard() {
   const { data: ws } = useWorkspace();
   const orgId = ws?.workspace?.organizationId;
   const org = ws?.workspace?.organization;
+
+  const [range, setRange] = useState<RangeValue>("30");
+  const [customFrom, setCustomFrom] = useState(
+    () => new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10),
+  );
+  const [customTo, setCustomTo] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const window = useMemo(() => {
+    if (range === "custom") {
+      const from = new Date(`${customFrom}T00:00:00`);
+      const to = new Date(`${customTo}T23:59:59`);
+      const valid = !Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime()) && from <= to;
+      const safeFrom = valid ? from : new Date(Date.now() - 30 * DAY);
+      const safeTo = valid ? to : new Date();
+      return {
+        from: safeFrom,
+        to: safeTo,
+        label: `${dateShort(safeFrom.toISOString())} – ${dateShort(safeTo.toISOString())}`,
+        days: Math.max(1, Math.round((safeTo.getTime() - safeFrom.getTime()) / DAY)),
+      };
+    }
+    const days = RANGES.find((r) => r.value === range)!.days;
+    const from = days === 1 ? startOfToday() : new Date(Date.now() - days * DAY);
+    return {
+      from,
+      to: new Date(),
+      label: RANGES.find((r) => r.value === range)!.label,
+      days,
+    };
+  }, [range, customFrom, customTo]);
+
   const leadsQuery = useLeads(orgId);
   const apptsQuery = useAppointments(orgId);
-  const analyticsQuery = useAnalytics(orgId, 30);
+  const analyticsQuery = useAnalytics(orgId, Math.min(365, window.days * 2 + 1));
   const servicesQuery = useServices(orgId);
   const profileQuery = useBusinessProfile(orgId);
+  const customersQuery = useCustomers(orgId);
 
   const leads = leadsQuery.data ?? [];
   const appts = apptsQuery.data ?? [];
   const events = analyticsQuery.data ?? [];
 
   const stats = useMemo(() => {
-    const now = Date.now();
-    const thisWeek = leads.filter((l) => now - new Date(l.created_at).getTime() < WEEK);
-    const lastWeek = leads.filter((l) => {
-      const age = now - new Date(l.created_at).getTime();
-      return age >= WEEK && age < WEEK * 2;
-    });
-    const views = events.filter((e) => e.event_type === "page_view").length;
-    const booked = leads.filter((l) => l.status === "booked" || l.status === "completed");
+    const fromMs = window.from.getTime();
+    const toMs = window.to.getTime();
+    const span = Math.max(DAY, toMs - fromMs);
+    const prevFrom = fromMs - span;
+
+    const inRange = (iso: string) => {
+      const t = new Date(iso).getTime();
+      return t >= fromMs && t <= toMs;
+    };
+    const inPrev = (iso: string) => {
+      const t = new Date(iso).getTime();
+      return t >= prevFrom && t < fromMs;
+    };
+
+    const rangeLeads = leads.filter((l) => inRange(l.created_at));
+    const prevLeads = leads.filter((l) => inPrev(l.created_at));
+    const rangeAppts = appts.filter((a) => inRange(a.starts_at));
+    const bookedAppts = rangeAppts.filter((a) => a.status !== "cancelled" && a.status !== "no_show");
+    const completedAppts = rangeAppts.filter((a) => a.status === "completed");
+    const views = events.filter((e) => e.event_type === "page_view" && inRange(e.created_at)).length;
+    const calls = events.filter((e) => e.event_type === "call_click" && inRange(e.created_at)).length;
+
+    const revenueWon = leads
+      .filter((l) => l.status === "completed" && inRange(l.created_at))
+      .reduce((sum, l) => sum + Number(l.estimated_value ?? 0), 0);
     const pipeline = leads
       .filter((l) => !["completed", "lost"].includes(l.status))
       .reduce((sum, l) => sum + Number(l.estimated_value ?? 0), 0);
+
+    const bookedLeads = rangeLeads.filter((l) =>
+      ["booked", "completed"].includes(l.status),
+    ).length;
+
     const needsAttention = leads.filter(
-      (l) => (l.status === "new" || l.status === "contacted") && !l.last_contacted_at,
+      (l) =>
+        (l.status === "new" || l.status === "contacted") &&
+        !l.last_contacted_at &&
+        l.status !== "lost",
     );
+
     const upcoming = appts
-      .filter((a) => new Date(a.starts_at).getTime() > now && a.status !== "cancelled")
+      .filter((a) => new Date(a.starts_at).getTime() > Date.now() && a.status !== "cancelled")
       .slice(0, 5);
+
     const delta =
-      lastWeek.length === 0
-        ? thisWeek.length > 0
+      prevLeads.length === 0
+        ? rangeLeads.length > 0
           ? 100
           : 0
-        : Math.round(((thisWeek.length - lastWeek.length) / lastWeek.length) * 100);
+        : Math.round(((rangeLeads.length - prevLeads.length) / prevLeads.length) * 100);
+
     return {
-      thisWeek: thisWeek.length,
+      leads: rangeLeads.length,
+      prevLeads: prevLeads.length,
       delta,
       views,
-      conversion: views > 0 ? (leads.length / views) * 100 : 0,
-      booked: booked.length,
+      calls,
+      visitorConversion: views > 0 ? (rangeLeads.length / views) * 100 : 0,
+      leadToBooking: rangeLeads.length > 0 ? (bookedLeads / rangeLeads.length) * 100 : 0,
+      bookings: bookedAppts.length,
+      completed: completedAppts.length,
+      revenueWon,
       pipeline,
       needsAttention,
       upcoming,
+      recent: rangeLeads.slice(0, 8),
+      avgJob:
+        rangeLeads.length > 0
+          ? rangeLeads.reduce((s, l) => s + Number(l.estimated_value ?? 0), 0) / rangeLeads.length
+          : 0,
     };
-  }, [leads, appts, events]);
+  }, [leads, appts, events, window]);
 
   const checklist = [
     { done: !!profileQuery.data?.phone, label: "Add your phone number", to: "/app/settings" },
@@ -89,49 +179,138 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="eyebrow">Business command center</p>
-        <h1 className="mt-1 font-display text-[24px] font-semibold">
-          {org?.name ?? "Your business"}
-        </h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow">Business growth center</p>
+          <h1 className="mt-1 font-display text-[24px] font-semibold">
+            {org?.name ?? "Your business"}
+          </h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {RANGES.map((r) => (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => setRange(r.value)}
+              aria-pressed={range === r.value}
+              className={cn(
+                "cursor-pointer rounded-full border px-3 py-1 text-[12px]",
+                range === r.value
+                  ? "border-primary text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {range === "custom" ? (
+        <Panel className="p-4">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="from">From</Label>
+              <Input
+                id="from"
+                type="date"
+                value={customFrom}
+                max={customTo}
+                onChange={(e) => setCustomFrom(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="to">To</Label>
+              <Input
+                id="to"
+                type="date"
+                value={customTo}
+                min={customFrom}
+                onChange={(e) => setCustomTo(e.target.value)}
+              />
+            </div>
+            <p className="text-[12px] text-muted-foreground">
+              Comparing against the {window.days} days before this range.
+            </p>
+          </div>
+        </Panel>
+      ) : null}
 
       <div className="panel-inset panel p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
-            <p className="eyebrow">New leads · last 7 days</p>
+            <p className="eyebrow">New leads · {window.label.toLowerCase()}</p>
             <p className="tnum mt-1.5 font-display text-[42px] leading-none font-semibold">
-              {stats.thisWeek}
+              {stats.leads}
             </p>
             <p className={`mt-2 text-xs ${stats.delta >= 0 ? "text-primary" : "text-destructive"}`}>
-              {stats.delta >= 0 ? "▲" : "▼"} {Math.abs(stats.delta)}% vs previous week
+              {stats.delta >= 0 ? "▲" : "▼"} {Math.abs(stats.delta)}% vs previous {window.days}{" "}
+              day{window.days === 1 ? "" : "s"} ({stats.prevLeads})
             </p>
           </div>
-          <div className="text-right">
-            <p className="eyebrow">Open pipeline value</p>
-            <p className="tnum mt-1.5 font-display text-[22px] font-semibold">
-              {currency(stats.pipeline)}
-            </p>
+          <div className="grid gap-4 text-right sm:grid-cols-2">
+            <div>
+              <p className="eyebrow">Revenue won</p>
+              <p className="tnum mt-1.5 font-display text-[22px] font-semibold text-primary">
+                {currency(stats.revenueWon)}
+              </p>
+            </div>
+            <div>
+              <p className="eyebrow">Open pipeline</p>
+              <p className="tnum mt-1.5 font-display text-[22px] font-semibold">
+                {currency(stats.pipeline)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Bookings" value={String(stats.booked)} hint="leads that turned into work" tone="signal" />
         <MetricCard
-          label="Conversion"
-          value={`${stats.conversion.toFixed(1)}%`}
-          hint="visitor → lead (30d)"
-          tone="attention"
-          progress={stats.conversion * 10}
+          label="Bookings"
+          value={String(stats.bookings)}
+          hint={`${stats.completed} completed in range`}
+          tone="signal"
         />
+        <MetricCard
+          label="Visitor → lead"
+          value={`${stats.visitorConversion.toFixed(1)}%`}
+          hint={`${stats.views} website visitors`}
+          tone="attention"
+          progress={stats.visitorConversion * 10}
+        />
+        <MetricCard
+          label="Lead → booking"
+          value={`${stats.leadToBooking.toFixed(0)}%`}
+          hint="leads that reached the calendar"
+          tone="info"
+          progress={stats.leadToBooking}
+        />
+        <MetricCard
+          label="Average job"
+          value={currency(stats.avgJob)}
+          hint={`${stats.calls} call clicks`}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Needs follow-up"
           value={String(stats.needsAttention.length)}
           hint={stats.needsAttention.length ? "nobody has replied yet" : "all caught up"}
           tone={stats.needsAttention.length ? "attention" : "signal"}
         />
-        <MetricCard label="Website visitors" value={String(stats.views)} hint="last 30 days" />
+        <MetricCard label="Customers" value={String((customersQuery.data ?? []).length)} hint="lifetime" />
+        <MetricCard
+          label="Upcoming jobs"
+          value={String(stats.upcoming.length)}
+          hint="next on the calendar"
+        />
+        <MetricCard
+          label="Total leads"
+          value={String(leads.length)}
+          hint="all time in your pipeline"
+        />
       </div>
 
       {remaining.length ? (
@@ -228,12 +407,12 @@ function Dashboard() {
       </div>
 
       <Panel className="p-5">
-        <SectionHeading eyebrow="Latest activity" title="Recent leads" />
-        {leads.length === 0 ? (
+        <SectionHeading eyebrow={`Leads in ${window.label.toLowerCase()}`} title="Latest activity" />
+        {stats.recent.length === 0 ? (
           <div className="mt-4">
             <EmptyState
-              title="No leads yet"
-              description="Share your website address and your first leads will land right here."
+              title="No leads in this range"
+              description="Widen the date range, or share your website address to start capturing leads."
               action={
                 <Button asChild variant="signal">
                   <Link to="/app/website">Set up your website</Link>
@@ -243,7 +422,7 @@ function Dashboard() {
           </div>
         ) : (
           <ul className="mt-4 divide-y divide-border">
-            {leads.slice(0, 8).map((lead) => (
+            {stats.recent.map((lead) => (
               <li key={lead.id} className="flex items-center justify-between gap-3 py-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-medium">{lead.name}</p>

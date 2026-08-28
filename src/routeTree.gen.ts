@@ -26,9 +26,11 @@ import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
+import { Route as AuthenticatedAppAutomationsRouteImport } from './routes/_authenticated/app.automations'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as AuthenticatedAppLaunchRouteImport } from './routes/_authenticated/app.launch'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
+import { Route as AuthenticatedAppQuotesRouteImport } from './routes/_authenticated/app.quotes'
 import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
@@ -121,6 +123,12 @@ const AuthenticatedAppAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppAutomationsRoute =
+  AuthenticatedAppAutomationsRouteImport.update({
+    id: '/automations',
+    path: '/automations',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppCalendarRoute =
   AuthenticatedAppCalendarRouteImport.update({
     id: '/calendar',
@@ -135,6 +143,11 @@ const AuthenticatedAppLaunchRoute = AuthenticatedAppLaunchRouteImport.update({
 const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppQuotesRoute = AuthenticatedAppQuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppServicesRoute =
@@ -176,9 +189,11 @@ export interface FileRoutesByFullPath {
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
+  '/app/quotes': typeof AuthenticatedAppQuotesRoute
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
@@ -199,9 +214,11 @@ export interface FileRoutesByTo {
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
+  '/app/quotes': typeof AuthenticatedAppQuotesRoute
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
@@ -226,9 +243,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
+  '/_authenticated/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/launch': typeof AuthenticatedAppLaunchRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
+  '/_authenticated/app/quotes': typeof AuthenticatedAppQuotesRoute
   '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
@@ -253,9 +272,11 @@ export interface FileRouteTypes {
     | '/admin/domains'
     | '/admin/plans'
     | '/app/analytics'
+    | '/app/automations'
     | '/app/calendar'
     | '/app/launch'
     | '/app/leads'
+    | '/app/quotes'
     | '/app/services'
     | '/app/settings'
     | '/app/website'
@@ -276,9 +297,11 @@ export interface FileRouteTypes {
     | '/admin/domains'
     | '/admin/plans'
     | '/app/analytics'
+    | '/app/automations'
     | '/app/calendar'
     | '/app/launch'
     | '/app/leads'
+    | '/app/quotes'
     | '/app/services'
     | '/app/settings'
     | '/app/website'
@@ -302,9 +325,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/domains'
     | '/_authenticated/admin/plans'
     | '/_authenticated/app/analytics'
+    | '/_authenticated/app/automations'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/launch'
     | '/_authenticated/app/leads'
+    | '/_authenticated/app/quotes'
     | '/_authenticated/app/services'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/website'
@@ -445,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAnalyticsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/automations': {
+      id: '/_authenticated/app/automations'
+      path: '/automations'
+      fullPath: '/app/automations'
+      preLoaderRoute: typeof AuthenticatedAppAutomationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/calendar': {
       id: '/_authenticated/app/calendar'
       path: '/calendar'
@@ -464,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/leads'
       fullPath: '/app/leads'
       preLoaderRoute: typeof AuthenticatedAppLeadsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/quotes': {
+      id: '/_authenticated/app/quotes'
+      path: '/quotes'
+      fullPath: '/app/quotes'
+      preLoaderRoute: typeof AuthenticatedAppQuotesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/services': {
@@ -530,9 +569,11 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
+  AuthenticatedAppAutomationsRoute: typeof AuthenticatedAppAutomationsRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
   AuthenticatedAppLaunchRoute: typeof AuthenticatedAppLaunchRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
+  AuthenticatedAppQuotesRoute: typeof AuthenticatedAppQuotesRoute
   AuthenticatedAppServicesRoute: typeof AuthenticatedAppServicesRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppWebsiteRoute: typeof AuthenticatedAppWebsiteRoute
@@ -541,9 +582,11 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
+  AuthenticatedAppAutomationsRoute: AuthenticatedAppAutomationsRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
   AuthenticatedAppLaunchRoute: AuthenticatedAppLaunchRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
+  AuthenticatedAppQuotesRoute: AuthenticatedAppQuotesRoute,
   AuthenticatedAppServicesRoute: AuthenticatedAppServicesRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppWebsiteRoute: AuthenticatedAppWebsiteRoute,
