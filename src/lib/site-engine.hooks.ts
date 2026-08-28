@@ -162,7 +162,8 @@ export function useScoreFacts(organizationId: string | undefined) {
     enabled: !!organizationId,
     queryFn: async () => {
       const orgId = organizationId!;
-      const [services, media, reviews, social, forms, events] = await Promise.all([
+      const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+      const [services, media, reviews, social, forms, events, leads, bookings] = await Promise.all([
         supabase.from("services").select("price, starting_price, bookable").eq("organization_id", orgId).eq("is_active", true),
         supabase.from("media").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
         supabase.from("reviews").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
@@ -172,8 +173,14 @@ export function useScoreFacts(organizationId: string | undefined) {
           .from("analytics_events")
           .select("event_type")
           .eq("organization_id", orgId)
-          .gte("created_at", new Date(Date.now() - 30 * 86_400_000).toISOString())
+          .gte("created_at", since)
           .limit(20000),
+        supabase.from("leads").select("id", { count: "exact", head: true }).eq("organization_id", orgId).gte("created_at", since),
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .gte("created_at", since),
       ]);
 
       const rows = services.data ?? [];
@@ -194,10 +201,10 @@ export function useScoreFacts(organizationId: string | undefined) {
         quoteFormCount: forms.count ?? 0,
         signals: {
           visitors: countOf("page_view"),
-          leads: countOf("lead_submit") + countOf("quote_submit"),
-          bookings: countOf("booking_submit"),
+          leads: leads.count ?? 0,
+          bookings: bookings.count ?? 0,
           callClicks: countOf("call_click"),
-          formViews: countOf("form_view"),
+          formViews: countOf("quote_start") + countOf("booking_start"),
         },
       };
     },
