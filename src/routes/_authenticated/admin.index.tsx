@@ -1,0 +1,109 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowUpRight, Building2 } from "lucide-react";
+import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import { Button } from "@/components/ui/button";
+import { getPlatformMetrics, listClients } from "@/lib/admin.functions";
+import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
+import { currency, dateShort, number } from "@/lib/format";
+
+export const Route = createFileRoute("/_authenticated/admin/")({
+  component: AdminOverview,
+});
+
+function AdminOverview() {
+  const metricsFn = useServerFn(getPlatformMetrics);
+  const clientsFn = useServerFn(listClients);
+  const metrics = useQuery({ queryKey: ["admin", "metrics"], queryFn: () => metricsFn({}) });
+  const clients = useQuery({ queryKey: ["admin", "clients"], queryFn: () => clientsFn({}) });
+
+  return (
+    <div className="space-y-6">
+      <SectionHeading
+        eyebrow="Platform"
+        title="Every client business, one platform"
+        action={
+          <Button asChild variant="signal" size="sm">
+            <Link to="/admin/clients">Create new client</Link>
+          </Button>
+        }
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Client businesses" value={number(metrics.data?.clients ?? 0)} tone="signal" />
+        <MetricCard
+          label="Live websites"
+          value={number(metrics.data?.published ?? 0)}
+          hint={`${metrics.data?.domainsLive ?? 0} on their own domain`}
+          tone="info"
+        />
+        <MetricCard
+          label="Leads (30 days)"
+          value={number(metrics.data?.leads30d ?? 0)}
+          hint={`${metrics.data?.bookings30d ?? 0} bookings`}
+          tone="attention"
+        />
+        <MetricCard
+          label="Recurring revenue"
+          value={currency(metrics.data?.mrr ?? 0)}
+          hint={`${metrics.data?.trialing ?? 0} on trial · ${metrics.data?.suspended ?? 0} suspended`}
+        />
+      </div>
+
+      <Panel className="p-0">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <p className="eyebrow">Newest clients</p>
+          <Link to="/admin/clients" className="text-[12px] text-primary hover:underline">
+            All clients
+          </Link>
+        </div>
+        {clients.isLoading ? (
+          <div className="p-4">
+            <LoadingRows rows={3} />
+          </div>
+        ) : (clients.data ?? []).length === 0 ? (
+          <div className="p-4">
+            <EmptyState
+              icon={<Building2 className="size-5" />}
+              title="No client businesses yet"
+              description="Create your first client and the platform provisions their workspace, website and CRM instantly."
+              action={
+                <Button asChild variant="signal" size="sm">
+                  <Link to="/admin/clients">Create new client</Link>
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {(clients.data ?? []).slice(0, 8).map((client) => (
+              <li key={client.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-medium">{client.name}</p>
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    {client.city ?? "No city"} · added {dateShort(client.created_at)} ·{" "}
+                    {number(client.leads)} leads
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Pill tone={PUBLISH_STATES[client.publish_state]?.tone ?? "neutral"}>
+                    {PUBLISH_STATES[client.publish_state]?.label ?? client.publish_state}
+                  </Pill>
+                  <Pill tone={DOMAIN_STATES[client.domain_status]?.tone ?? "neutral"}>
+                    {DOMAIN_STATES[client.domain_status]?.label ?? client.domain_status}
+                  </Pill>
+                  <Button asChild size="sm" variant="ghost">
+                    <Link to="/admin/clients/$orgId" params={{ orgId: client.id }}>
+                      Open <ArrowUpRight className="ml-1 size-3.5" />
+                    </Link>
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+    </div>
+  );
+}
