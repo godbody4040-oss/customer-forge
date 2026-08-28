@@ -28,7 +28,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Back to Customer Forge
+            Back to Revora
           </Link>
         </div>
       </div>
@@ -78,16 +78,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Customer Forge — Turn visitors into booked customers" },
+      { title: "Revora — The Business Growth Operating System" },
       {
         name: "description",
         content:
-          "Customer Forge gives local businesses the website, lead capture, booking and follow-up tools that turn online visitors into real customers.",
+          "Revora gives businesses one powerful system to get discovered, capture opportunities, convert leads, book customers, automate follow-up and measure growth.",
       },
-      { name: "author", content: "Customer Forge" },
+      { name: "author", content: "Revora" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#0E0E10" },
+      { name: "theme-color", content: "#0A0A0C" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

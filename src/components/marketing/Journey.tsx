@@ -67,7 +67,7 @@ export function WithoutWith() {
     <div className="mt-8 grid gap-3 md:grid-cols-2">
       <Panel className="p-5">
         <h3 className="font-display text-[15px] font-semibold text-muted-foreground">
-          Without Customer Forge
+          Without Revora
         </h3>
         <ul className="mt-4 space-y-2.5">
           {WITHOUT.map((item) => (
@@ -79,7 +79,7 @@ export function WithoutWith() {
         </ul>
       </Panel>
       <Panel className="border-primary/40 p-5">
-        <h3 className="font-display text-[15px] font-semibold">With Customer Forge</h3>
+        <h3 className="font-display text-[15px] font-semibold">With Revora</h3>
         <ul className="mt-4 space-y-2.5">
           {WITH.map((item) => (
             <li key={item} className="flex items-start gap-2.5 text-[13px] text-foreground">

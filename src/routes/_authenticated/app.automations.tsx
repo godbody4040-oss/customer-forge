@@ -39,7 +39,7 @@ import { relative } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/app/automations")({
   head: () => ({
     meta: [
-      { title: "Automations — Customer Forge" },
+      { title: "Automations — Revora" },
       {
         name: "description",
         content: "Automatic follow-ups by email, text and task whenever a lead or booking changes.",

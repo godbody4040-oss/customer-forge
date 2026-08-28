@@ -6,13 +6,13 @@ import { INDUSTRIES, TEMPLATES } from "@/lib/domain";
 export const Route = createFileRoute("/industries")({
   head: () => ({
     meta: [
-      { title: "Industries we build for — Customer Forge" },
+      { title: "Industries we build for — Revora" },
       {
         name: "description",
         content:
           "Templates and quote calculators tuned for auto detailing, beauty, landscaping, cleaning, contracting, HVAC, roofing and more local trades.",
       },
-      { property: "og:title", content: "Industries we build for — Customer Forge" },
+      { property: "og:title", content: "Industries we build for — Revora" },
       {
         property: "og:description",
         content: "Every trade sells differently. Pick your industry and get a site tuned to it.",
