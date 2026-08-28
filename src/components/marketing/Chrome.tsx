@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const NAV = [
-  { to: "/demo", label: "Demo" },
+  { to: "/demo", label: "Product" },
   { to: "/pricing", label: "Pricing" },
-  { to: "/industries", label: "Industries" },
+  { to: "/industries", label: "Solutions" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
@@ -40,7 +40,7 @@ export function SiteHeader() {
           </Button>
           <Button asChild variant="signal" size="sm">
             <Link to="/auth" search={{ mode: "signup" }}>
-              Build my system
+              Get started
             </Link>
           </Button>
         </div>
@@ -79,7 +79,7 @@ export function SiteHeader() {
             </Button>
             <Button asChild variant="signal">
               <Link to="/auth" search={{ mode: "signup" }} onClick={() => setOpen(false)}>
-                Build my system
+                Get started
               </Link>
             </Button>
           </div>
@@ -92,32 +92,55 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-        <Logo />
-        <nav aria-label="Footer" className="flex flex-wrap gap-5 text-[13px] text-muted-foreground">
-          <Link to="/demo" className="transition-colors hover:text-foreground">
-            Demo
-          </Link>
-          <Link to="/pricing" className="transition-colors hover:text-foreground">
-            Pricing
-          </Link>
-          <Link to="/industries" className="transition-colors hover:text-foreground">
-            Industries
-          </Link>
-          <Link to="/contact" className="transition-colors hover:text-foreground">
-            Contact
-          </Link>
-          <Link
-            to="/s/$slug"
-            params={{ slug: "elite-mobile-detailing" }}
-            className="transition-colors hover:text-foreground"
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Logo tagline />
+            <p className="mt-4 max-w-xs text-[12px] leading-relaxed text-muted-foreground">
+              One system to get discovered, capture opportunities, convert leads, book customers and
+              measure growth.
+            </p>
+          </div>
+          <nav
+            aria-label="Footer"
+            className="grid grid-cols-2 gap-x-10 gap-y-2.5 text-[13px] text-muted-foreground sm:grid-cols-3"
           >
-            Live demo site
-          </Link>
-        </nav>
-        <p className="text-[11px] text-muted-foreground">
-          © {new Date().getFullYear()} Revora
-        </p>
+            <Link to="/demo" className="transition-colors hover:text-primary">
+              Product
+            </Link>
+            <Link to="/industries" className="transition-colors hover:text-primary">
+              Solutions
+            </Link>
+            <Link to="/pricing" className="transition-colors hover:text-primary">
+              Pricing
+            </Link>
+            <Link to="/demo" className="transition-colors hover:text-primary">
+              Demo
+            </Link>
+            <Link to="/contact" className="transition-colors hover:text-primary">
+              Contact
+            </Link>
+            <Link to="/auth" className="transition-colors hover:text-primary">
+              Login
+            </Link>
+            <Link
+              to="/s/$slug"
+              params={{ slug: "elite-mobile-detailing" }}
+              className="transition-colors hover:text-primary"
+            >
+              Live demo site
+            </Link>
+          </nav>
+        </div>
+        <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[11px] text-muted-foreground">
+            © {new Date().getFullYear()} <span className="text-foreground">REVORA™</span> — The
+            Business Growth Operating System
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Estimated opportunity figures are estimates, not guaranteed revenue.
+          </p>
+        </div>
       </div>
     </footer>
   );
