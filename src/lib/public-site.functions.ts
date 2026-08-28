@@ -173,7 +173,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
         comment: r.comment,
         created_at: r.created_at as string,
       })),
-      gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) as string })),
+      gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
       quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     };
   });
