@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -50,14 +51,14 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
 
     // Non-blocking kick so the worker usually starts immediately; the scheduled
     // run and the client's pump call are the fallbacks.
-    void kickWorker();
+    void kickWorker(new URL(getRequest().url).origin);
 
     return { jobId: job.id, status: "queued", progress: 0, queued: true };
   });
 
-async function kickWorker() {
+async function kickWorker(origin: string) {
   const secret = process.env["LOVABLE_CRON_SECRET"];
-  const base = process.env["VITE_APP_URL"] ?? process.env["APP_URL"];
+  const base = process.env["APP_URL"] ?? origin;
   if (!secret || !base) return;
   try {
     await fetch(`${base.replace(/\/$/, "")}/api/public/jobs/site-engine`, {
