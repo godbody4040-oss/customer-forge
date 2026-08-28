@@ -274,7 +274,39 @@ function Launch() {
       </Panel>
 
       <Panel className="space-y-3">
-        <SectionHeading eyebrow="Handoff" title="Your system at a glance" />
+        <SectionHeading
+          eyebrow="Handoff"
+          title="Your system at a glance"
+          action={
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const lines = [
+                  `Business: ${org?.name ?? ""}`,
+                  `Website: ${siteUrl}`,
+                  `Revora address: ${revoraSubdomain(org?.slug ?? "")}`,
+                  `Website status: ${reviewMeta.label}`,
+                  `Publishing: ${PUBLISH_STATES[publishState]?.label ?? publishState}`,
+                  `Domain: ${DOMAIN_STATES[domainStatus]?.label ?? domainStatus}`,
+                  `Phone: ${profile?.phone ?? "Not set"}`,
+                  `Email: ${profile?.email ?? "Not set"}`,
+                  `Service area: ${profile?.service_area ?? "Not set"}`,
+                  `Services live: ${active.length}`,
+                  `Setup complete: ${score.score}%`,
+                ].join("\n");
+                const url = URL.createObjectURL(new Blob([lines], { type: "text/plain" }));
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${org?.slug ?? "business"}-revora-handoff.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Download handoff sheet
+            </Button>
+          }
+        />
         <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
           <Row label="Website address" value={siteUrl} />
           <Row label="Revora address" value={revoraSubdomain(org?.slug ?? "")} />
