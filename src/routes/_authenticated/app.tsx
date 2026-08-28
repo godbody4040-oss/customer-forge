@@ -16,7 +16,9 @@ import {
   Shield,
   Users,
   Wrench,
-  X,
+  X,,
+  Calculator,
+  Zap
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -36,7 +38,9 @@ const NAV = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/leads", label: "Leads", icon: Users, exact: false },
   { to: "/app/calendar", label: "Calendar", icon: CalendarDays, exact: false },
-  { to: "/app/services", label: "Services & Quotes", icon: Wrench, exact: false },
+  { to: "/app/services", label: "Services", icon: Wrench, exact: false },
+  { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false },
+  { to: "/app/automations", label: "Automations", icon: Zap, exact: false },
   { to: "/app/website", label: "Website", icon: Globe, exact: false },
   { to: "/app/launch", label: "Launch", icon: Rocket, exact: false },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false },
