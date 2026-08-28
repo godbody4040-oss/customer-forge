@@ -306,6 +306,34 @@ function PublicSite() {
         </section>
       ) : null}
 
+      {/* Extra sections added in the builder (FAQ, process, guarantees, custom blocks). */}
+      {(site.content?.sections ?? [])
+        .filter(
+          (section) =>
+            !["hero", "services", "about", "gallery", "reviews", "contact", "quote", "booking"].includes(
+              section.kind,
+            ) && (section.heading || section.body),
+        )
+        .map((section) => (
+          <section key={section.id} className="border-b border-border">
+            <div className="mx-auto max-w-3xl px-4 py-14">
+              {section.heading ? (
+                <h2 className="font-display text-[28px] font-semibold">{section.heading}</h2>
+              ) : null}
+              {section.subheading ? (
+                <p className="mt-2 text-[15px] text-muted-foreground">{section.subheading}</p>
+              ) : null}
+              {section.body ? (
+                <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
+                  {section.body}
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ))}
+
+
+
       {reviews.length ? (
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-14">
