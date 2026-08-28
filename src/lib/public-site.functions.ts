@@ -47,7 +47,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
     // A client site is only served publicly once it is published (or explicitly in preview).
     if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview")) return null;
 
-    const [profile, services, settings, social, reviews, gallery, quoteForm] = await Promise.all([
+    const [profile, services, settings, social, reviews, galleryRows, quoteForm] = await Promise.all([
 
       supabase.from("public_business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       supabase
@@ -173,7 +173,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
         comment: r.comment,
         created_at: r.created_at as string,
       })),
-      gallery: gallery.data ?? [],
+      gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) as string })),
       quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     };
   });
