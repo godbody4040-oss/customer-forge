@@ -117,27 +117,26 @@ function Landing() {
         <section className="border-b border-border">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
             <div>
-              <Pill tone="signal">Built for local service businesses</Pill>
+              <Pill tone="signal">A customer-acquisition system, not a website builder</Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.4rem)] leading-[1.05] font-semibold tracking-tight">
                 Turn local searches into booked jobs.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                Customer Forge gives your business a website that actually asks for the work — plus
-                instant quotes, online booking and one place where every lead lands. Built for
-                detailers, stylists, landscapers, cleaners and contractors.
+                Your business deserves more than a website. Customer Forge gives you a complete
+                system for getting found, capturing leads, booking customers, following up and
+                growing repeat business.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button asChild variant="signal" size="lg">
                   <Link to="/auth" search={{ mode: "signup" }}>
-                    Start growing free <ArrowRight className="size-4" />
+                    Build my growth system <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/s/$slug" params={{ slug: "elite-mobile-detailing" }}>
-                    See a live business site
-                  </Link>
+                  <Link to="/demo">See a live business demo</Link>
                 </Button>
               </div>
+
               <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-border pt-6">
                 {[
                   ["14 days", "Free trial, no card"],
