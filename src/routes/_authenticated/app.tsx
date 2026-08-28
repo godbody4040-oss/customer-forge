@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
   Bell,
@@ -7,9 +8,12 @@ import {
   ExternalLink,
   Globe,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Menu,
+  Rocket,
   Settings,
+  Shield,
   Users,
   Wrench,
   X,
@@ -19,7 +23,9 @@ import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { useNotifications } from "@/lib/queries";
 import { useSignOut, useWorkspace } from "@/lib/use-tenant";
-import { relative } from "@/lib/format";
+import { endSupportSession } from "@/lib/admin.functions";
+import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
+import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -32,6 +38,7 @@ const NAV = [
   { to: "/app/calendar", label: "Calendar", icon: CalendarDays, exact: false },
   { to: "/app/services", label: "Services & Quotes", icon: Wrench, exact: false },
   { to: "/app/website", label: "Website", icon: Globe, exact: false },
+  { to: "/app/launch", label: "Launch", icon: Rocket, exact: false },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false },
   { to: "/app/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
@@ -45,10 +52,14 @@ function AppShell() {
   const org = data?.workspace?.organization;
   const { data: notifications } = useNotifications(org?.id);
   const unread = (notifications ?? []).filter((n) => !n.is_read).length;
+  const { mode: supportMode } = useSupportMode();
+  const endSupport = useServerFn(endSupportSession);
+  const supporting = Boolean(data?.supporting && supportMode);
 
   useEffect(() => {
     if (!isLoading && data && !data.workspace) navigate({ to: "/onboarding", replace: true });
   }, [data, isLoading, navigate]);
+
 
   return (
     <div className="min-h-screen bg-background lg:flex">
