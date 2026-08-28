@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PayPalCheckout } from "@/components/app/PayPalCheckout";
 import { usePaymentConfig, usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
 import { useWorkspace } from "@/lib/use-tenant";
-import { canManage } from "@/lib/domain";
+import { canManage } from "@/lib/use-tenant";
 import { REVORA } from "@/lib/brand";
 import { useQueryClient } from "@tanstack/react-query";
 
