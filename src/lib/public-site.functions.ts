@@ -30,17 +30,18 @@ export const getPublicSite = createServerFn({ method: "GET" })
     const supabase = publicClient();
 
     const { data: org } = await supabase
-      .from("organizations")
+      .from("public_organizations")
       .select("id, name, slug, industry, is_demo")
       .eq("slug", data.slug)
       .maybeSingle();
 
-    if (!org) return null;
+    if (!org?.id) return null;
+    const orgId: string = org.id;
 
     const { data: gate } = await supabase
       .from("website_settings")
       .select("publish_state, published")
-      .eq("organization_id", org.id)
+      .eq("organization_id", orgId)
       .maybeSingle();
 
     // A client site is only served publicly once it is published (or explicitly in preview).
@@ -48,34 +49,33 @@ export const getPublicSite = createServerFn({ method: "GET" })
 
     const [profile, services, settings, social, reviews, gallery, quoteForm] = await Promise.all([
 
-      supabase.from("business_profiles").select("*").eq("organization_id", org.id).maybeSingle(),
+      supabase.from("public_business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       supabase
         .from("services")
         .select(
           "id, name, description, category, price, starting_price, duration_minutes, image_url, bookable, featured, sort_order",
         )
-        .eq("organization_id", org.id)
+        .eq("organization_id", orgId)
         .eq("is_active", true)
         .order("sort_order"),
-      supabase.from("website_settings").select("*").eq("organization_id", org.id).maybeSingle(),
-      supabase.from("social_profiles").select("*").eq("organization_id", org.id).maybeSingle(),
+      supabase.from("website_settings").select("*").eq("organization_id", orgId).maybeSingle(),
+      supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       supabase
-        .from("reviews")
+        .from("public_reviews")
         .select("id, author_name, rating, comment, created_at")
-        .eq("organization_id", org.id)
-        .eq("is_published", true)
+        .eq("organization_id", orgId)
         .order("created_at", { ascending: false })
         .limit(12),
       supabase
         .from("media")
         .select("id, url, alt_text, category")
-        .eq("organization_id", org.id)
+        .eq("organization_id", orgId)
         .order("created_at", { ascending: false })
         .limit(24),
       supabase
         .from("quote_forms")
         .select("id, name, base_price, min_price, max_price")
-        .eq("organization_id", org.id)
+        .eq("organization_id", orgId)
         .eq("is_active", true)
         .order("created_at")
         .limit(1)
@@ -131,12 +131,18 @@ export const getPublicSite = createServerFn({ method: "GET" })
     }
 
     return {
-      org,
+      org: { ...org, id: orgId, name: org.name ?? "", slug: org.slug ?? "" },
       profile: profile.data,
       services: services.data ?? [],
       settings: settings.data,
       social: social.data,
-      reviews: reviews.data ?? [],
+      reviews: (reviews.data ?? []).map((r) => ({
+        id: r.id as string,
+        author_name: r.author_name ?? "",
+        rating: r.rating ?? 5,
+        comment: r.comment,
+        created_at: r.created_at as string,
+      })),
       gallery: gallery.data ?? [],
       quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     };
@@ -193,16 +199,17 @@ export const submitPublicLead = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: org } = await supabase
-      .from("organizations")
+      .from("public_organizations")
       .select("id, name")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!org) throw new Error("We couldn't find that business.");
+    if (!org?.id) throw new Error("We couldn't find that business.");
+    const orgId: string = org.id;
 
     const { data: lead, error } = await supabase
       .from("leads")
       .insert({
-        organization_id: org.id,
+        organization_id: orgId,
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
@@ -221,7 +228,7 @@ export const submitPublicLead = createServerFn({ method: "POST" })
 
     if (data.quote) {
       await supabase.from("quote_requests").insert({
-        organization_id: org.id,
+        organization_id: orgId,
         form_id: data.quote.formId,
         lead_id: lead.id,
         answers: data.quote.answers,
@@ -235,7 +242,7 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       if (Number.isNaN(starts.getTime())) throw new Error("Pick a valid appointment time.");
       const ends = new Date(starts.getTime() + data.booking.durationMinutes * 60_000);
       await supabase.from("appointments").insert({
-        organization_id: org.id,
+        organization_id: orgId,
         lead_id: lead.id,
         service_id: data.serviceId || null,
         name: data.name,
@@ -256,7 +263,7 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       consultation: `Consultation request: ${data.name}`,
     };
     await supabase.from("notifications").insert({
-      organization_id: org.id,
+      organization_id: orgId,
       title: titles[data.kind] ?? `New lead: ${data.name}`,
       body: [data.serviceInterest, data.city, data.estimatedValue ? `$${data.estimatedValue} estimated` : null]
         .filter(Boolean)
@@ -298,13 +305,14 @@ export const trackPublicEvent = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: org } = await supabase
-      .from("organizations")
+      .from("public_organizations")
       .select("id")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!org) return { ok: false };
+    if (!org?.id) return { ok: false };
+    const orgId: string = org.id;
     await supabase.from("analytics_events").insert({
-      organization_id: org.id,
+      organization_id: orgId,
       event_type: data.eventType,
       path: data.path?.slice(0, 200) ?? null,
       source: data.source?.slice(0, 60) ?? null,
