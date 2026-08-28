@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppointmentStatus, LeadStatus } from "@/lib/domain";
+import { generateWebsitePlan, type GoalKey } from "@/lib/website-plan";
 import {
   AUTOMATION_RECIPES,
   enqueueAutomations,
