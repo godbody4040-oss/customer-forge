@@ -19,6 +19,14 @@ import { cn } from "@/lib/utils";
 import { readSeo } from "@/lib/site-seo";
 import { canManage } from "@/lib/domain";
 import { WebsiteReview } from "@/components/app/WebsiteReview";
+import {
+  AiCopyAssistant,
+  RevoraScorePanel,
+  SiteEnginePanel,
+  VersionHistory,
+} from "@/components/app/SiteEngine";
+import { EDITABLE_COPY_FIELDS, growthRecommendations, readCopy, revoraScore } from "@/lib/site-engine";
+import { useScoreFacts } from "@/lib/site-engine.hooks";
 
 export const Route = createFileRoute("/_authenticated/app/website")({
   head: () => ({
@@ -44,6 +52,31 @@ function WebsitePage() {
   const profile = profileQuery.data;
   const settings = settingsQuery.data;
   const seo = readSeo(settings?.seo);
+  const facts = useScoreFacts(orgId);
+  const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
+  const copy = readCopy(generation?.["copy"]);
+  const manage = canManage(ws?.workspace?.role ?? "viewer");
+  const score = revoraScore({
+    profile,
+    seo,
+    servicesCount: facts.data?.servicesCount ?? (services ?? []).length,
+    pricedServicesCount: facts.data?.pricedServicesCount ?? 0,
+    mediaCount: facts.data?.mediaCount ?? 0,
+    reviewCount: facts.data?.reviewCount ?? 0,
+    socialLinks: facts.data?.socialLinks ?? 0,
+    quoteFormCount: facts.data?.quoteFormCount ?? 0,
+    bookableCount: facts.data?.bookableCount ?? 0,
+    hasCopy: !!copy,
+  });
+  const recommendations = growthRecommendations(
+    score,
+    facts.data?.signals ?? { visitors: 0, leads: 0, bookings: 0, callClicks: 0, formViews: 0 },
+  );
+  const copyFields = copy
+    ? Object.fromEntries(
+        EDITABLE_COPY_FIELDS.map((f) => [f.key, String((copy as Record<string, unknown>)[f.key] ?? "")]),
+      )
+    : {};
   const [template, setTemplate] = useState<string | null>(null);
   const activeTemplate = template ?? settings?.template ?? "default";
 
@@ -76,11 +109,28 @@ function WebsitePage() {
         ) : null}
       </div>
 
+      <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
+
+      <RevoraScorePanel score={score.score} factors={score.factors} recommendations={recommendations} />
+
+      <AiCopyAssistant
+        organizationId={orgId}
+        fields={copyFields}
+        canManage={manage}
+        onApply={(patch) =>
+          saveSettings.mutate({
+            generation: { ...(generation ?? {}), copy: { ...(copy ?? {}), ...patch } },
+          })
+        }
+      />
+
+      <VersionHistory organizationId={orgId} canManage={manage} />
+
       <WebsiteReview
         organizationId={orgId}
         slug={org?.slug}
         settings={settings}
-        canManage={canManage(ws?.workspace?.role ?? "viewer")}
+        canManage={manage}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
