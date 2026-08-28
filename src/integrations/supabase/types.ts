@@ -185,11 +185,102 @@ export type Database = {
           },
         ]
       }
+      automation_runs: {
+        Row: {
+          action_type: string
+          appointment_id: string | null
+          automation_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          organization_id: string
+          recipient: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          step_id: string | null
+          subject: string | null
+          trigger_event: string
+        }
+        Insert: {
+          action_type: string
+          appointment_id?: string | null
+          automation_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          organization_id: string
+          recipient?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          step_id?: string | null
+          subject?: string | null
+          trigger_event: string
+        }
+        Update: {
+          action_type?: string
+          appointment_id?: string | null
+          automation_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          organization_id?: string
+          recipient?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          step_id?: string | null
+          subject?: string | null
+          trigger_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "automation_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_steps: {
         Row: {
           action_type: string
           automation_id: string
           body: string | null
+          channel: string | null
           created_at: string
           delay_minutes: number
           id: string
@@ -201,6 +292,7 @@ export type Database = {
           action_type?: string
           automation_id: string
           body?: string | null
+          channel?: string | null
           created_at?: string
           delay_minutes?: number
           id?: string
@@ -212,6 +304,7 @@ export type Database = {
           action_type?: string
           automation_id?: string
           body?: string | null
+          channel?: string | null
           created_at?: string
           delay_minutes?: number
           id?: string
@@ -500,6 +593,64 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_activities: {
+        Row: {
+          actor_id: string | null
+          appointment_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string | null
+          metadata: Json
+          organization_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          appointment_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          lead_id?: string | null
+          metadata?: Json
+          organization_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          appointment_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          metadata?: Json
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -846,6 +997,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quote_addons: {
+        Row: {
+          created_at: string
+          description: string | null
+          form_id: string
+          id: string
+          label: string
+          organization_id: string
+          price: number
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          form_id: string
+          id?: string
+          label: string
+          organization_id: string
+          price?: number
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          form_id?: string
+          id?: string
+          label?: string
+          organization_id?: string
+          price?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_addons_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "quote_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_addons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quote_forms: {
         Row: {
