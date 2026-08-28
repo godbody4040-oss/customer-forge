@@ -1,0 +1,1 @@
+GRANT SELECT (is_suspended) ON public.organizations TO anon;
