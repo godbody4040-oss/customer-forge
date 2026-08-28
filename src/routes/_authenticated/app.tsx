@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
   Bell,
@@ -7,9 +8,12 @@ import {
   ExternalLink,
   Globe,
   LayoutDashboard,
+  LifeBuoy,
   LogOut,
   Menu,
+  Rocket,
   Settings,
+  Shield,
   Users,
   Wrench,
   X,
@@ -19,7 +23,9 @@ import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { useNotifications } from "@/lib/queries";
 import { useSignOut, useWorkspace } from "@/lib/use-tenant";
-import { relative } from "@/lib/format";
+import { endSupportSession } from "@/lib/admin.functions";
+import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
+import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -32,6 +38,7 @@ const NAV = [
   { to: "/app/calendar", label: "Calendar", icon: CalendarDays, exact: false },
   { to: "/app/services", label: "Services & Quotes", icon: Wrench, exact: false },
   { to: "/app/website", label: "Website", icon: Globe, exact: false },
+  { to: "/app/launch", label: "Launch", icon: Rocket, exact: false },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false },
   { to: "/app/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
@@ -45,10 +52,14 @@ function AppShell() {
   const org = data?.workspace?.organization;
   const { data: notifications } = useNotifications(org?.id);
   const unread = (notifications ?? []).filter((n) => !n.is_read).length;
+  const { mode: supportMode } = useSupportMode();
+  const endSupport = useServerFn(endSupportSession);
+  const supporting = Boolean(data?.supporting && supportMode);
 
   useEffect(() => {
     if (!isLoading && data && !data.workspace) navigate({ to: "/onboarding", replace: true });
   }, [data, isLoading, navigate]);
+
 
   return (
     <div className="min-h-screen bg-background lg:flex">
@@ -95,10 +106,23 @@ function AppShell() {
           </div>
         ) : null}
 
+        {data?.isSuperAdmin ? (
+          <div className="p-2.5">
+            <Link
+              to="/admin"
+              onClick={() => setNavOpen(false)}
+              className="flex items-center gap-2.5 rounded-md border border-border px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
+            >
+              <Shield className="size-4" aria-hidden="true" /> Platform admin
+            </Link>
+          </div>
+        ) : null}
+
         <div className="p-2.5">
           <button
             type="button"
             onClick={async () => {
+              writeSupportMode(null);
               await signOut();
               navigate({ to: "/auth", replace: true });
             }}
@@ -110,6 +134,29 @@ function AppShell() {
       </aside>
 
       <div className="min-w-0 flex-1">
+        {supporting && supportMode ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/40 bg-accent/15 px-4 py-2.5">
+            <p className="flex items-center gap-2 text-[12px]">
+              <LifeBuoy className="size-4 text-accent" aria-hidden="true" />
+              <span>
+                <strong>Support mode</strong> — you are working inside {supportMode.organizationName}. This
+                session started {dateLong(supportMode.startedAt)} and is recorded in the audit log.
+              </span>
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                await endSupport({ data: { sessionId: supportMode.sessionId } });
+                writeSupportMode(null);
+                navigate({ to: "/admin/clients/$orgId", params: { orgId: supportMode.organizationId } });
+              }}
+            >
+              End support session
+            </Button>
+          </div>
+        ) : null}
+
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-sm">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -124,12 +171,17 @@ function AppShell() {
             <LogoMark className="lg:hidden" />
             <div className="hidden min-w-0 sm:block">
               <p className="truncate font-display text-[14px] font-semibold">
-                {org?.name ?? "Your business"}
+                {org ? `Welcome back, ${org.name}` : "Your business"}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {data?.workspace?.role ? `Signed in as ${data.workspace.role}` : "Loading…"}
+                {supporting
+                  ? "Platform support session"
+                  : data?.workspace?.role
+                    ? `Signed in as ${data.workspace.role}`
+                    : "Loading…"}
               </p>
             </div>
+
           </div>
 
           <div className="flex items-center gap-2">
