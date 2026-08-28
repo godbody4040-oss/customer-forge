@@ -126,7 +126,7 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
         kind: "website_copy",
         model: COPY_MODEL,
         instruction: null,
-        result: copy as unknown as Record<string, unknown>,
+        result: copy as unknown as never,
         created_by: userId,
       });
       await step("conversion");
@@ -247,7 +247,7 @@ export const aiEditSiteCopy = createServerFn({ method: "POST" })
       kind: "copy_edit",
       model: COPY_MODEL,
       instruction: data.instruction,
-      result: result as unknown as Record<string, unknown>,
+      result: result as unknown as never,
       created_by: userId,
     });
 
