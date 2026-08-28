@@ -14,6 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          instruction: string | null
+          job_id: string | null
+          kind: string
+          model: string | null
+          organization_id: string
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instruction?: string | null
+          job_id?: string | null
+          kind: string
+          model?: string | null
+          organization_id: string
+          result?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instruction?: string | null
+          job_id?: string | null
+          kind?: string
+          model?: string | null
+          organization_id?: string
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "generation_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           campaign: string | null
@@ -630,6 +688,63 @@ export type Database = {
           },
           {
             foreignKeyName: "customers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generation_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          current_step: string | null
+          error_message: string | null
+          id: string
+          organization_id: string
+          progress: number
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          progress?: number
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          progress?: number
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_jobs_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "public_organizations"
@@ -1862,6 +1977,63 @@ export type Database = {
             foreignKeyName: "website_settings_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: true
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          generation: Json
+          id: string
+          label: string | null
+          organization_id: string
+          pages: Json
+          published_at: string | null
+          seo: Json
+          template: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          generation?: Json
+          id?: string
+          label?: string | null
+          organization_id: string
+          pages?: Json
+          published_at?: string | null
+          seo?: Json
+          template?: string | null
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          generation?: Json
+          id?: string
+          label?: string | null
+          organization_id?: string
+          pages?: Json
+          published_at?: string | null
+          seo?: Json
+          template?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_versions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_versions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "public_organizations"
             referencedColumns: ["id"]
           },

@@ -8,6 +8,7 @@ import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
 import { getPublicSite, trackPublicEvent } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { readSeo } from "@/lib/site-seo";
+import { readCopy } from "@/lib/site-engine";
 
 export const Route = createFileRoute("/s/$slug")({
   loader: async ({ params }) => {
@@ -23,10 +24,15 @@ export const Route = createFileRoute("/s/$slug")({
     }
     const name = loaderData.org.name;
     const city = loaderData.profile?.city;
-    const title = `${name}${city ? ` — ${city}` : ""}`.slice(0, 60);
+    const title = (
+      readCopy((loaderData.settings?.generation as { copy?: unknown } | null)?.copy)?.metaTitle ||
+      `${name}${city ? ` — ${city}` : ""}`
+    ).slice(0, 60);
+    const generated = readCopy((loaderData.settings?.generation as { copy?: unknown } | null)?.copy);
     const description = (
-      readSeo(loaderData.settings?.seo).meta_description ??
-      loaderData.profile?.tagline ??
+      generated?.metaDescription ||
+      readSeo(loaderData.settings?.seo).meta_description ||
+      loaderData.profile?.tagline ||
       `Book ${name}${city ? ` in ${city}` : ""} online. See services, prices and reviews.`
     ).slice(0, 158);
     return {
@@ -65,6 +71,8 @@ function PublicSite() {
   const track = useServerFn(trackPublicEvent);
   const { org, profile, settings, services, reviews, gallery, social } = site;
   const seo = readSeo(settings?.seo);
+  const generation = (settings?.generation ?? null) as { copy?: unknown } | null;
+  const copy = readCopy(generation?.copy);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -83,12 +91,14 @@ function PublicSite() {
   const rating = reviews.length
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null;
-  const headline = seo.headline ?? `${org.name}${profile?.city ? ` in ${profile.city}` : ""}`;
+  const headline = copy?.heroHeadline ?? seo.headline ?? `${org.name}${profile?.city ? ` in ${profile.city}` : ""}`;
   const sub =
-    seo.subheadline ??
-    profile?.tagline ??
+    copy?.heroSubheadline ||
+    seo.subheadline ||
+    profile?.tagline ||
     "Straight answers, honest pricing, and work booked in under two minutes.";
-  const ctaLabel = seo.primary_cta_label ?? "Get my instant quote";
+  const ctaLabel = copy?.primaryCta || seo.primary_cta_label || "Get my instant quote";
+  const secondaryCta = copy?.secondaryCta || "Book an appointment";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -161,9 +171,19 @@ function PublicSite() {
                 <a href="#quote">{ctaLabel}</a>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <a href="#book">Book an appointment</a>
+                <a href="#book">{secondaryCta}</a>
               </Button>
             </div>
+            {copy?.benefits.length ? (
+              <ul className="mt-7 grid gap-2 sm:grid-cols-2">
+                {copy.benefits.slice(0, 4).map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2 text-[13px] text-muted-foreground">
+                    <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <dl className="mt-9 grid gap-4 sm:grid-cols-3">
               {profile?.phone ? (
                 <div>
@@ -202,6 +222,14 @@ function PublicSite() {
         </div>
       </section>
 
+      {copy?.intro ? (
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-3xl px-4 py-12 text-center">
+            <p className="text-[16px] leading-relaxed text-muted-foreground">{copy.intro}</p>
+          </div>
+        </section>
+      ) : null}
+
       {services.length ? (
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-14">
@@ -214,6 +242,12 @@ function PublicSite() {
                     <h3 className="font-display text-[15px] font-semibold">{service.name}</h3>
                     {service.featured ? <Pill tone="attention">Popular</Pill> : null}
                   </div>
+                  {(() => {
+                    const card = copy?.serviceCards.find((c) => c.name === service.name);
+                    return card?.copy ? (
+                      <p className="mt-2 flex-1 text-[13px] leading-relaxed text-muted-foreground">{card.copy}</p>
+                    ) : null;
+                  })()}
                   {service.description ? (
                     <p className="mt-2 flex-1 text-[13px] leading-relaxed text-muted-foreground">
                       {service.description}
@@ -236,14 +270,17 @@ function PublicSite() {
         </section>
       ) : null}
 
-      {profile?.description ? (
+      {copy?.about || profile?.description ? (
         <section className="border-b border-border">
           <div className="mx-auto max-w-3xl px-4 py-14">
             <p className="eyebrow">About</p>
             <h2 className="mt-1.5 font-display text-[28px] font-semibold">Why neighbors call us</h2>
             <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
-              {profile.description}
+              {copy?.about || profile?.description}
             </p>
+            {copy?.areaCopy ? (
+              <p className="mt-4 text-[14px] leading-relaxed text-muted-foreground">{copy.areaCopy}</p>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -293,6 +330,23 @@ function PublicSite() {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+      ) : null}
+
+      {copy?.faqs.length ? (
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-3xl px-4 py-14">
+            <p className="eyebrow">Questions</p>
+            <h2 className="mt-1.5 font-display text-[28px] font-semibold">Frequently asked</h2>
+            <dl className="mt-8 space-y-5">
+              {copy.faqs.map((faq) => (
+                <div key={faq.question}>
+                  <dt className="text-[14px] font-medium">{faq.question}</dt>
+                  <dd className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{faq.answer}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
       ) : null}
