@@ -309,3 +309,38 @@ export function useApplySectionEdits(organizationId: string | undefined) {
     onError: (error: Error) => toast.error(error.message || "Couldn't apply those changes."),
   });
 }
+
+/** Silent autosave for the builder wizard — no toast per keystroke batch. */
+export function useAutosaveProfile(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (patch: Record<string, unknown>) => {
+      const { error } = await supabase
+        .from("business_profiles")
+        .upsert({ organization_id: organizationId!, ...patch } as never, { onConflict: "organization_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["business_profile", organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't save your latest edit."),
+  });
+}
+
+/** Silent autosave for the workspace record (business name, trade, goal). */
+export function useAutosaveOrganization(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (patch: Record<string, unknown>) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update(patch as never)
+        .eq("id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["workspace"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't save your latest edit."),
+  });
+}
