@@ -152,3 +152,54 @@ export function useRestoreWebsiteVersion(organizationId: string | undefined) {
     onError: (error: Error) => toast.error(error.message || "Couldn't restore that version."),
   });
 }
+
+/* --------------------------- score / recommendations --------------------------- */
+
+/** Counts behind the Revora Website Score, read in one pass. */
+export function useScoreFacts(organizationId: string | undefined) {
+  return useQuery({
+    queryKey: ["score_facts", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const orgId = organizationId!;
+      const [services, media, reviews, social, forms, events] = await Promise.all([
+        supabase.from("services").select("price, starting_price, bookable").eq("organization_id", orgId).eq("is_active", true),
+        supabase.from("media").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+        supabase.from("reviews").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+        supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+        supabase.from("quote_forms").select("id", { count: "exact", head: true }).eq("organization_id", orgId).eq("is_active", true),
+        supabase
+          .from("analytics_events")
+          .select("event_type")
+          .eq("organization_id", orgId)
+          .gte("created_at", new Date(Date.now() - 30 * 86_400_000).toISOString())
+          .limit(20000),
+      ]);
+
+      const rows = services.data ?? [];
+      const s = (social.data ?? {}) as Record<string, unknown>;
+      const socialLinks = ["instagram", "facebook", "tiktok", "youtube", "google_business", "linkedin"].filter(
+        (k) => typeof s[k] === "string" && String(s[k]).trim(),
+      ).length;
+      const eventRows = events.data ?? [];
+      const countOf = (type: string) => eventRows.filter((e) => e.event_type === type).length;
+
+      return {
+        servicesCount: rows.length,
+        pricedServicesCount: rows.filter((r) => r.price != null || r.starting_price != null).length,
+        bookableCount: rows.filter((r) => r.bookable).length,
+        mediaCount: media.count ?? 0,
+        reviewCount: reviews.count ?? 0,
+        socialLinks,
+        quoteFormCount: forms.count ?? 0,
+        signals: {
+          visitors: countOf("page_view"),
+          leads: countOf("lead_submit") + countOf("quote_submit"),
+          bookings: countOf("booking_submit"),
+          callClicks: countOf("call_click"),
+          formViews: countOf("form_view"),
+        },
+      };
+    },
+  });
+}
