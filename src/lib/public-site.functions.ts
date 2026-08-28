@@ -30,7 +30,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
     const supabase = publicClient();
 
     const { data: org } = await supabase
-      .from("organizations")
+      .from("public_organizations")
       .select("id, name, slug, industry, is_demo")
       .eq("slug", data.slug)
       .maybeSingle();
@@ -48,7 +48,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
 
     const [profile, services, settings, social, reviews, gallery, quoteForm] = await Promise.all([
 
-      supabase.from("business_profiles").select("*").eq("organization_id", org.id).maybeSingle(),
+      supabase.from("public_business_profiles").select("*").eq("organization_id", org.id).maybeSingle(),
       supabase
         .from("services")
         .select(
@@ -60,10 +60,9 @@ export const getPublicSite = createServerFn({ method: "GET" })
       supabase.from("website_settings").select("*").eq("organization_id", org.id).maybeSingle(),
       supabase.from("social_profiles").select("*").eq("organization_id", org.id).maybeSingle(),
       supabase
-        .from("reviews")
+        .from("public_reviews")
         .select("id, author_name, rating, comment, created_at")
         .eq("organization_id", org.id)
-        .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(12),
       supabase
@@ -193,7 +192,7 @@ export const submitPublicLead = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: org } = await supabase
-      .from("organizations")
+      .from("public_organizations")
       .select("id, name")
       .eq("slug", data.slug)
       .maybeSingle();
@@ -298,7 +297,7 @@ export const trackPublicEvent = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: org } = await supabase
-      .from("organizations")
+      .from("public_organizations")
       .select("id")
       .eq("slug", data.slug)
       .maybeSingle();
