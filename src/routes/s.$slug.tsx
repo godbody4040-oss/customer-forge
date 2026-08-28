@@ -31,8 +31,8 @@ export const Route = createFileRoute("/s/$slug")({
     const generated = readCopy((loaderData.settings?.generation as { copy?: unknown } | null)?.copy);
     const description = (
       generated?.metaDescription ||
-      readSeo(loaderData.settings?.seo).meta_description ??
-      loaderData.profile?.tagline ??
+      readSeo(loaderData.settings?.seo).meta_description ||
+      loaderData.profile?.tagline ||
       `Book ${name}${city ? ` in ${city}` : ""} online. See services, prices and reviews.`
     ).slice(0, 158);
     return {
@@ -94,8 +94,8 @@ function PublicSite() {
   const headline = copy?.heroHeadline ?? seo.headline ?? `${org.name}${profile?.city ? ` in ${profile.city}` : ""}`;
   const sub =
     copy?.heroSubheadline ||
-    seo.subheadline ??
-    profile?.tagline ??
+    seo.subheadline ||
+    profile?.tagline ||
     "Straight answers, honest pricing, and work booked in under two minutes.";
   const ctaLabel = copy?.primaryCta || seo.primary_cta_label || "Get my instant quote";
   const secondaryCta = copy?.secondaryCta || "Book an appointment";
