@@ -89,6 +89,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
       sort_order: number;
       options: { id: string; label: string; price_modifier: number; modifier_type: string }[];
     }[] = [];
+    let addons: { id: string; label: string; description: string | null; price: number }[] = [];
 
     if (quoteForm.data) {
       const { data: qs } = await supabase
@@ -115,6 +116,18 @@ export const getPublicSite = createServerFn({ method: "GET" })
             modifier_type: o.modifier_type,
           })),
       }));
+
+      const { data: adds } = await supabase
+        .from("quote_addons")
+        .select("id, label, description, price, sort_order")
+        .eq("form_id", quoteForm.data.id)
+        .order("sort_order");
+      addons = (adds ?? []).map((a) => ({
+        id: a.id,
+        label: a.label,
+        description: a.description,
+        price: Number(a.price),
+      }));
     }
 
     return {
@@ -125,7 +138,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
       social: social.data,
       reviews: reviews.data ?? [],
       gallery: gallery.data ?? [],
-      quote: quoteForm.data ? { form: quoteForm.data, questions } : null,
+      quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     };
   });
 
