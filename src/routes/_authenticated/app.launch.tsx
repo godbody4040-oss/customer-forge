@@ -16,7 +16,10 @@ import {
   useTeam,
   useWebsiteSettings,
   useSaveWebsiteSettings,
+  useQuoteBuilder,
+  useSetWebsiteReviewState,
 } from "@/lib/queries";
+import { reviewStateMeta, revoraSubdomain } from "@/lib/website-plan";
 import { saveOwnDomain } from "@/lib/domain.functions";
 import { DOMAIN_STATES, PUBLISH_STATES, readiness } from "@/lib/readiness";
 import { dateLong, number } from "@/lib/format";
@@ -56,6 +59,8 @@ function Launch() {
   const { data: analytics } = useAnalytics(orgId, 30);
   const { data: team } = useTeam(orgId);
   const saveSettings = useSaveWebsiteSettings(orgId);
+  const { data: quoteBuilder } = useQuoteBuilder(orgId);
+  const setReviewState = useSetWebsiteReviewState(orgId);
   const domainFn = useServerFn(saveOwnDomain);
   const queryClient = useQueryClient();
   const [domain, setDomain] = useState<string | null>(null);
@@ -77,8 +82,8 @@ function Launch() {
     settings,
     servicesCount: active.length,
     bookableCount: active.filter((s) => s.bookable).length,
-    mediaCount: 0,
-    quoteFormCount: 0,
+    mediaCount: profile?.hero_image_url ? 1 : 0,
+    quoteFormCount: quoteBuilder?.form ? 1 : 0,
     analyticsCount: (analytics ?? []).length,
   });
 
@@ -86,14 +91,28 @@ function Launch() {
   const publishState = settings?.publish_state ?? "draft";
   const siteUrl = settings?.custom_domain ? `https://${settings.custom_domain}` : `/s/${org?.slug ?? ""}`;
 
-  const setPublish = (state: string) =>
+  const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
+  const reviewMeta = reviewStateMeta(reviewState);
+  const approved = ["approved", "domain_setup", "publishing", "live"].includes(reviewState);
+
+  const setPublish = (state: string) => {
+    if (state === "published") {
+      setReviewState.mutate({ state: "live", message: "Website live." });
+    } else if (state === "unpublished") {
+      setReviewState.mutate({ state: "approved", message: "Website taken offline." });
+    }
     saveSettings.mutate(
-      { publish_state: state, published: state === "published", last_published_at: new Date().toISOString() },
+      {
+        publish_state: state,
+        published: state === "published",
+        ...(state === "published" ? { last_published_at: new Date().toISOString() } : {}),
+      },
       {
         onSuccess: () => toast.success(`Website ${PUBLISH_STATES[state]?.label.toLowerCase()}.`),
         onError: (error: Error) => toast.error(error.message),
       },
     );
+  };
 
   return (
     <div className="space-y-6">
@@ -169,6 +188,24 @@ function Launch() {
           }
         />
         <p className="text-[12px] text-muted-foreground">{PUBLISH_STATES[publishState]?.help}</p>
+        <div className="rounded-md border border-border p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone={reviewMeta.tone}>{reviewMeta.label}</Pill>
+            <span className="text-[12px] text-muted-foreground">{reviewMeta.help}</span>
+          </div>
+          {!approved ? (
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              Approve your website on the{" "}
+              <Link to="/app/website" className="text-primary hover:underline">
+                Website
+              </Link>{" "}
+              page before publishing.
+            </p>
+          ) : null}
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            Free Revora address: {revoraSubdomain(org?.slug ?? "")} (available once published)
+          </p>
+        </div>
         {manage ? (
           <div className="flex flex-wrap gap-2">
             {(["draft", "preview", "published", "unpublished"] as const).map((state) => (
@@ -176,7 +213,7 @@ function Launch() {
                 key={state}
                 size="sm"
                 variant={state === publishState ? "secondary" : state === "published" ? "signal" : "outline"}
-                disabled={saveSettings.isPending}
+                disabled={saveSettings.isPending || (state === "published" && !approved)}
                 onClick={() => setPublish(state)}
               >
                 {PUBLISH_STATES[state]?.label}
@@ -237,9 +274,43 @@ function Launch() {
       </Panel>
 
       <Panel className="space-y-3">
-        <SectionHeading eyebrow="Handoff" title="Your system at a glance" />
+        <SectionHeading
+          eyebrow="Handoff"
+          title="Your system at a glance"
+          action={
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const lines = [
+                  `Business: ${org?.name ?? ""}`,
+                  `Website: ${siteUrl}`,
+                  `Revora address: ${revoraSubdomain(org?.slug ?? "")}`,
+                  `Website status: ${reviewMeta.label}`,
+                  `Publishing: ${PUBLISH_STATES[publishState]?.label ?? publishState}`,
+                  `Domain: ${DOMAIN_STATES[domainStatus]?.label ?? domainStatus}`,
+                  `Phone: ${profile?.phone ?? "Not set"}`,
+                  `Email: ${profile?.email ?? "Not set"}`,
+                  `Service area: ${profile?.service_area ?? "Not set"}`,
+                  `Services live: ${active.length}`,
+                  `Setup complete: ${score.score}%`,
+                ].join("\n");
+                const url = URL.createObjectURL(new Blob([lines], { type: "text/plain" }));
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${org?.slug ?? "business"}-revora-handoff.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Download handoff sheet
+            </Button>
+          }
+        />
         <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
           <Row label="Website address" value={siteUrl} />
+          <Row label="Revora address" value={revoraSubdomain(org?.slug ?? "")} />
+          <Row label="Website status" value={reviewMeta.label} />
           <Row label="Login page" value="/auth" />
           <Row label="Business phone" value={profile?.phone ?? "Not set"} />
           <Row label="Business email" value={profile?.email ?? "Not set"} />
@@ -249,7 +320,7 @@ function Launch() {
           />
           <Row label="Service area" value={profile?.service_area ?? "Not set"} />
           <Row label="Plan" value={`${org?.plan_id ?? "No plan"} · ${org?.subscription_status ?? ""}`} />
-          <Row label="Support" value={profile?.support_email ?? "support@localleadengine.com"} />
+          <Row label="Support" value={profile?.support_email ?? "Revorabusiness0@gmail.com"} />
           <Row label="Team members" value={number((team ?? []).length)} />
           <Row label="Setup complete" value={`${score.score}%`} />
         </dl>

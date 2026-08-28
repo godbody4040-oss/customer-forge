@@ -17,6 +17,8 @@ import { useWorkspace } from "@/lib/use-tenant";
 import { TEMPLATES } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 import { readSeo } from "@/lib/site-seo";
+import { canManage } from "@/lib/domain";
+import { WebsiteReview } from "@/components/app/WebsiteReview";
 
 export const Route = createFileRoute("/_authenticated/app/website")({
   head: () => ({
@@ -73,6 +75,13 @@ function WebsitePage() {
           </Button>
         ) : null}
       </div>
+
+      <WebsiteReview
+        organizationId={orgId}
+        slug={org?.slug}
+        settings={settings}
+        canManage={canManage(ws?.workspace?.role ?? "viewer")}
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <MetricCard

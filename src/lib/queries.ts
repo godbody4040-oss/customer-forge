@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppointmentStatus, LeadStatus } from "@/lib/domain";
+import { generateWebsitePlan, type GoalKey } from "@/lib/website-plan";
 import {
   AUTOMATION_RECIPES,
   enqueueAutomations,
@@ -1075,4 +1076,158 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     saveAddon,
     deleteAddon,
   };
+}
+
+/* --------------------------- website generation & review --------------------------- */
+
+export function useWebsiteRequests(organizationId: string | undefined) {
+  return useQuery({
+    queryKey: ["website_requests", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("website_requests")
+        .select("*")
+        .eq("organization_id", organizationId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useCreateWebsiteRequest(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      title: string;
+      details?: string | null;
+      kind?: string;
+      priority?: string;
+    }) => {
+      const userId = (await supabase.auth.getUser()).data.user?.id ?? null;
+      const { error } = await supabase.from("website_requests").insert({
+        organization_id: organizationId!,
+        created_by: userId,
+        title: input.title,
+        details: input.details ?? null,
+        kind: input.kind ?? "change",
+        priority: input.priority ?? "normal",
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Request sent to the Revora team.");
+      void queryClient.invalidateQueries({ queryKey: ["website_requests"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't send that request."),
+  });
+}
+
+export function useUpdateWebsiteRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { error } = await supabase.from("website_requests").update(patch as never).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Request updated.");
+      void queryClient.invalidateQueries({ queryKey: ["website_requests"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't update that request."),
+  });
+}
+
+/** Regenerates the website plan from the client's real, stored information. */
+export function useGenerateWebsite(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const orgId = organizationId!;
+      const [org, profile, services, media, socials, forms] = await Promise.all([
+        supabase.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
+        supabase.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+        supabase.from("services").select("name, description, price").eq("organization_id", orgId),
+        supabase.from("media").select("id").eq("organization_id", orgId),
+        supabase.from("social_profiles").select("id").eq("organization_id", orgId),
+        supabase.from("quote_forms").select("id").eq("organization_id", orgId),
+      ]);
+      const p = (profile.data ?? {}) as Record<string, unknown>;
+      const testimonials = Array.isArray(p["testimonials"]) ? (p["testimonials"] as unknown[]) : [];
+      const goalsRaw = (p["website_goals"] as string[] | undefined) ?? [];
+      const goals = (goalsRaw.length
+        ? goalsRaw
+        : [(org.data?.conversion_goal as string | null) ?? "quote"]) as GoalKey[];
+      const plan = generateWebsitePlan({
+        businessName: (org.data?.name as string) ?? "",
+        industry: (org.data?.industry as string) ?? "",
+        description: (p["description"] as string) ?? null,
+        city: (p["city"] as string) ?? null,
+        state: (p["state"] as string) ?? null,
+        serviceArea: (p["service_area"] as string) ?? null,
+        phone: (p["phone"] as string) ?? null,
+        email: (p["email"] as string) ?? null,
+        goals: goals.length ? goals : ["quote"],
+        services: (services.data ?? []) as { name: string; description?: string | null; price?: number | null }[],
+        photoCount: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
+        testimonialCount: testimonials.length,
+        hasCredentials: Boolean(p["certifications"] || p["awards"] || p["years_in_business"]),
+        hasHours: Boolean(p["hours"]),
+        socialLinks: (socials.data ?? []).length,
+      });
+
+      const { error } = await supabase.from("website_settings").upsert(
+        {
+          organization_id: orgId,
+          template: plan.template,
+          generation: plan as unknown as Record<string, unknown>,
+          generated_at: plan.generatedAt,
+          review_state: "ready_for_review",
+          seo: {
+            headline: plan.headline,
+            subheadline: plan.subheadline,
+            meta_description: plan.metaDescription,
+            primary_cta_label: plan.primaryCtaLabel,
+            title: plan.seoTitle,
+          },
+          publish_state: "preview",
+        } as never,
+        { onConflict: "organization_id" },
+      );
+      if (error) throw error;
+      if (!(forms.data ?? []).length && goals.includes("quote")) {
+        // no quote form yet — surfaced to the client as a setup item, not auto-faked
+      }
+      return plan;
+    },
+    onSuccess: () => {
+      toast.success("Website generated. Review it before launch.");
+      void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't generate the website."),
+  });
+}
+
+export function useSetWebsiteReviewState(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ state, message }: { state: string; message?: string }) => {
+      const patch: Record<string, unknown> = { organization_id: organizationId!, review_state: state };
+      if (state === "approved") {
+        patch["approved_at"] = new Date().toISOString();
+        patch["approved_by"] = (await supabase.auth.getUser()).data.user?.id ?? null;
+      }
+      const { error } = await supabase
+        .from("website_settings")
+        .upsert(patch as never, { onConflict: "organization_id" });
+      if (error) throw error;
+      return message;
+    },
+    onSuccess: (message) => {
+      toast.success(message || "Website status updated.");
+      void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't update the website status."),
+  });
 }
