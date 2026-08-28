@@ -56,7 +56,7 @@ function WebsitePage() {
   const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
   const copy = readCopy(generation?.["copy"]);
   const manage = canManage(ws?.workspace?.role ?? "viewer");
-  const score = revoraScore({
+  const siteScore = revoraScore({
     profile,
     seo,
     servicesCount: facts.data?.servicesCount ?? (services ?? []).length,
@@ -69,7 +69,7 @@ function WebsitePage() {
     hasCopy: !!copy,
   });
   const recommendations = growthRecommendations(
-    score,
+    siteScore,
     facts.data?.signals ?? { visitors: 0, leads: 0, bookings: 0, callClicks: 0, formViews: 0 },
   );
   const copyFields = copy
@@ -111,7 +111,7 @@ function WebsitePage() {
 
       <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
 
-      <RevoraScorePanel score={score.score} factors={score.factors} recommendations={recommendations} />
+      <RevoraScorePanel score={siteScore.score} factors={siteScore.factors} recommendations={recommendations} />
 
       <AiCopyAssistant
         organizationId={orgId}
