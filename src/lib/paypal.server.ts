@@ -76,7 +76,7 @@ async function api<T>(
   const response = await fetch(`${config.apiBase}${path}`, {
     method: init?.method ?? "GET",
     headers,
-    body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+    ...(init?.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
   const text = await response.text();
   const parsed = text ? JSON.parse(text) : {};

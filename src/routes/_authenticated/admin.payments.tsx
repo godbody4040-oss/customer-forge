@@ -29,7 +29,7 @@ const STATUS_TONE = (status: string) =>
 
 function AdminPayments() {
   const { data: ws } = useWorkspace();
-  const isSuperAdmin = !!ws?.workspace?.isSuperAdmin;
+  const isSuperAdmin = !!ws?.isSuperAdmin;
   const { data: payments, isLoading } = useAllPayments(isSuperAdmin);
   const { data: config } = usePaymentConfig();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -59,9 +59,9 @@ function AdminPayments() {
     if (!open) return;
     setMessage(null);
     const value = amount.trim() ? Number(amount) : undefined;
-    const result = await runRefund({ data: { paymentId: open.id, amount: value, note: note || undefined } });
+    const result = await runRefund({ data: { paymentId: open.id, amount: value } });
     if (result.ok) {
-      setMessage(`PayPal confirmed refund status: ${result.refundStatus}.`);
+      setMessage(`PayPal confirmed the refund. Payment is now ${result.status.replace("_", " ")}.`);
       setAmount("");
       setNote("");
       void queryClient.invalidateQueries({ queryKey: ["payments", "all"] });
