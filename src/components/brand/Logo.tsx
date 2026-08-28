@@ -20,7 +20,7 @@ export function Logo({ className, wordmark = true }: { className?: string; wordm
       <LogoMark />
       {wordmark ? (
         <span className="font-display text-[15px] font-semibold tracking-tight">
-          Customer Forge
+          Revora
         </span>
       ) : null}
     </span>

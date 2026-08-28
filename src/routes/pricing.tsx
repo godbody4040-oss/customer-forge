@@ -12,13 +12,13 @@ export const Route = createFileRoute("/pricing")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Pricing — Customer Forge" },
+      { title: "Pricing — Revora" },
       {
         name: "description",
         content:
           "Simple monthly pricing for local service businesses: website, instant quotes, booking, CRM and analytics. 14-day free trial, no card required.",
       },
-      { property: "og:title", content: "Pricing — Customer Forge" },
+      { property: "og:title", content: "Pricing — Revora" },
       {
         property: "og:description",
         content: "Plans from Starter to Pro. Everything you need to turn local searches into booked jobs.",
@@ -35,7 +35,7 @@ const FAQ = [
   },
   {
     q: "Can I use my own domain?",
-    a: "Yes. Start on your Customer Forge address, then point your own domain at it whenever you're ready.",
+    a: "Yes. Start on your Revora address, then point your own domain at it whenever you're ready.",
   },
   {
     q: "What if I have more than one location?",

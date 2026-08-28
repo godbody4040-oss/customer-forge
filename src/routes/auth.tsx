@@ -24,12 +24,12 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — Customer Forge" },
+      { title: "Sign in — Revora" },
       {
         name: "description",
-        content: "Sign in or create your Customer Forge account to manage leads, bookings and your business website.",
+        content: "Sign in or create your Revora account to manage leads, bookings and your business website.",
       },
-      { property: "og:title", content: "Sign in — Customer Forge" },
+      { property: "og:title", content: "Sign in — Revora" },
       { property: "og:description", content: "Access your business command center." },
       { name: "robots", content: "noindex" },
     ],
@@ -76,7 +76,7 @@ function AuthPage() {
           setIsSignup(false);
           return;
         }
-        toast.success("Welcome to Customer Forge.");
+        toast.success("Welcome to Revora.");
         navigate({ to: "/onboarding", replace: true });
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });

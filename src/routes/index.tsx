@@ -25,13 +25,13 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Customer Forge — Turn local searches into booked jobs" },
+      { title: "Revora — Turn local searches into booked jobs" },
       {
         name: "description",
         content:
-          "Customer Forge is a complete customer-acquisition system for local businesses: website, lead capture, instant quotes, booking, CRM, follow-up and analytics in one place.",
+          "Revora is a complete customer-acquisition system for local businesses: website, lead capture, instant quotes, booking, CRM, follow-up and analytics in one place.",
       },
-      { property: "og:title", content: "Customer Forge — Turn local searches into booked jobs" },
+      { property: "og:title", content: "Revora — Turn local searches into booked jobs" },
       {
         property: "og:description",
         content:
@@ -122,7 +122,7 @@ function Landing() {
                 Turn local searches into booked jobs.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                Your business deserves more than a website. Customer Forge gives you a complete
+                Your business deserves more than a website. Revora gives you a complete
                 system for getting found, capturing leads, booking customers, following up and
                 growing repeat business.
               </p>
@@ -201,7 +201,7 @@ function Landing() {
               See what your business could look like.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-              Enter a few details and see how Customer Forge can turn your online presence into a
+              Enter a few details and see how Revora can turn your online presence into a
               customer-acquisition system.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">

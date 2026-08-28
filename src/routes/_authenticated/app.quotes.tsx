@@ -26,7 +26,7 @@ import { currency, relative } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/app/quotes")({
   head: () => ({
     meta: [
-      { title: "Quote calculator — Customer Forge" },
+      { title: "Quote calculator — Revora" },
       {
         name: "description",
         content: "Build the instant estimate that turns website visitors into priced leads.",

@@ -15,13 +15,13 @@ import { INDUSTRIES } from "@/lib/domain";
 export const Route = createFileRoute("/demo")({
   head: () => ({
     meta: [
-      { title: "See Customer Forge for your business — live demo" },
+      { title: "See Revora for your business — live demo" },
       {
         name: "description",
         content:
           "Walk the real customer journey on a live business site: instant quote, lead capture, booking and pipeline. Then request a preview for your own business.",
       },
-      { property: "og:title", content: "See Customer Forge for your business" },
+      { property: "og:title", content: "See Revora for your business" },
       {
         property: "og:description",
         content: "A live, interactive demo of the quote → lead → booking flow, plus a preview request for your business.",
@@ -138,7 +138,7 @@ function DemoPage() {
                 title="See what your business could look like"
               />
               <p className="mt-4 max-w-md text-[14px] leading-relaxed text-muted-foreground">
-                Enter a few details and we'll show you how Customer Forge would turn your online
+                Enter a few details and we'll show you how Revora would turn your online
                 presence into a customer-acquisition system. No card, no obligation.
               </p>
             </div>

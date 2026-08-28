@@ -27,7 +27,7 @@ import { currency, relative } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/app/services")({
   head: () => ({
     meta: [
-      { title: "Services & Quotes — Customer Forge" },
+      { title: "Services & Quotes — Revora" },
       { name: "description", content: "Manage your service menu and review incoming quote requests." },
       { name: "robots", content: "noindex" },
     ],

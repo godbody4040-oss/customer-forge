@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/app/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics — Customer Forge" },
+      { title: "Analytics — Revora" },
       { name: "description", content: "Traffic, leads, bookings and conversion by source." },
       { name: "robots", content: "noindex" },
     ],
