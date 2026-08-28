@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
+import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
@@ -28,18 +29,21 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A conversion-first website, instant quote calculator, booking calendar and lead CRM for local service businesses. Launch in a day, see every lead in one place.",
+          "Customer Forge is a complete customer-acquisition system for local businesses: website, lead capture, instant quotes, booking, CRM, follow-up and analytics in one place.",
       },
       { property: "og:title", content: "Customer Forge — Turn local searches into booked jobs" },
       {
         property: "og:description",
         content:
-          "Website, instant quotes, bookings and a lead pipeline built for detailers, stylists, landscapers and contractors.",
+          "Get found, capture leads, quote instantly, book customers, follow up and grow repeat business — one system for local businesses.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,
 });
+
 
 const PROBLEMS = [
   {
