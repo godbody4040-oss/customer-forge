@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -9,34 +9,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorNote } from "@/components/app/Bits";
-import { CONVERSION_GOALS, INDUSTRIES } from "@/lib/domain";
-import { slugify } from "@/lib/format";
+import { INDUSTRIES } from "@/lib/domain";
 import { useWorkspace } from "@/lib/use-tenant";
 import { cn } from "@/lib/utils";
+import {
+  WEBSITE_GOALS,
+  generateWebsitePlan,
+  revoraSubdomain,
+  safeSlug,
+  type GoalKey,
+} from "@/lib/website-plan";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Set up your business — Revora" },
-      { name: "description", content: "Three steps to a live, conversion-first business website." },
+      { title: "Build your website — Revora" },
+      {
+        name: "description",
+        content: "Answer six short steps. Revora builds your website and connects it to your growth system.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: Onboarding,
 });
 
+type ServiceDraft = { name: string; description: string; price: string };
+type TestimonialDraft = { name: string; text: string };
+
 type Draft = {
   businessName: string;
   industry: string;
   city: string;
-  phone: string;
-  goal: string;
+  state: string;
+  serviceArea: string;
   about: string;
-  serviceName: string;
-  servicePrice: string;
+  services: ServiceDraft[];
+  primaryColor: string;
+  accentColor: string;
+  logoUrl: string;
+  heroImageUrl: string;
+  phone: string;
+  email: string;
+  address: string;
+  hours: string;
+  website: string;
+  instagram: string;
+  facebook: string;
+  google: string;
+  yearsInBusiness: string;
+  certifications: string;
+  awards: string;
+  testimonials: TestimonialDraft[];
+  goals: GoalKey[];
 };
 
-const STEPS = ["Business", "Goal", "First service"] as const;
+const STEPS = ["Business", "Services", "Brand", "Contact", "Proof", "Goals"] as const;
+
+const emptyService = (): ServiceDraft => ({ name: "", description: "", price: "" });
 
 function Onboarding() {
   const navigate = useNavigate();
@@ -48,18 +78,41 @@ function Onboarding() {
     businessName: "",
     industry: INDUSTRIES[0]!.name,
     city: "",
-    phone: "",
-    goal: "quotes",
+    state: "",
+    serviceArea: "",
     about: "",
-    serviceName: "",
-    servicePrice: "",
+    services: [emptyService()],
+    primaryColor: "#0B0B0C",
+    accentColor: "#C9A227",
+    logoUrl: "",
+    heroImageUrl: "",
+    phone: "",
+    email: "",
+    address: "",
+    hours: "",
+    website: "",
+    instagram: "",
+    facebook: "",
+    google: "",
+    yearsInBusiness: "",
+    certifications: "",
+    awards: "",
+    testimonials: [],
+    goals: ["quote"],
   });
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-  const template =
-    INDUSTRIES.find((i) => i.name === draft.industry)?.template ?? "default";
+  const toggleGoal = (goal: GoalKey) =>
+    setDraft((prev) => ({
+      ...prev,
+      goals: prev.goals.includes(goal)
+        ? prev.goals.filter((g) => g !== goal)
+        : [...prev.goals, goal],
+    }));
+
+  const slugPreview = safeSlug(draft.businessName);
 
   async function finish() {
     setError(null);
@@ -69,7 +122,7 @@ function Onboarding() {
       const user = auth.user;
       if (!user) throw new Error("Your session expired. Please sign in again.");
 
-      const base = slugify(draft.businessName) || "my-business";
+      const base = safeSlug(draft.businessName);
       let slug = base;
       for (let attempt = 0; attempt < 5; attempt++) {
         const { data: existing } = await supabase
@@ -81,16 +134,31 @@ function Onboarding() {
         slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
       }
 
+      const services = draft.services.filter((s) => s.name.trim());
+      const testimonials = draft.testimonials.filter((t) => t.text.trim());
+      const goals: GoalKey[] = draft.goals.length ? draft.goals : ["quote"];
+
+      const legacyGoal =
+        goals[0] === "book"
+          ? "bookings"
+          : goals[0] === "call"
+            ? "calls"
+            : goals[0] === "consult"
+              ? "consultations"
+              : goals[0] === "purchase"
+                ? "purchases"
+                : "quotes";
+
       const { data: org, error: orgError } = await supabase
         .from("organizations")
         .insert({
           name: draft.businessName.trim(),
           slug,
           industry: draft.industry,
-          conversion_goal: draft.goal as never,
+          conversion_goal: legacyGoal as never,
           created_by: user.id,
           onboarding_completed: true,
-          onboarding_step: 3,
+          onboarding_step: STEPS.length,
         })
         .select("id, slug")
         .single();
@@ -103,36 +171,99 @@ function Onboarding() {
       await supabase.from("business_profiles").insert({
         organization_id: org.id,
         phone: draft.phone || null,
+        email: draft.email || null,
+        address: draft.address || null,
         city: draft.city || null,
+        state: draft.state || null,
+        service_area: draft.serviceArea || draft.city || null,
         description: draft.about || null,
-        tagline: `${draft.industry} in ${draft.city || "your area"}`,
-        service_area: draft.city || null,
+        tagline: `${draft.industry}${draft.city ? ` in ${draft.city}` : ""}`,
+        hours: draft.hours ? ({ summary: draft.hours } as never) : null,
+        website: draft.website || null,
+        logo_url: draft.logoUrl || null,
+        hero_image_url: draft.heroImageUrl || null,
+        primary_color: draft.primaryColor,
+        accent_color: draft.accentColor,
+        years_in_business: draft.yearsInBusiness ? Number(draft.yearsInBusiness) : null,
+        certifications: draft.certifications || null,
+        awards: draft.awards || null,
+        testimonials: testimonials as never,
+        website_goals: goals,
+      } as never);
+
+      const socials = [
+        { platform: "instagram", url: draft.instagram },
+        { platform: "facebook", url: draft.facebook },
+        { platform: "google", url: draft.google },
+      ].filter((s) => s.url.trim());
+      if (socials.length) {
+        await supabase
+          .from("social_profiles")
+          .insert(
+            socials.map((s) => ({
+              organization_id: org.id,
+              platform: s.platform,
+              url: s.url.trim(),
+            })) as never,
+          );
+      }
+
+      if (services.length) {
+        await supabase.from("services").insert(
+          services.map((s, index) => ({
+            organization_id: org.id,
+            name: s.name.trim(),
+            description: s.description.trim() || null,
+            price: s.price ? Number(s.price) : null,
+            starting_price: s.price ? Number(s.price) : null,
+            bookable: goals.includes("book"),
+            featured: index === 0,
+            sort_order: index,
+          })) as never,
+        );
+      }
+
+      const plan = generateWebsitePlan({
+        businessName: draft.businessName,
+        industry: draft.industry,
+        description: draft.about,
+        city: draft.city,
+        state: draft.state,
+        serviceArea: draft.serviceArea || draft.city,
+        phone: draft.phone,
+        email: draft.email,
+        goals,
+        services: services.map((s) => ({
+          name: s.name,
+          description: s.description,
+          price: s.price ? Number(s.price) : null,
+        })),
+        photoCount: draft.heroImageUrl ? 1 : 0,
+        testimonialCount: testimonials.length,
+        hasCredentials: Boolean(draft.certifications || draft.awards || draft.yearsInBusiness),
+        hasHours: Boolean(draft.hours),
+        socialLinks: socials.length,
       });
 
       await supabase.from("website_settings").insert({
         organization_id: org.id,
-        template,
+        template: plan.template,
+        subdomain: org.slug,
+        publish_state: "preview",
+        review_state: "ready_for_review",
+        generation: plan as never,
+        generated_at: plan.generatedAt,
         seo: {
-          headline: `${draft.industry} you can actually book`,
-          subheadline:
-            draft.about || `Serving ${draft.city || "your area"}. Fast quotes, real availability.`,
-        },
-      });
+          headline: plan.headline,
+          subheadline: plan.subheadline,
+          meta_description: plan.metaDescription,
+          primary_cta_label: plan.primaryCtaLabel,
+          title: plan.seoTitle,
+        } as never,
+      } as never);
 
-      if (draft.serviceName.trim()) {
-        await supabase.from("services").insert({
-          organization_id: org.id,
-          name: draft.serviceName.trim(),
-          price: draft.servicePrice ? Number(draft.servicePrice) : null,
-          starting_price: draft.servicePrice ? Number(draft.servicePrice) : null,
-          bookable: true,
-          featured: true,
-          sort_order: 0,
-        });
-      }
-
-      toast.success("Your business is live.");
-      navigate({ to: "/app", replace: true });
+      toast.success("Your website draft is ready to review.");
+      navigate({ to: "/app/website", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
@@ -155,21 +286,25 @@ function Onboarding() {
     step === 0
       ? draft.businessName.trim().length > 1 && draft.city.trim().length > 1
       : step === 1
-        ? !!draft.goal
-        : true;
+        ? draft.services.some((s) => s.name.trim().length > 1)
+        : step === 3
+          ? draft.phone.trim().length > 5 || draft.email.trim().length > 4
+          : step === 5
+            ? draft.goals.length > 0
+            : true;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-2xl items-center px-4">
+        <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Logo />
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 py-12">
-        <ol className="flex items-center gap-2" aria-label="Progress">
+      <main className="mx-auto max-w-3xl px-4 py-12">
+        <ol className="flex flex-wrap items-center gap-2" aria-label="Progress">
           {STEPS.map((label, index) => (
-            <li key={label} className="flex flex-1 items-center gap-2">
+            <li key={label} className="flex items-center gap-2">
               <span
                 className={cn(
                   "tnum grid size-6 place-items-center rounded-full text-[11px] font-semibold",
@@ -188,7 +323,7 @@ function Onboarding() {
               >
                 {label}
               </span>
-              {index < STEPS.length - 1 ? <span className="h-px flex-1 bg-border" /> : null}
+              {index < STEPS.length - 1 ? <span className="h-px w-6 bg-border" /> : null}
             </li>
           ))}
         </ol>
@@ -199,7 +334,7 @@ function Onboarding() {
               <div>
                 <h1 className="font-display text-[20px] font-semibold">Tell us about the business</h1>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
-                  This becomes your website address and headline. You can change all of it later.
+                  Revora uses only what you enter here — nothing is invented.
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -212,12 +347,12 @@ function Onboarding() {
                 />
                 {draft.businessName ? (
                   <p className="text-[11px] text-muted-foreground">
-                    Your site: /s/{slugify(draft.businessName) || "my-business"}
+                    Your free Revora address: {revoraSubdomain(slugPreview)}
                   </p>
                 ) : null}
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5 sm:col-span-1">
                   <Label htmlFor="o-industry">Industry</Label>
                   <select
                     id="o-industry"
@@ -233,58 +368,35 @@ function Onboarding() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="o-city">City you serve</Label>
+                  <Label htmlFor="o-city">City</Label>
                   <Input
                     id="o-city"
                     value={draft.city}
                     onChange={(e) => set("city", e.target.value)}
-                    placeholder="Austin, TX"
+                    placeholder="Austin"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-state">State</Label>
+                  <Input
+                    id="o-state"
+                    value={draft.state}
+                    onChange={(e) => set("state", e.target.value)}
+                    placeholder="TX"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="o-phone">Phone number</Label>
+                <Label htmlFor="o-area">Areas you serve</Label>
                 <Input
-                  id="o-phone"
-                  value={draft.phone}
-                  onChange={(e) => set("phone", e.target.value)}
-                  placeholder="(555) 019-4420"
-                  inputMode="tel"
+                  id="o-area"
+                  value={draft.serviceArea}
+                  onChange={(e) => set("serviceArea", e.target.value)}
+                  placeholder="Austin, Round Rock, Cedar Park"
                 />
               </div>
-            </div>
-          ) : null}
-
-          {step === 1 ? (
-            <div className="space-y-5">
-              <div>
-                <h1 className="font-display text-[20px] font-semibold">
-                  What counts as a win for you?
-                </h1>
-                <p className="mt-1.5 text-[13px] text-muted-foreground">
-                  Your whole site points at this one action.
-                </p>
-              </div>
-              <div className="grid gap-2">
-                {CONVERSION_GOALS.map((goal) => (
-                  <button
-                    key={goal.value}
-                    type="button"
-                    onClick={() => set("goal", goal.value)}
-                    className={cn(
-                      "cursor-pointer rounded-md border p-4 text-left transition-colors",
-                      draft.goal === goal.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-elevated",
-                    )}
-                  >
-                    <p className="text-[14px] font-medium">{goal.label}</p>
-                    <p className="mt-1 text-[12px] text-muted-foreground">{goal.description}</p>
-                  </button>
-                ))}
-              </div>
               <div className="space-y-1.5">
-                <Label htmlFor="o-about">One line about the business</Label>
+                <Label htmlFor="o-about">Describe the business in your own words</Label>
                 <Textarea
                   id="o-about"
                   rows={3}
@@ -296,35 +408,360 @@ function Onboarding() {
             </div>
           ) : null}
 
+          {step === 1 ? (
+            <div className="space-y-5">
+              <div>
+                <h1 className="font-display text-[20px] font-semibold">What do you sell?</h1>
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  Add each service you want on the website. Leave price blank if you quote per job.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {draft.services.map((service, index) => (
+                  <div key={index} className="rounded-md border border-border p-4">
+                    <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`svc-${index}`}>Service name</Label>
+                        <Input
+                          id={`svc-${index}`}
+                          value={service.name}
+                          onChange={(e) =>
+                            set(
+                              "services",
+                              draft.services.map((s, i) =>
+                                i === index ? { ...s, name: e.target.value } : s,
+                              ),
+                            )
+                          }
+                          placeholder="Full interior + exterior detail"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`price-${index}`}>Starting at ($)</Label>
+                        <Input
+                          id={`price-${index}`}
+                          inputMode="decimal"
+                          value={service.price}
+                          onChange={(e) =>
+                            set(
+                              "services",
+                              draft.services.map((s, i) =>
+                                i === index
+                                  ? { ...s, price: e.target.value.replace(/[^0-9.]/g, "") }
+                                  : s,
+                              ),
+                            )
+                          }
+                          placeholder="189"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-1.5">
+                      <Label htmlFor={`desc-${index}`}>What's included</Label>
+                      <Textarea
+                        id={`desc-${index}`}
+                        rows={2}
+                        value={service.description}
+                        onChange={(e) =>
+                          set(
+                            "services",
+                            draft.services.map((s, i) =>
+                              i === index ? { ...s, description: e.target.value } : s,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                    {draft.services.length > 1 ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() =>
+                          set(
+                            "services",
+                            draft.services.filter((_, i) => i !== index),
+                          )
+                        }
+                      >
+                        <Trash2 className="size-4" /> Remove
+                      </Button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => set("services", [...draft.services, emptyService()])}
+              >
+                <Plus className="size-4" /> Add another service
+              </Button>
+            </div>
+          ) : null}
+
           {step === 2 ? (
             <div className="space-y-5">
               <div>
-                <h1 className="font-display text-[20px] font-semibold">Add your first service</h1>
+                <h1 className="font-display text-[20px] font-semibold">Brand and visuals</h1>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
-                  One is enough to go live. Add the rest whenever you like.
+                  Optional. Paste image links you already own — we never use stock claims about your work.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="o-service">Service name</Label>
+                  <Label htmlFor="o-logo">Logo URL</Label>
                   <Input
-                    id="o-service"
-                    value={draft.serviceName}
-                    onChange={(e) => set("serviceName", e.target.value)}
-                    placeholder="Full interior + exterior detail"
+                    id="o-logo"
+                    value={draft.logoUrl}
+                    onChange={(e) => set("logoUrl", e.target.value)}
+                    placeholder="https://..."
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="o-price">Starting at ($)</Label>
+                  <Label htmlFor="o-hero">Main photo URL</Label>
                   <Input
-                    id="o-price"
-                    value={draft.servicePrice}
-                    onChange={(e) => set("servicePrice", e.target.value.replace(/[^0-9.]/g, ""))}
-                    inputMode="decimal"
-                    placeholder="189"
+                    id="o-hero"
+                    value={draft.heroImageUrl}
+                    onChange={(e) => set("heroImageUrl", e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-primary">Primary colour</Label>
+                  <Input
+                    id="o-primary"
+                    type="color"
+                    value={draft.primaryColor}
+                    onChange={(e) => set("primaryColor", e.target.value)}
+                    className="h-10 p-1"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-accent">Accent colour</Label>
+                  <Input
+                    id="o-accent"
+                    type="color"
+                    value={draft.accentColor}
+                    onChange={(e) => set("accentColor", e.target.value)}
+                    className="h-10 p-1"
                   />
                 </div>
               </div>
+            </div>
+          ) : null}
+
+          {step === 3 ? (
+            <div className="space-y-5">
+              <div>
+                <h1 className="font-display text-[20px] font-semibold">How can customers reach you?</h1>
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  These details power your call, text, email and form buttons.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-phone">Business phone</Label>
+                  <Input
+                    id="o-phone"
+                    inputMode="tel"
+                    value={draft.phone}
+                    onChange={(e) => set("phone", e.target.value)}
+                    placeholder="(555) 019-4420"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-email">Business email</Label>
+                  <Input
+                    id="o-email"
+                    type="email"
+                    value={draft.email}
+                    onChange={(e) => set("email", e.target.value)}
+                    placeholder="hello@yourbusiness.com"
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="o-address">Address (optional)</Label>
+                  <Input
+                    id="o-address"
+                    value={draft.address}
+                    onChange={(e) => set("address", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="o-hours">Hours</Label>
+                  <Input
+                    id="o-hours"
+                    value={draft.hours}
+                    onChange={(e) => set("hours", e.target.value)}
+                    placeholder="Mon–Sat 8am–6pm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-site">Existing website (optional)</Label>
+                  <Input
+                    id="o-site"
+                    value={draft.website}
+                    onChange={(e) => set("website", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-ig">Instagram</Label>
+                  <Input
+                    id="o-ig"
+                    value={draft.instagram}
+                    onChange={(e) => set("instagram", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-fb">Facebook</Label>
+                  <Input
+                    id="o-fb"
+                    value={draft.facebook}
+                    onChange={(e) => set("facebook", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-gg">Google Business profile</Label>
+                  <Input
+                    id="o-gg"
+                    value={draft.google}
+                    onChange={(e) => set("google", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 4 ? (
+            <div className="space-y-5">
+              <div>
+                <h1 className="font-display text-[20px] font-semibold">Proof and credentials</h1>
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  Only what you provide gets published. Revora never writes fake reviews or awards.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="o-years">Years in business</Label>
+                  <Input
+                    id="o-years"
+                    inputMode="numeric"
+                    value={draft.yearsInBusiness}
+                    onChange={(e) => set("yearsInBusiness", e.target.value.replace(/[^0-9]/g, ""))}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="o-cert">Licences / certifications</Label>
+                  <Input
+                    id="o-cert"
+                    value={draft.certifications}
+                    onChange={(e) => set("certifications", e.target.value)}
+                    placeholder="Licensed & insured, IDA certified"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="o-awards">Awards or recognition</Label>
+                <Input
+                  id="o-awards"
+                  value={draft.awards}
+                  onChange={(e) => set("awards", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>Customer testimonials</Label>
+                {draft.testimonials.map((t, index) => (
+                  <div key={index} className="rounded-md border border-border p-4">
+                    <Input
+                      value={t.name}
+                      onChange={(e) =>
+                        set(
+                          "testimonials",
+                          draft.testimonials.map((x, i) =>
+                            i === index ? { ...x, name: e.target.value } : x,
+                          ),
+                        )
+                      }
+                      placeholder="Customer name"
+                    />
+                    <Textarea
+                      className="mt-2"
+                      rows={2}
+                      value={t.text}
+                      onChange={(e) =>
+                        set(
+                          "testimonials",
+                          draft.testimonials.map((x, i) =>
+                            i === index ? { ...x, text: e.target.value } : x,
+                          ),
+                        )
+                      }
+                      placeholder="What they actually said"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() =>
+                        set(
+                          "testimonials",
+                          draft.testimonials.filter((_, i) => i !== index),
+                        )
+                      }
+                    >
+                      <Trash2 className="size-4" /> Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    set("testimonials", [...draft.testimonials, { name: "", text: "" }])
+                  }
+                >
+                  <Plus className="size-4" /> Add testimonial
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 5 ? (
+            <div className="space-y-5">
+              <div>
+                <h1 className="font-display text-[20px] font-semibold">
+                  What should visitors do?
+                </h1>
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  Pick every action that matters. The first one becomes your main button.
+                </p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {WEBSITE_GOALS.map((goal) => {
+                  const active = draft.goals.includes(goal.value);
+                  return (
+                    <button
+                      key={goal.value}
+                      type="button"
+                      onClick={() => toggleGoal(goal.value)}
+                      className={cn(
+                        "cursor-pointer rounded-md border p-4 text-left transition-colors",
+                        active ? "border-primary bg-primary/5" : "border-border hover:bg-elevated",
+                      )}
+                      aria-pressed={active}
+                    >
+                      <p className="text-[14px] font-medium">{goal.label}</p>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        Button: {goal.cta}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[12px] text-muted-foreground">
+                Next: Revora assembles your website from these answers, then you review and approve
+                it before anything goes live.
+              </p>
             </div>
           ) : null}
 
@@ -347,8 +784,8 @@ function Onboarding() {
                 Continue <ArrowRight className="size-4" />
               </Button>
             ) : (
-              <Button variant="signal" onClick={finish} disabled={busy}>
-                {busy ? <Loader2 className="size-4 animate-spin" /> : null} Launch my business
+              <Button variant="signal" onClick={finish} disabled={busy || !canContinue}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : null} Build my website
               </Button>
             )}
           </div>
