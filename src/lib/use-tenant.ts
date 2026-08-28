@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSupportMode } from "@/lib/support-mode";
 import type { AppRole } from "@/lib/domain";
+
 
 export type Session = Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"];
 
