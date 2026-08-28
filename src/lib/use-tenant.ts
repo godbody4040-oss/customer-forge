@@ -1,0 +1,86 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { AppRole } from "@/lib/domain";
+
+export type Session = Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"];
+
+export function useSession() {
+  return useQuery({
+    queryKey: ["session"],
+    queryFn: async () => (await supabase.auth.getSession()).data.session,
+    staleTime: 30_000,
+  });
+}
+
+export type Workspace = {
+  organizationId: string;
+  role: AppRole;
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    industry: string | null;
+    plan_id: string | null;
+    subscription_status: string;
+    trial_ends_at: string | null;
+    onboarding_completed: boolean;
+    onboarding_step: number;
+    is_demo: boolean;
+    is_suspended: boolean;
+    conversion_goal: string | null;
+  };
+};
+
+/** Current user's workspace (first membership) plus platform-admin flag. */
+export function useWorkspace() {
+  return useQuery({
+    queryKey: ["workspace"],
+    queryFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth.user;
+      if (!user) return { user: null, workspace: null, isSuperAdmin: false };
+
+      const [{ data: memberships }, { data: roles }] = await Promise.all([
+        supabase
+          .from("memberships")
+          .select(
+            "organization_id, role, organizations(id, name, slug, industry, plan_id, subscription_status, trial_ends_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal)",
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true }),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
+      ]);
+
+      const first = memberships?.find((m) => m.organizations);
+      const workspace: Workspace | null = first?.organizations
+        ? {
+            organizationId: first.organization_id,
+            role: first.role,
+            organization: first.organizations as Workspace["organization"],
+          }
+        : null;
+
+      return {
+        user,
+        workspace,
+        isSuperAdmin: (roles ?? []).some((r) => r.role === "super_admin"),
+      };
+    },
+    staleTime: 15_000,
+  });
+}
+
+export const canManage = (role: AppRole | undefined) =>
+  role === "owner" || role === "admin" || role === "manager";
+
+export const canEdit = (role: AppRole | undefined) => role !== "viewer" && role !== undefined;
+
+export function useSignOut() {
+  const queryClient = useQueryClient();
+  return useCallback(async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+  }, [queryClient]);
+}
