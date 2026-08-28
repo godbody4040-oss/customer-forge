@@ -227,3 +227,17 @@
   border-radius: var(--radius-lg);
   backdrop-filter: blur(10px);
 }
+
+/* Hide Lovable preview/editor badges/watermarks when they are injected into the app body.
+   The published application does not include these, but the editor preview may overlay them.
+   This keeps the public UI clean for demos and recordings. */
+[class*="lovable-badge"],
+[id*="lovable-badge"],
+[class*="edit-with-lovable"],
+[id*="edit-with-lovable"],
+a[href*="lovable.app"][target="_blank"][class*="fixed"],
+.lovable-watermark {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
