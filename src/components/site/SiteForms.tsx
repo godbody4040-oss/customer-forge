@@ -1,0 +1,338 @@
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { Check, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { submitPublicLead, trackPublicEvent, type PublicSite } from "@/lib/public-site.functions";
+import { currency } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+type Site = NonNullable<PublicSite>;
+
+function useTracker(slug: string) {
+  const track = useServerFn(trackPublicEvent);
+  return (eventType: string) => {
+    void track({
+      data: {
+        slug,
+        eventType,
+        path: typeof window === "undefined" ? undefined : window.location.pathname,
+        device: typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop",
+      },
+    }).catch(() => undefined);
+  };
+}
+
+function Success({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="panel flex flex-col items-center px-6 py-10 text-center">
+      <span className="grid size-10 place-items-center rounded-full bg-primary/15 text-primary">
+        <Check className="size-5" aria-hidden="true" />
+      </span>
+      <h3 className="mt-4 font-display text-[17px] font-semibold">{title}</h3>
+      <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground">{body}</p>
+    </div>
+  );
+}
+
+export function QuoteCalculator({ site }: { site: Site }) {
+  const quote = site.quote;
+  const submit = useServerFn(submitPublicLead);
+  const track = useTracker(site.org.slug);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [step, setStep] = useState<"questions" | "contact">("questions");
+  const [pending, setPending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  if (!quote) return null;
+  if (done) {
+    return (
+      <Success
+        title="Your estimate is on its way"
+        body={`${site.org.name} has your details and price range, and will confirm the exact quote shortly.`}
+      />
+    );
+  }
+
+  const base = Number(quote.form.base_price ?? 0);
+  const selected = quote.questions.map((question) => {
+    const optionId = answers[question.id];
+    const option = question.options.find((o) => o.id === optionId);
+    return { question, option };
+  });
+
+  let total = base;
+  for (const { option } of selected) {
+    if (!option) continue;
+    total = option.modifier_type === "multiply" ? total * option.price_modifier : total + option.price_modifier;
+  }
+  const min = Math.max(Number(quote.form.min_price ?? 0), Math.round(total * 0.9));
+  const max = Math.max(min, Math.min(Number(quote.form.max_price ?? total * 1.15) || total * 1.15, Math.round(total * 1.15)));
+  const answered = selected.filter((s) => s.option).length;
+  const complete = answered === quote.questions.length && quote.questions.length > 0;
+
+  return (
+    <div className="panel overflow-hidden">
+      <div className="border-b border-border px-5 py-4">
+        <p className="eyebrow">Instant estimate</p>
+        <h3 className="mt-1 font-display text-[19px] font-semibold">{quote.form.name}</h3>
+      </div>
+
+      {step === "questions" ? (
+        <div className="space-y-6 px-5 py-5">
+          {quote.questions.map((question) => (
+            <fieldset key={question.id}>
+              <legend className="text-[14px] font-medium">{question.label}</legend>
+              {question.helper_text ? (
+                <p className="mt-1 text-[12px] text-muted-foreground">{question.helper_text}</p>
+              ) : null}
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {question.options.map((option) => {
+                  const active = answers[question.id] === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        if (!answered) track("quote_start");
+                        setAnswers((prev) => ({ ...prev, [question.id]: option.id }));
+                      }}
+                      aria-pressed={active}
+                      className={cn(
+                        "cursor-pointer rounded-md border px-3.5 py-2.5 text-left text-[13px] transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border hover:bg-elevated",
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ))}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+            <div>
+              <p className="eyebrow">Estimated range</p>
+              <p className="tnum mt-1 font-display text-[24px] font-semibold text-primary">
+                {complete ? `${currency(min)} – ${currency(max)}` : "—"}
+              </p>
+            </div>
+            <Button
+              variant="signal"
+              disabled={!complete}
+              onClick={() => {
+                track("quote_complete");
+                setStep("contact");
+              }}
+            >
+              Lock in this price
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form
+          className="space-y-4 px-5 py-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const form = new FormData(e.currentTarget);
+            setPending(true);
+            submit({
+              data: {
+                slug: site.org.slug,
+                kind: "quote",
+                name: String(form.get("name") ?? ""),
+                email: String(form.get("email") ?? ""),
+                phone: String(form.get("phone") ?? ""),
+                message: String(form.get("message") ?? ""),
+                serviceInterest: quote.form.name,
+                estimatedValue: Math.round((min + max) / 2),
+                source: "website",
+                quote: {
+                  formId: quote.form.id,
+                  answers: selected
+                    .filter((s) => s.option)
+                    .map((s) => ({
+                      question: s.question.label,
+                      answer: s.option!.label,
+                      modifier: s.option!.price_modifier,
+                    })),
+                  min,
+                  max,
+                },
+              },
+            })
+              .then(() => setDone(true))
+              .catch((error: Error) => toast.error(error.message))
+              .finally(() => setPending(false));
+          }}
+        >
+          <p className="tnum text-[13px] text-muted-foreground">
+            Your estimate:{" "}
+            <span className="font-semibold text-primary">
+              {currency(min)} – {currency(max)}
+            </span>
+          </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="q-name">Your name</Label>
+            <Input id="q-name" name="name" required />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="q-phone">Phone</Label>
+              <Input id="q-phone" name="phone" type="tel" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="q-email">Email</Label>
+              <Input id="q-email" name="email" type="email" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="q-message">Anything we should know?</Label>
+            <Textarea id="q-message" name="message" rows={3} />
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" variant="signal" disabled={pending}>
+              {pending ? <Loader2 className="size-4 animate-spin" /> : null} Send my quote request
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setStep("questions")}>
+              Back
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+export function BookingForm({ site }: { site: Site }) {
+  const submit = useServerFn(submitPublicLead);
+  const track = useTracker(site.org.slug);
+  const bookable = site.services.filter((s) => s.bookable);
+  const [pending, setPending] = useState(false);
+  const [done, setDone] = useState(false);
+  const [serviceId, setServiceId] = useState(bookable[0]?.id ?? "");
+
+  if (done) {
+    return (
+      <Success
+        title="Booking request received"
+        body={`${site.org.name} will confirm your time slot by phone or email shortly.`}
+      />
+    );
+  }
+
+  const service = bookable.find((s) => s.id === serviceId);
+  const today = new Date().toISOString().slice(0, 10);
+
+  return (
+    <form
+      className="panel space-y-4 p-5"
+      onFocus={() => track("booking_start")}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = new FormData(e.currentTarget);
+        const date = String(form.get("date") ?? "");
+        const time = String(form.get("time") ?? "");
+        setPending(true);
+        submit({
+          data: {
+            slug: site.org.slug,
+            kind: bookable.length ? "booking" : "contact",
+            name: String(form.get("name") ?? ""),
+            email: String(form.get("email") ?? ""),
+            phone: String(form.get("phone") ?? ""),
+            message: String(form.get("message") ?? ""),
+            city: String(form.get("city") ?? ""),
+            serviceId: serviceId || null,
+            serviceInterest: service?.name ?? null,
+            estimatedValue: Number(service?.price ?? 0),
+            source: "website",
+            booking:
+              bookable.length && date && time
+                ? {
+                    startsAt: new Date(`${date}T${time}`).toISOString(),
+                    durationMinutes: service?.duration_minutes ?? 60,
+                  }
+                : null,
+          },
+        })
+          .then(() => setDone(true))
+          .catch((error: Error) => toast.error(error.message))
+          .finally(() => setPending(false));
+      }}
+    >
+      <div>
+        <p className="eyebrow">Book now</p>
+        <h3 className="mt-1 font-display text-[19px] font-semibold">Request your appointment</h3>
+      </div>
+
+      {bookable.length ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="b-service">Service</Label>
+          <select
+            id="b-service"
+            value={serviceId}
+            onChange={(e) => setServiceId(e.target.value)}
+            className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-[13px]"
+          >
+            {bookable.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+                {s.price ? ` — ${currency(Number(s.price))}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="b-name">Your name</Label>
+          <Input id="b-name" name="name" required />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="b-phone">Phone</Label>
+          <Input id="b-phone" name="phone" type="tel" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="b-email">Email</Label>
+          <Input id="b-email" name="email" type="email" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="b-city">City / address</Label>
+          <Input id="b-city" name="city" />
+        </div>
+        {bookable.length ? (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="b-date">Preferred date</Label>
+              <Input id="b-date" name="date" type="date" min={today} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="b-time">Preferred time</Label>
+              <Input id="b-time" name="time" type="time" defaultValue="09:00" required />
+            </div>
+          </>
+        ) : null}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="b-message">Details</Label>
+        <Textarea id="b-message" name="message" rows={3} />
+      </div>
+
+      <Button type="submit" variant="signal" disabled={pending}>
+        {pending ? <Loader2 className="size-4 animate-spin" /> : null} Request appointment
+      </Button>
+      <p className="text-[11px] text-muted-foreground">
+        No payment now — you'll get a confirmation before anything is charged.
+      </p>
+    </form>
+  );
+}
