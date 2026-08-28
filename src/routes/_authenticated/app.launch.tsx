@@ -1,0 +1,268 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { CheckCircle2, Circle, ExternalLink, RefreshCw } from "lucide-react";
+import { LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useWorkspace } from "@/lib/use-tenant";
+import {
+  useAnalytics,
+  useBusinessProfile,
+  useServices,
+  useTeam,
+  useWebsiteSettings,
+  useSaveWebsiteSettings,
+} from "@/lib/queries";
+import { saveOwnDomain } from "@/lib/domain.functions";
+import { DOMAIN_STATES, PUBLISH_STATES, readiness } from "@/lib/readiness";
+import { dateLong, number } from "@/lib/format";
+import { canManage } from "@/lib/domain";
+
+export const Route = createFileRoute("/_authenticated/app/launch")({
+  head: () => ({
+    meta: [
+      { title: "Launch checklist — get your site live" },
+      {
+        name: "description",
+        content:
+          "Track website readiness, connect your domain, publish your site, and review your full business handoff sheet.",
+      },
+      { property: "og:title", content: "Launch checklist — get your site live" },
+      {
+        property: "og:description",
+        content: "Website readiness, domain status, publishing controls and your handoff summary.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Launch,
+});
+
+function Launch() {
+  const { data: ws } = useWorkspace();
+  const orgId = ws?.workspace?.organizationId;
+  const org = ws?.workspace?.organization;
+  const role = ws?.workspace?.role;
+  const manage = role ? canManage(role) : false;
+
+  const { data: profile, isLoading: loadingProfile } = useBusinessProfile(orgId);
+  const { data: settings } = useWebsiteSettings(orgId);
+  const { data: services } = useServices(orgId);
+  const { data: analytics } = useAnalytics(orgId, 30);
+  const { data: team } = useTeam(orgId);
+  const saveSettings = useSaveWebsiteSettings(orgId);
+  const domainFn = useServerFn(saveOwnDomain);
+  const queryClient = useQueryClient();
+  const [domain, setDomain] = useState<string | null>(null);
+
+  const domainMutation = useMutation({
+    mutationFn: (value: string) => domainFn({ data: { organizationId: orgId!, domain: value } }),
+    onSuccess: async (result) => {
+      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, { description: result.detail });
+      await queryClient.invalidateQueries({ queryKey: ["website-settings"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  if (loadingProfile || !orgId) return <LoadingRows rows={5} />;
+
+  const active = (services ?? []).filter((s) => s.is_active);
+  const score = readiness({
+    profile,
+    settings,
+    servicesCount: active.length,
+    bookableCount: active.filter((s) => s.bookable).length,
+    mediaCount: 0,
+    quoteFormCount: 0,
+    analyticsCount: (analytics ?? []).length,
+  });
+
+  const domainStatus = settings?.domain_status ?? "not_connected";
+  const publishState = settings?.publish_state ?? "draft";
+  const siteUrl = settings?.custom_domain ? `https://${settings.custom_domain}` : `/s/${org?.slug ?? ""}`;
+
+  const setPublish = (state: string) =>
+    saveSettings.mutate(
+      { publish_state: state, published: state === "published", last_published_at: new Date().toISOString() },
+      {
+        onSuccess: () => toast.success(`Website ${PUBLISH_STATES[state]?.label.toLowerCase()}.`),
+        onError: (error: Error) => toast.error(error.message),
+      },
+    );
+
+  return (
+    <div className="space-y-6">
+      <SectionHeading
+        eyebrow="Launch"
+        title="Website readiness"
+        action={
+          <Button asChild size="sm" variant="outline">
+            <Link to="/s/$slug" params={{ slug: org?.slug ?? "" }} target="_blank">
+              Preview site <ExternalLink className="ml-1 size-3.5" />
+            </Link>
+          </Button>
+        }
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Website readiness"
+          value={`${score.score}%`}
+          hint={`${score.done} of ${score.total} steps complete`}
+          tone={score.score >= 90 ? "signal" : "attention"}
+          progress={score.score}
+        />
+        <MetricCard label="Live services" value={number(active.length)} />
+        <MetricCard
+          label="Publishing"
+          value={PUBLISH_STATES[publishState]?.label ?? publishState}
+          tone={PUBLISH_STATES[publishState]?.tone ?? "neutral"}
+        />
+        <MetricCard
+          label="Domain"
+          value={DOMAIN_STATES[domainStatus]?.label ?? domainStatus}
+          tone={DOMAIN_STATES[domainStatus]?.tone ?? "neutral"}
+        />
+      </div>
+
+      <Panel className="space-y-3">
+        <SectionHeading eyebrow="Checklist" title="What's left before launch" />
+        <ul className="grid gap-1.5 sm:grid-cols-2">
+          {score.items.map((item) => (
+            <li key={item.key} className="flex items-start gap-2 text-[13px]">
+              {item.done ? (
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+              ) : (
+                <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              )}
+              <span className={item.done ? "" : "text-muted-foreground"}>
+                {item.label}
+                {!item.done ? (
+                  <span className="block text-[11px]">
+                    {item.fix}
+                    {item.to ? (
+                      <Link to={item.to} className="ml-1 text-primary hover:underline">
+                        Fix now
+                      </Link>
+                    ) : null}
+                  </span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+
+      <Panel className="space-y-3">
+        <SectionHeading
+          eyebrow="Publishing"
+          title="Website status"
+          action={
+            <Pill tone={PUBLISH_STATES[publishState]?.tone ?? "neutral"}>
+              {PUBLISH_STATES[publishState]?.label}
+            </Pill>
+          }
+        />
+        <p className="text-[12px] text-muted-foreground">{PUBLISH_STATES[publishState]?.help}</p>
+        {manage ? (
+          <div className="flex flex-wrap gap-2">
+            {(["draft", "preview", "published", "unpublished"] as const).map((state) => (
+              <Button
+                key={state}
+                size="sm"
+                variant={state === publishState ? "secondary" : state === "published" ? "signal" : "outline"}
+                disabled={saveSettings.isPending}
+                onClick={() => setPublish(state)}
+              >
+                {PUBLISH_STATES[state]?.label}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[12px] text-muted-foreground">
+            Ask an owner or admin on your team to change publishing.
+          </p>
+        )}
+        {settings?.last_published_at ? (
+          <p className="text-[11px] text-muted-foreground">
+            Last published {dateLong(settings.last_published_at)}
+          </p>
+        ) : null}
+      </Panel>
+
+      <Panel className="space-y-3">
+        <SectionHeading
+          eyebrow="Domain"
+          title="Your web address"
+          action={
+            <Pill tone={DOMAIN_STATES[domainStatus]?.tone ?? "neutral"}>
+              {DOMAIN_STATES[domainStatus]?.label}
+            </Pill>
+          }
+        />
+        <p className="text-[12px] text-muted-foreground">{DOMAIN_STATES[domainStatus]?.help}</p>
+        {manage ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-56 flex-1">
+              <Label className="mb-1.5 block text-[12px]">Your domain</Label>
+              <Input
+                placeholder="yourbusiness.com"
+                value={domain ?? settings?.custom_domain ?? ""}
+                onChange={(event) => setDomain(event.target.value)}
+              />
+            </div>
+            <Button
+              size="sm"
+              variant="signal"
+              disabled={domainMutation.isPending}
+              onClick={() => domainMutation.mutate(domain ?? settings?.custom_domain ?? "")}
+            >
+              <RefreshCw className="mr-1 size-3.5" /> Save & check
+            </Button>
+          </div>
+        ) : null}
+        {settings?.domain_error ? (
+          <p className="text-[12px] text-destructive">{settings.domain_error}</p>
+        ) : null}
+        {settings?.domain_checked_at ? (
+          <p className="text-[11px] text-muted-foreground">
+            Last checked {dateLong(settings.domain_checked_at)}
+          </p>
+        ) : null}
+      </Panel>
+
+      <Panel className="space-y-3">
+        <SectionHeading eyebrow="Handoff" title="Your system at a glance" />
+        <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
+          <Row label="Website address" value={siteUrl} />
+          <Row label="Login page" value="/auth" />
+          <Row label="Business phone" value={profile?.phone ?? "Not set"} />
+          <Row label="Business email" value={profile?.email ?? "Not set"} />
+          <Row
+            label="Address"
+            value={[profile?.address, profile?.city, profile?.state, profile?.zip].filter(Boolean).join(", ") || "Not set"}
+          />
+          <Row label="Service area" value={profile?.service_area ?? "Not set"} />
+          <Row label="Plan" value={`${org?.plan_id ?? "No plan"} · ${org?.subscription_status ?? ""}`} />
+          <Row label="Support" value={profile?.support_email ?? "support@localleadengine.com"} />
+          <Row label="Team members" value={number((team ?? []).length)} />
+          <Row label="Setup complete" value={`${score.score}%`} />
+        </dl>
+      </Panel>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="eyebrow">{label}</dt>
+      <dd className="mt-0.5 break-words">{value}</dd>
+    </div>
+  );
+}
