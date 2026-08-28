@@ -438,6 +438,7 @@ export type Database = {
           testimonials: Json
           updated_at: string
           website: string | null
+          website_goals: string[]
           years_in_business: number | null
           zip: string | null
         }
@@ -469,6 +470,7 @@ export type Database = {
           testimonials?: Json
           updated_at?: string
           website?: string | null
+          website_goals?: string[]
           years_in_business?: number | null
           zip?: string | null
         }
@@ -500,6 +502,7 @@ export type Database = {
           testimonials?: Json
           updated_at?: string
           website?: string | null
+          website_goals?: string[]
           years_in_business?: number | null
           zip?: string | null
         }
