@@ -24,11 +24,13 @@ import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authenticated/admin.domains'
+import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAdminWebsitesRouteImport } from './routes/_authenticated/admin.websites'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppAutomationsRouteImport } from './routes/_authenticated/app.automations'
+import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as AuthenticatedAppLaunchRouteImport } from './routes/_authenticated/app.launch'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
@@ -38,6 +40,7 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsSiteEngineRouteImport } from './routes/api/public/jobs/site-engine'
+import { Route as ApiPublicPaypalWebhookRouteImport } from './routes/api/public/paypal/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -118,6 +121,12 @@ const AuthenticatedAdminDomainsRoute =
     path: '/domains',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPaymentsRoute =
+  AuthenticatedAdminPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
   id: '/plans',
   path: '/plans',
@@ -146,6 +155,11 @@ const AuthenticatedAppAutomationsRoute =
     path: '/automations',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppCalendarRoute =
   AuthenticatedAppCalendarRouteImport.update({
     id: '/calendar',
@@ -195,6 +209,11 @@ const ApiPublicJobsSiteEngineRoute = ApiPublicJobsSiteEngineRouteImport.update({
   path: '/api/public/jobs/site-engine',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaypalWebhookRoute = ApiPublicPaypalWebhookRouteImport.update({
+  id: '/api/public/paypal/webhook',
+  path: '/api/public/paypal/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -226,10 +245,12 @@ export interface FileRoutesByFullPath {
   '/s/$slug': typeof SSlugRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
+  '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -241,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
+  '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -257,10 +279,12 @@ export interface FileRoutesByTo {
   '/s/$slug': typeof SSlugRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
+  '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -272,6 +296,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
+  '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -292,10 +317,12 @@ export interface FileRoutesById {
   '/s/$slug': typeof SSlugRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/automations': typeof AuthenticatedAppAutomationsRoute
+  '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/launch': typeof AuthenticatedAppLaunchRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -307,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
+  '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -327,10 +355,12 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/admin/clients'
     | '/admin/domains'
+    | '/admin/payments'
     | '/admin/plans'
     | '/admin/websites'
     | '/app/analytics'
     | '/app/automations'
+    | '/app/billing'
     | '/app/calendar'
     | '/app/launch'
     | '/app/leads'
@@ -342,6 +372,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/site-engine'
+    | '/api/public/paypal/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -358,10 +389,12 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/admin/clients'
     | '/admin/domains'
+    | '/admin/payments'
     | '/admin/plans'
     | '/admin/websites'
     | '/app/analytics'
     | '/app/automations'
+    | '/app/billing'
     | '/app/calendar'
     | '/app/launch'
     | '/app/leads'
@@ -373,6 +406,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/site-engine'
+    | '/api/public/paypal/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -392,10 +426,12 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
+    | '/_authenticated/admin/payments'
     | '/_authenticated/admin/plans'
     | '/_authenticated/admin/websites'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/automations'
+    | '/_authenticated/app/billing'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/launch'
     | '/_authenticated/app/leads'
@@ -407,6 +443,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/'
     | '/_authenticated/admin/clients/$orgId'
     | '/api/public/jobs/site-engine'
+    | '/api/public/paypal/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -423,6 +460,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SSlugRoute: typeof SSlugRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
+  ApiPublicPaypalWebhookRoute: typeof ApiPublicPaypalWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -535,6 +573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDomainsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/payments': {
+      id: '/_authenticated/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AuthenticatedAdminPaymentsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/plans': {
       id: '/_authenticated/admin/plans'
       path: '/plans'
@@ -568,6 +613,13 @@ declare module '@tanstack/react-router' {
       path: '/automations'
       fullPath: '/app/automations'
       preLoaderRoute: typeof AuthenticatedAppAutomationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/billing': {
+      id: '/_authenticated/app/billing'
+      path: '/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/calendar': {
@@ -633,6 +685,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsSiteEngineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/paypal/webhook': {
+      id: '/api/public/paypal/webhook'
+      path: '/api/public/paypal/webhook'
+      fullPath: '/api/public/paypal/webhook'
+      preLoaderRoute: typeof ApiPublicPaypalWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -674,6 +733,7 @@ const AuthenticatedAdminClientsRouteWithChildren =
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminDomainsRoute: typeof AuthenticatedAdminDomainsRoute
+  AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdminWebsitesRoute: typeof AuthenticatedAdminWebsitesRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -682,6 +742,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminDomainsRoute: AuthenticatedAdminDomainsRoute,
+  AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdminWebsitesRoute: AuthenticatedAdminWebsitesRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -693,6 +754,7 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppAutomationsRoute: typeof AuthenticatedAppAutomationsRoute
+  AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
   AuthenticatedAppLaunchRoute: typeof AuthenticatedAppLaunchRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
@@ -706,6 +768,7 @@ interface AuthenticatedAppRouteChildren {
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppAutomationsRoute: AuthenticatedAppAutomationsRoute,
+  AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
   AuthenticatedAppLaunchRoute: AuthenticatedAppLaunchRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
@@ -745,6 +808,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SSlugRoute: SSlugRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
+  ApiPublicPaypalWebhookRoute: ApiPublicPaypalWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

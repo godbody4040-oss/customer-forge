@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { Building2, ClipboardList, Globe2, LayoutGrid, LifeBuoy, Receipt, ShieldCheck } from "lucide-react";
+import { Building2, ClipboardList, CreditCard, Globe2, LayoutGrid, LifeBuoy, Receipt, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Pill } from "@/components/app/Bits";
@@ -22,6 +22,7 @@ const NAV = [
   { to: "/admin/websites", label: "Websites", icon: ClipboardList, exact: false },
   { to: "/admin/domains", label: "Domains", icon: Globe2, exact: false },
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
+  { to: "/admin/payments", label: "Payments", icon: CreditCard, exact: false },
 ] as const;
 
 function AdminShell() {

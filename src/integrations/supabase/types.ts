@@ -1209,6 +1209,257 @@ export type Database = {
           },
         ]
       }
+      payment_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          organization_id: string | null
+          payload: Json
+          payment_id: string | null
+          processed: boolean
+          provider: string
+          provider_event_id: string
+          resource_id: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          organization_id?: string | null
+          payload?: Json
+          payment_id?: string | null
+          processed?: boolean
+          provider?: string
+          provider_event_id: string
+          resource_id?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          organization_id?: string | null
+          payload?: Json
+          payment_id?: string | null
+          processed?: boolean
+          provider?: string
+          provider_event_id?: string
+          resource_id?: string | null
+          verification_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_products: {
+        Row: {
+          amount: number
+          billing_interval:
+            | Database["public"]["Enums"]["billing_interval"]
+            | null
+          created_at: string
+          currency: string
+          description: string | null
+          entitlement_key: string | null
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["payment_product_kind"]
+          name: string
+          plan_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_interval?:
+            | Database["public"]["Enums"]["billing_interval"]
+            | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          entitlement_key?: string | null
+          id: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["payment_product_kind"]
+          name: string
+          plan_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_interval?:
+            | Database["public"]["Enums"]["billing_interval"]
+            | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          entitlement_key?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["payment_product_kind"]
+          name?: string
+          plan_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_products_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          billing_interval:
+            | Database["public"]["Enums"]["billing_interval"]
+            | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_email: string | null
+          description: string | null
+          entitlement_applied: boolean
+          environment: string
+          failure_reason: string | null
+          id: string
+          metadata: Json
+          organization_id: string
+          payment_provider: string
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          period_end: string | null
+          period_start: string | null
+          plan_id: string | null
+          product_id: string | null
+          provider_subscription_id: string | null
+          refund_status: string | null
+          refunded_amount: number
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          billing_interval?:
+            | Database["public"]["Enums"]["billing_interval"]
+            | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          entitlement_applied?: boolean
+          environment?: string
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json
+          organization_id: string
+          payment_provider?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_id?: string | null
+          product_id?: string | null
+          provider_subscription_id?: string | null
+          refund_status?: string | null
+          refunded_amount?: number
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          billing_interval?:
+            | Database["public"]["Enums"]["billing_interval"]
+            | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          description?: string | null
+          entitlement_applied?: boolean
+          environment?: string
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json
+          organization_id?: string
+          payment_provider?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_id?: string | null
+          product_id?: string | null
+          provider_subscription_id?: string | null
+          refund_status?: string | null
+          refunded_amount?: number
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "payment_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           annual_price: number
@@ -2479,6 +2730,23 @@ export type Database = {
         | "booked"
         | "completed"
         | "lost"
+      payment_product_kind:
+        | "one_time"
+        | "subscription"
+        | "setup_fee"
+        | "deposit"
+        | "addon"
+        | "service"
+      payment_status:
+        | "created"
+        | "pending"
+        | "approved"
+        | "completed"
+        | "failed"
+        | "cancelled"
+        | "refunded"
+        | "partially_refunded"
+        | "disputed"
       platform_role: "super_admin"
       publish_state: "draft" | "preview" | "published" | "unpublished"
       subscription_status:
@@ -2646,6 +2914,25 @@ export const Constants = {
         "booked",
         "completed",
         "lost",
+      ],
+      payment_product_kind: [
+        "one_time",
+        "subscription",
+        "setup_fee",
+        "deposit",
+        "addon",
+        "service",
+      ],
+      payment_status: [
+        "created",
+        "pending",
+        "approved",
+        "completed",
+        "failed",
+        "cancelled",
+        "refunded",
+        "partially_refunded",
+        "disputed",
       ],
       platform_role: ["super_admin"],
       publish_state: ["draft", "preview", "published", "unpublished"],

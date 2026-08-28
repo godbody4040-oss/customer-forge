@@ -19,6 +19,7 @@ import {
   X,
   Calculator,
   Zap,
+  CreditCard,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const NAV = [
   { to: "/app/website", label: "Website", icon: Globe, exact: false },
   { to: "/app/launch", label: "Launch", icon: Rocket, exact: false },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false },
+  { to: "/app/billing", label: "Billing", icon: CreditCard, exact: false },
   { to: "/app/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
 
