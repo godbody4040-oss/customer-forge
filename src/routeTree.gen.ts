@@ -20,6 +20,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
@@ -82,6 +83,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminClientsRoute =
+  AuthenticatedAdminClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
+  '/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -149,6 +157,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
+  '/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
+  '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/onboarding'
     | '/s/$slug'
+    | '/admin/clients'
     | '/app/analytics'
     | '/app/calendar'
     | '/app/leads'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/onboarding'
     | '/s/$slug'
+    | '/admin/clients'
     | '/app/analytics'
     | '/app/calendar'
     | '/app/leads'
@@ -228,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
     | '/s/$slug'
+    | '/_authenticated/admin/clients'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/leads'
@@ -327,6 +340,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/clients': {
+      id: '/_authenticated/admin/clients'
+      path: '/clients'
+      fullPath: '/admin/clients'
+      preLoaderRoute: typeof AuthenticatedAdminClientsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -380,10 +400,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
