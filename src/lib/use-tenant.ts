@@ -32,25 +32,51 @@ export type Workspace = {
   };
 };
 
-/** Current user's workspace (first membership) plus platform-admin flag. */
+const ORG_FIELDS =
+  "id, name, slug, industry, plan_id, subscription_status, trial_ends_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal";
+
+/** Current user's workspace (or the client workspace being supported) plus platform-admin flag. */
 export function useWorkspace() {
+  const { mode } = useSupportMode();
+  const supportOrgId = mode?.organizationId ?? null;
+
   return useQuery({
-    queryKey: ["workspace"],
+    queryKey: ["workspace", supportOrgId],
     queryFn: async () => {
       const { data: auth } = await supabase.auth.getUser();
       const user = auth.user;
-      if (!user) return { user: null, workspace: null, isSuperAdmin: false };
+      if (!user) return { user: null, workspace: null, isSuperAdmin: false, supporting: false };
 
       const [{ data: memberships }, { data: roles }] = await Promise.all([
         supabase
           .from("memberships")
-          .select(
-            "organization_id, role, organizations(id, name, slug, industry, plan_id, subscription_status, trial_ends_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal)",
-          )
+          .select(`organization_id, role, organizations(${ORG_FIELDS})`)
           .eq("user_id", user.id)
           .order("created_at", { ascending: true }),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
+
+      const isSuperAdmin = (roles ?? []).some((r) => r.role === "super_admin");
+
+      if (supportOrgId && isSuperAdmin) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select(ORG_FIELDS)
+          .eq("id", supportOrgId)
+          .maybeSingle();
+        if (org) {
+          return {
+            user,
+            workspace: {
+              organizationId: supportOrgId,
+              role: "admin" as AppRole,
+              organization: org as Workspace["organization"],
+            },
+            isSuperAdmin,
+            supporting: true,
+          };
+        }
+      }
 
       const first = memberships?.find((m) => m.organizations);
       const workspace: Workspace | null = first?.organizations
@@ -61,15 +87,12 @@ export function useWorkspace() {
           }
         : null;
 
-      return {
-        user,
-        workspace,
-        isSuperAdmin: (roles ?? []).some((r) => r.role === "super_admin"),
-      };
+      return { user, workspace, isSuperAdmin, supporting: false };
     },
     staleTime: 15_000,
   });
 }
+
 
 export const canManage = (role: AppRole | undefined) =>
   role === "owner" || role === "admin" || role === "manager";

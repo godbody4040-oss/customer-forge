@@ -288,11 +288,15 @@ export type Database = {
           id: string
           logo_url: string | null
           organization_id: string
+          owner_email: string | null
+          owner_name: string | null
           phone: string | null
           primary_color: string | null
+          review_link: string | null
           secondary_color: string | null
           service_area: string | null
           state: string | null
+          support_email: string | null
           tagline: string | null
           updated_at: string
           website: string | null
@@ -311,11 +315,15 @@ export type Database = {
           id?: string
           logo_url?: string | null
           organization_id: string
+          owner_email?: string | null
+          owner_name?: string | null
           phone?: string | null
           primary_color?: string | null
+          review_link?: string | null
           secondary_color?: string | null
           service_area?: string | null
           state?: string | null
+          support_email?: string | null
           tagline?: string | null
           updated_at?: string
           website?: string | null
@@ -334,11 +342,15 @@ export type Database = {
           id?: string
           logo_url?: string | null
           organization_id?: string
+          owner_email?: string | null
+          owner_name?: string | null
           phone?: string | null
           primary_color?: string | null
+          review_link?: string | null
           secondary_color?: string | null
           service_area?: string | null
           state?: string | null
+          support_email?: string | null
           tagline?: string | null
           updated_at?: string
           website?: string | null
@@ -1257,6 +1269,44 @@ export type Database = {
           },
         ]
       }
+      support_sessions: {
+        Row: {
+          admin_email: string | null
+          admin_id: string
+          ended_at: string | null
+          id: string
+          organization_id: string
+          reason: string | null
+          started_at: string
+        }
+        Insert: {
+          admin_email?: string | null
+          admin_id: string
+          ended_at?: string | null
+          id?: string
+          organization_id: string
+          reason?: string | null
+          started_at?: string
+        }
+        Update: {
+          admin_email?: string | null
+          admin_id?: string
+          ended_at?: string | null
+          id?: string
+          organization_id?: string
+          reason?: string | null
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1282,10 +1332,16 @@ export type Database = {
         Row: {
           created_at: string
           custom_domain: string | null
+          domain_checked_at: string | null
+          domain_error: string | null
+          domain_status: Database["public"]["Enums"]["domain_status"]
+          domain_target: string | null
           domain_verified: boolean
           id: string
+          last_published_at: string | null
           organization_id: string
           pages: Json
+          publish_state: Database["public"]["Enums"]["publish_state"]
           published: boolean
           seo: Json
           ssl_active: boolean
@@ -1296,10 +1352,16 @@ export type Database = {
         Insert: {
           created_at?: string
           custom_domain?: string | null
+          domain_checked_at?: string | null
+          domain_error?: string | null
+          domain_status?: Database["public"]["Enums"]["domain_status"]
+          domain_target?: string | null
           domain_verified?: boolean
           id?: string
+          last_published_at?: string | null
           organization_id: string
           pages?: Json
+          publish_state?: Database["public"]["Enums"]["publish_state"]
           published?: boolean
           seo?: Json
           ssl_active?: boolean
@@ -1310,10 +1372,16 @@ export type Database = {
         Update: {
           created_at?: string
           custom_domain?: string | null
+          domain_checked_at?: string | null
+          domain_error?: string | null
+          domain_status?: Database["public"]["Enums"]["domain_status"]
+          domain_target?: string | null
           domain_verified?: boolean
           id?: string
+          last_published_at?: string | null
           organization_id?: string
           pages?: Json
+          publish_state?: Database["public"]["Enums"]["publish_state"]
           published?: boolean
           seo?: Json
           ssl_active?: boolean
@@ -1337,6 +1405,7 @@ export type Database = {
     }
     Functions: {
       can_manage_org: { Args: { _org: string }; Returns: boolean }
+      has_support_access: { Args: { _org: string }; Returns: boolean }
       is_org_member: { Args: { _org: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
     }
@@ -1355,6 +1424,13 @@ export type Database = {
         | "bookings"
         | "consultations"
         | "purchases"
+      domain_status:
+        | "not_connected"
+        | "dns_pending"
+        | "verifying"
+        | "connected"
+        | "ssl_active"
+        | "error"
       lead_status:
         | "new"
         | "contacted"
@@ -1364,6 +1440,7 @@ export type Database = {
         | "completed"
         | "lost"
       platform_role: "super_admin"
+      publish_state: "draft" | "preview" | "published" | "unpublished"
       subscription_status:
         | "trialing"
         | "active"
@@ -1513,6 +1590,14 @@ export const Constants = {
         "consultations",
         "purchases",
       ],
+      domain_status: [
+        "not_connected",
+        "dns_pending",
+        "verifying",
+        "connected",
+        "ssl_active",
+        "error",
+      ],
       lead_status: [
         "new",
         "contacted",
@@ -1523,6 +1608,7 @@ export const Constants = {
         "lost",
       ],
       platform_role: ["super_admin"],
+      publish_state: ["draft", "preview", "published", "unpublished"],
       subscription_status: [
         "trialing",
         "active",
