@@ -136,7 +136,13 @@ export const getPublicSite = createServerFn({ method: "GET" })
       services: services.data ?? [],
       settings: settings.data,
       social: social.data,
-      reviews: reviews.data ?? [],
+      reviews: (reviews.data ?? []).map((r) => ({
+        id: r.id as string,
+        author_name: r.author_name ?? "",
+        rating: r.rating ?? 5,
+        comment: r.comment,
+        created_at: r.created_at as string,
+      })),
       gallery: gallery.data ?? [],
       quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     };
