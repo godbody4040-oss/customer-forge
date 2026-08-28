@@ -37,7 +37,17 @@ export const getPublicSite = createServerFn({ method: "GET" })
 
     if (!org) return null;
 
+    const { data: gate } = await supabase
+      .from("website_settings")
+      .select("publish_state, published")
+      .eq("organization_id", org.id)
+      .maybeSingle();
+
+    // A client site is only served publicly once it is published (or explicitly in preview).
+    if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview")) return null;
+
     const [profile, services, settings, social, reviews, gallery, quoteForm] = await Promise.all([
+
       supabase.from("business_profiles").select("*").eq("organization_id", org.id).maybeSingle(),
       supabase
         .from("services")
