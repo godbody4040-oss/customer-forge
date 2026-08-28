@@ -697,40 +697,49 @@ export type Database = {
       }
       generation_jobs: {
         Row: {
+          attempts: number
           completed_at: string | null
           created_at: string
           created_by: string | null
           current_step: string | null
           error_message: string | null
           id: string
+          lease_expires_at: string | null
           organization_id: string
           progress: number
+          started_at: string | null
           status: string
           steps: Json
           updated_at: string
         }
         Insert: {
+          attempts?: number
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
           current_step?: string | null
           error_message?: string | null
           id?: string
+          lease_expires_at?: string | null
           organization_id: string
           progress?: number
+          started_at?: string | null
           status?: string
           steps?: Json
           updated_at?: string
         }
         Update: {
+          attempts?: number
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
           current_step?: string | null
           error_message?: string | null
           id?: string
+          lease_expires_at?: string | null
           organization_id?: string
           progress?: number
+          started_at?: string | null
           status?: string
           steps?: Json
           updated_at?: string
@@ -799,6 +808,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_queue_state: {
+        Row: {
+          consecutive_rate_limits: number
+          id: string
+          last_error: string | null
+          last_run_at: string | null
+          pause_kind: string | null
+          pause_reason: string | null
+          paused: boolean
+          paused_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          consecutive_rate_limits?: number
+          id: string
+          last_error?: string | null
+          last_run_at?: string | null
+          pause_kind?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          paused_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          consecutive_rate_limits?: number
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          pause_kind?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          paused_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       lead_activities: {
         Row: {
@@ -1895,8 +1940,10 @@ export type Database = {
           approved_by: string | null
           created_at: string
           custom_domain: string | null
+          dns_ok: boolean
           domain_checked_at: string | null
           domain_error: string | null
+          domain_records: Json
           domain_status: Database["public"]["Enums"]["domain_status"]
           domain_target: string | null
           domain_verified: boolean
@@ -1911,6 +1958,7 @@ export type Database = {
           review_state: string
           seo: Json
           ssl_active: boolean
+          ssl_ok: boolean
           subdomain: string | null
           template: string
           updated_at: string
@@ -1920,8 +1968,10 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           custom_domain?: string | null
+          dns_ok?: boolean
           domain_checked_at?: string | null
           domain_error?: string | null
+          domain_records?: Json
           domain_status?: Database["public"]["Enums"]["domain_status"]
           domain_target?: string | null
           domain_verified?: boolean
@@ -1936,6 +1986,7 @@ export type Database = {
           review_state?: string
           seo?: Json
           ssl_active?: boolean
+          ssl_ok?: boolean
           subdomain?: string | null
           template?: string
           updated_at?: string
@@ -1945,8 +1996,10 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           custom_domain?: string | null
+          dns_ok?: boolean
           domain_checked_at?: string | null
           domain_error?: string | null
+          domain_records?: Json
           domain_status?: Database["public"]["Enums"]["domain_status"]
           domain_target?: string | null
           domain_verified?: boolean
@@ -1961,6 +2014,7 @@ export type Database = {
           review_state?: string
           seo?: Json
           ssl_active?: boolean
+          ssl_ok?: boolean
           subdomain?: string | null
           template?: string
           updated_at?: string

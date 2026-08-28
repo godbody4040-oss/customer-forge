@@ -2,8 +2,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NewClientInput } from "@/lib/admin-types";
 
-/** The DNS target clients point their domain at. */
-export const DOMAIN_TARGET = "customer-forge.lovable.app";
+/** Where clients point their domain. Both records are checked automatically. */
+export const DOMAIN_TARGET = "revoragrowthsystems.com";
+export const DOMAIN_A_RECORD = "185.158.133.1";
+export const DOMAIN_TXT_NAME = "_lovable";
 
 export async function assertSuperAdmin(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
@@ -43,7 +45,7 @@ export function isValidDomain(value: string) {
 
 type DnsAnswer = { name: string; type: number; data: string };
 
-async function dnsQuery(name: string, type: "A" | "CNAME"): Promise<DnsAnswer[]> {
+async function dnsQuery(name: string, type: "A" | "CNAME" | "TXT"): Promise<DnsAnswer[]> {
   const res = await fetch(
     `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,
     { headers: { accept: "application/dns-json" } },
@@ -53,50 +55,118 @@ async function dnsQuery(name: string, type: "A" | "CNAME"): Promise<DnsAnswer[]>
   return json.Answer ?? [];
 }
 
+export type DomainRecords = {
+  a: string[];
+  cname: string[];
+  txt: string[];
+  aMatches: boolean;
+  cnameMatches: boolean;
+  txtVerified: boolean;
+  httpsStatus: number | null;
+  httpsError: string | null;
+  servesThisSite: boolean;
+};
+
 export type DomainCheck = {
   status: "not_connected" | "dns_pending" | "verifying" | "connected" | "ssl_active" | "error";
   detail: string;
+  dnsOk: boolean;
+  sslOk: boolean;
+  records: DomainRecords;
 };
 
-/** Honest domain check: only reports connected/ssl_active from real DNS + TLS evidence. */
+const emptyRecords = (): DomainRecords => ({
+  a: [],
+  cname: [],
+  txt: [],
+  aMatches: false,
+  cnameMatches: false,
+  txtVerified: false,
+  httpsStatus: null,
+  httpsError: null,
+  servesThisSite: false,
+});
+
+/** What a client must add at their registrar. Shown verbatim in the app. */
+export const requiredDnsRecords = (domain: string) => [
+  { type: "A", name: "@", value: DOMAIN_A_RECORD, purpose: `Points ${domain} at the platform` },
+  { type: "A", name: "www", value: DOMAIN_A_RECORD, purpose: "Makes the www address work too" },
+  { type: "TXT", name: DOMAIN_TXT_NAME, value: "lovable_verify=<value shown in project settings>", purpose: "Proves you own the domain" },
+];
+
+/**
+ * Automated domain validation. Nothing is reported as live without evidence:
+ * DNS must actually resolve to the platform, and HTTPS must complete a TLS
+ * handshake and return a real response from that hostname.
+ */
 export async function checkDomain(domain: string): Promise<DomainCheck> {
-  if (!domain) return { status: "not_connected", detail: "No custom domain added." };
+  if (!domain)
+    return { status: "not_connected", detail: "No custom domain added.", dnsOk: false, sslOk: false, records: emptyRecords() };
+
+  const records = emptyRecords();
+
   try {
-    const [cname, a] = await Promise.all([dnsQuery(domain, "CNAME"), dnsQuery(domain, "A")]);
-    const cnames = cname.filter((r) => r.type === 5).map((r) => normalizeDomain(r.data));
-    const pointsHere = cnames.some((c) => c === DOMAIN_TARGET || c.endsWith(".lovable.app"));
+    const [aRes, cnameRes, txtRes] = await Promise.all([
+      dnsQuery(domain, "A"),
+      dnsQuery(domain, "CNAME"),
+      dnsQuery(`${DOMAIN_TXT_NAME}.${domain}`, "TXT").catch(() => [] as DnsAnswer[]),
+    ]);
 
-    if (!pointsHere && a.length === 0 && cnames.length === 0) {
-      return {
-        status: "dns_pending",
-        detail: `No DNS records found yet. Add a CNAME record pointing ${domain} to ${DOMAIN_TARGET}.`,
-      };
+    records.a = aRes.filter((r) => r.type === 1).map((r) => r.data.trim());
+    records.cname = cnameRes.filter((r) => r.type === 5).map((r) => normalizeDomain(r.data));
+    records.txt = txtRes.filter((r) => r.type === 16).map((r) => r.data.replace(/"/g, "").trim());
+    records.aMatches = records.a.includes(DOMAIN_A_RECORD);
+    records.cnameMatches = records.cname.some((c) => c === DOMAIN_TARGET || c.endsWith(".lovable.app"));
+    records.txtVerified = records.txt.some((t) => t.toLowerCase().startsWith("lovable_verify="));
+
+    const dnsOk = records.aMatches || records.cnameMatches;
+
+    if (!dnsOk) {
+      const detail =
+        records.a.length === 0 && records.cname.length === 0
+          ? `No DNS records found for ${domain} yet. Add an A record pointing to ${DOMAIN_A_RECORD}.`
+          : `DNS exists but doesn't point here. ${domain} currently resolves to ${[...records.a, ...records.cname].slice(0, 3).join(", ")}. Point it to ${DOMAIN_A_RECORD} instead.`;
+      return { status: records.txtVerified ? "verifying" : "dns_pending", detail, dnsOk: false, sslOk: false, records };
     }
 
-    if (!pointsHere) {
-      return {
-        status: "dns_pending",
-        detail: `DNS records exist but don't point here yet. Point ${domain} to ${DOMAIN_TARGET} with a CNAME record.`,
-      };
-    }
-
-    // DNS resolves to us — now see whether HTTPS actually answers on that hostname.
+    // DNS resolves here. Now prove HTTPS actually works on that hostname.
     try {
       const res = await fetch(`https://${domain}/`, { method: "GET", redirect: "manual" });
-      if (res.status > 0) {
-        return { status: "ssl_active", detail: "Domain resolves here and serves a secure connection." };
+      records.httpsStatus = res.status;
+      records.servesThisSite = res.status < 500;
+      if (res.status >= 500) {
+        return {
+          status: "connected",
+          detail: `DNS points here and the certificate is valid, but the site returned ${res.status}. Publish the website, then re-check.`,
+          dnsOk: true,
+          sslOk: true,
+          records,
+        };
       }
-      return { status: "connected", detail: "DNS points here. Waiting on the security certificate." };
-    } catch {
+      return {
+        status: "ssl_active",
+        detail: "DNS resolves here and HTTPS answers with a valid certificate.",
+        dnsOk: true,
+        sslOk: true,
+        records,
+      };
+    } catch (error) {
+      records.httpsError = error instanceof Error ? error.message : "TLS handshake failed";
       return {
         status: "connected",
-        detail: "DNS points here. The security certificate isn't answering yet — this can take a few hours.",
+        detail: `DNS points here, but HTTPS isn't answering yet (${records.httpsError}). Certificates are usually issued within a few hours.`,
+        dnsOk: true,
+        sslOk: false,
+        records,
       };
     }
   } catch (error) {
     return {
       status: "error",
       detail: error instanceof Error ? error.message : "The domain check failed. Try again shortly.",
+      dnsOk: false,
+      sslOk: false,
+      records,
     };
   }
 }

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -9,7 +10,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * or edit their own website.
  */
 
-export type RunResult = { jobId: string; status: string; progress: number };
+export type RunResult = { jobId: string; status: string; progress: number; queued: boolean };
 
 export const runSiteGeneration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -22,170 +23,82 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const orgId = data.organizationId;
 
-    const { GENERATION_STEPS } = await import("@/lib/site-engine");
-    const { generateWebsitePlan } = await import("@/lib/website-plan");
-    const { generateSiteCopy, COPY_MODEL } = await import("@/lib/site-engine.server");
+    // RLS enforces that the caller belongs to this workspace.
+    const { data: existing } = await supabase
+      .from("generation_jobs")
+      .select("id, status, progress")
+      .eq("organization_id", orgId)
+      .in("status", ["queued", "processing"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existing)
+      return { jobId: existing.id, status: existing.status, progress: existing.progress, queued: true };
 
-    const { data: job, error: jobError } = await supabase
+    const { data: job, error } = await supabase
       .from("generation_jobs")
       .insert({
         organization_id: orgId,
-        status: "processing",
+        status: "queued",
         progress: 0,
-        current_step: "business",
+        current_step: null,
         created_by: userId,
         steps: [],
       })
       .select("id")
       .single();
-    if (jobError || !job) throw new Error(jobError?.message ?? "Couldn't start the build.");
+    if (error || !job) throw new Error(error?.message ?? "Couldn't queue the build.");
 
-    const done: string[] = [];
-    const step = async (key: string) => {
-      done.push(key);
-      const meta = GENERATION_STEPS.find((s) => s.key === key);
-      await supabase
-        .from("generation_jobs")
-        .update({ current_step: key, progress: meta?.progress ?? 0, steps: done })
-        .eq("id", job.id);
-    };
+    // Non-blocking kick so the worker usually starts immediately; the scheduled
+    // run and the client's pump call are the fallbacks.
+    void kickWorker(new URL(getRequest().url).origin);
 
-    try {
-      const [org, profile, services, media, socials, forms, bookable] = await Promise.all([
-        supabase.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
-        supabase.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-        supabase
-          .from("services")
-          .select("name, description, price, starting_price")
-          .eq("organization_id", orgId)
-          .eq("is_active", true)
-          .order("sort_order"),
-        supabase.from("media").select("id").eq("organization_id", orgId),
-        supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-        supabase.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
-        supabase.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
-      ]);
+    return { jobId: job.id, status: "queued", progress: 0, queued: true };
+  });
 
-      if (!org.data) throw new Error("Workspace not found.");
-      await step("business");
+async function kickWorker(origin: string) {
+  const secret = process.env["LOVABLE_CRON_SECRET"];
+  const base = process.env["APP_URL"] ?? origin;
+  if (!secret || !base) return;
+  try {
+    await fetch(`${base.replace(/\/$/, "")}/api/public/jobs/site-engine`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${secret}` },
+    });
+  } catch {
+    // The scheduled worker run and the client pump still pick the job up.
+  }
+}
 
-      const p = (profile.data ?? {}) as Record<string, unknown>;
-      const serviceRows = services.data ?? [];
-      await step("services");
+/**
+ * Advances the queue for the caller's own workspace. The client polling hook
+ * calls this, so generation always progresses even without a scheduler — the
+ * database lease guarantees a job is never processed twice.
+ */
+export const pumpSiteEngineQueue = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string }) => {
+    const organizationId = String(input?.organizationId ?? "");
+    if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
+    return { organizationId };
+  })
+  .handler(async ({ data, context }) => {
+    // Verify membership with the caller's RLS-scoped client before using admin.
+    const { data: member } = await context.supabase
+      .from("memberships")
+      .select("organization_id")
+      .eq("organization_id", data.organizationId)
+      .limit(1)
+      .maybeSingle();
+    if (!member) throw new Error("You don't have access to that workspace.");
 
-      const social = (socials.data ?? {}) as Record<string, unknown>;
-      const socialLinks = ["instagram", "facebook", "tiktok", "youtube", "google_business", "linkedin"].filter(
-        (k) => typeof social[k] === "string" && String(social[k]).trim(),
-      ).length;
-      await step("brand");
-
-      const testimonials = Array.isArray(p["testimonials"]) ? (p["testimonials"] as unknown[]) : [];
-      const goalsRaw = (p["website_goals"] as string[] | undefined) ?? [];
-      const goals = (goalsRaw.length ? goalsRaw : [org.data.conversion_goal ?? "quote"]) as string[];
-
-      const plan = generateWebsitePlan({
-        businessName: org.data.name ?? "",
-        industry: org.data.industry ?? "",
-        description: (p["description"] as string) ?? null,
-        city: (p["city"] as string) ?? null,
-        state: (p["state"] as string) ?? null,
-        serviceArea: (p["service_area"] as string) ?? null,
-        phone: (p["phone"] as string) ?? null,
-        email: (p["email"] as string) ?? null,
-        goals: goals as never,
-        services: serviceRows,
-        photoCount: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
-        testimonialCount: testimonials.length,
-        hasCredentials: Boolean(p["certifications"] || p["awards"] || p["years_in_business"]),
-        hasHours: Boolean(p["hours"] && Object.keys(p["hours"] as object).length),
-        socialLinks,
-      });
-      await step("structure");
-
-      const copy = await generateSiteCopy({
-        businessName: org.data.name ?? "",
-        industry: org.data.industry ?? "",
-        description: (p["description"] as string) ?? null,
-        city: (p["city"] as string) ?? null,
-        state: (p["state"] as string) ?? null,
-        serviceArea: (p["service_area"] as string) ?? null,
-        phone: (p["phone"] as string) ?? null,
-        email: (p["email"] as string) ?? null,
-        yearsInBusiness: (p["years_in_business"] as number) ?? null,
-        hasHours: Boolean(p["hours"] && Object.keys(p["hours"] as object).length),
-        style: (p["font_preference"] as string) ?? null,
-        goals,
-        ctaLabel: plan.primaryCtaLabel,
-        services: serviceRows,
-      });
-      await step("copy");
-
-      await supabase.from("ai_generations").insert({
-        organization_id: orgId,
-        job_id: job.id,
-        kind: "website_copy",
-        model: COPY_MODEL,
-        instruction: null,
-        result: copy as unknown as never,
-        created_by: userId,
-      });
-      await step("conversion");
-
-      const { error: saveError } = await supabase.from("website_settings").upsert(
-        {
-          organization_id: orgId,
-          template: plan.template,
-          generation: { ...plan, copy } as unknown as Record<string, unknown>,
-          generated_at: new Date().toISOString(),
-          review_state: "ready_for_review",
-          publish_state: "preview",
-          seo: {
-            title: copy.metaTitle || plan.seoTitle,
-            headline: copy.heroHeadline,
-            subheadline: copy.heroSubheadline,
-            meta_description: copy.metaDescription || plan.metaDescription,
-            primary_cta_label: copy.primaryCta || plan.primaryCtaLabel,
-            og_title: copy.ogTitle,
-            og_description: copy.ogDescription,
-          },
-        } as never,
-        { onConflict: "organization_id" },
-      );
-      if (saveError) throw new Error(saveError.message);
-      await step("leads");
-      await step("mobile");
-
-      await supabase
-        .from("generation_jobs")
-        .update({
-          status: "completed",
-          progress: 100,
-          current_step: "ready",
-          steps: [...done, "ready"],
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", job.id);
-
-      const leadCapture = (forms.data ?? []).length > 0 || (bookable.data ?? []).length > 0;
-      await supabase.from("notifications").insert({
-        organization_id: orgId,
-        title: "Your website draft is ready to review",
-        body: leadCapture
-          ? "Revora built your site from your information and connected lead capture."
-          : "Revora built your site. Turn on the quote calculator or online booking to capture leads.",
-        kind: "website",
-        link: "/app/website",
-      });
-
-      return { jobId: job.id, status: "completed", progress: 100 };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Generation failed.";
-      await supabase
-        .from("generation_jobs")
-        .update({ status: "failed", error_message: message, completed_at: new Date().toISOString() })
-        .eq("id", job.id);
-      throw new Error(message);
-    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { drainSiteEngineQueue } = await import("@/lib/site-engine.worker.server");
+    return drainSiteEngineQueue(supabaseAdmin as never, {
+      max: 1,
+      organizationId: data.organizationId,
+      probeWhilePaused: true,
+    });
   });
 
 /** AI edit assistant: rewrites only the requested fields. */

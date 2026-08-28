@@ -263,6 +263,39 @@ function Launch() {
             </Button>
           </div>
         ) : null}
+        {settings?.custom_domain ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-md border border-border/60 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[12px] font-medium">DNS check</p>
+                <Pill tone={settings.dns_ok ? "signal" : "attention"}>
+                  {settings.dns_ok ? "Resolving here" : "Not pointing here"}
+                </Pill>
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Add an A record for <span className="font-mono">@</span> and{" "}
+                <span className="font-mono">www</span> pointing to{" "}
+                <span className="font-mono">185.158.133.1</span>.
+              </p>
+            </div>
+            <div className="rounded-md border border-border/60 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[12px] font-medium">Secure certificate (SSL)</p>
+                <Pill tone={settings.ssl_ok ? "signal" : settings.dns_ok ? "info" : "neutral"}>
+                  {settings.ssl_ok ? "HTTPS active" : settings.dns_ok ? "Being issued" : "Waiting on DNS"}
+                </Pill>
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                Certificates are issued automatically once DNS resolves here — usually within a few hours.
+              </p>
+            </div>
+          </div>
+        ) : null}
+        {settings?.custom_domain && !(settings.dns_ok && settings.ssl_ok) ? (
+          <p className="text-[12px] text-accent">
+            Your domain isn't live yet. Until both checks pass, your site stays on its Revora address.
+          </p>
+        ) : null}
         {settings?.domain_error ? (
           <p className="text-[12px] text-destructive">{settings.domain_error}</p>
         ) : null}
@@ -271,6 +304,7 @@ function Launch() {
             Last checked {dateLong(settings.domain_checked_at)}
           </p>
         ) : null}
+
       </Panel>
 
       <Panel className="space-y-3">

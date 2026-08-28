@@ -1,17 +1,18 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { aiEditSiteCopy, runSiteGeneration } from "@/lib/site-engine.functions";
+import { aiEditSiteCopy, pumpSiteEngineQueue, runSiteGeneration } from "@/lib/site-engine.functions";
 
 /** Latest build job for the workspace; polls while a build is running. */
 export function useLatestGenerationJob(organizationId: string | undefined) {
-  return useQuery({
+  const query = useQuery({
     queryKey: ["generation_job", organizationId],
     enabled: !!organizationId,
-    refetchInterval: (query) => {
-      const status = (query.state.data as { status?: string } | undefined)?.status;
-      return status === "processing" || status === "queued" ? 1200 : false;
+    refetchInterval: (q) => {
+      const status = (q.state.data as { status?: string } | undefined)?.status;
+      return status === "processing" || status === "queued" ? 1500 : false;
     },
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,6 +26,30 @@ export function useLatestGenerationJob(organizationId: string | undefined) {
       return data;
     },
   });
+
+  // Fallback pump: if the scheduled worker hasn't picked the job up yet, ask the
+  // server to advance the queue for this workspace. The database lease makes this
+  // safe to call repeatedly — it never double-processes a job.
+  const pump = useServerFn(pumpSiteEngineQueue);
+  const status = (query.data as { status?: string } | null | undefined)?.status;
+  useEffect(() => {
+    if (!organizationId || status !== "queued") return;
+    const timer = setTimeout(() => {
+      void pump({ data: { organizationId } }).catch(() => undefined);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [organizationId, status, pump]);
+
+  // When the background worker finishes, pull the new site copy into the UI.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (status !== "completed") return;
+    void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
+    void queryClient.invalidateQueries({ queryKey: ["website_versions"] });
+    void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  }, [status, queryClient]);
+
+  return query;
 }
 
 export function useRunSiteEngine(organizationId: string | undefined) {
@@ -36,17 +61,18 @@ export function useRunSiteEngine(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
     },
     onSuccess: () => {
-      toast.success("Your website is ready to review.");
+      toast.message("Build queued", { description: "Revora is building your website — progress updates below." });
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error: Error) => {
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
-      toast.error(error.message || "The build failed. You can retry.");
+      toast.error(error.message || "The build couldn't be queued. You can retry.");
     },
   });
 }
+
 
 export function useAiCopyEdit(organizationId: string | undefined) {
   const edit = useServerFn(aiEditSiteCopy);
