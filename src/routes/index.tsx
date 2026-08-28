@@ -16,7 +16,7 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
 import { INDUSTRIES } from "@/lib/domain";
-import { formatCurrency } from "@/lib/format";
+import { currency } from "@/lib/format";
 
 const plansQuery = queryOptions({ queryKey: ["plans"], queryFn: () => getPlans() });
 
@@ -245,7 +245,7 @@ function Landing() {
                     {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
                   </div>
                   <p className="tnum mt-4 font-display text-[30px] leading-none font-semibold">
-                    {formatCurrency(Number(plan.monthly_price))}
+                    {currency(Number(plan.monthly_price))}
                     <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
                   </p>
                   <p className="mt-2 text-[13px] text-muted-foreground">{plan.tagline}</p>
