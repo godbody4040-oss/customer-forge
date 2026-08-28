@@ -20,6 +20,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
+import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,12 @@ const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppServicesRoute =
+  AuthenticatedAppServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
+  '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -98,6 +106,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
+  '/app/services': typeof AuthenticatedAppServicesRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -112,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
+  '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/calendar'
     | '/app/leads'
+    | '/app/services'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/calendar'
     | '/app/leads'
+    | '/app/services'
     | '/app'
   id:
     | '__root__'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/app/calendar'
     | '/_authenticated/app/leads'
+    | '/_authenticated/app/services'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -241,18 +254,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppLeadsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/services': {
+      id: '/_authenticated/app/services'
+      path: '/services'
+      fullPath: '/app/services'
+      preLoaderRoute: typeof AuthenticatedAppServicesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
+  AuthenticatedAppServicesRoute: typeof AuthenticatedAppServicesRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
+  AuthenticatedAppServicesRoute: AuthenticatedAppServicesRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
