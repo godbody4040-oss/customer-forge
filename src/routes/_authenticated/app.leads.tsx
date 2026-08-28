@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Mail, Phone, Plus, Search } from "lucide-react";
+import {
+  CalendarPlus,
+  Mail,
+  MessageSquare,
+  Phone,
+  Plus,
+  Search,
+  StickyNote,
+  UserCheck,
+} from "lucide-react";
 import { EmptyState, LoadingRows, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +24,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useCreateLead, useLeads, useUpdateLead } from "@/lib/queries";
+import {
+  useConvertLeadToCustomer,
+  useCreateAppointment,
+  useCreateLead,
+  useLeadAction,
+  useLeadActivities,
+  useLeads,
+  useServices,
+  useTeam,
+} from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
 import { LEAD_STATUSES, leadStatusMeta, sourceLabel, type LeadStatus } from "@/lib/domain";
 import { currency, relative } from "@/lib/format";
@@ -23,24 +41,38 @@ import { currency, relative } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/app/leads")({
   head: () => ({
     meta: [
-      { title: "Leads — Customer Forge" },
-      { name: "description", content: "Every lead from new to booked in one pipeline." },
+      { title: "Lead pipeline — Customer Forge" },
+      { name: "description", content: "Work every lead from new to booked with calls, texts and follow-ups." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: LeadsPage,
 });
 
+const FOLLOW_UPS = [
+  { label: "Tomorrow", days: 1 },
+  { label: "In 2 days", days: 2 },
+  { label: "In 1 week", days: 7 },
+];
+
 function LeadsPage() {
   const { data: ws } = useWorkspace();
   const orgId = ws?.workspace?.organizationId;
+  const businessName = ws?.workspace?.organization?.name ?? null;
   const { data: leads, isLoading } = useLeads(orgId);
-  const updateLead = useUpdateLead(orgId);
+  const { data: team } = useTeam(orgId);
+  const { data: services } = useServices(orgId);
+  const action = useLeadAction(orgId, businessName);
   const createLead = useCreateLead(orgId);
+  const convert = useConvertLeadToCustomer(orgId);
+  const createAppointment = useCreateAppointment(orgId, businessName);
+
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [addOpen, setAddOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [bookOpen, setBookOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -56,6 +88,21 @@ function LeadsPage() {
   }, [leads, query, statusFilter]);
 
   const selected = (leads ?? []).find((l) => l.id === selectedId) ?? null;
+  const { data: activities } = useLeadActivities(orgId, selectedId);
+
+  const leadRef = selected
+    ? {
+        id: selected.id,
+        name: selected.name,
+        email: selected.email,
+        phone: selected.phone,
+        service_interest: selected.service_interest,
+        estimated_value: Number(selected.estimated_value ?? 0),
+      }
+    : null;
+
+  const triggerFor = (status: LeadStatus) =>
+    status === "quoted" ? "quote_requested" : status === "booked" ? "booking_created" : undefined;
 
   if (isLoading) return <LoadingRows rows={6} />;
 
@@ -176,12 +223,13 @@ function LeadsPage() {
         <div className="flex w-max gap-3">
           {LEAD_STATUSES.map((status) => {
             const column = filtered.filter((l) => l.status === status.value);
+            const value = column.reduce((sum, l) => sum + Number(l.estimated_value ?? 0), 0);
             return (
               <section key={status.value} className="w-64 shrink-0">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="eyebrow">{status.label}</span>
                   <span className="tnum rounded-full bg-elevated px-1.5 py-0.5 text-[10px] font-semibold">
-                    {column.length}
+                    {column.length} · {currency(value)}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -189,7 +237,10 @@ function LeadsPage() {
                     <button
                       key={lead.id}
                       type="button"
-                      onClick={() => setSelectedId(lead.id)}
+                      onClick={() => {
+                        setSelectedId(lead.id);
+                        setNote("");
+                      }}
                       className="panel w-full cursor-pointer p-3 text-left transition-colors hover:border-muted-foreground/40"
                     >
                       <p className="truncate text-[13px] font-medium">{lead.name}</p>
@@ -204,6 +255,11 @@ function LeadsPage() {
                           {relative(lead.created_at)}
                         </span>
                       </div>
+                      {lead.next_follow_up_at ? (
+                        <p className="mt-1.5 text-[10px] text-accent">
+                          Follow up {relative(lead.next_follow_up_at)}
+                        </p>
+                      ) : null}
                     </button>
                   ))}
                   {column.length === 0 ? (
@@ -226,9 +282,14 @@ function LeadsPage() {
       ) : null}
 
       {/* Detail */}
-      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <DialogContent>
-          {selected ? (
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          {selected && leadRef ? (
             <>
               <DialogHeader>
                 <DialogTitle>{selected.name}</DialogTitle>
@@ -239,22 +300,79 @@ function LeadsPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex flex-wrap gap-2">
                   {selected.phone ? (
-                    <Button asChild variant="signal" size="sm">
-                      <a href={`tel:${selected.phone}`}>
-                        <Phone className="size-4" /> Call {selected.phone}
-                      </a>
-                    </Button>
+                    <>
+                      <Button
+                        asChild
+                        variant="signal"
+                        size="sm"
+                        onClick={() =>
+                          action.mutate({
+                            lead: leadRef,
+                            patch: { last_contacted_at: new Date().toISOString(), status: selected.status === "new" ? "contacted" : selected.status },
+                            activity: { kind: "call", body: `Called ${selected.phone}` },
+                          })
+                        }
+                      >
+                        <a href={`tel:${selected.phone}`}>
+                          <Phone className="size-4" /> Call
+                        </a>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          action.mutate({
+                            lead: leadRef,
+                            patch: { last_contacted_at: new Date().toISOString() },
+                            activity: { kind: "text", body: `Texted ${selected.phone}` },
+                          })
+                        }
+                      >
+                        <a href={`sms:${selected.phone}`}>
+                          <MessageSquare className="size-4" /> Text
+                        </a>
+                      </Button>
+                    </>
                   ) : null}
                   {selected.email ? (
-                    <Button asChild variant="outline" size="sm">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        action.mutate({
+                          lead: leadRef,
+                          patch: { last_contacted_at: new Date().toISOString() },
+                          activity: { kind: "email", body: `Emailed ${selected.email}` },
+                        })
+                      }
+                    >
                       <a href={`mailto:${selected.email}`}>
                         <Mail className="size-4" /> Email
                       </a>
                     </Button>
                   ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBookOpen(true)}
+                    disabled={createAppointment.isPending}
+                  >
+                    <CalendarPlus className="size-4" /> Book job
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={convert.isPending || !!selected.customer_id}
+                    onClick={() => convert.mutate(leadRef)}
+                  >
+                    <UserCheck className="size-4" />
+                    {selected.customer_id ? "Already a customer" : "Convert to customer"}
+                  </Button>
                 </div>
 
                 {selected.message ? (
@@ -266,16 +384,22 @@ function LeadsPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="d-status">Status</Label>
+                    <Label htmlFor="d-status">Stage</Label>
                     <select
                       id="d-status"
                       value={selected.status}
-                      onChange={(e) =>
-                        updateLead.mutate({
-                          id: selected.id,
-                          patch: { status: e.target.value as LeadStatus },
-                        })
-                      }
+                      onChange={(e) => {
+                        const next = e.target.value as LeadStatus;
+                        action.mutate({
+                          lead: leadRef,
+                          patch: { status: next },
+                          activity: {
+                            kind: "status",
+                            body: `Stage moved to ${leadStatusMeta(next).label}.`,
+                          },
+                          ...(triggerFor(next) ? { trigger: triggerFor(next)! } : {}),
+                        });
+                      }}
                       className="h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm"
                     >
                       {LEAD_STATUSES.map((s) => (
@@ -292,9 +416,67 @@ function LeadsPage() {
                       defaultValue={String(selected.estimated_value ?? "")}
                       inputMode="decimal"
                       onBlur={(e) =>
-                        updateLead.mutate({
-                          id: selected.id,
+                        action.mutate({
+                          lead: leadRef,
                           patch: { estimated_value: Number(e.target.value) || 0 },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="d-assign">Assigned to</Label>
+                    <select
+                      id="d-assign"
+                      value={selected.assigned_to ?? ""}
+                      onChange={(e) => {
+                        const userId = e.target.value || null;
+                        const member = (team ?? []).find((m) => m.user_id === userId);
+                        action.mutate({
+                          lead: leadRef,
+                          patch: { assigned_to: userId },
+                          activity: {
+                            kind: "assign",
+                            body: userId
+                              ? `Assigned to ${(member?.profiles as { full_name?: string; email?: string } | null)?.full_name ?? (member?.profiles as { email?: string } | null)?.email ?? "a teammate"}.`
+                              : "Unassigned.",
+                          },
+                        });
+                      }}
+                      className="h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="">Unassigned</option>
+                      {(team ?? []).map((member) => {
+                        const profile = member.profiles as
+                          | { full_name?: string | null; email?: string | null }
+                          | null;
+                        return (
+                          <option key={member.id} value={member.user_id}>
+                            {profile?.full_name || profile?.email || member.role}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="d-followup">Next follow-up</Label>
+                    <Input
+                      id="d-followup"
+                      type="date"
+                      value={selected.next_follow_up_at?.slice(0, 10) ?? ""}
+                      onChange={(e) =>
+                        action.mutate({
+                          lead: leadRef,
+                          patch: {
+                            next_follow_up_at: e.target.value
+                              ? new Date(`${e.target.value}T09:00:00`).toISOString()
+                              : null,
+                          },
+                          activity: {
+                            kind: "follow_up",
+                            body: e.target.value
+                              ? `Follow-up scheduled for ${e.target.value}.`
+                              : "Follow-up cleared.",
+                          },
                         })
                       }
                     />
@@ -305,32 +487,73 @@ function LeadsPage() {
                   <Pill tone={leadStatusMeta(selected.status).tone}>
                     {leadStatusMeta(selected.status).label}
                   </Pill>
+                  {FOLLOW_UPS.map((f) => (
+                    <Button
+                      key={f.label}
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        action.mutate({
+                          lead: leadRef,
+                          patch: {
+                            next_follow_up_at: new Date(
+                              Date.now() + f.days * 86_400_000,
+                            ).toISOString(),
+                          },
+                          activity: { kind: "follow_up", body: `Follow-up set ${f.label.toLowerCase()}.` },
+                        })
+                      }
+                    >
+                      {f.label}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="d-note">Add a note</Label>
+                  <Textarea
+                    id="d-note"
+                    rows={2}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Quoted $320 over the phone, wants Saturday…"
+                  />
                   <Button
-                    variant="outline"
                     size="sm"
+                    variant="signal"
+                    disabled={!note.trim() || action.isPending}
                     onClick={() =>
-                      updateLead.mutate({
-                        id: selected.id,
-                        patch: { last_contacted_at: new Date().toISOString() },
-                      })
+                      action.mutate(
+                        { lead: leadRef, activity: { kind: "note", body: note.trim() } },
+                        { onSuccess: () => setNote("") },
+                      )
                     }
                   >
-                    Mark contacted
+                    <StickyNote className="size-4" /> Save note
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      updateLead.mutate({
-                        id: selected.id,
-                        patch: {
-                          next_follow_up_at: new Date(Date.now() + 2 * 86_400_000).toISOString(),
-                        },
-                      })
-                    }
-                  >
-                    Follow up in 2 days
-                  </Button>
+                </div>
+
+                <div>
+                  <p className="eyebrow">Activity</p>
+                  <ul className="mt-2 space-y-2">
+                    {(activities ?? []).map((item) => (
+                      <li key={item.id} className="flex gap-2.5 text-[12px]">
+                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                        <span>
+                          <span className="font-medium">{item.kind.replace(/_/g, " ")}</span>
+                          {item.body ? ` — ${item.body}` : ""}
+                          <span className="ml-1 text-muted-foreground">
+                            {relative(item.created_at)}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                    {(activities ?? []).length === 0 ? (
+                      <li className="text-[12px] text-muted-foreground">
+                        Nothing logged yet. Calls, texts, notes and automations show up here.
+                      </li>
+                    ) : null}
+                  </ul>
                 </div>
               </div>
             </>
@@ -338,11 +561,83 @@ function LeadsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Book a job for this lead */}
+      <Dialog open={bookOpen} onOpenChange={setBookOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Book {selected?.name}</DialogTitle>
+            <DialogDescription>
+              This lands on your calendar and moves the lead to Booked.
+            </DialogDescription>
+          </DialogHeader>
+          {selected ? (
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = new FormData(e.currentTarget);
+                const serviceId = String(form.get("service") ?? "") || null;
+                const service = (services ?? []).find((s) => s.id === serviceId);
+                createAppointment.mutate(
+                  {
+                    name: selected.name,
+                    email: selected.email,
+                    phone: selected.phone,
+                    leadId: selected.id,
+                    serviceId,
+                    startsAt: `${String(form.get("date"))}T${String(form.get("time"))}`,
+                    durationMinutes: service?.duration_minutes ?? 60,
+                    notes: String(form.get("notes") ?? "") || null,
+                  },
+                  { onSuccess: () => setBookOpen(false) },
+                );
+              }}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="b-date">Date</Label>
+                  <Input id="b-date" name="date" type="date" required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="b-time">Time</Label>
+                  <Input id="b-time" name="time" type="time" required defaultValue="09:00" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="b-service">Service</Label>
+                <select
+                  id="b-service"
+                  name="service"
+                  className="h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">No specific service</option>
+                  {(services ?? []).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} · {s.duration_minutes}min
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="b-notes">Notes</Label>
+                <Textarea id="b-notes" name="notes" rows={2} />
+              </div>
+              <DialogFooter>
+                <Button type="submit" variant="signal" disabled={createAppointment.isPending}>
+                  Add to calendar
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Panel className="p-5">
         <SectionHeading eyebrow="Reference" title="How the pipeline works" />
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-          New leads arrive on the left. Move them right as you contact, quote and book. Anything sat
-          in New with no reply is money leaking — the dashboard surfaces those first.
+          New leads arrive on the left. Call, text or email from the lead card and it logs itself.
+          Moving a lead to Quoted or Booked fires the matching automation, and booking a job puts it
+          straight on your calendar and into your dashboard numbers.
         </p>
       </Panel>
     </div>
