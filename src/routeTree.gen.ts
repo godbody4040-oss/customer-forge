@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
+import { Route as AuthenticatedAppLaunchRouteImport } from './routes/_authenticated/app.launch'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
@@ -120,6 +121,11 @@ const AuthenticatedAppCalendarRoute =
     path: '/calendar',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppLaunchRoute = AuthenticatedAppLaunchRouteImport.update({
+  id: '/launch',
+  path: '/launch',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppLeadsRoute = AuthenticatedAppLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/_authenticated/app/launch': typeof AuthenticatedAppLaunchRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/plans'
     | '/app/analytics'
     | '/app/calendar'
+    | '/app/launch'
     | '/app/leads'
     | '/app/services'
     | '/app/settings'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/admin/plans'
     | '/app/analytics'
     | '/app/calendar'
+    | '/app/launch'
     | '/app/leads'
     | '/app/services'
     | '/app/settings'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/plans'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/calendar'
+    | '/_authenticated/app/launch'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/services'
     | '/_authenticated/app/settings'
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCalendarRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/launch': {
+      id: '/_authenticated/app/launch'
+      path: '/launch'
+      fullPath: '/app/launch'
+      preLoaderRoute: typeof AuthenticatedAppLaunchRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/leads': {
       id: '/_authenticated/app/leads'
       path: '/leads'
@@ -492,6 +511,7 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
+  AuthenticatedAppLaunchRoute: typeof AuthenticatedAppLaunchRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppServicesRoute: typeof AuthenticatedAppServicesRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -502,6 +522,7 @@ interface AuthenticatedAppRouteChildren {
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAnalyticsRoute: AuthenticatedAppAnalyticsRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
+  AuthenticatedAppLaunchRoute: AuthenticatedAppLaunchRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppServicesRoute: AuthenticatedAppServicesRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
