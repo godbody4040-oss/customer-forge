@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { Database } from "@/integrations/supabase/types";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { NewClientInput } from "@/lib/admin-types";
 
 type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
 type PublishState = Database["public"]["Enums"]["publish_state"];
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { NewClientInput } from "@/lib/admin-types";
 
 /** Platform-wide metrics for the super admin dashboard. */
 export const getPlatformMetrics = createServerFn({ method: "GET" })

@@ -2,10 +2,10 @@
 
 export type NewClientService = {
   name: string;
-  description?: string;
-  price?: number;
-  duration_minutes?: number;
-  bookable?: boolean;
+  description?: string | undefined;
+  price?: number | undefined;
+  duration_minutes?: number | undefined;
+  bookable?: boolean | undefined;
 };
 
 export type NewClientInput = {
