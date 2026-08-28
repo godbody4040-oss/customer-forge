@@ -106,10 +106,23 @@ function AppShell() {
           </div>
         ) : null}
 
+        {data?.isSuperAdmin ? (
+          <div className="p-2.5">
+            <Link
+              to="/admin"
+              onClick={() => setNavOpen(false)}
+              className="flex items-center gap-2.5 rounded-md border border-border px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
+            >
+              <Shield className="size-4" aria-hidden="true" /> Platform admin
+            </Link>
+          </div>
+        ) : null}
+
         <div className="p-2.5">
           <button
             type="button"
             onClick={async () => {
+              writeSupportMode(null);
               await signOut();
               navigate({ to: "/auth", replace: true });
             }}
@@ -121,6 +134,29 @@ function AppShell() {
       </aside>
 
       <div className="min-w-0 flex-1">
+        {supporting && supportMode ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-accent/40 bg-accent/15 px-4 py-2.5">
+            <p className="flex items-center gap-2 text-[12px]">
+              <LifeBuoy className="size-4 text-accent" aria-hidden="true" />
+              <span>
+                <strong>Support mode</strong> — you are working inside {supportMode.organizationName}. This
+                session started {dateLong(supportMode.startedAt)} and is recorded in the audit log.
+              </span>
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                await endSupport({ data: { sessionId: supportMode.sessionId } });
+                writeSupportMode(null);
+                navigate({ to: "/admin/clients/$orgId", params: { orgId: supportMode.organizationId } });
+              }}
+            >
+              End support session
+            </Button>
+          </div>
+        ) : null}
+
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-sm">
           <div className="flex min-w-0 items-center gap-3">
             <button
