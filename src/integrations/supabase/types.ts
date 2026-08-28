@@ -413,6 +413,8 @@ export type Database = {
         Row: {
           accent_color: string | null
           address: string | null
+          awards: string | null
+          certifications: string | null
           city: string | null
           created_at: string
           description: string | null
@@ -433,13 +435,17 @@ export type Database = {
           state: string | null
           support_email: string | null
           tagline: string | null
+          testimonials: Json
           updated_at: string
           website: string | null
+          years_in_business: number | null
           zip: string | null
         }
         Insert: {
           accent_color?: string | null
           address?: string | null
+          awards?: string | null
+          certifications?: string | null
           city?: string | null
           created_at?: string
           description?: string | null
@@ -460,13 +466,17 @@ export type Database = {
           state?: string | null
           support_email?: string | null
           tagline?: string | null
+          testimonials?: Json
           updated_at?: string
           website?: string | null
+          years_in_business?: number | null
           zip?: string | null
         }
         Update: {
           accent_color?: string | null
           address?: string | null
+          awards?: string | null
+          certifications?: string | null
           city?: string | null
           created_at?: string
           description?: string | null
@@ -487,8 +497,10 @@ export type Database = {
           state?: string | null
           support_email?: string | null
           tagline?: string | null
+          testimonials?: Json
           updated_at?: string
           website?: string | null
+          years_in_business?: number | null
           zip?: string | null
         }
         Relationships: [
@@ -1702,8 +1714,67 @@ export type Database = {
         }
         Relationships: []
       }
+      website_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          created_by: string | null
+          details: string | null
+          id: string
+          kind: string
+          organization_id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          kind?: string
+          organization_id: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          kind?: string
+          organization_id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       website_settings: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           custom_domain: string | null
           domain_checked_at: string | null
@@ -1711,12 +1782,15 @@ export type Database = {
           domain_status: Database["public"]["Enums"]["domain_status"]
           domain_target: string | null
           domain_verified: boolean
+          generated_at: string | null
+          generation: Json
           id: string
           last_published_at: string | null
           organization_id: string
           pages: Json
           publish_state: Database["public"]["Enums"]["publish_state"]
           published: boolean
+          review_state: string
           seo: Json
           ssl_active: boolean
           subdomain: string | null
@@ -1724,6 +1798,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           custom_domain?: string | null
           domain_checked_at?: string | null
@@ -1731,12 +1807,15 @@ export type Database = {
           domain_status?: Database["public"]["Enums"]["domain_status"]
           domain_target?: string | null
           domain_verified?: boolean
+          generated_at?: string | null
+          generation?: Json
           id?: string
           last_published_at?: string | null
           organization_id: string
           pages?: Json
           publish_state?: Database["public"]["Enums"]["publish_state"]
           published?: boolean
+          review_state?: string
           seo?: Json
           ssl_active?: boolean
           subdomain?: string | null
@@ -1744,6 +1823,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           custom_domain?: string | null
           domain_checked_at?: string | null
@@ -1751,12 +1832,15 @@ export type Database = {
           domain_status?: Database["public"]["Enums"]["domain_status"]
           domain_target?: string | null
           domain_verified?: boolean
+          generated_at?: string | null
+          generation?: Json
           id?: string
           last_published_at?: string | null
           organization_id?: string
           pages?: Json
           publish_state?: Database["public"]["Enums"]["publish_state"]
           published?: boolean
+          review_state?: string
           seo?: Json
           ssl_active?: boolean
           subdomain?: string | null
