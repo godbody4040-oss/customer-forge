@@ -1,4 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { Database } from "@/integrations/supabase/types";
+
+type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
+type PublishState = Database["public"]["Enums"]["publish_state"];
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { NewClientInput } from "@/lib/admin-types";
 
@@ -229,12 +233,14 @@ export const updateClientOrg = createServerFn({ method: "POST" })
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const patch: Record<string, unknown> = {};
-    if (data.name !== undefined) patch["name"] = data.name.trim();
-    if (data.is_suspended !== undefined) patch["is_suspended"] = data.is_suspended;
-    if (data.plan_id !== undefined) patch["plan_id"] = data.plan_id;
-    if (data.subscription_status !== undefined) patch["subscription_status"] = data.subscription_status;
-    if (data.industry !== undefined) patch["industry"] = data.industry;
+    const patch: Database["public"]["Tables"]["organizations"]["Update"] = {};
+    if (data.name !== undefined) patch.name = data.name.trim();
+    if (data.is_suspended !== undefined) patch.is_suspended = data.is_suspended;
+    if (data.plan_id !== undefined) patch.plan_id = data.plan_id;
+    if (data.subscription_status !== undefined) {
+      patch.subscription_status = data.subscription_status as SubscriptionStatus;
+    }
+    if (data.industry !== undefined) patch.industry = data.industry;
 
     const { error } = await supabaseAdmin
       .from("organizations")
@@ -243,9 +249,11 @@ export const updateClientOrg = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     if (data.plan_id !== undefined || data.subscription_status !== undefined) {
-      const subPatch: Record<string, unknown> = {};
-      if (data.plan_id !== undefined) subPatch["plan_id"] = data.plan_id;
-      if (data.subscription_status !== undefined) subPatch["status"] = data.subscription_status;
+      const subPatch: Database["public"]["Tables"]["subscriptions"]["Update"] = {};
+      if (data.plan_id !== undefined) subPatch.plan_id = data.plan_id;
+      if (data.subscription_status !== undefined) {
+        subPatch.status = data.subscription_status as SubscriptionStatus;
+      }
       await supabaseAdmin.from("subscriptions").update(subPatch).eq("organization_id", data.organizationId);
     }
 
@@ -255,7 +263,7 @@ export const updateClientOrg = createServerFn({ method: "POST" })
       action: data.is_suspended === true ? "client.suspended" : "client.updated",
       entity: "organization",
       entity_id: data.organizationId,
-      metadata: patch,
+      metadata: patch as Record<string, never> as never,
     });
 
     return { ok: true };
@@ -428,7 +436,7 @@ export const setClientPublishState = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("website_settings")
       .update({
-        publish_state: data.state,
+        publish_state: data.state as PublishState,
         published: data.state === "published",
         ...(data.state === "published" ? { last_published_at: new Date().toISOString() } : {}),
       })
