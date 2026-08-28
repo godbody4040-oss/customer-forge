@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { readSeo } from "@/lib/site-seo";
 import { canManage } from "@/lib/domain";
 import { WebsiteReview } from "@/components/app/WebsiteReview";
+import { MediaLibrary } from "@/components/app/MediaLibrary";
 import {
   AiCopyAssistant,
   RevoraScorePanel,
