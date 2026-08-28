@@ -1076,3 +1076,64 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     deleteAddon,
   };
 }
+
+/* --------------------------- website generation & review --------------------------- */
+
+export function useWebsiteRequests(organizationId: string | undefined) {
+  return useQuery({
+    queryKey: ["website_requests", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("website_requests")
+        .select("*")
+        .eq("organization_id", organizationId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useCreateWebsiteRequest(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      title: string;
+      details?: string | null;
+      kind?: string;
+      priority?: string;
+    }) => {
+      const userId = (await supabase.auth.getUser()).data.user?.id ?? null;
+      const { error } = await supabase.from("website_requests").insert({
+        organization_id: organizationId!,
+        created_by: userId,
+        title: input.title,
+        details: input.details ?? null,
+        kind: input.kind ?? "change",
+        priority: input.priority ?? "normal",
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Request sent to the Revora team.");
+      void queryClient.invalidateQueries({ queryKey: ["website_requests"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't send that request."),
+  });
+}
+
+export function useUpdateWebsiteRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { error } = await supabase.from("website_requests").update(patch as never).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Request updated.");
+      void queryClient.invalidateQueries({ queryKey: ["website_requests"] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't update that request."),
+  });
+}
