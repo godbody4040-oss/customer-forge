@@ -2,12 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Mail, Menu, Phone, X } from "lucide-react";
+import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 
 const NAV = [
   { to: "/demo", label: "Product" },
   { to: "/pricing", label: "Pricing" },
   { to: "/industries", label: "Solutions" },
+  { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
@@ -100,6 +102,31 @@ export function SiteFooter() {
               One system to get discovered, capture opportunities, convert leads, book customers and
               measure growth.
             </p>
+            <div className="mt-6">
+              <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+                Contact
+              </p>
+              <ul className="mt-2 space-y-1.5 text-[12px]">
+                <li className="flex items-center gap-2">
+                  <Mail className="size-3.5 text-primary" aria-hidden="true" />
+                  <a
+                    href={revoraMailto(MAIL_SUBJECTS.inquiry)}
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    {REVORA.email}
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Phone className="size-3.5 text-primary" aria-hidden="true" />
+                  <a
+                    href={revoraTel}
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    {REVORA.phoneDisplay}
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
           <nav
             aria-label="Footer"
@@ -116,6 +143,9 @@ export function SiteFooter() {
             </Link>
             <Link to="/demo" className="transition-colors hover:text-primary">
               Demo
+            </Link>
+            <Link to="/about" className="transition-colors hover:text-primary">
+              About
             </Link>
             <Link to="/contact" className="transition-colors hover:text-primary">
               Contact
