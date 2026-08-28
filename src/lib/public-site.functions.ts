@@ -204,6 +204,8 @@ export const getPublicSite = createServerFn({ method: "GET" })
       })),
       gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
       quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
+      content: homePage ? { page: homePage, sections } : null,
+
     };
   });
 
