@@ -8,7 +8,7 @@ import { useSignOut, useWorkspace } from "@/lib/use-tenant";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Platform admin — Local Lead Engine" },
+      { title: "Platform admin — Customer Forge" },
       { name: "description", content: "Create, launch and support client businesses on the platform." },
       { name: "robots", content: "noindex" },
     ],

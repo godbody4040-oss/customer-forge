@@ -24,13 +24,13 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Local Lead Engine — Turn local searches into booked jobs" },
+      { title: "Customer Forge — Turn local searches into booked jobs" },
       {
         name: "description",
         content:
           "A conversion-first website, instant quote calculator, booking calendar and lead CRM for local service businesses. Launch in a day, see every lead in one place.",
       },
-      { property: "og:title", content: "Local Lead Engine — Turn local searches into booked jobs" },
+      { property: "og:title", content: "Customer Forge — Turn local searches into booked jobs" },
       {
         property: "og:description",
         content:
@@ -118,7 +118,7 @@ function Landing() {
                 Turn local searches into booked jobs.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                Local Lead Engine gives your business a website that actually asks for the work — plus
+                Customer Forge gives your business a website that actually asks for the work — plus
                 instant quotes, online booking and one place where every lead lands. Built for
                 detailers, stylists, landscapers, cleaners and contractors.
               </p>

@@ -16,7 +16,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" aria-label="Local Lead Engine home">
+        <Link to="/" aria-label="Customer Forge home">
           <Logo />
         </Link>
 
@@ -112,7 +112,7 @@ export function SiteFooter() {
           </Link>
         </nav>
         <p className="text-[11px] text-muted-foreground">
-          © {new Date().getFullYear()} Local Lead Engine
+          © {new Date().getFullYear()} Customer Forge
         </p>
       </div>
     </footer>

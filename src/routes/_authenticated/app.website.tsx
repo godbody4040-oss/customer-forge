@@ -21,7 +21,7 @@ import { readSeo } from "@/lib/site-seo";
 export const Route = createFileRoute("/_authenticated/app/website")({
   head: () => ({
     meta: [
-      { title: "Website — Local Lead Engine" },
+      { title: "Website — Customer Forge" },
       { name: "description", content: "Edit your public business website and check its SEO health." },
       { name: "robots", content: "noindex" },
     ],
