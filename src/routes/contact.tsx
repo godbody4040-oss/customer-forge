@@ -1,27 +1,44 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Mail, MessageSquare, Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { RevoraMobileBar, SupportCard } from "@/components/marketing/SalesCTA";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
+
+const INTERESTS = [
+  "Website",
+  "Lead Generation",
+  "CRM",
+  "Booking",
+  "Quotes",
+  "AI",
+  "Automations",
+  "Analytics",
+  "Complete Revora System",
+  "Other",
+] as const;
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — Revora" },
+      { title: "Contact Revora — Build your customer growth system" },
       {
         name: "description",
         content:
-          "Questions about launching your local business website, quote calculator or booking calendar? Send us a note and we'll get back within one business day.",
+          "Questions about Revora, want to see the platform in action, or ready to build a customer acquisition system? Email Revorabusiness0@gmail.com or call (919) 622-6620.",
       },
-      { property: "og:title", content: "Contact — Revora" },
+      { property: "og:title", content: "Contact Revora" },
       {
         property: "og:description",
-        content: "Talk to us about getting your local service business online and booked out.",
+        content: "Get in touch with the Revora team about your customer acquisition system.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Contact,
@@ -29,43 +46,71 @@ export const Route = createFileRoute("/contact")({
 
 function Contact() {
   const [sent, setSent] = useState(false);
+  const [interest, setInterest] = useState<string>("Complete Revora System");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-16">
         <div className="grid gap-10 lg:grid-cols-[1fr_1fr]">
           <div>
-            <p className="eyebrow">Contact</p>
+            <p className="eyebrow">Contact Revora</p>
             <h1 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
-              Talk to a human
+              Let's build your <span className="gold-text">customer growth system</span>.
             </h1>
             <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-              Tell us your trade and what you're trying to fix. We'll tell you honestly whether this
-              is the right tool for you — and how fast you can be live.
+              Have a question about Revora, want to see the platform in action, or ready to build a
+              customer acquisition system for your business? Get in touch with the Revora team.
             </p>
+
             <ul className="mt-8 space-y-3">
-              {[
-                { icon: Mail, label: "hello@localleadengine.app", note: "Replies within one business day" },
-                { icon: Phone, label: "(555) 018-2200", note: "Mon–Fri, 9a–6p" },
-                { icon: MessageSquare, label: "Live demo site", note: "See exactly what customers see" },
-              ].map(({ icon: Icon, label, note }) => (
-                <li key={label} className="panel flex items-center gap-3.5 p-4">
-                  <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                  <div>
-                    <p className="text-[14px] font-medium">{label}</p>
-                    <p className="text-[12px] text-muted-foreground">{note}</p>
-                  </div>
-                </li>
-              ))}
+              <li className="panel flex items-center gap-3.5 p-4">
+                <Mail className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <div>
+                  <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+                    Email
+                  </p>
+                  <a
+                    href={revoraMailto(MAIL_SUBJECTS.inquiry)}
+                    className="text-[14px] font-medium hover:text-primary"
+                  >
+                    {REVORA.email}
+                  </a>
+                </div>
+              </li>
+              <li className="panel flex items-center gap-3.5 p-4">
+                <Phone className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <div>
+                  <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+                    Phone
+                  </p>
+                  <a href={revoraTel} className="text-[14px] font-medium hover:text-primary">
+                    {REVORA.phoneDisplay}
+                  </a>
+                </div>
+              </li>
             </ul>
-            <p className="mt-6 text-[13px] text-muted-foreground">
-              Want to skip the conversation?{" "}
-              <Link to="/auth" search={{ mode: "signup" }} className="text-primary hover:underline">
-                Start the free trial
-              </Link>
-              .
-            </p>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button asChild variant="signal">
+                <a href={revoraMailto(MAIL_SUBJECTS.inquiry)}>Email Revora</a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href={revoraTel}>Call Revora</a>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Get started
+                </Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link to="/demo">Request a demo</Link>
+              </Button>
+            </div>
+
+            <div className="mt-8">
+              <SupportCard />
+            </div>
           </div>
 
           <div className="panel p-6">
@@ -73,7 +118,7 @@ function Contact() {
               <div className="py-10 text-center">
                 <h2 className="font-display text-[17px] font-semibold">Message received</h2>
                 <p className="mt-2 text-[13px] text-muted-foreground">
-                  We'll be in touch within one business day.
+                  Thanks for contacting Revora. We've received your request and will be in touch.
                 </p>
               </div>
             ) : (
@@ -82,25 +127,49 @@ function Contact() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   setSent(true);
-                  toast.success("Thanks — we'll reply within one business day.");
+                  toast.success("Message received — the Revora team will be in touch.");
                 }}
               >
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="c-name">Your name</Label>
+                    <Label htmlFor="c-name">Name</Label>
                     <Input id="c-name" name="name" required autoComplete="name" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="c-business">Business</Label>
+                    <Label htmlFor="c-business">Business name</Label>
                     <Input id="c-business" name="business" autoComplete="organization" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="c-email">Email</Label>
+                    <Input id="c-email" name="email" type="email" required autoComplete="email" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="c-phone">Phone</Label>
+                    <Input id="c-phone" name="phone" type="tel" autoComplete="tel" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="c-email">Email</Label>
-                  <Input id="c-email" name="email" type="email" required autoComplete="email" />
+                  <Label htmlFor="c-type">Business type</Label>
+                  <Input id="c-type" name="businessType" placeholder="e.g. mobile detailing" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="c-message">What are you trying to fix?</Label>
+                  <Label htmlFor="c-interest">What are you interested in?</Label>
+                  <select
+                    id="c-interest"
+                    name="interest"
+                    value={interest}
+                    onChange={(e) => setInterest(e.target.value)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground"
+                  >
+                    {INTERESTS.map((i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="c-message">Message</Label>
                   <Textarea id="c-message" name="message" rows={5} required />
                 </div>
                 <Button type="submit" variant="signal" className="w-full">
@@ -112,6 +181,7 @@ function Contact() {
         </div>
       </main>
       <SiteFooter />
+      <RevoraMobileBar />
     </div>
   );
 }
