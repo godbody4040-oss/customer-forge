@@ -19,6 +19,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
@@ -76,6 +77,11 @@ const SSlugRoute = SSlugRouteImport.update({
   path: '/s/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -122,7 +128,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesByTo {
@@ -140,7 +147,6 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
@@ -149,6 +155,7 @@ export interface FileRoutesByTo {
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRoutesById {
@@ -159,7 +166,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/s/$slug': typeof SSlugRoute
@@ -169,6 +176,7 @@ export interface FileRoutesById {
   '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
 export interface FileRouteTypes {
@@ -189,6 +197,7 @@ export interface FileRouteTypes {
     | '/app/services'
     | '/app/settings'
     | '/app/website'
+    | '/admin/'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -197,7 +206,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/industries'
     | '/pricing'
-    | '/admin'
     | '/onboarding'
     | '/s/$slug'
     | '/app/analytics'
@@ -206,6 +214,7 @@ export interface FileRouteTypes {
     | '/app/services'
     | '/app/settings'
     | '/app/website'
+    | '/admin'
     | '/app'
   id:
     | '__root__'
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/services'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/website'
+    | '/_authenticated/admin/'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
 }
@@ -310,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/app/': {
       id: '/_authenticated/app/'
       path: '/'
@@ -362,6 +379,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAnalyticsRoute: typeof AuthenticatedAppAnalyticsRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
@@ -386,13 +414,13 @@ const AuthenticatedAppRouteWithChildren =
   AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
 }
