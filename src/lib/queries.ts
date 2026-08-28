@@ -270,7 +270,7 @@ export function useSaveService(organizationId: string | undefined) {
       description?: string | null | undefined;
       category?: string | null | undefined;
       price?: number | null | undefined;
-      starting_price?: boolean | undefined;
+      starting_price?: number | null | undefined;
       duration_minutes?: number | null | undefined;
       bookable?: boolean | undefined;
       featured?: boolean | undefined;
