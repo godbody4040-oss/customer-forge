@@ -211,7 +211,7 @@ export function useUpdateLead(organizationId: string | undefined) {
         notes?: string | null;
       };
     }) => {
-      const { error } = await supabase.from("leads").update(patch).eq("id", id);
+      const { error } = await supabase.from("leads").update(patch as never).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -226,16 +226,16 @@ export function useCreateLead(organizationId: string | undefined) {
   return useMutation({
     mutationFn: async (lead: {
       name: string;
-      email?: string;
-      phone?: string;
-      source?: string;
-      service_interest?: string;
-      estimated_value?: number;
-      message?: string;
+      email?: string | undefined;
+      phone?: string | undefined;
+      source?: string | undefined;
+      service_interest?: string | undefined;
+      estimated_value?: number | undefined;
+      message?: string | undefined;
     }) => {
       const { error } = await supabase
         .from("leads")
-        .insert({ ...lead, organization_id: organizationId!, status: "new" });
+        .insert({ ...lead, organization_id: organizationId!, status: "new" } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -265,26 +265,26 @@ export function useSaveService(organizationId: string | undefined) {
   const invalidate = useInvalidate(["services"], organizationId);
   return useMutation({
     mutationFn: async (service: {
-      id?: string;
+      id?: string | undefined;
       name: string;
-      description?: string | null;
-      category?: string | null;
-      price?: number | null;
-      starting_price?: boolean;
-      duration_minutes?: number | null;
-      bookable?: boolean;
-      featured?: boolean;
-      is_active?: boolean;
-      sort_order?: number;
+      description?: string | null | undefined;
+      category?: string | null | undefined;
+      price?: number | null | undefined;
+      starting_price?: number | null | undefined;
+      duration_minutes?: number | null | undefined;
+      bookable?: boolean | undefined;
+      featured?: boolean | undefined;
+      is_active?: boolean | undefined;
+      sort_order?: number | undefined;
     }) => {
       if (service.id) {
         const { id, ...patch } = service;
-        const { error } = await supabase.from("services").update(patch).eq("id", id);
+        const { error } = await supabase.from("services").update(patch as never).eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("services")
-          .insert({ ...service, organization_id: organizationId! });
+          .insert({ ...service, organization_id: organizationId! } as never);
         if (error) throw error;
       }
     },
@@ -317,7 +317,7 @@ export function useSaveBusinessProfile(organizationId: string | undefined) {
     mutationFn: async (patch: Record<string, unknown>) => {
       const { error } = await supabase
         .from("business_profiles")
-        .upsert({ organization_id: organizationId!, ...patch }, { onConflict: "organization_id" });
+        .upsert({ organization_id: organizationId!, ...patch } as never, { onConflict: "organization_id" });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -334,7 +334,7 @@ export function useSaveWebsiteSettings(organizationId: string | undefined) {
     mutationFn: async (patch: Record<string, unknown>) => {
       const { error } = await supabase
         .from("website_settings")
-        .upsert({ organization_id: organizationId!, ...patch }, { onConflict: "organization_id" });
+        .upsert({ organization_id: organizationId!, ...patch } as never, { onConflict: "organization_id" });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -349,7 +349,7 @@ export function useUpdateOrganization() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
-      const { error } = await supabase.from("organizations").update(patch).eq("id", id);
+      const { error } = await supabase.from("organizations").update(patch as never).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

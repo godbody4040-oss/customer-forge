@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
-import { formatCurrency } from "@/lib/format";
+import { currency } from "@/lib/format";
 
 const plansQuery = queryOptions({ queryKey: ["plans"], queryFn: () => getPlans() });
 
@@ -71,11 +71,11 @@ function Pricing() {
                 {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
               </div>
               <p className="tnum mt-5 font-display text-[34px] leading-none font-semibold">
-                {formatCurrency(Number(plan.monthly_price))}
+                {currency(Number(plan.monthly_price))}
                 <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
               </p>
               <p className="mt-1.5 text-[12px] text-muted-foreground">
-                or {formatCurrency(Number(plan.annual_price))}/yr — two months free
+                or {currency(Number(plan.annual_price))}/yr — two months free
               </p>
               <p className="mt-3 text-[13px] text-muted-foreground">{plan.tagline}</p>
               <ul className="mt-5 space-y-2 border-t border-border pt-5">

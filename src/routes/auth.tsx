@@ -14,13 +14,14 @@ type Search = { mode?: "signup" | "signin"; redirect?: string };
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): Search => ({
-    mode: search.mode === "signup" ? "signup" : search.mode === "signin" ? "signin" : undefined,
-    redirect:
-      typeof search.redirect === "string" && search.redirect.startsWith("/")
-        ? search.redirect
-        : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): Search => {
+    const rawMode = search["mode"];
+    const rawRedirect = search["redirect"];
+    const out: Search = {};
+    if (rawMode === "signup" || rawMode === "signin") out.mode = rawMode;
+    if (typeof rawRedirect === "string" && rawRedirect.startsWith("/")) out.redirect = rawRedirect;
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Local Lead Engine" },
@@ -76,7 +77,7 @@ function AuthPage() {
           return;
         }
         toast.success("Welcome to Local Lead Engine.");
-        navigate({ to: "/app/onboarding", replace: true });
+        navigate({ to: "/onboarding", replace: true });
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
