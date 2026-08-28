@@ -16,9 +16,9 @@ import {
   Shield,
   Users,
   Wrench,
-  X,,
+  X,
   Calculator,
-  Zap
+  Zap,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
