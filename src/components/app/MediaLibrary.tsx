@@ -151,11 +151,11 @@ export function MediaLibrary({
 
   return (
     <Panel className="p-5">
-      <SectionHeading
-        eyebrow="Step 4 · Photos"
-        title="Your photo library"
-        description="Real photos of your work sell better than stock images. Drag them in — Revora resizes and optimises them for you."
-      />
+      <SectionHeading eyebrow="Step 4 · Photos" title="Your photo library" />
+      <p className="mt-1.5 text-[13px] text-muted-foreground">
+        Real photos of your work sell better than stock images. Drag them in — Revora resizes and
+        optimises them for you.
+      </p>
 
       {canManage ? (
         <>
