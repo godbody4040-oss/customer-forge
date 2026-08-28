@@ -1,0 +1,176 @@
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import type { Tone } from "@/lib/domain";
+
+const toneClasses: Record<Tone, string> = {
+  signal: "bg-primary/12 text-primary border-primary/30",
+  attention: "bg-accent/12 text-accent border-accent/30",
+  info: "bg-info/12 text-info border-info/30",
+  neutral: "bg-elevated text-muted-foreground border-border",
+  danger: "bg-destructive/12 text-destructive border-destructive/30",
+};
+
+export function Pill({
+  tone = "neutral",
+  children,
+  className,
+}: {
+  tone?: Tone;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+        toneClasses[tone],
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function Dot({ tone = "signal" }: { tone?: Tone }) {
+  const map: Record<Tone, string> = {
+    signal: "bg-primary",
+    attention: "bg-accent",
+    info: "bg-info",
+    neutral: "bg-muted-foreground",
+    danger: "bg-destructive",
+  };
+  return <span aria-hidden="true" className={cn("size-1.5 rounded-full", map[tone])} />;
+}
+
+export function Panel({
+  children,
+  className,
+  as: As = "section",
+}: {
+  children: ReactNode;
+  className?: string;
+  as?: "section" | "div" | "article";
+}) {
+  return <As className={cn("panel p-4", className)}>{children}</As>;
+}
+
+export function SectionHeading({
+  eyebrow,
+  title,
+  action,
+  className,
+}: {
+  eyebrow?: string;
+  title: string;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-end justify-between gap-3", className)}>
+      <div className="min-w-0">
+        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+        <h2 className="mt-1 truncate font-display text-[17px] font-semibold">{title}</h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+export function MetricCard({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+  progress,
+  className,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: Tone;
+  progress?: number;
+  className?: string;
+}) {
+  const hintTone: Record<Tone, string> = {
+    signal: "text-primary",
+    attention: "text-accent",
+    info: "text-info",
+    neutral: "text-muted-foreground",
+    danger: "text-destructive",
+  };
+  const barTone: Record<Tone, string> = {
+    signal: "bg-primary",
+    attention: "bg-accent",
+    info: "bg-info",
+    neutral: "bg-muted-foreground",
+    danger: "bg-destructive",
+  };
+  return (
+    <div className={cn("panel p-3.5", className)}>
+      <p className="eyebrow flex items-center gap-1.5">
+        {tone !== "neutral" ? <Dot tone={tone} /> : null}
+        {label}
+      </p>
+      <p className="tnum mt-1.5 font-display text-[26px] leading-none font-semibold">{value}</p>
+      {hint ? <p className={cn("mt-1.5 text-[11px]", hintTone[tone])}>{hint}</p> : null}
+      {typeof progress === "number" ? (
+        <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-elevated">
+          <div
+            className={cn("h-full rounded-full", barTone[tone])}
+            style={{ width: `${Math.min(100, Math.max(2, progress))}%` }}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function EmptyState({
+  title,
+  description,
+  action,
+  icon,
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className="panel flex flex-col items-center px-6 py-12 text-center">
+      {icon ? (
+        <div className="mb-4 grid size-11 place-items-center rounded-lg bg-elevated text-muted-foreground">
+          {icon}
+        </div>
+      ) : null}
+      <h3 className="font-display text-[15px] font-semibold">{title}</h3>
+      <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground">
+        {description}
+      </p>
+      {action ? <div className="mt-5">{action}</div> : null}
+    </div>
+  );
+}
+
+export function LoadingRows({ rows = 4 }: { rows?: number }) {
+  return (
+    <div className="space-y-2" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Loading</span>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="panel h-16 animate-pulse opacity-60" />
+      ))}
+    </div>
+  );
+}
+
+export function ErrorNote({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive"
+    >
+      {message}
+    </div>
+  );
+}
