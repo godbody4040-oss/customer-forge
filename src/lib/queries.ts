@@ -358,3 +358,15 @@ export function useUpdateOrganization() {
     onError: (error: Error) => toast.error(error.message || "Couldn't save that change."),
   });
 }
+
+export function usePlans() {
+  return useQuery({
+    queryKey: ["plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("plans").select("*").order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60_000,
+  });
+}
