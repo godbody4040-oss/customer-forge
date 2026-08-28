@@ -288,7 +288,13 @@ export const setClientDomain = createServerFn({ method: "POST" })
 
     const check = domain
       ? await checkDomain(domain)
-      : { status: "not_connected" as const, detail: "No custom domain added." };
+      : {
+          status: "not_connected" as const,
+          detail: "No custom domain added.",
+          dnsOk: false,
+          sslOk: false,
+          records: null,
+        };
 
     const { error } = await supabaseAdmin
       .from("website_settings")
@@ -298,13 +304,16 @@ export const setClientDomain = createServerFn({ method: "POST" })
         domain_error: check.status === "error" || check.status === "dns_pending" ? check.detail : null,
         domain_checked_at: new Date().toISOString(),
         domain_target: DOMAIN_TARGET,
-        domain_verified: check.status === "connected" || check.status === "ssl_active",
-        ssl_active: check.status === "ssl_active",
+        domain_verified: check.dnsOk,
+        dns_ok: check.dnsOk,
+        ssl_ok: check.sslOk,
+        domain_records: check.records,
+        ssl_active: check.sslOk,
       })
       .eq("organization_id", data.organizationId);
     if (error) throw new Error(error.message);
 
-    return { ...check, domain, target: DOMAIN_TARGET };
+    return { ...check, domain, target: DOMAIN_TARGET, live: check.dnsOk && check.sslOk };
   });
 
 /** Re-checks DNS for the saved domain. Never optimistic. */
@@ -333,12 +342,15 @@ export const verifyClientDomain = createServerFn({ method: "POST" })
         domain_status: check.status,
         domain_error: check.status === "error" || check.status === "dns_pending" ? check.detail : null,
         domain_checked_at: new Date().toISOString(),
-        domain_verified: check.status === "connected" || check.status === "ssl_active",
-        ssl_active: check.status === "ssl_active",
+        domain_verified: check.dnsOk,
+        dns_ok: check.dnsOk,
+        ssl_ok: check.sslOk,
+        domain_records: check.records,
+        ssl_active: check.sslOk,
       })
       .eq("organization_id", data.organizationId);
 
-    return { ...check, domain, target: DOMAIN_TARGET };
+    return { ...check, domain, target: DOMAIN_TARGET, live: check.dnsOk && check.sslOk };
   });
 
 /** Starts an explicit, audited support session in a client's workspace. */

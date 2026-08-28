@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
+import { Route as ApiPublicJobsSiteEngineRouteImport } from './routes/api/public/jobs/site-engine'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -186,6 +187,11 @@ const AuthenticatedAdminClientsOrgIdRoute =
     path: '/$orgId',
     getParentRoute: () => AuthenticatedAdminClientsRoute,
   } as any)
+const ApiPublicJobsSiteEngineRoute = ApiPublicJobsSiteEngineRouteImport.update({
+  id: '/api/public/jobs/site-engine',
+  path: '/api/public/jobs/site-engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/admin/clients/$orgId'
+    | '/api/public/jobs/site-engine'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/admin/clients/$orgId'
+    | '/api/public/jobs/site-engine'
   id:
     | '__root__'
     | '/'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/admin/clients/$orgId'
+    | '/api/public/jobs/site-engine'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   IndustriesRoute: typeof IndustriesRoute
   PricingRoute: typeof PricingRoute
   SSlugRoute: typeof SSlugRoute
+  ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -573,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClientsOrgIdRouteImport
       parentRoute: typeof AuthenticatedAdminClientsRoute
     }
+    '/api/public/jobs/site-engine': {
+      id: '/api/public/jobs/site-engine'
+      path: '/api/public/jobs/site-engine'
+      fullPath: '/api/public/jobs/site-engine'
+      preLoaderRoute: typeof ApiPublicJobsSiteEngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -663,6 +683,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndustriesRoute: IndustriesRoute,
   PricingRoute: PricingRoute,
   SSlugRoute: SSlugRoute,
+  ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

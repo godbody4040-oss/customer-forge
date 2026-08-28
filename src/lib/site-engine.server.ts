@@ -39,6 +39,18 @@ export type CopyFacts = {
   services: { name: string; description?: string | null; price?: number | null; starting_price?: number | null }[];
 };
 
+/** Carries the gateway HTTP status so the worker can pause or retry correctly. */
+export class AiGatewayError extends Error {
+  status: number;
+  retryAfterSeconds: number | null;
+  constructor(status: number, message: string, retryAfterSeconds: number | null = null) {
+    super(message);
+    this.name = "AiGatewayError";
+    this.status = status;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 async function chatJson(system: string, prompt: string): Promise<Record<string, unknown>> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI copywriting isn't configured for this workspace.");
@@ -56,11 +68,18 @@ async function chatJson(system: string, prompt: string): Promise<Record<string, 
     }),
   });
 
-  if (response.status === 429) throw new Error("AI is busy right now. Try generating again in a moment.");
-  if (response.status === 402) throw new Error("AI credits are exhausted for this workspace.");
   if (!response.ok) {
-    console.error("[site-engine] gateway error", response.status, await response.text().catch(() => ""));
-    throw new Error("The copy engine couldn't be reached. Try again.");
+    const body = await response.text().catch(() => "");
+    if (response.status === 429) {
+      const retryAfter = Number(response.headers.get("retry-after")) || null;
+      throw new AiGatewayError(429, "AI is busy right now. The build will retry automatically.", retryAfter);
+    }
+    if (response.status === 402)
+      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to continue building sites.");
+    if (response.status === 403)
+      throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+    console.error("[site-engine] gateway error", response.status, body);
+    throw new AiGatewayError(response.status, "The copy engine couldn't be reached. Try again.");
   }
 
   const payload = (await response.json()) as {
