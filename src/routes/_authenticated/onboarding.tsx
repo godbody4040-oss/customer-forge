@@ -88,8 +88,7 @@ function Onboarding() {
           slug,
           industry: draft.industry,
           conversion_goal: draft.goal as never,
-          template,
-          owner_id: user.id,
+          created_by: user.id,
           onboarding_completed: true,
           onboarding_step: 3,
         })
@@ -105,7 +104,7 @@ function Onboarding() {
         organization_id: org.id,
         phone: draft.phone || null,
         city: draft.city || null,
-        about: draft.about || null,
+        description: draft.about || null,
         tagline: `${draft.industry} in ${draft.city || "your area"}`,
         service_area: draft.city || null,
       });
@@ -113,8 +112,11 @@ function Onboarding() {
       await supabase.from("website_settings").insert({
         organization_id: org.id,
         template,
-        headline: `${draft.industry} you can actually book`,
-        subheadline: draft.about || `Serving ${draft.city || "your area"}. Fast quotes, real availability.`,
+        seo: {
+          headline: `${draft.industry} you can actually book`,
+          subheadline:
+            draft.about || `Serving ${draft.city || "your area"}. Fast quotes, real availability.`,
+        },
       });
 
       if (draft.serviceName.trim()) {
@@ -122,7 +124,7 @@ function Onboarding() {
           organization_id: org.id,
           name: draft.serviceName.trim(),
           price: draft.servicePrice ? Number(draft.servicePrice) : null,
-          starting_price: true,
+          starting_price: draft.servicePrice ? Number(draft.servicePrice) : null,
           bookable: true,
           featured: true,
           sort_order: 0,

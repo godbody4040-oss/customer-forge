@@ -41,7 +41,7 @@ type Editing = {
   description: string;
   category: string;
   price: string;
-  starting_price: boolean;
+  starting_price: string;
   duration_minutes: string;
   bookable: boolean;
   featured: boolean;
@@ -53,7 +53,7 @@ const blank: Editing = {
   description: "",
   category: "",
   price: "",
-  starting_price: true,
+  starting_price: "",
   duration_minutes: "60",
   bookable: true,
   featured: false,
@@ -102,7 +102,7 @@ function ServicesPage() {
                   <p className="truncate font-display text-[15px] font-semibold">{service.name}</p>
                   <p className="mt-1 text-[12px] text-muted-foreground">
                     {service.price !== null
-                      ? `${service.starting_price ? "From " : ""}${currency(Number(service.price))}`
+                      ? `${service.starting_price ? "From " : ""}${currency(Number(service.starting_price ?? service.price))}`
                       : "Price on request"}
                     {service.duration_minutes ? ` · ${service.duration_minutes} min` : ""}
                   </p>
@@ -129,7 +129,7 @@ function ServicesPage() {
                       description: service.description ?? "",
                       category: service.category ?? "",
                       price: service.price === null ? "" : String(service.price),
-                      starting_price: service.starting_price,
+                      starting_price: service.starting_price === null ? "" : String(service.starting_price),
                       duration_minutes: service.duration_minutes ? String(service.duration_minutes) : "",
                       bookable: service.bookable,
                       featured: service.featured,
@@ -208,7 +208,7 @@ function ServicesPage() {
                       description: editing.description.trim() || null,
                       category: editing.category.trim() || null,
                       price: editing.price ? Number(editing.price) : null,
-                      starting_price: editing.starting_price,
+                      starting_price: editing.starting_price ? Number(editing.starting_price) : null,
                       duration_minutes: editing.duration_minutes
                         ? Number(editing.duration_minutes)
                         : null,
@@ -238,7 +238,7 @@ function ServicesPage() {
                     onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                   />
                 </div>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="s-price">Price ($)</Label>
                     <Input
@@ -265,6 +265,20 @@ function ServicesPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
+                    <Label htmlFor="s-starting">Starting at ($)</Label>
+                    <Input
+                      id="s-starting"
+                      inputMode="decimal"
+                      value={editing.starting_price}
+                      onChange={(e) =>
+                        setEditing({
+                          ...editing,
+                          starting_price: e.target.value.replace(/[^0-9.]/g, ""),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
                     <Label htmlFor="s-category">Category</Label>
                     <Input
                       id="s-category"
@@ -276,7 +290,6 @@ function ServicesPage() {
                 <div className="space-y-3 border-t border-border pt-4">
                   {(
                     [
-                      ["starting_price", "Show as “starting at”"],
                       ["bookable", "Customers can book this online"],
                       ["featured", "Feature on the website"],
                       ["is_active", "Visible on the website"],

@@ -221,7 +221,7 @@ function PublicSite() {
                   ) : null}
                   <p className="tnum mt-3.5 text-[15px] font-semibold text-primary">
                     {service.price !== null
-                      ? `${service.starting_price ? "From " : ""}${currency(Number(service.price))}`
+                      ? `${service.starting_price ? "From " : ""}${currency(Number(service.starting_price ?? service.price))}`
                       : "Price on request"}
                     {service.duration_minutes ? (
                       <span className="ml-2 text-[12px] font-normal text-muted-foreground">
@@ -328,18 +328,18 @@ function PublicSite() {
             {profile?.city ? ` · ${profile.city}` : ""}
           </p>
           <div className="flex gap-4">
-            {social?.google_url ? (
-              <a href={social.google_url} className="hover:text-foreground">
+            {social?.google_business ? (
+              <a href={social.google_business} className="hover:text-foreground">
                 Google
               </a>
             ) : null}
-            {social?.facebook_url ? (
-              <a href={social.facebook_url} className="hover:text-foreground">
+            {social?.facebook ? (
+              <a href={social.facebook} className="hover:text-foreground">
                 Facebook
               </a>
             ) : null}
-            {social?.instagram_url ? (
-              <a href={social.instagram_url} className="hover:text-foreground">
+            {social?.instagram ? (
+              <a href={social.instagram} className="hover:text-foreground">
                 Instagram
               </a>
             ) : null}

@@ -80,7 +80,7 @@ function Dashboard() {
   const checklist = [
     { done: !!profileQuery.data?.phone, label: "Add your phone number", to: "/app/settings" },
     { done: (servicesQuery.data ?? []).length > 0, label: "Add your services", to: "/app/services" },
-    { done: !!profileQuery.data?.about, label: "Write your About section", to: "/app/website" },
+    { done: !!profileQuery.data?.description, label: "Write your About section", to: "/app/website" },
     { done: !!org?.conversion_goal, label: "Pick your main conversion goal", to: "/app/settings" },
   ];
   const remaining = checklist.filter((c) => !c.done);
