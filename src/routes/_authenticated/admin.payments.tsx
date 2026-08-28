@@ -58,8 +58,10 @@ function AdminPayments() {
   const submitRefund = async () => {
     if (!open) return;
     setMessage(null);
-    const value = amount.trim() ? Number(amount) : undefined;
-    const result = await runRefund({ data: { paymentId: open.id, amount: value } });
+    const value = amount.trim() ? Number(amount) : null;
+    const result = await runRefund({
+      data: value === null ? { paymentId: open.id } : { paymentId: open.id, amount: value },
+    });
     if (result.ok) {
       setMessage(`PayPal confirmed the refund. Payment is now ${result.status.replace("_", " ")}.`);
       setAmount("");
