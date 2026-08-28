@@ -47,7 +47,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
     // A client site is only served publicly once it is published (or explicitly in preview).
     if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview")) return null;
 
-    const [profile, services, settings, social, reviews, gallery, quoteForm] = await Promise.all([
+    const [profile, services, settings, social, reviews, galleryRows, quoteForm] = await Promise.all([
 
       supabase.from("public_business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       supabase
@@ -130,9 +130,39 @@ export const getPublicSite = createServerFn({ method: "GET" })
       }));
     }
 
+    // Photos live in a private bucket, so published pages get signed URLs.
+    // Only reachable here after the publish gate above.
+    const { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, isStoragePath } = await import("@/lib/media");
+    const gallery = galleryRows.data ?? [];
+    const profileRow = profile.data;
+    const toSign = [
+      ...gallery.map((g) => g.url),
+      profileRow?.logo_url ?? null,
+      profileRow?.hero_image_url ?? null,
+    ].filter((value): value is string => typeof value === "string" && isStoragePath(value));
+
+    const signed = new Map<string, string>();
+    if (toSign.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: urls } = await supabaseAdmin.storage
+        .from(MEDIA_BUCKET)
+        .createSignedUrls([...new Set(toSign)], SIGNED_URL_TTL_SECONDS);
+      for (const entry of urls ?? []) {
+        if (entry.path && entry.signedUrl) signed.set(entry.path, entry.signedUrl);
+      }
+    }
+    const resolve = (value: string | null): string | null =>
+      value ? (signed.get(value) ?? value) : value;
+
     return {
       org: { ...org, id: orgId, name: org.name ?? "", slug: org.slug ?? "" },
-      profile: profile.data,
+      profile: profileRow
+        ? {
+            ...profileRow,
+            logo_url: resolve(profileRow.logo_url),
+            hero_image_url: resolve(profileRow.hero_image_url),
+          }
+        : null,
       services: services.data ?? [],
       settings: settings.data,
       social: social.data,
@@ -143,7 +173,7 @@ export const getPublicSite = createServerFn({ method: "GET" })
         comment: r.comment,
         created_at: r.created_at as string,
       })),
-      gallery: gallery.data ?? [],
+      gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
       quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     };
   });
