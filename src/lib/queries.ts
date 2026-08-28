@@ -18,7 +18,7 @@ export function useLeads(organizationId: string | undefined) {
       const { data, error } = await supabase
         .from("leads")
         .select(
-          "id, name, email, phone, status, source, campaign, city, message, service_interest, estimated_value, next_follow_up_at, last_contacted_at, created_at, service_id",
+          "id, name, email, phone, status, source, campaign, city, message, service_interest, estimated_value, next_follow_up_at, last_contacted_at, created_at, service_id, customer_id, assigned_to",
         )
         .eq("organization_id", organizationId!)
         .order("created_at", { ascending: false });
@@ -604,7 +604,12 @@ export function useCreateAppointment(
         organizationId: organizationId!,
         trigger: "booking_created",
         businessName: businessName ?? null,
-        lead: { id: leadId, name: input.name, email: input.email, phone: input.phone },
+        lead: {
+          id: leadId,
+          name: input.name,
+          email: input.email ?? null,
+          phone: input.phone ?? null,
+        },
         appointment: appt,
       });
 
@@ -681,8 +686,8 @@ export function useSaveAppointment(
             ? {
                 id: appointment.lead_id,
                 name: appointment.name,
-                email: appointment.email,
-                phone: appointment.phone,
+                email: appointment.email ?? null,
+                phone: appointment.phone ?? null,
               }
             : null,
           appointment,
@@ -802,8 +807,11 @@ export function useSaveAutomationStep(organizationId: string | undefined) {
     }) => {
       const row = { ...input, channel: input.action_type };
       if (input.id) {
-        const { id, ...patch } = row;
-        const { error } = await supabase.from("automation_steps").update(patch as never).eq("id", id);
+        const { id: _id, ...patch } = row;
+        const { error } = await supabase
+          .from("automation_steps")
+          .update(patch as never)
+          .eq("id", input.id);
         if (error) throw error;
         return;
       }
@@ -939,7 +947,8 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["quote_builder", organizationId] }),
       queryClient.invalidateQueries({ queryKey: ["quote_requests", organizationId] }),
     ]);
-  const wrap = <T,>(fn: (input: T) => Promise<unknown>, success?: string) =>
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed call order below
+  const useWrapped = <T,>(fn: (input: T) => Promise<unknown>, success?: string) =>
     useMutation({
       mutationFn: fn,
       onSuccess: () => {
@@ -949,7 +958,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
       onError: (error: Error) => toast.error(error.message || "Couldn't save that."),
     });
 
-  const saveForm = wrap(
+  const saveForm = useWrapped(
     async (input: {
       id?: string | undefined;
       name: string;
@@ -972,7 +981,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Quote calculator saved.",
   );
 
-  const saveQuestion = wrap(
+  const saveQuestion = useWrapped(
     async (input: {
       id?: string | undefined;
       form_id: string;
@@ -996,12 +1005,12 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Question saved.",
   );
 
-  const deleteQuestion = wrap(async (id: string) => {
+  const deleteQuestion = useWrapped(async (id: string) => {
     const { error } = await supabase.from("quote_questions").delete().eq("id", id);
     if (error) throw error;
   }, "Question removed.");
 
-  const saveOption = wrap(
+  const saveOption = useWrapped(
     async (input: {
       id?: string | undefined;
       question_id: string;
@@ -1024,12 +1033,12 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Option saved.",
   );
 
-  const deleteOption = wrap(async (id: string) => {
+  const deleteOption = useWrapped(async (id: string) => {
     const { error } = await supabase.from("quote_options").delete().eq("id", id);
     if (error) throw error;
   }, "Option removed.");
 
-  const saveAddon = wrap(
+  const saveAddon = useWrapped(
     async (input: {
       id?: string | undefined;
       form_id: string;
@@ -1052,7 +1061,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     "Add-on saved.",
   );
 
-  const deleteAddon = wrap(async (id: string) => {
+  const deleteAddon = useWrapped(async (id: string) => {
     const { error } = await supabase.from("quote_addons").delete().eq("id", id);
     if (error) throw error;
   }, "Add-on removed.");

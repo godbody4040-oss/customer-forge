@@ -43,6 +43,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
   const submit = useServerFn(submitPublicLead);
   const track = useTracker(site.org.slug);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [picked, setPicked] = useState<string[]>([]);
   const [step, setStep] = useState<"questions" | "contact">("questions");
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
@@ -69,6 +70,9 @@ export function QuoteCalculator({ site }: { site: Site }) {
     if (!option) continue;
     total = option.modifier_type === "multiply" ? total * option.price_modifier : total + option.price_modifier;
   }
+  const addons = quote.addons ?? [];
+  const chosenAddons = addons.filter((a) => picked.includes(a.id));
+  total += chosenAddons.reduce((sum, a) => sum + Number(a.price), 0);
   const min = Math.max(Number(quote.form.min_price ?? 0), Math.round(total * 0.9));
   const max = Math.max(min, Math.min(Number(quote.form.max_price ?? total * 1.15) || total * 1.15, Math.round(total * 1.15)));
   const answered = selected.filter((s) => s.option).length;
@@ -116,6 +120,47 @@ export function QuoteCalculator({ site }: { site: Site }) {
             </fieldset>
           ))}
 
+          {addons.length ? (
+            <fieldset className="border-t border-border pt-4">
+              <legend className="text-[14px] font-medium">Optional extras</legend>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {addons.map((addon) => {
+                  const active = picked.includes(addon.id);
+                  return (
+                    <button
+                      key={addon.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() =>
+                        setPicked((prev) =>
+                          prev.includes(addon.id)
+                            ? prev.filter((id) => id !== addon.id)
+                            : [...prev, addon.id],
+                        )
+                      }
+                      className={cn(
+                        "cursor-pointer rounded-md border px-3.5 py-2.5 text-left text-[13px] transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border hover:bg-elevated",
+                      )}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span>{addon.label}</span>
+                        <span className="tnum text-primary">+{currency(Number(addon.price))}</span>
+                      </span>
+                      {addon.description ? (
+                        <span className="mt-1 block text-[12px] text-muted-foreground">
+                          {addon.description}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ) : null}
+
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
             <div>
               <p className="eyebrow">Estimated range</p>
@@ -155,13 +200,20 @@ export function QuoteCalculator({ site }: { site: Site }) {
                 source: "website",
                 quote: {
                   formId: quote.form.id,
-                  answers: selected
-                    .filter((s) => s.option)
-                    .map((s) => ({
-                      question: s.question.label,
-                      answer: s.option!.label,
-                      modifier: s.option!.price_modifier,
+                  answers: [
+                    ...selected
+                      .filter((s) => s.option)
+                      .map((s) => ({
+                        question: s.question.label,
+                        answer: s.option!.label,
+                        modifier: s.option!.price_modifier,
+                      })),
+                    ...chosenAddons.map((a) => ({
+                      question: "Add-on",
+                      answer: a.label,
+                      modifier: Number(a.price),
                     })),
+                  ],
                   min,
                   max,
                 },

@@ -129,9 +129,7 @@ function Dashboard() {
 
     const needsAttention = leads.filter(
       (l) =>
-        (l.status === "new" || l.status === "contacted") &&
-        !l.last_contacted_at &&
-        l.status !== "lost",
+        (l.status === "new" || l.status === "contacted") && !l.last_contacted_at,
     );
 
     const upcoming = appts
