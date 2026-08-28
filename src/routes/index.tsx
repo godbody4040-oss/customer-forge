@@ -8,7 +8,10 @@ import {
   LineChart,
   MessageSquare,
   Search,
+  Sparkles,
+  Star,
   Users,
+  Zap,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
@@ -25,13 +28,13 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Revora — Turn local searches into booked jobs" },
+      { title: "Revora — The Business Growth Operating System" },
       {
         name: "description",
         content:
-          "Revora is a complete customer-acquisition system for local businesses: website, lead capture, instant quotes, booking, CRM, follow-up and analytics in one place.",
+          "Revora gives businesses one system to get discovered, capture opportunities, convert leads, book customers, automate follow-up and measure growth.",
       },
-      { property: "og:title", content: "Revora — Turn local searches into booked jobs" },
+      { property: "og:title", content: "Revora — Turn more opportunities into customers" },
       {
         property: "og:description",
         content:
@@ -44,6 +47,17 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+
+const ECOSYSTEM = [
+  { icon: Globe, name: "Revora Sites", body: "Get discovered." },
+  { icon: Users, name: "Revora CRM", body: "Never lose a lead." },
+  { icon: Calculator, name: "Revora Quotes", body: "Turn interest into opportunities." },
+  { icon: CalendarCheck, name: "Revora Bookings", body: "Make scheduling effortless." },
+  { icon: Sparkles, name: "Revora AI", body: "Assist with the repetitive work." },
+  { icon: Zap, name: "Revora Automations", body: "Follow up consistently." },
+  { icon: Star, name: "Revora Reviews", body: "Build trust." },
+  { icon: LineChart, name: "Revora Analytics", body: "Know what's working." },
+] as const;
 
 const PROBLEMS = [
   {
@@ -117,14 +131,13 @@ function Landing() {
         <section className="border-b border-border">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
             <div>
-              <Pill tone="signal">A customer-acquisition system, not a website builder</Pill>
-              <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.4rem)] leading-[1.05] font-semibold tracking-tight">
-                Turn local searches into booked jobs.
+              <Pill tone="signal">REVORA™ — The Business Growth Operating System</Pill>
+              <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.5rem)] leading-[1.04] font-semibold tracking-tight">
+                Turn more <span className="gold-text">opportunities</span> into customers.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                Your business deserves more than a website. Revora gives you a complete
-                system for getting found, capturing leads, booking customers, following up and
-                growing repeat business.
+                The complete business growth operating system for getting found, capturing leads,
+                booking customers, following up and growing relationships.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button asChild variant="signal" size="lg">
@@ -133,7 +146,7 @@ function Landing() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/demo">See a live business demo</Link>
+                  <Link to="/demo">See Revora in action</Link>
                 </Button>
               </div>
 
@@ -151,6 +164,31 @@ function Landing() {
               </dl>
             </div>
             <DashboardPreview />
+          </div>
+        </section>
+
+        {/* Product ecosystem */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="The Revora platform"
+              title="One platform. Every customer touchpoint."
+            />
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {ECOSYSTEM.map(({ icon: Icon, name, body }) => (
+                <Panel key={name} className="group relative overflow-hidden p-5 transition-colors hover:border-primary/40">
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-0 h-px bg-primary/0 transition-colors group-hover:bg-primary/50"
+                  />
+                  <Icon className="size-5 text-primary" aria-hidden="true" />
+                  <h3 className="mt-3.5 font-display text-[13px] font-bold tracking-[0.12em] uppercase">
+                    {name}
+                  </h3>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
+                </Panel>
+              ))}
+            </div>
           </div>
         </section>
 
