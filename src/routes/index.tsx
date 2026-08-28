@@ -172,6 +172,55 @@ function Landing() {
           </div>
         </section>
 
+        {/* Customer journey */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="From search to customer"
+              title="Every step connected, nothing left to memory"
+            />
+            <CustomerJourney />
+          </div>
+        </section>
+
+        {/* Without vs with */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="The difference"
+              title="More leads. More bookings. Less chaos."
+            />
+            <WithoutWith />
+          </div>
+        </section>
+
+        {/* See it for your business */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+            <h2 className="font-display text-[clamp(1.5rem,3vw,2.2rem)] leading-tight font-semibold">
+              See what your business could look like.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+              Enter a few details and see how Customer Forge can turn your online presence into a
+              customer-acquisition system.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Button asChild variant="signal" size="lg">
+                <Link to="/demo">
+                  See it for my business <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/s/$slug" params={{ slug: "elite-mobile-detailing" }}>
+                  Walk the live demo
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+
+
         {/* Features */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
