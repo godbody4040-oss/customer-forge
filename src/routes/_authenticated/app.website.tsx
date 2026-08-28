@@ -80,7 +80,7 @@ function WebsitePage() {
         organizationId={orgId}
         slug={org?.slug}
         settings={settings}
-        canManage={canManage(ws?.workspace?.role)}
+        canManage={canManage(ws?.workspace?.role ?? "viewer")}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
