@@ -118,3 +118,6 @@ export const DATE_RANGES = [
   { value: "30", label: "30 days" },
   { value: "90", label: "90 days" },
 ] as const;
+
+/** Owners, admins and managers may change publishing, domains and billing-facing settings. */
+export const canManage = (role: AppRole) => role === "owner" || role === "admin" || role === "manager";
