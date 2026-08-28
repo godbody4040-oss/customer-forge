@@ -124,6 +124,13 @@ function WebsitePage() {
         }
       />
 
+      <MediaLibrary
+        organizationId={orgId}
+        canManage={manage}
+        heroUrl={profile?.hero_image_url ?? null}
+        onSetHero={(value) => saveProfile.mutate({ hero_image_url: value })}
+      />
+
       <VersionHistory organizationId={orgId} canManage={manage} />
 
       <WebsiteReview
