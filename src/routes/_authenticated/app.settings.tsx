@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Local Lead Engine" },
+      { title: "Settings — Customer Forge" },
       { name: "description", content: "Manage your account, business workspace and team." },
       { name: "robots", content: "noindex" },
     ],

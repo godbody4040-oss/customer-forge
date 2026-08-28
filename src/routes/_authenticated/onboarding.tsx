@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Set up your business — Local Lead Engine" },
+      { title: "Set up your business — Customer Forge" },
       { name: "description", content: "Three steps to a live, conversion-first business website." },
       { name: "robots", content: "noindex" },
     ],

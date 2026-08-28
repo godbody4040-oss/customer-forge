@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/app/calendar")({
   head: () => ({
     meta: [
-      { title: "Calendar — Local Lead Engine" },
+      { title: "Calendar — Customer Forge" },
       { name: "description", content: "Confirm, reschedule and track every booking." },
       { name: "robots", content: "noindex" },
     ],

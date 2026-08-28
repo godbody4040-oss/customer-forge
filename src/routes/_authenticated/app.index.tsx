@@ -17,7 +17,7 @@ import { leadStatusMeta } from "@/lib/domain";
 export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Local Lead Engine" },
+      { title: "Dashboard — Customer Forge" },
       { name: "description", content: "Your leads, bookings and conversion at a glance." },
       { name: "robots", content: "noindex" },
     ],

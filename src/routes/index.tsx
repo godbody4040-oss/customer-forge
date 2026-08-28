@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
+import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
@@ -24,22 +25,25 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Local Lead Engine — Turn local searches into booked jobs" },
+      { title: "Customer Forge — Turn local searches into booked jobs" },
       {
         name: "description",
         content:
-          "A conversion-first website, instant quote calculator, booking calendar and lead CRM for local service businesses. Launch in a day, see every lead in one place.",
+          "Customer Forge is a complete customer-acquisition system for local businesses: website, lead capture, instant quotes, booking, CRM, follow-up and analytics in one place.",
       },
-      { property: "og:title", content: "Local Lead Engine — Turn local searches into booked jobs" },
+      { property: "og:title", content: "Customer Forge — Turn local searches into booked jobs" },
       {
         property: "og:description",
         content:
-          "Website, instant quotes, bookings and a lead pipeline built for detailers, stylists, landscapers and contractors.",
+          "Get found, capture leads, quote instantly, book customers, follow up and grow repeat business — one system for local businesses.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,
 });
+
 
 const PROBLEMS = [
   {
@@ -113,27 +117,26 @@ function Landing() {
         <section className="border-b border-border">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
             <div>
-              <Pill tone="signal">Built for local service businesses</Pill>
+              <Pill tone="signal">A customer-acquisition system, not a website builder</Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.4rem)] leading-[1.05] font-semibold tracking-tight">
                 Turn local searches into booked jobs.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                Local Lead Engine gives your business a website that actually asks for the work — plus
-                instant quotes, online booking and one place where every lead lands. Built for
-                detailers, stylists, landscapers, cleaners and contractors.
+                Your business deserves more than a website. Customer Forge gives you a complete
+                system for getting found, capturing leads, booking customers, following up and
+                growing repeat business.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button asChild variant="signal" size="lg">
                   <Link to="/auth" search={{ mode: "signup" }}>
-                    Start growing free <ArrowRight className="size-4" />
+                    Build my growth system <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/s/$slug" params={{ slug: "elite-mobile-detailing" }}>
-                    See a live business site
-                  </Link>
+                  <Link to="/demo">See a live business demo</Link>
                 </Button>
               </div>
+
               <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-border pt-6">
                 {[
                   ["14 days", "Free trial, no card"],
@@ -168,6 +171,55 @@ function Landing() {
             </div>
           </div>
         </section>
+
+        {/* Customer journey */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="From search to customer"
+              title="Every step connected, nothing left to memory"
+            />
+            <CustomerJourney />
+          </div>
+        </section>
+
+        {/* Without vs with */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="The difference"
+              title="More leads. More bookings. Less chaos."
+            />
+            <WithoutWith />
+          </div>
+        </section>
+
+        {/* See it for your business */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+            <h2 className="font-display text-[clamp(1.5rem,3vw,2.2rem)] leading-tight font-semibold">
+              See what your business could look like.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+              Enter a few details and see how Customer Forge can turn your online presence into a
+              customer-acquisition system.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Button asChild variant="signal" size="lg">
+                <Link to="/demo">
+                  See it for my business <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/s/$slug" params={{ slug: "elite-mobile-detailing" }}>
+                  Walk the live demo
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+
 
         {/* Features */}
         <section className="border-b border-border">
@@ -281,6 +333,30 @@ function Landing() {
           </div>
         </section>
 
+        {/* Trust */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="Who it's for"
+              title="Built for businesses that depend on local customers"
+            />
+            <ul className="mt-8 flex flex-wrap gap-2">
+              {TRUST_INDUSTRIES.map((name) => (
+                <li
+                  key={name}
+                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] text-muted-foreground"
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-[12px] text-muted-foreground">
+              Customer stories are published here only once they're real and verified with the
+              business owner.
+            </p>
+          </div>
+        </section>
+
         {/* Final CTA */}
         <section>
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
@@ -293,9 +369,10 @@ function Landing() {
             </p>
             <Button asChild variant="signal" size="lg" className="mt-8">
               <Link to="/auth" search={{ mode: "signup" }}>
-                Start growing free <ArrowRight className="size-4" />
+                Build my growth system <ArrowRight className="size-4" />
               </Link>
             </Button>
+
           </div>
         </section>
       </main>

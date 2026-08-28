@@ -9,7 +9,7 @@ export function LogoMark({ className }: { className?: string }) {
         className,
       )}
     >
-      LL
+      CF
     </span>
   );
 }
@@ -20,7 +20,7 @@ export function Logo({ className, wordmark = true }: { className?: string; wordm
       <LogoMark />
       {wordmark ? (
         <span className="font-display text-[15px] font-semibold tracking-tight">
-          Local Lead Engine
+          Customer Forge
         </span>
       ) : null}
     </span>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const NAV = [
+  { to: "/demo", label: "Demo" },
   { to: "/pricing", label: "Pricing" },
   { to: "/industries", label: "Industries" },
   { to: "/contact", label: "Contact" },
@@ -16,7 +17,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" aria-label="Local Lead Engine home">
+        <Link to="/" aria-label="Customer Forge home">
           <Logo />
         </Link>
 
@@ -39,7 +40,7 @@ export function SiteHeader() {
           </Button>
           <Button asChild variant="signal" size="sm">
             <Link to="/auth" search={{ mode: "signup" }}>
-              Start Growing
+              Build my system
             </Link>
           </Button>
         </div>
@@ -78,7 +79,7 @@ export function SiteHeader() {
             </Button>
             <Button asChild variant="signal">
               <Link to="/auth" search={{ mode: "signup" }} onClick={() => setOpen(false)}>
-                Start Growing
+                Build my system
               </Link>
             </Button>
           </div>
@@ -94,6 +95,9 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <Logo />
         <nav aria-label="Footer" className="flex flex-wrap gap-5 text-[13px] text-muted-foreground">
+          <Link to="/demo" className="transition-colors hover:text-foreground">
+            Demo
+          </Link>
           <Link to="/pricing" className="transition-colors hover:text-foreground">
             Pricing
           </Link>
@@ -112,7 +116,7 @@ export function SiteFooter() {
           </Link>
         </nav>
         <p className="text-[11px] text-muted-foreground">
-          © {new Date().getFullYear()} Local Lead Engine
+          © {new Date().getFullYear()} Customer Forge
         </p>
       </div>
     </footer>
