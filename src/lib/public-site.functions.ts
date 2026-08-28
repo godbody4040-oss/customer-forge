@@ -134,11 +134,11 @@ export const getPublicSite = createServerFn({ method: "GET" })
     // Only reachable here after the publish gate above.
     const { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, isStoragePath } = await import("@/lib/media");
     const gallery = galleryRows.data ?? [];
-    const rawProfile = (profile.data ?? null) as Record<string, unknown> | null;
+    const profileRow = profile.data;
     const toSign = [
       ...gallery.map((g) => g.url),
-      rawProfile?.["logo_url"],
-      rawProfile?.["hero_image_url"],
+      profileRow?.logo_url ?? null,
+      profileRow?.hero_image_url ?? null,
     ].filter((value): value is string => typeof value === "string" && isStoragePath(value));
 
     const signed = new Map<string, string>();
@@ -151,16 +151,16 @@ export const getPublicSite = createServerFn({ method: "GET" })
         if (entry.path && entry.signedUrl) signed.set(entry.path, entry.signedUrl);
       }
     }
-    const resolve = (value: unknown) =>
-      typeof value === "string" ? (signed.get(value) ?? value) : value;
+    const resolve = (value: string | null): string | null =>
+      value ? (signed.get(value) ?? value) : value;
 
     return {
       org: { ...org, id: orgId, name: org.name ?? "", slug: org.slug ?? "" },
-      profile: rawProfile
+      profile: profileRow
         ? {
-            ...rawProfile,
-            logo_url: resolve(rawProfile["logo_url"]),
-            hero_image_url: resolve(rawProfile["hero_image_url"]),
+            ...profileRow,
+            logo_url: resolve(profileRow.logo_url),
+            hero_image_url: resolve(profileRow.hero_image_url),
           }
         : null,
       services: services.data ?? [],
