@@ -104,6 +104,44 @@ function AdminOverview() {
           </ul>
         )}
       </Panel>
+      <Panel className="p-0">
+        <div className="border-b border-border px-4 py-3">
+          <h2 className="font-display text-[13px] font-semibold tracking-[0.12em] uppercase">
+            Revora company information
+          </h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Platform identity used across Revora marketing, CTAs and system emails. Client
+            businesses keep their own contact details in their workspace settings.
+          </p>
+        </div>
+        <dl className="grid gap-x-8 gap-y-3 px-4 py-4 sm:grid-cols-2">
+          {[
+            ["Company name", REVORA.name],
+            ["Founder", REVORA.founder.name],
+            ["Business email", REVORA.email],
+            ["Business phone", REVORA.phone],
+            ["Brand tagline", REVORA.tagline],
+            ["Primary message", REVORA.primaryMessage],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+                {label}
+              </dt>
+              <dd className="mt-1 text-[13px]">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="flex items-center gap-3 border-t border-border px-4 py-3">
+          <span className="grid size-8 place-items-center rounded-full bg-primary/15 font-display text-[12px] font-semibold text-primary">
+            A
+          </span>
+          <div>
+            <p className="text-[13px] font-medium">{REVORA.founder.name}</p>
+            <p className="text-[11px] text-muted-foreground">Founder profile · platform owner</p>
+          </div>
+        </div>
+      </Panel>
+
     </div>
   );
 }

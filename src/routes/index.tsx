@@ -16,6 +16,7 @@ import {
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
+import { FounderNote, SalesCTA } from "@/components/marketing/SalesCTA";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
@@ -392,6 +393,20 @@ function Landing() {
               Customer stories are published here only once they're real and verified with the
               business owner.
             </p>
+          </div>
+        </section>
+
+        {/* Founder mission */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <FounderNote />
+          </div>
+        </section>
+
+        {/* Sales CTA */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SalesCTA />
           </div>
         </section>
 
