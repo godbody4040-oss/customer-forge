@@ -103,7 +103,10 @@ export const listClients = createServerFn({ method: "GET" })
         city: profile?.city ?? null,
         custom_domain: settings?.custom_domain ?? null,
         domain_status: settings?.domain_status ?? "not_connected",
+        domain_checked_at: settings?.domain_checked_at ?? null,
+        domain_error: settings?.domain_error ?? null,
         publish_state: settings?.publish_state ?? "draft",
+
         leads: countBy(leads.data, org.id),
         appointments: countBy(appts.data, org.id),
         readinessScore: score,
