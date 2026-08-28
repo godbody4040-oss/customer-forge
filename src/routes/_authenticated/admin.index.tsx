@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getPlatformMetrics, listClients } from "@/lib/admin.functions";
 import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
 import { currency, dateShort, number } from "@/lib/format";
+import { REVORA } from "@/lib/brand";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminOverview,
