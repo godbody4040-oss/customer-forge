@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const NAV = [
+  { to: "/demo", label: "Demo" },
   { to: "/pricing", label: "Pricing" },
   { to: "/industries", label: "Industries" },
   { to: "/contact", label: "Contact" },
@@ -39,7 +40,7 @@ export function SiteHeader() {
           </Button>
           <Button asChild variant="signal" size="sm">
             <Link to="/auth" search={{ mode: "signup" }}>
-              Start Growing
+              Build my system
             </Link>
           </Button>
         </div>
@@ -78,7 +79,7 @@ export function SiteHeader() {
             </Button>
             <Button asChild variant="signal">
               <Link to="/auth" search={{ mode: "signup" }} onClick={() => setOpen(false)}>
-                Start Growing
+                Build my system
               </Link>
             </Button>
           </div>
@@ -94,6 +95,9 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <Logo />
         <nav aria-label="Footer" className="flex flex-wrap gap-5 text-[13px] text-muted-foreground">
+          <Link to="/demo" className="transition-colors hover:text-foreground">
+            Demo
+          </Link>
           <Link to="/pricing" className="transition-colors hover:text-foreground">
             Pricing
           </Link>
