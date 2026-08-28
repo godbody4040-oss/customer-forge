@@ -72,11 +72,10 @@ function SettingsPage() {
       </Panel>
 
       <Panel className="p-5">
-        <SectionHeading
-          eyebrow="Workspace"
-          title="Business workspace"
-          description="Your workspace name and web address are used across your public site."
-        />
+        <SectionHeading eyebrow="Workspace" title="Business workspace" />
+        <p className="mt-2 text-[13px] text-muted-foreground">
+          Your workspace name and web address are used across your public site.
+        </p>
         <form
           className="mt-4 space-y-4"
           onSubmit={(e) => {
@@ -85,10 +84,12 @@ function SettingsPage() {
             const form = new FormData(e.currentTarget);
             updateOrg.mutate({
               id: orgId,
-              name: String(form.get("name") ?? "").trim(),
-              slug: String(form.get("slug") ?? "")
-                .trim()
-                .toLowerCase(),
+              patch: {
+                name: String(form.get("name") ?? "").trim(),
+                slug: String(form.get("slug") ?? "")
+                  .trim()
+                  .toLowerCase(),
+              },
             });
           }}
         >

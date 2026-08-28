@@ -104,12 +104,12 @@ function AnalyticsPage() {
         <div className="flex gap-1.5">
           {DATE_RANGES.map((range) => (
             <button
-              key={range.days}
+              key={range.value}
               type="button"
-              onClick={() => setDays(range.days)}
+              onClick={() => setDays(Number(range.value))}
               className={cn(
                 "cursor-pointer rounded-full border px-3 py-1 text-[12px]",
-                days === range.days ? "border-primary text-primary" : "border-border text-muted-foreground",
+                days === Number(range.value) ? "border-primary text-primary" : "border-border text-muted-foreground",
               )}
             >
               {range.label}

@@ -19,7 +19,7 @@ function useTracker(slug: string) {
       data: {
         slug,
         eventType,
-        path: typeof window === "undefined" ? undefined : window.location.pathname,
+        ...(typeof window === "undefined" ? {} : { path: window.location.pathname }),
         device: typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop",
       },
     }).catch(() => undefined);

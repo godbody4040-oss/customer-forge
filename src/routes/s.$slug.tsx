@@ -7,6 +7,7 @@ import { Pill } from "@/components/app/Bits";
 import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
 import { getPublicSite, trackPublicEvent } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
+import { readSeo } from "@/lib/site-seo";
 
 export const Route = createFileRoute("/s/$slug")({
   loader: async ({ params }) => {
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/s/$slug")({
     const city = loaderData.profile?.city;
     const title = `${name}${city ? ` — ${city}` : ""}`.slice(0, 60);
     const description = (
-      loaderData.settings?.meta_description ??
+      readSeo(loaderData.settings?.seo).meta_description ??
       loaderData.profile?.tagline ??
       `Book ${name}${city ? ` in ${city}` : ""} online. See services, prices and reviews.`
     ).slice(0, 158);
@@ -63,6 +64,7 @@ function PublicSite() {
   const site = Route.useLoaderData();
   const track = useServerFn(trackPublicEvent);
   const { org, profile, settings, services, reviews, gallery, social } = site;
+  const seo = readSeo(settings?.seo);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,18 +83,18 @@ function PublicSite() {
   const rating = reviews.length
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null;
-  const headline = settings?.headline ?? `${org.name}${profile?.city ? ` in ${profile.city}` : ""}`;
+  const headline = seo.headline ?? `${org.name}${profile?.city ? ` in ${profile.city}` : ""}`;
   const sub =
-    settings?.subheadline ??
+    seo.subheadline ??
     profile?.tagline ??
     "Straight answers, honest pricing, and work booked in under two minutes.";
-  const ctaLabel = settings?.primary_cta_label ?? "Get my instant quote";
+  const ctaLabel = seo.primary_cta_label ?? "Get my instant quote";
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: org.name,
-    description: profile?.about ?? sub,
+    description: profile?.description ?? sub,
     telephone: profile?.phone ?? undefined,
     email: profile?.email ?? undefined,
     areaServed: profile?.service_area ?? profile?.city ?? undefined,
@@ -143,9 +145,6 @@ function PublicSite() {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 lg:grid-cols-[1.1fr_1fr] lg:py-20">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              {profile?.years_in_business ? (
-                <Pill tone="signal">{profile.years_in_business}+ years</Pill>
-              ) : null}
               {rating ? (
                 <Pill tone="attention">
                   {rating.toFixed(1)} ★ · {reviews.length} reviews
@@ -237,13 +236,13 @@ function PublicSite() {
         </section>
       ) : null}
 
-      {profile?.about ? (
+      {profile?.description ? (
         <section className="border-b border-border">
           <div className="mx-auto max-w-3xl px-4 py-14">
             <p className="eyebrow">About</p>
             <h2 className="mt-1.5 font-display text-[28px] font-semibold">Why neighbors call us</h2>
             <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
-              {profile.about}
+              {profile.description}
             </p>
           </div>
         </section>

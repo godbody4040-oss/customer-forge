@@ -130,7 +130,7 @@ function ServicesPage() {
                       category: service.category ?? "",
                       price: service.price === null ? "" : String(service.price),
                       starting_price: service.starting_price,
-                      duration_minutes: String(service.duration_minutes ?? ""),
+                      duration_minutes: service.duration_minutes ? String(service.duration_minutes) : "",
                       bookable: service.bookable,
                       featured: service.featured,
                       is_active: service.is_active,
@@ -203,7 +203,7 @@ function ServicesPage() {
                   e.preventDefault();
                   saveService.mutate(
                     {
-                      id: editing.id,
+                      ...(editing.id ? { id: editing.id } : {}),
                       name: editing.name.trim(),
                       description: editing.description.trim() || null,
                       category: editing.category.trim() || null,

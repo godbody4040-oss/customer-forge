@@ -16,6 +16,7 @@ import {
 import { useWorkspace } from "@/lib/use-tenant";
 import { TEMPLATES } from "@/lib/domain";
 import { cn } from "@/lib/utils";
+import { readSeo } from "@/lib/site-seo";
 
 export const Route = createFileRoute("/_authenticated/app/website")({
   head: () => ({
@@ -40,17 +41,18 @@ function WebsitePage() {
 
   const profile = profileQuery.data;
   const settings = settingsQuery.data;
+  const seo = readSeo(settings?.seo);
   const [template, setTemplate] = useState<string | null>(null);
   const activeTemplate = template ?? settings?.template ?? "default";
 
   const seoChecks = [
     { label: "Business name set", ok: !!org?.name },
-    { label: "Headline written", ok: !!settings?.headline },
-    { label: "About section written", ok: !!profile?.about },
+    { label: "Headline written", ok: !!seo.headline },
+    { label: "About section written", ok: !!profile?.description },
     { label: "Phone number added", ok: !!profile?.phone },
     { label: "Service area / city set", ok: !!profile?.city },
     { label: "At least 3 services listed", ok: (services ?? []).length >= 3 },
-    { label: "Meta description set", ok: !!settings?.meta_description },
+    { label: "Meta description set", ok: !!seo.meta_description },
   ];
   const score = Math.round((seoChecks.filter((c) => c.ok).length / seoChecks.length) * 100);
 
@@ -138,16 +140,19 @@ function WebsitePage() {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
             saveSettings.mutate({
-              headline: String(form.get("headline") ?? "") || null,
-              subheadline: String(form.get("subheadline") ?? "") || null,
-              meta_description: String(form.get("meta") ?? "") || null,
-              primary_cta_label: String(form.get("cta") ?? "") || null,
+              seo: {
+                ...seo,
+                headline: String(form.get("headline") ?? "") || null,
+                subheadline: String(form.get("subheadline") ?? "") || null,
+                meta_description: String(form.get("meta") ?? "") || null,
+                primary_cta_label: String(form.get("cta") ?? "") || null,
+              },
             });
           }}
         >
           <div className="space-y-1.5">
             <Label htmlFor="w-headline">Headline</Label>
-            <Input id="w-headline" name="headline" defaultValue={settings?.headline ?? ""} />
+            <Input id="w-headline" name="headline" defaultValue={seo.headline ?? ""} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="w-sub">Subheadline</Label>
@@ -155,7 +160,7 @@ function WebsitePage() {
               id="w-sub"
               name="subheadline"
               rows={2}
-              defaultValue={settings?.subheadline ?? ""}
+              defaultValue={seo.subheadline ?? ""}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -164,7 +169,7 @@ function WebsitePage() {
               <Input
                 id="w-cta"
                 name="cta"
-                defaultValue={settings?.primary_cta_label ?? ""}
+                defaultValue={seo.primary_cta_label ?? ""}
                 placeholder="Get my instant quote"
               />
             </div>
@@ -178,7 +183,7 @@ function WebsitePage() {
                 id="w-meta"
                 name="meta"
                 maxLength={160}
-                defaultValue={settings?.meta_description ?? ""}
+                defaultValue={seo.meta_description ?? ""}
               />
             </div>
           </div>
@@ -196,13 +201,12 @@ function WebsitePage() {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
             saveProfile.mutate({
-              about: String(form.get("about") ?? "") || null,
+              description: String(form.get("about") ?? "") || null,
               tagline: String(form.get("tagline") ?? "") || null,
               phone: String(form.get("phone") ?? "") || null,
               email: String(form.get("email") ?? "") || null,
               city: String(form.get("city") ?? "") || null,
               service_area: String(form.get("area") ?? "") || null,
-              years_in_business: Number(form.get("years") ?? 0) || null,
             });
           }}
         >
@@ -212,7 +216,7 @@ function WebsitePage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="w-about">About your business</Label>
-            <Textarea id="w-about" name="about" rows={5} defaultValue={profile?.about ?? ""} />
+            <Textarea id="w-about" name="about" rows={5} defaultValue={profile?.description ?? ""} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
@@ -230,15 +234,6 @@ function WebsitePage() {
             <div className="space-y-1.5">
               <Label htmlFor="w-area">Service area</Label>
               <Input id="w-area" name="area" defaultValue={profile?.service_area ?? ""} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="w-years">Years in business</Label>
-              <Input
-                id="w-years"
-                name="years"
-                inputMode="numeric"
-                defaultValue={profile?.years_in_business ?? ""}
-              />
             </div>
           </div>
           <Button type="submit" variant="signal" disabled={saveProfile.isPending}>
