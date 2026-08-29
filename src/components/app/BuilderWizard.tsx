@@ -97,6 +97,15 @@ export function BuilderWizard({
             )}
           </span>
         </div>
+        <div className="mt-3 flex items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated" role="presentation">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${completion}%` }}
+            />
+          </div>
+          <span className="tnum text-[11px] text-muted-foreground">{completion}% ready</span>
+        </div>
         <ol className="mt-3 flex flex-wrap gap-1.5">
           {WIZARD_STEPS.map((item, i) => (
             <li key={item.key}>
