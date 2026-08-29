@@ -31,20 +31,34 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Revora — The Business Growth Operating System" },
+      { title: "Revora — Turn Website Visitors Into Paying Customers" },
       {
         name: "description",
         content:
-          "Revora gives businesses one system to get discovered, capture opportunities, convert leads, book customers, automate follow-up and measure growth.",
+          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. 1-day free trial.",
       },
-      { property: "og:title", content: "Revora — Turn more opportunities into customers" },
+      { property: "og:title", content: "Revora — Turn website visitors into paying customers" },
       {
         property: "og:description",
         content:
-          "Get found, capture leads, quote instantly, book customers, follow up and grow repeat business — one system for local businesses.",
+          "Lead capture, CRM, quotes, online booking, automated follow-up, reviews and growth analytics in one dashboard for local service businesses.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ_ITEMS.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+          })),
+        }),
+      },
     ],
   }),
   component: Landing,
