@@ -470,6 +470,9 @@ export function PublicSiteView({
           </div>
         </div>
       </footer>
+
+      <StickyCallBar site={site} label={ctaLabel} />
     </div>
+
   );
 }
