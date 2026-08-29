@@ -84,7 +84,16 @@ export async function resolveHostSite(
 export function sitemapUrls(site: HostSite | null, origin: string) {
   if (!site) {
     const industryPaths = INDUSTRIES.map((i) => `/industries/${industrySlug(i.name)}`);
-    return ["", "/pricing", "/industries", ...industryPaths, "/about", "/contact", "/demo"].map(
+    return [
+      "",
+      "/pricing",
+      "/industries",
+      ...industryPaths,
+      "/crm-for-contractors",
+      "/about",
+      "/contact",
+      "/demo",
+    ].map(
       (path) => ({
         loc: `${origin}${path}`,
         lastmod: null as string | null,
