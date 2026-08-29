@@ -13,7 +13,7 @@ import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 type Admin = SupabaseClient<Database>;
 
 const APP_URL = "https://revoragrowthsystems.com";
-const PLAN_LABELS: Record<string, string> = { starter: "Starter", growth: "Growth", pro: "Pro" };
+const PLAN_LABELS: Record<string, string> = { revora_growth_system: "Revora Growth System" };
 
 const planLabel = (planId?: string | null) =>
   (planId && PLAN_LABELS[planId]) ||
