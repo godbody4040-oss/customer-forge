@@ -236,8 +236,8 @@ function Landing() {
         </section>
 
         {/* See it for your business */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+        <section className="hero-aura border-b border-border bg-card">
+          <div className="mx-auto max-w-4xl px-4 py-20 text-center">
             <h2 className="font-display text-[clamp(1.5rem,3vw,2.2rem)] leading-tight font-semibold">
               See what your business could look like.
             </h2>
@@ -245,7 +245,7 @@ function Landing() {
               Enter a few details and see how Revora can turn your online presence into a
               customer-acquisition system.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild variant="signal" size="lg">
                 <Link to="/demo">
                   See it for my business <ArrowRight className="size-4" />
@@ -260,15 +260,13 @@ function Landing() {
           </div>
         </section>
 
-
-
         {/* Features */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="What you get" title="One engine, from first search to paid invoice" />
             <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map(({ icon: Icon, title, body }) => (
-                <Panel key={title} className="p-5">
+                <Panel key={title} className="card-lift p-5">
                   <Icon className="size-5 text-primary" aria-hidden="true" />
                   <h3 className="mt-3.5 font-display text-[15px] font-semibold">{title}</h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
@@ -284,7 +282,7 @@ function Landing() {
             <SectionHeading eyebrow="How it works" title="Live this week, not next quarter" />
             <ol className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {STEPS.map((s) => (
-                <li key={s.n} className="panel p-5">
+                <li key={s.n} className="panel card-lift flex flex-col p-5">
                   <span className="tnum font-display text-[13px] font-semibold text-primary">
                     {s.n}
                   </span>
@@ -295,6 +293,7 @@ function Landing() {
             </ol>
           </div>
         </section>
+
 
         {/* Industries */}
         <section className="border-b border-border">
