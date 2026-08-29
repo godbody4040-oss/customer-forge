@@ -130,8 +130,80 @@ function GetStarted() {
     setStep(1);
   };
 
-  const signedIn = Boolean(session.data?.userId && session.data?.organizationId);
+  const signedIn = Boolean(session.data?.userId);
   const cardsReady = isPaymentsConfigured();
+
+  /**
+   * A brand-new account has no workspace yet (that normally happens during
+   * onboarding), which used to block checkout entirely. Create a minimal
+   * workspace from the intake so payment can always proceed.
+   */
+  async function ensureWorkspace(): Promise<string> {
+    if (organizationId) return organizationId;
+    const existing = session.data?.organizationId ?? null;
+    if (existing) {
+      setOrganizationId(existing);
+      return existing;
+    }
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth.user;
+    if (!user) throw new Error("Your session expired. Please sign in again.");
+
+    const base = safeSlug(intake.businessName);
+    let slug = base;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data: taken } = await supabase.from("organizations").select("id").eq("slug", slug).maybeSingle();
+      if (!taken) break;
+      slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
+    }
+
+    const { data: org, error: orgError } = await supabase
+      .from("organizations")
+      .insert({
+        name: intake.businessName.trim() || "My business",
+        slug,
+        industry: intake.businessType.trim() || null,
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
+    if (orgError) throw orgError;
+
+    const { error: memberError } = await supabase
+      .from("memberships")
+      .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
+    if (memberError) throw memberError;
+
+    await supabase.from("business_profiles").insert({
+      organization_id: org.id,
+      email: intake.email.trim() || null,
+      phone: intake.phone.trim() || null,
+      city: intake.city.trim() || null,
+      state: intake.state.trim() || null,
+      website: intake.website?.trim() || null,
+      description: intake.services.trim() || null,
+    } as never);
+
+    setOrganizationId(org.id);
+    return org.id;
+  }
+
+  async function startPayment() {
+    setError(null);
+    setProvisioning(true);
+    try {
+      await ensureWorkspace();
+      setPayNow(true);
+    } catch (cause) {
+      setError(
+        cause instanceof Error && cause.message
+          ? cause.message
+          : "We could not prepare your workspace. Please try again.",
+      );
+    } finally {
+      setProvisioning(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
