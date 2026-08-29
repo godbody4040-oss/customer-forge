@@ -110,7 +110,9 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const orgId = job.organization_id;
   const { GENERATION_STEPS } = await import("@/lib/site-engine");
   const { generateWebsitePlan } = await import("@/lib/website-plan");
-  const { generateSiteCopy, COPY_MODEL } = await import("@/lib/site-engine.server");
+  const { generateSiteCopy, analyzeBusiness, fallbackBrief, AiGatewayError, COPY_MODEL } = await import(
+    "@/lib/site-engine.server"
+  );
 
   const done: string[] = [];
   const step = async (key: string) => {
@@ -221,22 +223,7 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   });
   await step("structure");
 
-  const copy = await generateSiteCopy({
-    businessName: org.data.name ?? "",
-    industry: org.data.industry ?? "",
-    description: (p["description"] as string) ?? null,
-    city: (p["city"] as string) ?? null,
-    state: (p["state"] as string) ?? null,
-    serviceArea: (p["service_area"] as string) ?? null,
-    phone: (p["phone"] as string) ?? null,
-    email: (p["email"] as string) ?? null,
-    yearsInBusiness: (p["years_in_business"] as number) ?? null,
-    hasHours: Boolean(p["hours"] && Object.keys(p["hours"] as object).length),
-    style: (p["font_preference"] as string) ?? null,
-    goals,
-    ctaLabel: plan.primaryCtaLabel,
-    services: serviceRows,
-  });
+  const copy = await generateSiteCopy({ ...copyFacts, ctaLabel: plan.primaryCtaLabel }, brief);
   await step("copy");
 
   await db.from("ai_generations").insert({
@@ -250,11 +237,34 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   } as never);
   await step("conversion");
 
+  const report = {
+    builtAt: new Date().toISOString(),
+    pages: plan.pages.length,
+    sections: plan.sections.length,
+    services: serviceRows.length,
+    faqs: copy.faqs.length,
+    photos: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
+    leadForms: (forms.data ?? []).length,
+    bookableServices: (bookable.data ?? []).length,
+    seoConfigured: Boolean(copy.metaTitle && copy.metaDescription),
+    crmConnected: true,
+    analyticsConfigured: true,
+    briefSource: brief.source,
+    copyModel: COPY_MODEL,
+    attention: [
+      ...((forms.data ?? []).length || (bookable.data ?? []).length
+        ? []
+        : ["Turn on the quote calculator or make a service bookable so visitors can enquire."]),
+      ...((media.data ?? []).length >= 5 ? [] : ["Add at least five photos of your own work."]),
+      ...brief.missingFacts,
+    ].slice(0, 8),
+  };
+
   const { error: saveError } = await db.from("website_settings").upsert(
     {
       organization_id: orgId,
       template: plan.template,
-      generation: { ...plan, copy } as unknown as Record<string, unknown>,
+      generation: { ...plan, copy, brief, report } as unknown as Record<string, unknown>,
       generated_at: new Date().toISOString(),
       review_state: "ready_for_review",
       publish_state: "preview",
