@@ -498,3 +498,44 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
 
     return { applied: applied.length, failed: failed.length, snapshotLabel };
   });
+
+/* ------------------------------ voice commands ----------------------------- */
+
+/**
+ * Transcribes a recorded voice command so the owner can talk to the assistant
+ * instead of typing. Returns editable text only — nothing is changed here.
+ */
+export const transcribeVoiceCommand = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string; audio?: unknown }) => {
+    const organizationId = orgIdOf(input);
+    const [attachment] = readAttachments([input?.audio]);
+    if (!attachment || attachment.kind !== "audio")
+      throw new Error("That recording couldn't be read. Try recording again.");
+    return { organizationId, attachment };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    // RLS: a member can only read their own workspace, so this is the tenant gate.
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("id", data.organizationId)
+      .maybeSingle();
+    if (!org) throw new Error("Workspace not found.");
+
+    const { transcribeVoice, TRANSCRIBE_MODEL } = await import("@/lib/site-agent.server");
+    const text = await transcribeVoice(data.attachment);
+    if (!text) return { text: "", message: "I couldn't hear anything in that recording." };
+
+    await supabase.from("ai_generations").insert({
+      organization_id: data.organizationId,
+      kind: "voice_command",
+      model: TRANSCRIBE_MODEL,
+      instruction: "(voice note)",
+      result: { text: text.slice(0, 4000) } as unknown as never,
+      created_by: userId,
+    });
+
+    return { text: text.slice(0, PLAN_INSTRUCTION_LIMIT), message: null as string | null };
+  });
