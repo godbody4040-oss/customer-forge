@@ -1,0 +1,188 @@
+/**
+ * Server-only Stripe bookkeeping for Revora subscriptions.
+ * Subscription state and entitlements are only ever derived from verified
+ * Stripe objects (webhook payloads or direct API reads) — never the client.
+ */
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import type { StripeEnv } from "@/lib/stripe.server";
+
+type Admin = SupabaseClient<Database>;
+type SubStatus = Database["public"]["Enums"]["subscription_status"];
+type Interval = Database["public"]["Enums"]["billing_interval"];
+
+export const PLAN_PRICES: Record<string, { monthly: string; annual: string }> = {
+  starter: { monthly: "revora_starter_monthly", annual: "revora_starter_yearly" },
+  growth: { monthly: "revora_growth_monthly", annual: "revora_growth_yearly" },
+  pro: { monthly: "revora_pro_monthly", annual: "revora_pro_yearly" },
+};
+
+/** Human-readable price id (lookup key) -> { planId, interval }. */
+export function planFromPriceId(priceId: string | null | undefined) {
+  if (!priceId) return null;
+  for (const [planId, prices] of Object.entries(PLAN_PRICES)) {
+    if (prices.monthly === priceId) return { planId, interval: "monthly" as Interval };
+    if (prices.annual === priceId) return { planId, interval: "annual" as Interval };
+  }
+  return null;
+}
+
+export function priceIdFor(planId: string, interval: Interval): string | null {
+  const prices = PLAN_PRICES[planId];
+  if (!prices) return null;
+  return interval === "annual" ? prices.annual : prices.monthly;
+}
+
+export function resolvePriceKey(price: {
+  lookup_key?: string | null;
+  metadata?: Record<string, string> | null;
+  id?: string;
+}): string | null {
+  return price?.lookup_key ?? price?.metadata?.["lovable_external_id"] ?? price?.id ?? null;
+}
+
+const STATUS_MAP: Record<string, SubStatus> = {
+  trialing: "trialing",
+  active: "active",
+  past_due: "past_due",
+  unpaid: "past_due",
+  incomplete: "past_due",
+  incomplete_expired: "canceled",
+  canceled: "canceled",
+  paused: "suspended",
+};
+
+export function mapSubscriptionStatus(stripeStatus: string): SubStatus {
+  return STATUS_MAP[stripeStatus] ?? "past_due";
+}
+
+const iso = (seconds: unknown) =>
+  typeof seconds === "number" && seconds > 0 ? new Date(seconds * 1000).toISOString() : null;
+
+/**
+ * Writes a verified Stripe subscription into `subscriptions` + `organizations`.
+ * Safe to call repeatedly for the same event (upsert on organization_id).
+ */
+export async function syncStripeSubscription(
+  admin: Admin,
+  subscription: any,
+  env: StripeEnv,
+): Promise<{ ok: boolean; organizationId?: string; reason?: string }> {
+  const organizationId = subscription?.metadata?.organizationId as string | undefined;
+  if (!organizationId) return { ok: false, reason: "missing_organization_metadata" };
+
+  const item = subscription?.items?.data?.[0];
+  const priceKey = item?.price ? resolvePriceKey(item.price) : null;
+  const mapped = planFromPriceId(priceKey);
+  const status = mapSubscriptionStatus(String(subscription?.status ?? ""));
+  const periodStart = iso(item?.current_period_start ?? subscription?.current_period_start);
+  const periodEnd = iso(item?.current_period_end ?? subscription?.current_period_end);
+
+  const record = {
+    organization_id: organizationId,
+    plan_id: mapped?.planId ?? (subscription?.metadata?.planId as string | undefined) ?? null,
+    status,
+    billing_interval: mapped?.interval ?? ("monthly" as Interval),
+    payment_provider: "stripe",
+    price_id: priceKey,
+    environment: env,
+    provider_customer_id:
+      typeof subscription?.customer === "string" ? subscription.customer : (subscription?.customer?.id ?? null),
+    provider_subscription_id: subscription?.id ?? null,
+    cancel_at_period_end: Boolean(subscription?.cancel_at_period_end),
+    current_period_start: periodStart,
+    current_period_end: periodEnd,
+    trial_ends_at: iso(subscription?.trial_end),
+  };
+
+  await admin.from("subscriptions").upsert(record, { onConflict: "organization_id" });
+
+  const orgStatus = status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
+  await admin
+    .from("organizations")
+    .update({
+      ...(record.plan_id ? { plan_id: record.plan_id } : {}),
+      subscription_status: orgStatus,
+      ...(periodEnd ? { trial_ends_at: null } : {}),
+    })
+    .eq("id", organizationId);
+
+  return { ok: true, organizationId };
+}
+
+/** Records a verified Stripe charge/invoice payment. Idempotent on the Stripe id. */
+export async function recordStripeTransaction(
+  admin: Admin,
+  input: {
+    organizationId: string;
+    stripeId: string;
+    amount: number;
+    currency: string;
+    description: string;
+    status: "completed" | "failed";
+    planId?: string | null;
+    interval?: Interval | null;
+    customerEmail?: string | null;
+    environment: StripeEnv;
+    periodStart?: string | null;
+    periodEnd?: string | null;
+  },
+) {
+  const { data: existing } = await admin
+    .from("payments")
+    .select("id, status")
+    .eq("organization_id", input.organizationId)
+    .contains("metadata", { stripe_id: input.stripeId })
+    .maybeSingle();
+
+  if (existing) {
+    if (existing.status === input.status) return { inserted: false as const };
+    await admin.from("payments").update({ status: input.status }).eq("id", existing.id);
+    return { inserted: false as const };
+  }
+
+  await admin.from("payments").insert({
+    organization_id: input.organizationId,
+    plan_id: input.planId ?? null,
+    payment_provider: "stripe",
+    environment: input.environment,
+    amount: input.amount,
+    currency: input.currency.toUpperCase(),
+    status: input.status,
+    description: input.description,
+    billing_interval: input.interval ?? null,
+    customer_email: input.customerEmail ?? null,
+    period_start: input.periodStart ?? null,
+    period_end: input.periodEnd ?? null,
+    completed_at: input.status === "completed" ? new Date().toISOString() : null,
+    entitlement_applied: input.status === "completed",
+    metadata: { stripe_id: input.stripeId },
+  });
+
+  await admin.from("notifications").insert({
+    organization_id: input.organizationId,
+    title: input.status === "completed" ? "Payment received" : "Payment failed",
+    body:
+      input.status === "completed"
+        ? `${input.description} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: input.currency.toUpperCase() }).format(input.amount)} paid.`
+        : `${input.description} — the card payment did not go through. Update your payment method to keep access.`,
+    kind: input.status === "completed" ? "success" : "warning",
+    link: "/app/billing",
+  });
+
+  await admin.from("audit_logs").insert({
+    organization_id: input.organizationId,
+    action: `payment.${input.status}`,
+    entity: "payment",
+    entity_id: input.stripeId,
+    metadata: {
+      provider: "stripe",
+      environment: input.environment,
+      amount: input.amount,
+      currency: input.currency,
+      plan_id: input.planId ?? null,
+    },
+  });
+
+  return { inserted: true as const };
+}

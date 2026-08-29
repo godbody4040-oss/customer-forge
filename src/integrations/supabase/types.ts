@@ -1460,6 +1460,38 @@ export type Database = {
           },
         ]
       }
+      plan_entitlements: {
+        Row: {
+          created_at: string
+          feature_key: string
+          id: string
+          limit_value: number | null
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature_key: string
+          id?: string
+          limit_value?: number | null
+          plan_id: string
+        }
+        Update: {
+          created_at?: string
+          feature_key?: string
+          id?: string
+          limit_value?: number | null
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_entitlements_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           annual_price: number
@@ -1471,6 +1503,8 @@ export type Database = {
           monthly_price: number
           name: string
           sort_order: number
+          stripe_annual_price_id: string | null
+          stripe_monthly_price_id: string | null
           tagline: string | null
           updated_at: string
         }
@@ -1484,6 +1518,8 @@ export type Database = {
           monthly_price?: number
           name: string
           sort_order?: number
+          stripe_annual_price_id?: string | null
+          stripe_monthly_price_id?: string | null
           tagline?: string | null
           updated_at?: string
         }
@@ -1497,6 +1533,8 @@ export type Database = {
           monthly_price?: number
           name?: string
           sort_order?: number
+          stripe_annual_price_id?: string | null
+          stripe_monthly_price_id?: string | null
           tagline?: string | null
           updated_at?: string
         }
@@ -2001,11 +2039,16 @@ export type Database = {
       subscriptions: {
         Row: {
           billing_interval: Database["public"]["Enums"]["billing_interval"]
+          cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
+          current_period_start: string | null
+          environment: string
           id: string
           organization_id: string
+          payment_provider: string
           plan_id: string | null
+          price_id: string | null
           provider_customer_id: string | null
           provider_subscription_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
@@ -2014,11 +2057,16 @@ export type Database = {
         }
         Insert: {
           billing_interval?: Database["public"]["Enums"]["billing_interval"]
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
           organization_id: string
+          payment_provider?: string
           plan_id?: string | null
+          price_id?: string | null
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
@@ -2027,11 +2075,16 @@ export type Database = {
         }
         Update: {
           billing_interval?: Database["public"]["Enums"]["billing_interval"]
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
           organization_id?: string
+          payment_provider?: string
           plan_id?: string | null
+          price_id?: string | null
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
