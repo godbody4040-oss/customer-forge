@@ -94,7 +94,18 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         customer: customerId,
         metadata,
         subscription_data: { metadata },
-      });
+      };
+
+      // Tax calculation is used when the payment account has a head-office
+      // address configured; otherwise checkout still works without it.
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({ ...base, automatic_tax: { enabled: true } });
+      } catch (taxError) {
+        const message = getStripeErrorMessage(taxError);
+        if (!/automatic tax|head office|tax calculation/i.test(message)) throw taxError;
+        session = await stripe.checkout.sessions.create(base);
+      }
 
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
