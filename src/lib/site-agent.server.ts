@@ -213,7 +213,17 @@ export async function planChanges(
           .join("; ")}. ` +
         `Use them as context for the request: read any words shown or spoken, describe what is pictured only when it helps the copy, ` +
         `and follow spoken instructions exactly as if they had been typed. Never state a fact (price, award, rating, guarantee) that ` +
-        `only appears to be true from a photo — if it matters, ask for it in "questions".`,
+        `only appears to be true from a photo — if it matters, ask for it in "questions".` +
+        attachments
+          .filter((attachment) => attachment.chapters?.length)
+          .map(
+            (attachment) =>
+              `\nMoments already noted in "${attachment.name}": ` +
+              attachment.chapters!.map((chapter) => `${chapter.at} ${chapter.label} — ${chapter.detail}`).join(" | ") +
+              `. When the owner mentions a timestamp, use the moment at that time.`,
+          )
+          .join(""),
+
     });
     for (const attachment of attachments) parts.push(attachmentPart(attachment));
   }
