@@ -326,7 +326,7 @@ export function PlatformEngine({
                   />
                   <span className={checked ? "text-muted-foreground line-through" : ""}>
                     <span className="flex flex-wrap items-center gap-2">
-                      <Pill tone={item.severity === "blocker" ? "warning" : "info"}>{item.severity}</Pill>
+                      <Pill tone={item.severity === "blocker" ? "attention" : "info"}>{item.severity}</Pill>
                       <span className="font-medium">{item.area}</span>
                     </span>
                     <span className="mt-1 block">{item.task}</span>
