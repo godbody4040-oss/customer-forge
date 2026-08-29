@@ -328,10 +328,10 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
     const applied: string[] = [];
     const failed: string[] = [];
 
-    const run = async (label: string, work: () => Promise<{ error: unknown } | void>) => {
+    const run = async (label: string, work: () => PromiseLike<unknown>) => {
       try {
-        const result = await work();
-        if (result && "error" in result && result.error) throw result.error;
+        const result = (await work()) as { error?: unknown } | null;
+        if (result && result.error) throw result.error;
         applied.push(label);
       } catch (error) {
         console.error("[site-agent] action failed", label, error);
