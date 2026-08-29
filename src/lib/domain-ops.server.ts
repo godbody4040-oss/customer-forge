@@ -6,6 +6,7 @@
  * client their domain is working when it isn't.
  */
 import { canonicalHost, type EmailForwardProvider, type HostPreference } from "@/lib/domain-ops";
+import { isFetchableHostname } from "@/lib/net-guard.server";
 
 type DnsAnswer = { name: string; type: number; data: string };
 
@@ -28,6 +29,10 @@ export type HopResult = {
 
 async function probe(url: string): Promise<HopResult> {
   try {
+    // SSRF guard: only public DNS names are ever fetched server-side.
+    if (!isFetchableHostname(new URL(url).hostname)) {
+      return { url, status: null, location: null, ok: false, error: "Not a public domain" };
+    }
     const res = await fetch(url, { method: "GET", redirect: "manual" });
     return {
       url,
