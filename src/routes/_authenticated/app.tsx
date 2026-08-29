@@ -45,23 +45,24 @@ export const Route = createFileRoute("/_authenticated/app")({
 });
 
 const NAV = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/app/command", label: "AI Command Center", icon: Sparkles, exact: false },
-  { to: "/app/leads", label: "Leads", icon: Users, exact: false },
+  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true, key: false },
+  { to: "/app/command", label: "AI Command Center", icon: Sparkles, exact: false, key: true },
+  { to: "/app/leads", label: "Leads & CRM", icon: Users, exact: false, key: true },
 
-  { to: "/app/calendar", label: "Calendar", icon: CalendarDays, exact: false },
-  { to: "/app/services", label: "Services", icon: Wrench, exact: false },
-  { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false },
-  { to: "/app/automations", label: "Automations", icon: Zap, exact: false },
-  { to: "/app/campaigns", label: "Campaigns & QR", icon: QrCode, exact: false },
-  { to: "/app/reviews", label: "Reviews", icon: Star, exact: false },
-  { to: "/app/website", label: "Website", icon: Globe, exact: false },
-  { to: "/app/domain", label: "Domain", icon: Globe2, exact: false },
-  { to: "/app/launch", label: "Launch", icon: Rocket, exact: false },
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false },
-  { to: "/app/billing", label: "Billing", icon: CreditCard, exact: false },
-  { to: "/app/settings", label: "Settings", icon: Settings, exact: false },
+  { to: "/app/calendar", label: "Calendar & bookings", icon: CalendarDays, exact: false, key: false },
+  { to: "/app/services", label: "Services", icon: Wrench, exact: false, key: false },
+  { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false, key: false },
+  { to: "/app/automations", label: "Automations", icon: Zap, exact: false, key: false },
+  { to: "/app/campaigns", label: "Campaigns & QR", icon: QrCode, exact: false, key: false },
+  { to: "/app/reviews", label: "Reviews", icon: Star, exact: false, key: false },
+  { to: "/app/website", label: "Website builder", icon: Globe, exact: false, key: true },
+  { to: "/app/domain", label: "Domain & SSL", icon: Globe2, exact: false, key: false },
+  { to: "/app/launch", label: "Launch checklist", icon: Rocket, exact: false, key: true },
+  { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false, key: false },
+  { to: "/app/billing", label: "Billing", icon: CreditCard, exact: false, key: false },
+  { to: "/app/settings", label: "Settings", icon: Settings, exact: false, key: false },
 ] as const;
+
 
 function AppShell() {
   const { data, isLoading } = useWorkspace();
