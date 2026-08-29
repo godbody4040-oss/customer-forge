@@ -55,14 +55,15 @@ export function SiteEnginePanel({
             }
           />
           <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-            The engine reads the details you entered, picks the right structure for your industry and
-            writes the page copy. It never invents reviews, awards, credentials or prices.
+            Revora analyses your business, works out how your customers buy, chooses the right structure
+            for your industry, writes the copy, sets up your search settings and connects lead capture — in
+            one run. It never invents reviews, awards, credentials or prices.
           </p>
         </div>
         {canManage ? (
           <Button variant={hasCopy ? "outline" : "signal"} disabled={running} onClick={() => run.mutate()}>
             {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            {status === "failed" ? "Retry build" : hasCopy ? "Rebuild from my info" : "Generate my website"}
+            {status === "failed" ? "Retry build" : hasCopy ? "Rebuild from my info" : "Build my complete website"}
           </Button>
         ) : null}
       </div>

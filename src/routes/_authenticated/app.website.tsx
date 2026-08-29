@@ -24,6 +24,8 @@ import {
   SiteEnginePanel,
   VersionHistory,
 } from "@/components/app/SiteEngine";
+import { BuildReportPanel, BusinessBriefPanel } from "@/components/app/BuildBrief";
+import { readBrief, readReport } from "@/lib/site-brief";
 import { EDITABLE_COPY_FIELDS, growthRecommendations, readCopy, revoraScore } from "@/lib/site-engine";
 import { useScoreFacts } from "@/lib/site-engine.hooks";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
@@ -56,6 +58,8 @@ function WebsitePage() {
   const facts = useScoreFacts(orgId);
   const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
   const copy = readCopy(generation?.["copy"]);
+  const brief = readBrief(generation?.["brief"]);
+  const buildReport = readReport(generation?.["report"]);
   const manage = canManage(ws?.workspace?.role ?? "viewer");
 
   const servicesCount = facts.data?.servicesCount ?? (services ?? []).length;
@@ -135,6 +139,7 @@ function WebsitePage() {
         structureSlot={
           <div className="space-y-6">
             <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
+            <BusinessBriefPanel brief={brief} />
             <WebsiteStructure organizationId={orgId} canManage={manage} />
             <SiteChatbot
               organizationId={orgId}
@@ -160,6 +165,7 @@ function WebsitePage() {
               factors={siteScore.factors}
               recommendations={recommendations}
             />
+            <BuildReportPanel report={buildReport} />
             <WebsiteReview
               organizationId={orgId}
               slug={org?.slug}
