@@ -131,12 +131,31 @@ function AdminClients() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Pill tone={client.readinessScore >= 90 ? "signal" : "attention"}>
-                  {client.readinessScore}% ready
+                <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                  {client.setup_paid_at
+                    ? `Setup paid ${dateShort(client.setup_paid_at)}`
+                    : "Setup unpaid"}{" "}
+                  · {currency(client.paid_total)} collected
+                  {client.current_period_end ? ` · renews ${dateShort(client.current_period_end)}` : ""}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Pill
+                  tone={
+                    client.setup_paid_at && client.subscription_state === "active"
+                      ? "signal"
+                      : client.subscription_state === "past_due"
+                        ? "danger"
+                        : "attention"
+                  }
+                >
+                  {client.setup_paid_at && client.subscription_state === "active"
+                    ? "Paid & active"
+                    : client.subscription_state
+                      ? `Subscription ${client.subscription_state}`
+                      : "Awaiting payment"}
                 </Pill>
-                <Pill tone={PUBLISH_STATES[client.publish_state]?.tone ?? "neutral"}>
-                  {PUBLISH_STATES[client.publish_state]?.label ?? client.publish_state}
-                </Pill>
+
                 <Pill tone={DOMAIN_STATES[client.domain_status]?.tone ?? "neutral"}>
                   {DOMAIN_STATES[client.domain_status]?.label ?? client.domain_status}
                 </Pill>
