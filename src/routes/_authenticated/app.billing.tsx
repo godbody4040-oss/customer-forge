@@ -76,6 +76,21 @@ function BillingPage() {
       : currentPlan.monthly_price
     : null;
 
+  // Stripe embedded checkout redirects here after a completed payment.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") !== "complete") return;
+    toast.success("Payment received — your service is being activated.");
+    if (orgId) {
+      void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
+      void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications", orgId] });
+      void queryClient.invalidateQueries({ queryKey: ["workspace"] });
+    }
+    window.history.replaceState(null, "", "/app/billing");
+    setCardService(null);
+  }, [orgId, queryClient]);
+
   const openPortal = async () => {
     if (!orgId) return;
     setPortalBusy(true);
@@ -268,6 +283,17 @@ function BillingPage() {
             void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
             void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
             void queryClient.invalidateQueries({ queryKey: ["workspace"] });
+          }}
+        />
+      ) : null}
+
+      {cardService && orgId ? (
+        <StripeServiceCheckout
+          organizationId={orgId}
+          product={cardService}
+          onClose={() => {
+            setCardService(null);
+            void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
           }}
         />
       ) : null}
