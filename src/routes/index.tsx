@@ -24,7 +24,7 @@ import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/domain";
-import { GROWTH_SYSTEM, usd, usdExact } from "@/lib/offer";
+import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 
 export const Route = createFileRoute("/")({
   head: () => ({
