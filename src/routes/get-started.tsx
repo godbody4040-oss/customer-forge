@@ -238,19 +238,24 @@ function GetStarted() {
                   <p className="text-[14px] font-medium">Monthly subscription</p>
                   <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
                 </div>
-                <p className="tnum text-[15px] font-semibold whitespace-nowrap">
-                  {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
-                </p>
+                <div className="text-right">
+                  <p className="tnum text-[15px] font-semibold whitespace-nowrap text-primary">
+                    First month free
+                  </p>
+                  <p className="tnum text-[12px] whitespace-nowrap text-muted-foreground">
+                    then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
+                  </p>
+                </div>
               </div>
               <div className="flex items-baseline justify-between gap-3 px-4 py-3">
                 <p className="text-[13px] font-medium">Charged today</p>
-                <p className="tnum text-[17px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice + GROWTH_SYSTEM.monthlyPrice)}</p>
+                <p className="tnum text-[17px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</p>
               </div>
             </div>
             <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
-              {GROWTH_SYSTEM.explainer} Today's total includes your {usdExact(GROWTH_SYSTEM.setupPrice)} setup and
-              your first {usdExact(GROWTH_SYSTEM.monthlyPrice)} month. After that, only{" "}
-              {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month recurs.
+              {GROWTH_SYSTEM.explainer} Today you pay only the {usdExact(GROWTH_SYSTEM.setupPrice)} setup — your
+              first month is free. The first {usdExact(GROWTH_SYSTEM.monthlyPrice)} payment starts one month after
+              signup and recurs monthly. Cancel anytime.
             </p>
             <dl className="mt-5 grid gap-2 border-t border-border pt-4 text-[12px] sm:grid-cols-2">
               <Summary label="Name" value={intake.fullName} />
