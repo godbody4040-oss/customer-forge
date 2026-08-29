@@ -25,6 +25,29 @@ export function publicClient() {
   });
 }
 
+/**
+ * Resolves the public-safe fields of a business by slug (or id).
+ *
+ * Organization rows hold billing, plan, trial and onboarding data, so neither
+ * anonymous nor cross-tenant authenticated clients may read the table. Public
+ * site rendering runs on the server, so it resolves the handful of public
+ * fields with the privileged client and returns nothing else.
+ */
+export async function publicOrganization(
+  by: { slug: string } | { id: string },
+): Promise<{ id: string; name: string; slug: string; industry: string | null; is_demo: boolean } | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let query = supabaseAdmin
+    .from("organizations")
+    .select("id, name, slug, industry, is_demo")
+    .eq("is_suspended", false);
+  query = "slug" in by ? query.eq("slug", by.slug) : query.eq("id", by.id);
+  const { data } = await query.maybeSingle();
+  return data ?? null;
+}
+
+
+
 export type SiteSectionSettings = {
   seo?: {
     anchor?: string;
@@ -77,11 +100,8 @@ export async function loadSite(
     ? (await import("@/integrations/supabase/client.server")).supabaseAdmin
     : publicClient();
 
-  const { data: org } = await supabase
-    .from("public_organizations")
-    .select("id, name, slug, industry, is_demo")
-    .eq("slug", slug)
-    .maybeSingle();
+  const org = await publicOrganization({ slug });
+
 
   if (!org?.id) return null;
   const orgId: string = org.id;

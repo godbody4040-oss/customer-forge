@@ -6,7 +6,7 @@
  * business that owns the requested host — not the Revora marketing site — so
  * both are resolved from the incoming Host header.
  */
-import { publicClient } from "@/lib/public-site.server";
+import { publicClient, publicOrganization } from "@/lib/public-site.server";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
 
 export const REVORA_HOSTS = [
@@ -61,11 +61,7 @@ export async function resolveHostSite(
     .maybeSingle();
   if (!settings?.organization_id) return null;
 
-  const { data: org } = await supabase
-    .from("public_organizations")
-    .select("slug")
-    .eq("id", settings.organization_id)
-    .maybeSingle();
+  const org = await publicOrganization({ id: settings.organization_id });
   if (!org?.slug) return null;
 
   const { data: pages } = await supabase

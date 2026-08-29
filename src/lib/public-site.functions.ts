@@ -4,6 +4,22 @@ import type { Database } from "@/integrations/supabase/types";
 // Type-only import: erased at build time, so nothing server-only ships to the client.
 import type { loadSite } from "@/lib/public-site.server";
 
+/**
+ * Public-safe organization lookup. Organization rows carry billing and
+ * onboarding data, so the table is unreadable to anonymous clients; this
+ * resolves only id/name via the privileged server client.
+ */
+async function publicOrganization(slug: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("organizations")
+    .select("id, name")
+    .eq("slug", slug)
+    .eq("is_suspended", false)
+    .maybeSingle();
+  return data ?? null;
+}
+
 function publicClient() {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
   return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
@@ -118,15 +134,10 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
-    const lookup = publicClient();
     // Inserts use the admin client: anonymous callers have INSERT but no SELECT
     // on leads, so a `.insert().select()` round-trip is blocked by RLS.
     const { supabaseAdmin: supabase } = await import("@/integrations/supabase/client.server");
-    const { data: org } = await lookup
-      .from("public_organizations")
-      .select("id, name")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const org = await publicOrganization(data.slug);
     if (!org?.id) throw new Error("We couldn't find that business.");
     const orgId: string = org.id;
 
@@ -319,11 +330,7 @@ export const trackPublicEvent = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const supabase = publicClient();
-    const { data: org } = await supabase
-      .from("public_organizations")
-      .select("id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const org = await publicOrganization(data.slug);
     if (!org?.id) return { ok: false };
     const orgId: string = org.id;
     await supabase.from("analytics_events").insert({
