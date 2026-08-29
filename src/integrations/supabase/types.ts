@@ -2856,10 +2856,7 @@ export type Database = {
       }
     }
     Functions: {
-      org_has_entitlement: {
-        Args: { _feature_key: string; _organization_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"
