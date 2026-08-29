@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { REVORA, revoraMailto } from "@/lib/brand";
 import { trackConversion } from "@/lib/conversion";
+import { useStepScroll } from "@/lib/use-step-scroll";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -347,6 +348,7 @@ function GetStarted() {
             ) : null}
           </section>
         ) : null}
+        </div>
 
         <p className="mt-8 text-[12px] text-muted-foreground">
           Questions before you start? {REVORA.phoneDisplay} ·{" "}
