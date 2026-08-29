@@ -81,25 +81,19 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
         customerId = created.id;
       }
 
-      const session = await stripe.checkout.sessions.create({
+      const metadata = {
+        organizationId: data.organizationId,
+        planId: data.planId,
+        userId: context.userId,
+      };
+      const base = {
         line_items: [{ price: price.id, quantity: 1 }],
-        mode: "subscription",
-        ui_mode: "embedded_page",
+        mode: "subscription" as const,
+        ui_mode: "embedded_page" as const,
         return_url: data.returnUrl,
         customer: customerId,
-        automatic_tax: { enabled: true },
-        metadata: {
-          organizationId: data.organizationId,
-          planId: data.planId,
-          userId: context.userId,
-        },
-        subscription_data: {
-          metadata: {
-            organizationId: data.organizationId,
-            planId: data.planId,
-            userId: context.userId,
-          },
-        },
+        metadata,
+        subscription_data: { metadata },
       });
 
       return { clientSecret: session.client_secret ?? "" };
