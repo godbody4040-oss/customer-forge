@@ -75,6 +75,15 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+const ACTIVITY_ICON = {
+  lead: UserPlus,
+  quote: Mail,
+  message: MessageSquare,
+  booking: CalendarCheck,
+  payment: CreditCard,
+  review: Star,
+} as const;
+
 function DemoBanner() {
   return (
     <div
@@ -83,9 +92,19 @@ function DemoBanner() {
     >
       <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <p>
-        <span className="font-semibold">DEMO DATA.</span> {DEMO_DISCLOSURE}
+        <span className="font-semibold">LIVE PRODUCT DEMO.</span> All metrics shown are fictional
+        demonstration data. {DEMO_DISCLOSURE}
       </p>
     </div>
+  );
+}
+
+function LiveDot() {
+  return (
+    <span aria-hidden="true" className="relative inline-flex size-2">
+      <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
+      <span className="relative inline-flex size-2 rounded-full bg-primary" />
+    </span>
   );
 }
 
@@ -98,6 +117,11 @@ function DemoDashboard() {
 
   const metrics = useMemo(() => demoMetrics(range), [range]);
   const rangeLabel = DEMO_RANGES.find((r) => r.id === range)?.label ?? "30 days";
+  const series = useMemo(() => demoSeries(range), [range]);
+  const funnel = useMemo(() => demoFunnel(range), [range]);
+  const pipeline = useMemo(() => demoPipeline(range), [range]);
+  const activity = useMemo(() => demoActivity(), []);
+  const pipelineTotal = pipeline.reduce((sum, row) => sum + row.value, 0);
 
   const leads = useMemo(
     () =>
@@ -114,18 +138,36 @@ function DemoDashboard() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
-        <section className="border-b border-border">
+        <section className="hero-aura border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-10">
             <div className="flex flex-wrap items-center gap-2">
-              <Pill tone="attention">DEMO DATA</Pill>
+              <Pill tone="signal" className="uppercase tracking-[0.14em]">
+                <LiveDot /> Live product demo
+              </Pill>
+              <Pill tone="attention">Fictional demo data</Pill>
               <Pill tone="neutral">Interactive</Pill>
             </div>
             <h1 className="mt-4 max-w-3xl font-display text-[clamp(1.7rem,4vw,2.6rem)] leading-[1.08] font-semibold tracking-tight">
-              This is what running your business inside Revora looks like.
+              This is what running your business inside{" "}
+              <span className="gold-text">Revora</span> looks like.
             </h1>
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-              {workspace.business.name} — {workspace.business.tagline}. {DEMO_DISCLOSURE}
+              {workspace.business.name} — {workspace.business.tagline}.{" "}
+              <span className="text-accent">All metrics shown are fictional demonstration data.</span>
             </p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: "Every lead captured", value: "Instantly" },
+                { label: "First reply time", value: `${metrics.responseMinutes} min` },
+                { label: "Follow-ups", value: "Automatic" },
+                { label: "Booked → review", value: "Hands-free" },
+              ].map((item) => (
+                <div key={item.label} className="panel card-lift p-3">
+                  <p className="eyebrow">{item.label}</p>
+                  <p className="mt-1 font-display text-[15px] font-semibold gold-hl">{item.value}</p>
+                </div>
+              ))}
+            </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild variant="signal" size="lg">
                 <Link to="/get-started">
@@ -140,6 +182,7 @@ function DemoDashboard() {
             </div>
           </div>
         </section>
+
 
         <section className="mx-auto max-w-6xl px-4 py-8">
           <DemoBanner />
