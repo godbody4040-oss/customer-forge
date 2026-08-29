@@ -178,41 +178,32 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         ui_mode: "embedded_page" as const,
         return_url: data.returnUrl,
         customer: customerId,
-        // Prices are quoted in USD everywhere in the product, so keep checkout
-        // in USD instead of letting the provider convert by visitor location.
-        adaptive_pricing: { enabled: false },
         metadata,
         // 30-day free platform trial: the $1,500 setup is charged today, the $250/month
         // recurring price starts one month after signup.
         subscription_data: { metadata, trial_period_days: 30 },
       };
 
-      // Accounts with Managed Payments enabled by default reject
-      // `adaptive_pricing: { enabled: false }`; retry without that parameter.
-      type SessionPayload = typeof base & { automatic_tax?: { enabled: boolean } };
-      async function createSessionWithCompat(payload: SessionPayload) {
-        try {
-          return await stripe.checkout.sessions.create(payload);
-        } catch (compatError) {
-          const message = getStripeErrorMessage(compatError);
-          if (!/adaptive_pricing|managed payments/i.test(message)) throw compatError;
-          const { adaptive_pricing: _omit, ...withoutAdaptivePricing } = payload as typeof base & {
-            adaptive_pricing?: { enabled: boolean };
-          };
-          return stripe.checkout.sessions.create(withoutAdaptivePricing);
-        }
-      }
+      // Live accounts run with full compliance handling, which rejects
+      // currency-pinning parameters, so the primary payload omits them. Older
+      // accounts without it get the USD-pinned retry below.
+      type SessionPayload = typeof base & {
+        automatic_tax?: { enabled: boolean };
+        adaptive_pricing?: { enabled: boolean };
+      };
+      const createSession = (payload: SessionPayload) => stripe.checkout.sessions.create(payload);
 
-      // Tax calculation is used when the payment account has a head-office
-      // address configured; otherwise checkout still works without it.
       let session;
       try {
-        session = await createSessionWithCompat({ ...base, automatic_tax: { enabled: true } });
-      } catch (taxError) {
-        const message = getStripeErrorMessage(taxError);
-        if (!/automatic tax|head office|tax calculation/i.test(message)) throw taxError;
-        session = await createSessionWithCompat(base);
+        session = await createSession({ ...base, automatic_tax: { enabled: true } });
+      } catch (primaryError) {
+        const message = getStripeErrorMessage(primaryError);
+        // Tax calculation needs a head-office address on the payment account;
+        // without it checkout must still open.
+        if (!/automatic tax|head office|tax calculation/i.test(message)) throw primaryError;
+        session = await createSession(base);
       }
+
 
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
