@@ -281,12 +281,14 @@ function Onboarding() {
       if (socialRow.instagram || socialRow.facebook || socialRow.google_business) {
         const { error: socialError } = await supabase
           .from("social_profiles")
-          .insert(socialRow as never);
+          .upsert(socialRow as never, { onConflict: "organization_id" });
         assertNoError(socialError, "Could not save your social links");
       }
 
 
       if (services.length) {
+        // Re-running onboarding must not duplicate the service list.
+        await supabase.from("services").delete().eq("organization_id", org.id);
         const { error: servicesError } = await supabase.from("services").insert(
           services.map((s, index) => ({
             organization_id: org.id,
@@ -301,6 +303,7 @@ function Onboarding() {
         );
         assertNoError(servicesError, "Could not save your services");
       }
+
 
       // Give the workspace a working quote calculator so the public site's
       // primary "Get my quote" CTA has a real destination from day one.
