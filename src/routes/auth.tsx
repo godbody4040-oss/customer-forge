@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorNote, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
+import { ensureProfile } from "@/lib/auth-session";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
@@ -260,6 +261,20 @@ function AuthPage() {
                 {busy === "email" ? <Loader2 className="size-4 animate-spin" /> : null}
                 {isSignup ? "CREATE ACCOUNT — START FREE" : "Sign in"}
               </Button>
+              {!isSignup ? (
+                <button
+                  type="button"
+                  className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                  onClick={handleForgotPassword}
+                  disabled={busy !== null}
+                >
+                  Forgot your password?
+                </button>
+              ) : null}
+              <p className="text-center text-[11.5px] text-muted-foreground">
+                We keep you signed in on this device, so next time you land straight in your
+                dashboard.
+              </p>
             </form>
           </div>
 
