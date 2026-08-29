@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -51,7 +52,7 @@ export function AssistantMedia({
 }: {
   organizationId: string | undefined;
   attachments: AgentAttachment[];
-  onChange: (next: AgentAttachment[]) => void;
+  onChange: React.Dispatch<React.SetStateAction<AgentAttachment[]>>;
   onTranscript: (text: string) => void;
   onInsert?: (text: string) => void;
   disabled?: boolean;
@@ -93,11 +94,8 @@ export function AssistantMedia({
     try {
       const result = await chapterFn({ data: { organizationId, video: attachment } });
       if (result.chapters.length) {
-        onChange(
-          attachments
-            .concat()
-            .map((item) => item)
-            .map((item) => (item.dataUrl === attachment.dataUrl ? { ...item, chapters: result.chapters } : item)),
+        onChange((prior) =>
+          prior.map((item) => (item.dataUrl === attachment.dataUrl ? { ...item, chapters: result.chapters } : item)),
         );
       }
     } catch {
@@ -137,7 +135,7 @@ export function AssistantMedia({
         toast.error(`Couldn't read ${file.name}.`);
       }
     }
-    if (next.length) onChange([...attachments, ...next]);
+    if (next.length) onChange((prior) => [...prior, ...next]);
     if (fileInput.current) fileInput.current.value = "";
     for (const attachment of next) if (attachment.kind === "video") void indexClip(attachment);
   };
@@ -265,7 +263,7 @@ export function AssistantMedia({
                   type="button"
                   aria-label={`Remove ${attachment.name}`}
                   className={`${FOCUS} p-1 text-muted-foreground transition-colors hover:text-foreground`}
-                  onClick={() => onChange(attachments.filter((_, position) => position !== index))}
+                  onClick={() => onChange((prior) => prior.filter((_, position) => position !== index))}
                 >
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
