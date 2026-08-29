@@ -149,7 +149,13 @@ function AdminOverview() {
         </div>
       </Panel>
 
-      <Panel title="Marketing funnel — last 30 days" description="Landing views through paid checkout, grouped by industry page or entry path.">
+      <Panel>
+        <div className="border-b border-border px-4 py-3">
+          <p className="font-display text-[15px] font-semibold">Marketing funnel — last 30 days</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Landing views through paid checkout, grouped by industry page or entry path.
+          </p>
+        </div>
         {conversions.isLoading ? (
           <LoadingRows rows={3} />
         ) : (conversions.data?.report.length ?? 0) === 0 ? (
