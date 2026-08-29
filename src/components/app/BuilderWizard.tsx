@@ -145,6 +145,7 @@ export function BuilderWizard({
         <div className="mt-5 space-y-4">
           {step === "business" ? (
             <>
+              <GoogleListingImport organizationId={organizationId} canManage={canManage} />
               <AutoField
                 label="Business name"
                 value={org?.name ?? ""}
