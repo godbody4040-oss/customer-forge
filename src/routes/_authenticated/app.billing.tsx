@@ -103,12 +103,45 @@ function BillingPage() {
 
       <PaymentTestModeBanner />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      {subscription?.status === "past_due" ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+          <p className="font-medium">Your last payment did not go through.</p>
+          <p className="mt-1">
+            Update your card to keep your workspace active — access continues while the payment provider retries.
+          </p>
+          <Button variant="outline" size="sm" className="mt-2" onClick={openPortal} disabled={portalBusy || !manage}>
+            <ExternalLink className="size-4" /> {portalBusy ? "Opening…" : "Update payment method"}
+          </Button>
+        </div>
+      ) : null}
+
+      {subscription?.cancel_at_period_end ? (
+        <div className="rounded-md border border-border bg-muted/40 px-4 py-3 text-[13px] text-muted-foreground">
+          Cancellation is scheduled. You keep full access until{" "}
+          {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : "the end of the paid period"}
+          , then the workspace becomes read-only.
+        </div>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Current plan" value={currentPlanId ?? "No plan"} hint={subscription?.status ?? org?.subscription_status ?? ""} />
+        <MetricCard
+          label="Plan price"
+          value={currentPrice != null ? money(currentPrice, "USD") : "—"}
+          hint={subscription ? `billed ${subscription.billing_interval}` : "no active subscription"}
+        />
         <MetricCard label="Paid to date" value={money(paidTotal, "USD")} hint={`${paid.length} payment${paid.length === 1 ? "" : "s"}`} />
         <MetricCard
-          label={subscription?.cancel_at_period_end ? "Access ends" : "Renews"}
-          value={subscription?.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : "—"}
+          label={subscription?.cancel_at_period_end ? "Access ends" : subscription?.status === "trialing" ? "Trial ends" : "Renews"}
+          value={
+            subscription?.status === "trialing" && subscription.trial_ends_at
+              ? new Date(subscription.trial_ends_at).toLocaleDateString()
+              : subscription?.current_period_end
+                ? new Date(subscription.current_period_end).toLocaleDateString()
+                : org?.trial_ends_at
+                  ? new Date(org.trial_ends_at).toLocaleDateString()
+                  : "—"
+          }
           hint={subscription?.cancel_at_period_end ? "Cancellation scheduled" : "Next billing date"}
         />
       </div>
