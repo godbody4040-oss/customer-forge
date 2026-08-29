@@ -25,9 +25,10 @@ import {
   VersionHistory,
 } from "@/components/app/SiteEngine";
 import { BuildReportPanel, BusinessBriefPanel } from "@/components/app/BuildBrief";
+import { BriefReviewPanel, EngineSelfTestPanel, MissingFactsPanel } from "@/components/app/BriefReview";
 import { readBrief, readReport } from "@/lib/site-brief";
 import { EDITABLE_COPY_FIELDS, growthRecommendations, readCopy, revoraScore } from "@/lib/site-engine";
-import { useScoreFacts } from "@/lib/site-engine.hooks";
+import { useBuildReadiness, useScoreFacts } from "@/lib/site-engine.hooks";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { websiteQa } from "@/lib/website-content";
 
@@ -55,6 +56,7 @@ function WebsitePage() {
   const profile = profileQuery.data as Record<string, unknown> | null | undefined;
   const settings = settingsQuery.data;
   const seo = readSeo(settings?.seo);
+  const { data: readiness } = useBuildReadiness(orgId);
   const facts = useScoreFacts(orgId);
   const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
   const copy = readCopy(generation?.["copy"]);
@@ -139,6 +141,8 @@ function WebsitePage() {
         structureSlot={
           <div className="space-y-6">
             <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
+            <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
+            <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
             <BusinessBriefPanel brief={brief} />
             <WebsiteStructure organizationId={orgId} canManage={manage} />
             <SiteChatbot
@@ -166,6 +170,7 @@ function WebsitePage() {
               recommendations={recommendations}
             />
             <BuildReportPanel report={buildReport} />
+            <EngineSelfTestPanel organizationId={orgId} />
             <WebsiteReview
               organizationId={orgId}
               slug={org?.slug}

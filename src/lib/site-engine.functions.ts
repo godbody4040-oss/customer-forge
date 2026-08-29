@@ -23,6 +23,27 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const orgId = data.organizationId;
 
+    // Generation is gated on real readiness: the blanks Revora asked about must
+    // be filled, and the owner must have approved the brief the build reads from.
+    {
+      const { readBrief } = await import("@/lib/site-brief");
+      const { requiredFactGaps } = await import("@/lib/launch-qa");
+      const { gatherBriefFacts } = await import("@/lib/site-brief.server");
+
+      const settings = await supabase
+        .from("website_settings")
+        .select("generation")
+        .eq("organization_id", orgId)
+        .maybeSingle();
+      const brief = readBrief((settings.data?.generation as Record<string, unknown> | null)?.["brief"]);
+      const facts = await gatherBriefFacts(supabase, orgId, brief?.missingFacts ?? []);
+      const missing = requiredFactGaps(facts.factInput);
+      if (missing.length)
+        throw new Error(`Revora still needs: ${missing.map((g) => g.label.toLowerCase()).join(", ")}.`);
+      if (!brief) throw new Error("Review Revora's understanding of your business first.");
+      if (!brief.approved) throw new Error("Approve the brief and Revora will build from it.");
+    }
+
     // RLS enforces that the caller belongs to this workspace.
     const { data: existing } = await supabase
       .from("generation_jobs")
@@ -252,4 +273,309 @@ export const aiEditSiteSections = createServerFn({ method: "POST" })
         };
       }),
     };
+  });
+
+/* --------------------- brief review, facts and self-test --------------------- */
+
+const orgIdOf = (input: { organizationId?: unknown }) => {
+  const organizationId = String(input?.organizationId ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
+  return organizationId;
+};
+
+/**
+ * Runs only the analysis pass and stores the result as an unapproved brief, so
+ * the owner can read and edit Revora's understanding before any copy, design or
+ * pages are generated.
+ */
+export const analyzeSiteBrief = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string }) => ({ organizationId: orgIdOf(input) }))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const orgId = data.organizationId;
+    const { gatherBriefFacts } = await import("@/lib/site-brief.server");
+    const { analyzeBusiness, fallbackBrief, AiGatewayError } = await import("@/lib/site-engine.server");
+    const { readBrief } = await import("@/lib/site-brief");
+
+    const facts = await gatherBriefFacts(supabase, orgId);
+    const settings = await supabase
+      .from("website_settings")
+      .select("generation")
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const generation = (settings.data?.generation ?? {}) as Record<string, unknown>;
+    const previous = readBrief(generation["brief"]);
+
+    let brief = fallbackBrief(facts.copyFacts);
+    let aiError: string | null = null;
+    try {
+      brief = await analyzeBusiness(facts.copyFacts);
+    } catch (error) {
+      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) throw error;
+      aiError = error instanceof Error ? error.message : "Analysis unavailable";
+    }
+    // A new analysis always needs re-approval, but the owner's answers stay.
+    brief = { ...brief, approved: false, factAnswers: previous?.factAnswers ?? {} };
+
+    const { error } = await supabase.from("website_settings").upsert(
+      { organization_id: orgId, generation: { ...generation, brief } } as never,
+      { onConflict: "organization_id" },
+    );
+    if (error) throw new Error(error.message);
+
+    await supabase.from("ai_generations").insert({
+      organization_id: orgId,
+      kind: "business_brief",
+      model: brief.source,
+      instruction: null,
+      result: brief as unknown as never,
+      created_by: userId,
+    });
+
+    return { brief, aiError };
+  });
+
+/** Saves the owner's edits to the brief, and their approval to build from it. */
+export const saveSiteBrief = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string; brief: unknown; approved?: boolean }) => ({
+    organizationId: orgIdOf(input),
+    brief: input?.brief,
+    approved: input?.approved === true,
+  }))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { readBrief } = await import("@/lib/site-brief");
+    const parsed = readBrief(data.brief);
+    if (!parsed) throw new Error("That brief isn't complete enough to save.");
+
+    const settings = await supabase
+      .from("website_settings")
+      .select("generation")
+      .eq("organization_id", data.organizationId)
+      .maybeSingle();
+    const generation = (settings.data?.generation ?? {}) as Record<string, unknown>;
+    const brief = { ...parsed, approved: data.approved, source: parsed.source };
+
+    const { error } = await supabase.from("website_settings").upsert(
+      { organization_id: data.organizationId, generation: { ...generation, brief } } as never,
+      { onConflict: "organization_id" },
+    );
+    if (error) throw new Error(error.message);
+    return { brief };
+  });
+
+/**
+ * Saves answers to the blanks Revora asked about. Answers that map to a business
+ * profile column are written there so every later stage uses them; the rest are
+ * kept with the brief as context.
+ */
+export const saveMissingFacts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string; answers: Record<string, string> }) => {
+    const answers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(input?.answers ?? {}).slice(0, 20)) {
+      if (typeof value === "string" && value.trim()) answers[key.slice(0, 60)] = value.trim().slice(0, 600);
+    }
+    if (!Object.keys(answers).length) throw new Error("Fill in at least one answer.");
+    return { organizationId: orgIdOf(input), answers };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const orgId = data.organizationId;
+    const { readBrief } = await import("@/lib/site-brief");
+    const { factGaps } = await import("@/lib/launch-qa");
+    const { gatherBriefFacts } = await import("@/lib/site-brief.server");
+
+    const facts = await gatherBriefFacts(supabase, orgId);
+    const fieldByKey = new Map(
+      factGaps(facts.factInput)
+        .filter((g) => g.field)
+        .map((g) => [g.key, g.field!] as const),
+    );
+
+    const profilePatch: Record<string, string> = {};
+    const context_answers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(data.answers)) {
+      const field = fieldByKey.get(key);
+      if (field) profilePatch[field] = value;
+      else context_answers[key] = value;
+    }
+
+    if (Object.keys(profilePatch).length) {
+      const { error } = await supabase
+        .from("business_profiles")
+        .upsert({ organization_id: orgId, ...profilePatch } as never, { onConflict: "organization_id" });
+      if (error) throw new Error(error.message);
+    }
+
+    const settings = await supabase
+      .from("website_settings")
+      .select("generation")
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const generation = (settings.data?.generation ?? {}) as Record<string, unknown>;
+    const brief = readBrief(generation["brief"]);
+    if (brief) {
+      const { error } = await supabase.from("website_settings").upsert(
+        {
+          organization_id: orgId,
+          generation: {
+            ...generation,
+            brief: { ...brief, factAnswers: { ...brief.factAnswers, ...context_answers } },
+          },
+        } as never,
+        { onConflict: "organization_id" },
+      );
+      if (error) throw new Error(error.message);
+    }
+
+    const after = await gatherBriefFacts(supabase, orgId, brief?.missingFacts ?? []);
+    return { gaps: factGaps(after.factInput) };
+  });
+
+/** The blanks and QA state for the builder UI, computed from real rows. */
+export const getBuildReadiness = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string }) => ({ organizationId: orgIdOf(input) }))
+  .handler(async ({ data, context }) => {
+    const { readBrief } = await import("@/lib/site-brief");
+    const { captureQa, factGaps } = await import("@/lib/launch-qa");
+    const { gatherBriefFacts } = await import("@/lib/site-brief.server");
+
+    const settings = await context.supabase
+      .from("website_settings")
+      .select("generation")
+      .eq("organization_id", data.organizationId)
+      .maybeSingle();
+    const brief = readBrief((settings.data?.generation as Record<string, unknown> | null)?.["brief"]);
+    const facts = await gatherBriefFacts(context.supabase, data.organizationId, brief?.missingFacts ?? []);
+    const gaps = factGaps(facts.factInput);
+    const qa = captureQa(facts.qaInput);
+    return {
+      gaps,
+      requiredGaps: gaps.filter((g) => g.required),
+      briefApproved: brief?.approved === true,
+      hasBrief: !!brief,
+      capture: qa,
+    };
+  });
+
+/**
+ * Signed-in end-to-end check. Every step does the real thing — a live AI
+ * analysis call, a real QA pass over the workspace's rows, and a real fetch of
+ * the public preview — and reports exactly what happened. Nothing is simulated.
+ */
+export const runSiteEngineCheck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string }) => ({ organizationId: orgIdOf(input) }))
+  .handler(async ({ data, context }) => {
+    const orgId = data.organizationId;
+    const steps: { key: string; label: string; ok: boolean; detail: string }[] = [];
+    const { gatherBriefFacts } = await import("@/lib/site-brief.server");
+    const { analyzeBusiness } = await import("@/lib/site-engine.server");
+    const { captureQa } = await import("@/lib/launch-qa");
+    const { readBrief, readReport } = await import("@/lib/site-brief");
+
+    let facts: Awaited<ReturnType<typeof gatherBriefFacts>> | null = null;
+    try {
+      facts = await gatherBriefFacts(context.supabase, orgId);
+      steps.push({
+        key: "facts",
+        label: "Business information readable",
+        ok: true,
+        detail: `${facts.serviceRows.length} services, ${facts.photoCount} photos, ${facts.socialLinks} social links.`,
+      });
+    } catch (error) {
+      steps.push({
+        key: "facts",
+        label: "Business information readable",
+        ok: false,
+        detail: error instanceof Error ? error.message : "Couldn't read your workspace.",
+      });
+    }
+
+    if (facts) {
+      try {
+        const brief = await analyzeBusiness(facts.copyFacts);
+        steps.push({
+          key: "ai",
+          label: "Live AI analysis call",
+          ok: brief.source !== "rules",
+          detail:
+            brief.source === "rules"
+              ? "AI analysis returned nothing usable; the deterministic brief would be used."
+              : `${brief.source} answered: “${brief.positioning.slice(0, 120)}”`,
+        });
+      } catch (error) {
+        steps.push({
+          key: "ai",
+          label: "Live AI analysis call",
+          ok: false,
+          detail: error instanceof Error ? error.message : "The AI call failed.",
+        });
+      }
+
+      const qa = captureQa(facts.qaInput);
+      steps.push({
+        key: "capture",
+        label: "Lead capture and booking QA",
+        ok: qa.passed,
+        detail: qa.passed
+          ? "Every lead-capture and booking check passed."
+          : `${qa.blockers.length} blocking issue${qa.blockers.length === 1 ? "" : "s"}: ${qa.blockers.map((b) => b.label).join(", ")}.`,
+      });
+    }
+
+    const settings = await context.supabase
+      .from("website_settings")
+      .select("generation, publish_state")
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const generation = (settings.data?.generation ?? {}) as Record<string, unknown>;
+    const brief = readBrief(generation["brief"]);
+    const report = readReport(generation["report"]);
+    steps.push({
+      key: "report",
+      label: "Build report written",
+      ok: !!report,
+      detail: report
+        ? `Last build ${report.builtAt}: ${report.pages} pages, ${report.sections} sections, ${report.checks.length} QA checks.`
+        : "No build report yet — run a build first.",
+    });
+    steps.push({
+      key: "brief",
+      label: "Brief stored and reviewable",
+      ok: !!brief,
+      detail: brief
+        ? `${brief.source}${brief.approved ? ", approved by you" : ", awaiting your approval"}.`
+        : "No brief stored yet.",
+    });
+
+    if (facts?.slug) {
+      try {
+        const origin = new URL(getRequest().url).origin;
+        const response = await fetch(`${origin}/s/${facts.slug}`, { headers: { accept: "text/html" } });
+        const html = await response.text();
+        const headline = brief ? null : null;
+        steps.push({
+          key: "preview",
+          label: "Public preview renders",
+          ok: response.ok && html.includes("<html"),
+          detail: response.ok
+            ? `/s/${facts.slug} returned ${response.status} and ${html.length.toLocaleString()} bytes of HTML.${headline ?? ""}`
+            : `/s/${facts.slug} returned ${response.status}.`,
+        });
+      } catch (error) {
+        steps.push({
+          key: "preview",
+          label: "Public preview renders",
+          ok: false,
+          detail: error instanceof Error ? error.message : "Couldn't load the preview.",
+        });
+      }
+    }
+
+    return { ranAt: new Date().toISOString(), steps, passed: steps.every((s) => s.ok) };
   });

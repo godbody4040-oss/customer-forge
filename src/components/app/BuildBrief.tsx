@@ -125,6 +125,29 @@ export function BuildReportPanel({ report }: { report: BuildReport | null }) {
         ))}
       </dl>
 
+      {report.checks.length ? (
+        <div className="mt-5">
+          <p className="text-[12px] font-medium">Lead capture and booking checks</p>
+          <ul className="mt-2 grid gap-1.5">
+            {report.checks.map((check) => (
+              <li
+                key={check.key}
+                className="flex flex-wrap items-start gap-2 rounded-md bg-elevated px-3 py-2 text-[12px]"
+              >
+                <span className={check.ok ? "text-primary" : check.severity === "blocker" ? "text-accent" : "text-muted-foreground"}>
+                  {check.ok ? "\u2713" : check.severity === "blocker" ? "\u2715" : "!"}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="font-medium">{check.label}</span>
+                  <span className="block text-muted-foreground">{check.detail}</span>
+                  {!check.ok && check.fix ? <span className="mt-0.5 block">{check.fix}</span> : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       {report.attention.length ? (
         <div className="mt-4">
           <p className="text-[12px] font-medium">Needs your attention</p>
