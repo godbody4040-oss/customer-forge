@@ -2207,7 +2207,12 @@ export type Database = {
           id: string
           is_visible: boolean
           kind: string
+          noindex: boolean
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
           organization_id: string
+          seo_canonical: string | null
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -2220,7 +2225,12 @@ export type Database = {
           id?: string
           is_visible?: boolean
           kind?: string
+          noindex?: boolean
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
           organization_id: string
+          seo_canonical?: string | null
           seo_description?: string | null
           seo_title?: string | null
           slug: string
@@ -2233,7 +2243,12 @@ export type Database = {
           id?: string
           is_visible?: boolean
           kind?: string
+          noindex?: boolean
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
           organization_id?: string
+          seo_canonical?: string | null
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
@@ -2251,6 +2266,63 @@ export type Database = {
           },
           {
             foreignKeyName: "website_pages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      website_preview_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          label: string | null
+          last_viewed_at: string | null
+          organization_id: string
+          revoked: boolean
+          token: string
+          updated_at: string
+          views: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          label?: string | null
+          last_viewed_at?: string | null
+          organization_id: string
+          revoked?: boolean
+          token: string
+          updated_at?: string
+          views?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          label?: string | null
+          last_viewed_at?: string | null
+          organization_id?: string
+          revoked?: boolean
+          token?: string
+          updated_at?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_preview_links_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_preview_links_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "public_organizations"

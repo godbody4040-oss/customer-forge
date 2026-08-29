@@ -107,7 +107,7 @@ export function useSnapshotWebsiteVersion(organizationId: string | undefined) {
   return useMutation({
     mutationFn: async (label?: string) => {
       const orgId = organizationId!;
-      const [{ data: settings }, { data: last }] = await Promise.all([
+      const [{ data: settings }, { data: last }, pages, sections] = await Promise.all([
         supabase.from("website_settings").select("*").eq("organization_id", orgId).maybeSingle(),
         supabase
           .from("website_versions")
@@ -116,9 +116,27 @@ export function useSnapshotWebsiteVersion(organizationId: string | undefined) {
           .order("version", { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("website_pages")
+          .select("id, slug, title, kind, seo_title, seo_description")
+          .eq("organization_id", orgId)
+          .order("sort_order"),
+        supabase
+          .from("website_sections")
+          .select("id, page_id, kind, heading, subheading, body, sort_order, is_visible")
+          .eq("organization_id", orgId)
+          .order("sort_order"),
       ]);
       if (!settings) throw new Error("There's no website to snapshot yet.");
       const version = Number(last?.version ?? 0) + 1;
+      // Every version also carries the structure, so two versions can be
+      // compared section by section later on.
+      const content = {
+        pages: (pages.data ?? []).map((page) => ({
+          ...page,
+          sections: (sections.data ?? []).filter((section) => section.page_id === page.id),
+        })),
+      };
       const { error } = await supabase.from("website_versions").insert({
         organization_id: orgId,
         version,
@@ -126,7 +144,7 @@ export function useSnapshotWebsiteVersion(organizationId: string | undefined) {
         template: settings.template,
         generation: settings.generation as never,
         seo: settings.seo as never,
-        pages: settings.pages as never,
+        pages: { settings_pages: settings.pages ?? null, content } as never,
         published_at: new Date().toISOString(),
         created_by: (await supabase.auth.getUser()).data.user?.id ?? null,
       });
@@ -156,13 +174,17 @@ export function useRestoreWebsiteVersion(organizationId: string | undefined) {
       if (readError) throw readError;
       if (!snapshot) throw new Error("That version is no longer available.");
 
+      const stored = snapshot.pages as { settings_pages?: unknown } | null;
+      const settingsPages =
+        stored && typeof stored === "object" && "settings_pages" in stored ? stored.settings_pages : snapshot.pages;
+
       const { error } = await supabase.from("website_settings").upsert(
         {
           organization_id: orgId,
           template: snapshot.template ?? "default",
           generation: snapshot.generation as never,
           seo: snapshot.seo as never,
-          pages: snapshot.pages as never,
+          pages: settingsPages as never,
           review_state: "ready_for_review",
           publish_state: "preview",
         } as never,

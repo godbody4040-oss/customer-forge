@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Layers, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useState, type DragEvent } from "react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Layers, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { EmptyState, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,23 @@ import {
   useBuildWebsiteStructure,
   useDeleteSection,
   useMoveSection,
+  useReorderComponents,
+  useReorderSections,
+  useSaveComponent,
+  useSavePage,
   useSaveSection,
   useWebsiteContent,
 } from "@/lib/website-content.hooks";
-import { SECTION_LIBRARY, sectionLabel, type ContentPage, type SectionKind } from "@/lib/website-content";
+import {
+  PAGE_SEO_FIELDS,
+  SECTION_LIBRARY,
+  readSectionSeo,
+  sectionLabel,
+  writeSectionSeo,
+  type ContentPage,
+  type ContentSection,
+  type SectionKind,
+} from "@/lib/website-content";
 import { cn } from "@/lib/utils";
 
 /**
@@ -111,16 +124,62 @@ function PageSections({
   const moveSection = useMoveSection(organizationId);
   const addSection = useAddSection(organizationId);
   const deleteSection = useDeleteSection(organizationId);
+  const reorderSections = useReorderSections(organizationId);
   const [adding, setAdding] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   const sections = [...page.sections].sort((a, b) => a.sort_order - b.sort_order);
 
+  /** Reorders by id only, so nothing typed into a section is touched. */
+  const dropSection = (targetId: string) => {
+    const sourceId = dragId;
+    setDragId(null);
+    setOverId(null);
+    if (!sourceId || sourceId === targetId) return;
+    const ids = sections.map((section) => section.id);
+    const from = ids.indexOf(sourceId);
+    const to = ids.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    ids.splice(to, 0, ids.splice(from, 1)[0]!);
+    reorderSections.mutate(ids);
+  };
+
   return (
     <div className="space-y-3">
+      <PageSeoPanel page={page} organizationId={organizationId} canManage={canManage} />
+
       {sections.map((section, index) => (
-        <Panel key={section.id} className="p-4">
+        <Panel
+          key={section.id}
+          className={cn(
+            "p-4",
+            dragId === section.id && "opacity-60",
+            overId === section.id && dragId !== section.id && "border-primary",
+          )}
+          draggable={canManage}
+          onDragStart={() => setDragId(section.id)}
+          onDragEnd={() => {
+            setDragId(null);
+            setOverId(null);
+          }}
+          onDragOver={(event: DragEvent) => {
+            if (!canManage || !dragId) return;
+            event.preventDefault();
+            setOverId(section.id);
+          }}
+          onDrop={(event: DragEvent) => {
+            event.preventDefault();
+            dropSection(section.id);
+          }}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
+              {canManage ? (
+                <span title="Drag to reorder">
+                  <GripVertical className="size-4 cursor-grab text-muted-foreground" aria-hidden="true" />
+                </span>
+              ) : null}
               <Pill tone={section.is_visible ? "signal" : "neutral"}>{sectionLabel(section.kind)}</Pill>
               {section.components.length ? (
                 <span className="text-[11px] text-muted-foreground">
@@ -237,6 +296,9 @@ function PageSections({
               </div>
             ) : null}
           </form>
+
+          <SectionComponents section={section} organizationId={organizationId} canManage={canManage} />
+          <SectionSeoFields section={section} organizationId={organizationId} canManage={canManage} />
         </Panel>
       ))}
 
@@ -271,5 +333,248 @@ function PageSections({
         </Panel>
       ) : null}
     </div>
+  );
+}
+
+/** Items inside a section (service cards, FAQ pairs, photos) — drag to reorder. */
+function SectionComponents({
+  section,
+  organizationId,
+  canManage,
+}: {
+  section: ContentSection;
+  organizationId: string | undefined;
+  canManage: boolean;
+}) {
+  const reorder = useReorderComponents(organizationId);
+  const saveComponent = useSaveComponent(organizationId);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const items = [...section.components].sort((a, b) => a.sort_order - b.sort_order);
+  if (!items.length) return null;
+
+  const drop = (targetId: string) => {
+    const sourceId = dragId;
+    setDragId(null);
+    if (!sourceId || sourceId === targetId) return;
+    const ids = items.map((item) => item.id);
+    const from = ids.indexOf(sourceId);
+    const to = ids.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    ids.splice(to, 0, ids.splice(from, 1)[0]!);
+    reorder.mutate(ids);
+  };
+
+  return (
+    <div className="mt-4 rounded-md border border-border">
+      <p className="border-b border-border px-3 py-2 text-[11px] tracking-wide text-muted-foreground uppercase">
+        Items in this section
+      </p>
+      <ul>
+        {items.map((item) => (
+          <li
+            key={item.id}
+            draggable={canManage}
+            onDragStart={(event) => {
+              event.stopPropagation();
+              setDragId(item.id);
+            }}
+            onDragEnd={() => setDragId(null)}
+            onDragOver={(event) => {
+              if (!canManage || !dragId) return;
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              drop(item.id);
+            }}
+            className={cn(
+              "flex items-center gap-2 border-b border-border px-3 py-2 last:border-b-0",
+              dragId === item.id && "opacity-60",
+            )}
+          >
+            {canManage ? (
+              <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground" aria-hidden="true" />
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px]">{item.label ?? item.kind}</p>
+              {item.body ? (
+                <p className="truncate text-[12px] text-muted-foreground">{item.body}</p>
+              ) : null}
+            </div>
+            {canManage ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={item.is_visible ? "Hide item" : "Show item"}
+                onClick={() => saveComponent.mutate({ id: item.id, patch: { is_visible: !item.is_visible } })}
+              >
+                {item.is_visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+              </Button>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Per-section search settings: link anchor, heading level, schema inclusion. */
+function SectionSeoFields({
+  section,
+  organizationId,
+  canManage,
+}: {
+  section: ContentSection;
+  organizationId: string | undefined;
+  canManage: boolean;
+}) {
+  const saveSection = useSaveSection(organizationId);
+  const [open, setOpen] = useState(false);
+  const seo = readSectionSeo(section.settings);
+
+  if (!canManage) return null;
+
+  return (
+    <div className="mt-3">
+      <Button variant="ghost" size="sm" onClick={() => setOpen((value) => !value)}>
+        <Search className="size-4" /> {open ? "Hide" : "Search settings for this section"}
+      </Button>
+      {open ? (
+        <form
+          className="mt-3 grid gap-3 rounded-md border border-border p-3 sm:grid-cols-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            saveSection.mutate({
+              id: section.id,
+              patch: {
+                settings: writeSectionSeo(section.settings, {
+                  anchor: String(form.get("anchor") ?? "").trim() || undefined,
+                  seo_heading_level: (String(form.get("level") ?? "h2") === "h3" ? "h3" : "h2") as "h2" | "h3",
+                  include_in_schema: form.get("schema") === "on",
+                  image_alt: String(form.get("alt") ?? "").trim() || undefined,
+                }),
+              },
+            });
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor={`anchor-${section.id}`}>Link anchor</Label>
+            <Input id={`anchor-${section.id}`} name="anchor" defaultValue={seo.anchor ?? ""} placeholder="services" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`level-${section.id}`}>Heading level</Label>
+            <select
+              id={`level-${section.id}`}
+              name="level"
+              defaultValue={seo.seo_heading_level ?? "h2"}
+              className="h-9 w-full rounded-md border border-border bg-transparent px-3 text-[13px]"
+            >
+              <option value="h2">Main section (H2)</option>
+              <option value="h3">Sub-section (H3)</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`alt-${section.id}`}>Image description</Label>
+            <Input id={`alt-${section.id}`} name="alt" defaultValue={seo.image_alt ?? ""} />
+          </div>
+          <label className="flex items-center gap-2 text-[13px] sm:col-span-2">
+            <input type="checkbox" name="schema" defaultChecked={seo.include_in_schema ?? false} />
+            Include this section in search rich results
+          </label>
+          <div className="sm:col-span-3">
+            <Button type="submit" variant="outline" disabled={saveSection.isPending}>
+              Save search settings
+            </Button>
+          </div>
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
+/** Page-level search and social preview fields. */
+function PageSeoPanel({
+  page,
+  organizationId,
+  canManage,
+}: {
+  page: ContentPage;
+  organizationId: string | undefined;
+  canManage: boolean;
+}) {
+  const savePage = useSavePage(organizationId);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Panel className="p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[13px] font-medium">Search & sharing for {page.title}</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            {page.seo_title ? `Google shows: “${page.seo_title}”` : "No search title set yet."}
+            {page.noindex ? " · Hidden from search engines" : ""}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setOpen((value) => !value)}>
+          <Search className="size-4" /> {open ? "Close" : "Edit"}
+        </Button>
+      </div>
+
+      {open ? (
+        <form
+          className="mt-4 grid gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            const patch: Record<string, unknown> = { noindex: form.get("noindex") === "on" };
+            for (const field of PAGE_SEO_FIELDS) {
+              patch[field.key] = String(form.get(field.key) ?? "").trim() || null;
+            }
+            savePage.mutate({ id: page.id, patch });
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {PAGE_SEO_FIELDS.map((field) => (
+              <div key={field.key} className="space-y-1.5">
+                <Label htmlFor={`${field.key}-${page.id}`}>{field.label}</Label>
+                {field.key === "seo_description" || field.key === "og_description" ? (
+                  <Textarea
+                    id={`${field.key}-${page.id}`}
+                    name={field.key}
+                    rows={2}
+                    maxLength={field.max}
+                    defaultValue={page[field.key] ?? ""}
+                    disabled={!canManage}
+                  />
+                ) : (
+                  <Input
+                    id={`${field.key}-${page.id}`}
+                    name={field.key}
+                    maxLength={field.max}
+                    defaultValue={page[field.key] ?? ""}
+                    disabled={!canManage}
+                  />
+                )}
+                <p className="text-[11px] text-muted-foreground">{field.help}</p>
+              </div>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-[13px]">
+            <input type="checkbox" name="noindex" defaultChecked={page.noindex} disabled={!canManage} />
+            Hide this page from search engines
+          </label>
+          {canManage ? (
+            <div>
+              <Button type="submit" variant="outline" disabled={savePage.isPending}>
+                Save search settings
+              </Button>
+            </div>
+          ) : null}
+        </form>
+      ) : null}
+    </Panel>
   );
 }

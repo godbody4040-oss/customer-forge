@@ -27,7 +27,9 @@ export function useWebsiteContent(organizationId: string | undefined) {
       const [pages, sections, components] = await Promise.all([
         supabase
           .from("website_pages")
-          .select("id, slug, title, kind, sort_order, is_visible, seo_title, seo_description")
+          .select(
+            "id, slug, title, kind, sort_order, is_visible, seo_title, seo_description, seo_canonical, og_title, og_description, og_image_url, noindex",
+          )
           .eq("organization_id", orgId)
           .order("sort_order"),
         supabase
@@ -342,5 +344,138 @@ export function useAutosaveOrganization(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["workspace"] });
     },
     onError: (error: Error) => toast.error(error.message || "Couldn't save your latest edit."),
+  });
+}
+
+/**
+ * Persists a new order for sections or components after a drag. Each row keeps
+ * all of its content — only `sort_order` changes.
+ */
+function useReorderRows(
+  table: "website_sections" | "website_components",
+  organizationId: string | undefined,
+  failure: string,
+) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const orgId = organizationId!;
+      for (const [index, id] of orderedIds.entries()) {
+        const { error } = await supabase
+          .from(table)
+          .update({ sort_order: index })
+          .eq("id", id)
+          .eq("organization_id", orgId);
+        if (error) throw error;
+      }
+      return orderedIds.length;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || failure),
+  });
+}
+
+export function useReorderSections(organizationId: string | undefined) {
+  return useReorderRows("website_sections", organizationId, "Couldn't reorder the sections.");
+}
+
+export function useReorderComponents(organizationId: string | undefined) {
+  return useReorderRows("website_components", organizationId, "Couldn't reorder those items.");
+}
+
+export function useSaveComponent(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { error } = await supabase
+        .from("website_components")
+        .update(patch as never)
+        .eq("id", id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't save that item."),
+  });
+}
+
+/* ---------------------------------------------------------------------------
+ * Shareable draft preview links
+ * ------------------------------------------------------------------------- */
+
+const PREVIEW_KEY = "website_preview_links";
+
+export type PreviewLink = {
+  id: string;
+  token: string;
+  label: string | null;
+  expires_at: string;
+  revoked: boolean;
+  views: number;
+  last_viewed_at: string | null;
+  created_at: string;
+};
+
+export function usePreviewLinks(organizationId: string | undefined) {
+  return useQuery({
+    queryKey: [PREVIEW_KEY, organizationId],
+    enabled: !!organizationId,
+    queryFn: async (): Promise<PreviewLink[]> => {
+      const { data, error } = await supabase
+        .from("website_preview_links")
+        .select("id, token, label, expires_at, revoked, views, last_viewed_at, created_at")
+        .eq("organization_id", organizationId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PreviewLink[];
+    },
+  });
+}
+
+function newToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 40);
+}
+
+export function useCreatePreviewLink(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ label, hours }: { label: string; hours: number }) => {
+      const token = newToken();
+      const expires = new Date(Date.now() + Math.max(1, Math.min(720, hours)) * 3600_000);
+      const { error } = await supabase.from("website_preview_links").insert({
+        organization_id: organizationId!,
+        token,
+        label: label.trim() || null,
+        expires_at: expires.toISOString(),
+      });
+      if (error) throw error;
+      return token;
+    },
+    onSuccess: () => {
+      toast.success("Preview link created.");
+      void queryClient.invalidateQueries({ queryKey: [PREVIEW_KEY, organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't create a preview link."),
+  });
+}
+
+export function useRevokePreviewLink(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("website_preview_links")
+        .update({ revoked: true })
+        .eq("id", id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Preview link switched off.");
+      void queryClient.invalidateQueries({ queryKey: [PREVIEW_KEY, organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't revoke that link."),
   });
 }

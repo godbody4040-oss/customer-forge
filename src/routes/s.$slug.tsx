@@ -5,7 +5,7 @@ import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
-import { getPublicSite, trackPublicEvent } from "@/lib/public-site.functions";
+import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/s/$slug")({
     if (!site) throw notFound();
     return site;
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     if (!loaderData) {
       return {
         meta: [{ title: "Business not found" }, { name: "robots", content: "noindex" }],
@@ -24,29 +24,45 @@ export const Route = createFileRoute("/s/$slug")({
     }
     const name = loaderData.org.name;
     const city = loaderData.profile?.city;
+    const page = loaderData.content?.page ?? null;
+    const generated = readCopy((loaderData.settings?.generation as { copy?: unknown } | null)?.copy);
     const title = (
-      readCopy((loaderData.settings?.generation as { copy?: unknown } | null)?.copy)?.metaTitle ||
+      page?.seo_title ||
+      generated?.metaTitle ||
       `${name}${city ? ` — ${city}` : ""}`
     ).slice(0, 60);
-    const generated = readCopy((loaderData.settings?.generation as { copy?: unknown } | null)?.copy);
     const description = (
+      page?.seo_description ||
       generated?.metaDescription ||
       readSeo(loaderData.settings?.seo).meta_description ||
       loaderData.profile?.tagline ||
       `Book ${name}${city ? ` in ${city}` : ""} online. See services, prices and reviews.`
     ).slice(0, 158);
+    // Canonical and og:url point at this page itself unless the client set
+    // their own canonical address (e.g. after moving to a custom domain).
+    const url = page?.seo_canonical || `https://revoragrowthsystems.com/s/${params.slug}`;
+    const shareImage = page?.og_image_url || loaderData.profile?.hero_image_url || null;
     return {
       meta: [
         { title },
         { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
+        { property: "og:title", content: page?.og_title || title },
+        { property: "og:description", content: page?.og_description || description },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
         { name: "twitter:card", content: "summary_large_image" },
+        ...(shareImage && shareImage.startsWith("https://")
+          ? [
+              { property: "og:image", content: shareImage },
+              { name: "twitter:image", content: shareImage },
+            ]
+          : []),
+        ...(page?.noindex ? [{ name: "robots", content: "noindex" }] : []),
       ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
-  component: PublicSite,
+  component: PublicSiteRoute,
   errorComponent: () => (
     <div className="flex min-h-screen items-center justify-center px-4 text-center">
       <p className="text-[14px] text-muted-foreground">
@@ -66,8 +82,21 @@ export const Route = createFileRoute("/s/$slug")({
   ),
 });
 
-function PublicSite() {
-  const site = Route.useLoaderData();
+function PublicSiteRoute() {
+  return <PublicSiteView site={Route.useLoaderData()} />;
+}
+
+/**
+ * The rendered business website. Shared by the live site and by time-limited
+ * draft preview links, which pass `preview` so nothing is tracked as real traffic.
+ */
+export function PublicSiteView({
+  site,
+  preview = false,
+}: {
+  site: NonNullable<PublicSite>;
+  preview?: boolean;
+}) {
   const track = useServerFn(trackPublicEvent);
   const { org, profile, settings, services, reviews, gallery, social } = site;
   const seo = readSeo(settings?.seo);
@@ -75,6 +104,7 @@ function PublicSite() {
   const copy = readCopy(generation?.copy);
 
   useEffect(() => {
+    if (preview) return;
     const params = new URLSearchParams(window.location.search);
     void track({
       data: {
@@ -86,7 +116,7 @@ function PublicSite() {
         device: window.innerWidth < 768 ? "mobile" : "desktop",
       },
     }).catch(() => undefined);
-  }, [org.slug, track]);
+  }, [org.slug, track, preview]);
 
   const rating = reviews.length
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -119,6 +149,11 @@ function PublicSite() {
 
   return (
     <div className="min-h-screen bg-background">
+      {preview ? (
+        <div className="bg-accent/12 px-4 py-2 text-center text-[12px] text-accent">
+          Draft preview — this version is not live yet.
+        </div>
+      ) : null}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
