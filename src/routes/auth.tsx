@@ -8,7 +8,8 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ErrorNote } from "@/components/app/Bits";
+import { ErrorNote, Pill } from "@/components/app/Bits";
+import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
@@ -129,15 +130,51 @@ function AuthPage() {
 
       <main className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
-          <h1 className="font-display text-[24px] leading-tight font-semibold">
-            {isSignup ? "Start growing your business" : "Welcome back"}
+          {isSignup ? (
+            <Pill tone="signal">{`${GROWTH_SYSTEM.fullAccessTrialDays} DAYS FREE — FULL ACCESS`}</Pill>
+          ) : null}
+          <h1 className="mt-3 font-display text-[24px] leading-tight font-semibold">
+            {isSignup ? (
+              <>
+                Start your{" "}
+                <span className="gold-text">{GROWTH_SYSTEM.fullAccessTrialDays} free days</span>
+              </>
+            ) : (
+              "Welcome back"
+            )}
           </h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">
-            {isSignup
-              ? "Create your account, then launch your Revora Growth System."
-              : "Sign in to your business command center."}
-
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+            {isSignup ? (
+              <>
+                Create your account to unlock{" "}
+                <span className="gold-hl">every feature free for {GROWTH_SYSTEM.fullAccessTrialDays} days</span>.
+                No card needed to explore.
+              </>
+            ) : (
+              <>
+                Sign in to your business command center — your progress is{" "}
+                <span className="gold-hl">saved exactly where you left off</span>.
+              </>
+            )}
           </p>
+
+          {isSignup ? (
+            <ol className="mt-5 space-y-2 text-[12.5px] text-muted-foreground">
+              {[
+                "Create your account",
+                "Answer a few questions about your business",
+                `Explore the full system free for ${GROWTH_SYSTEM.fullAccessTrialDays} days`,
+                `Launch when ready — ${usd(GROWTH_SYSTEM.setupPrice)} setup, first month free`,
+              ].map((step, index) => (
+                <li key={step} className="flex items-start gap-2.5">
+                  <span className="tnum mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border border-primary/40 bg-primary/10 text-[10px] font-semibold text-primary">
+                    {index + 1}
+                  </span>
+                  <span className={index === 0 ? "text-foreground" : undefined}>{step}</span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
 
           <div className="panel mt-6 p-5">
             <Button
@@ -196,7 +233,7 @@ function AuthPage() {
               {error ? <ErrorNote message={error} /> : null}
               <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
                 {busy === "email" ? <Loader2 className="size-4 animate-spin" /> : null}
-                {isSignup ? "Create account" : "Sign in"}
+                {isSignup ? "CREATE ACCOUNT — START FREE" : "Sign in"}
               </Button>
             </form>
           </div>

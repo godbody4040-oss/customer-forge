@@ -4,6 +4,7 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Mail, Menu, Phone, Sparkles, X } from "lucide-react";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 
 const NAV = [
   { to: "/demo", label: "Product" },
@@ -89,7 +90,7 @@ export function SiteHeader() {
                 onClick={() => setOpen(false)}
               >
                 <Sparkles className="size-3.5" aria-hidden="true" />
-                Start free — 3 days full access
+                {`Start free — ${GROWTH_SYSTEM.fullAccessTrialDays} days full access`}
               </Link>
             </Button>
             <Button asChild variant="outline">
