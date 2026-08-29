@@ -24,6 +24,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as PTokenRouteImport } from './routes/p.$token'
@@ -130,6 +131,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
 const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoDashboardRoute = DemoDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => DemoRoute,
 } as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
@@ -370,6 +377,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
@@ -421,6 +429,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
@@ -472,6 +481,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/onboarding'
+    | '/demo/dashboard'
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/onboarding'
+    | '/demo/dashboard'
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
@@ -567,6 +578,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
+    | '/demo/dashboard'
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
@@ -730,6 +742,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/demo/'
       preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/dashboard': {
+      id: '/demo/dashboard'
+      path: '/dashboard'
+      fullPath: '/demo/dashboard'
+      preLoaderRoute: typeof DemoDashboardRouteImport
       parentRoute: typeof DemoRoute
     }
     '/industries/': {
@@ -1056,10 +1075,12 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface DemoRouteChildren {
+  DemoDashboardRoute: typeof DemoDashboardRoute
   DemoIndexRoute: typeof DemoIndexRoute
 }
 
 const DemoRouteChildren: DemoRouteChildren = {
+  DemoDashboardRoute: DemoDashboardRoute,
   DemoIndexRoute: DemoIndexRoute,
 }
 
