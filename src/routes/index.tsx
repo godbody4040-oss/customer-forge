@@ -394,22 +394,26 @@ function Landing() {
         <section className="hero-aura bg-card">
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
             <h2 className="mx-auto max-w-2xl font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
-              Your next customer is searching right now.
+              Turn your website into a growth system.
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
-              Get the site, the quotes and the calendar working together — and stop losing jobs to
-              whoever answered first.
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+              Stop losing leads between the first click and the final booking. Revora brings your
+              website, leads, quotes, bookings, follow-up, reviews and analytics together in one
+              place.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild variant="signal" size="lg">
                 <Link to="/auth" search={{ mode: "signup" }}>
-                  Build my growth system <ArrowRight className="size-4" />
+                  Start my free trial <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/contact">Talk to Revora</Link>
+                <a href="#how-it-works">See how it works</a>
               </Button>
             </div>
+            <p className="mt-5 text-[12px] text-muted-foreground">
+              No credit card required for the 1-day trial. Cancel anytime.
+            </p>
           </div>
         </section>
 
