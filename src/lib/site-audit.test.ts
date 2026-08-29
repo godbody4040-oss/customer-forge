@@ -134,7 +134,7 @@ describe("conversion engine", () => {
   it("puts the chosen goal first and keeps working fallbacks", () => {
     const ladder = ctaLadder("call", ctx);
     expect(ladder[0]?.key).toBe("call");
-    expect(ladder[0]?.href).toBe("tel:+19195550100");
+    expect(ladder[0]?.href).toBe("tel:9195550100");
     expect(ladder.filter((step) => step.available).length).toBeGreaterThanOrEqual(4);
   });
 

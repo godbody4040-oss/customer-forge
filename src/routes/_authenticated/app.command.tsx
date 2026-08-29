@@ -124,7 +124,7 @@ function CommandCenterPage() {
     smsCapable: !!input.phone,
     bookableCount: input.bookableCount,
     quoteFormCount: input.quoteFormCount,
-    paymentsEnabled: (services ?? []).some((service) => Number(service.price_cents ?? 0) > 0),
+    paymentsEnabled: (services ?? []).some((service) => Number(service.price ?? service.starting_price ?? 0) > 0),
     email: input.email,
     slug: org?.slug ?? null,
   };

@@ -171,8 +171,9 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
   }
 
   for (const issue of issues.filter((i) => i.upgrade === "page_index" && i.pageId)) {
+    const pageId = issue.pageId!;
     push({
-      id: `page_index-${issue.pageId}`,
+      id: `page_index-${pageId}`,
       kind: "page_index",
       title: `Let Google list ${issue.scope}`,
       why: "This page is marked noindex, so it can never appear in search results.",
