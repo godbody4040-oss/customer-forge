@@ -51,7 +51,7 @@ const Email = ({ businessName, heading, message, signoff }: Props) => {
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    (data?.heading as string) || `A message from ${(data?.businessName as string) || 'us'}`,
+    (data?.['heading'] as string) || `A message from ${(data?.['businessName'] as string) || 'us'}`,
   displayName: 'Automated follow-up',
   previewData: {
     businessName: 'Elite Mobile Detailing',

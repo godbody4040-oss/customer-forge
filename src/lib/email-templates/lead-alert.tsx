@@ -67,7 +67,7 @@ const Email = (props: Props) => (
 export const template = {
   component: Email,
   subject: (data: Record<string, any>) =>
-    `${(data?.kind as string) || 'New lead'}: ${(data?.leadName as string) || 'someone'}`,
+    `${(data?.['kind'] as string) || 'New lead'}: ${(data?.['leadName'] as string) || 'someone'}`,
   displayName: 'New lead alert',
   previewData: {
     businessName: 'Elite Mobile Detailing',
