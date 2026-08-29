@@ -287,6 +287,34 @@ function CommandCenterPage() {
         }}
         onAutoFix={(key) => void applyFix(key)}
       />
+
+      <IntakeHub
+        values={intakeValues}
+        canManage={manage}
+        isSaving={saveProfile.isPending || updateOrg.isPending || saveSettings.isPending}
+        onSave={(patch) => void saveIntake(patch)}
+      />
+
+      <SiteAuditor
+        structureIssues={structure.issues}
+        pageScores={structure.pageScores}
+        goal={goal}
+        conversionCtx={conversionCtx}
+        conversionGaps={gaps}
+        proposals={proposals}
+        live={live}
+        liveNote={liveNote}
+        isScanning={liveAudit.isPending}
+        canManage={manage}
+        applyingId={applyingId}
+        lastApplied={lastApplied}
+        isUndoing={undoUpgrade.isPending}
+        onScanLive={() => void scanLive()}
+        onApply={(proposal) => void runUpgrade(proposal)}
+        onUndo={() => {
+          if (lastApplied) void undoUpgrade.mutateAsync(lastApplied).then(() => setLastApplied(null));
+        }}
+      />
     </div>
   );
 }
