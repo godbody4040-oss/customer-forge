@@ -17,6 +17,8 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
 import { FounderNote } from "@/components/marketing/SalesCTA";
+import { ROICalculator } from "@/components/marketing/ROICalculator";
+import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
@@ -29,20 +31,34 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Revora — The Business Growth Operating System" },
+      { title: "Revora — Turn Website Visitors Into Paying Customers" },
       {
         name: "description",
         content:
-          "Revora gives businesses one system to get discovered, capture opportunities, convert leads, book customers, automate follow-up and measure growth.",
+          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. 1-day free trial.",
       },
-      { property: "og:title", content: "Revora — Turn more opportunities into customers" },
+      { property: "og:title", content: "Revora — Turn website visitors into paying customers" },
       {
         property: "og:description",
         content:
-          "Get found, capture leads, quote instantly, book customers, follow up and grow repeat business — one system for local businesses.",
+          "Lead capture, CRM, quotes, online booking, automated follow-up, reviews and growth analytics in one dashboard for local service businesses.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ_ITEMS.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+          })),
+        }),
+      },
     ],
   }),
   component: Landing,
@@ -61,17 +77,19 @@ const ECOSYSTEM = [
 ] as const;
 
 const PROBLEMS = [
+  { title: "Missed leads", body: "Customers contact you while you're busy on a job." },
   {
-    title: "Leads land in five places",
-    body: "Texts, DMs, voicemails, form emails. Something always slips, and the ones that slip are the jobs you lost.",
+    title: "Slow follow-up",
+    body: "Interested customers move on when nobody responds quickly.",
+  },
+  { title: "Lost quotes", body: "Quotes get sent and then forgotten by both sides." },
+  {
+    title: "Booking friction",
+    body: "Customers have to call or message you just to schedule a time.",
   },
   {
-    title: "Your site doesn't ask for the job",
-    body: "A pretty brochure with a contact form buried at the bottom converts a fraction of the traffic you paid for.",
-  },
-  {
-    title: "Quoting eats your evenings",
-    body: "Every 'how much for…' becomes a phone call. Most of those callers were price shopping anyway.",
+    title: "No visibility",
+    body: "You don't know which traffic sources actually generate business.",
   },
 ];
 
@@ -134,22 +152,27 @@ function Landing() {
             <div className="lg:pt-4">
               <Pill tone="signal">REVORA™ — The Business Growth Operating System</Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.5rem)] leading-[1.04] font-semibold tracking-tight">
-                Turn more <span className="gold-text">opportunities</span> into customers.
+                Turn more website visitors into{" "}
+                <span className="gold-text">paying customers</span>.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                The complete business growth operating system for getting found, capturing leads,
-                booking customers, following up and growing relationships.
+                Revora gives local businesses one system to capture leads, send quotes, book
+                customers, automate follow-up, collect reviews and understand what is driving
+                growth.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button asChild variant="signal" size="lg">
                   <Link to="/auth" search={{ mode: "signup" }}>
-                    Build my growth system <ArrowRight className="size-4" />
+                    Start free <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/demo">See Revora in action</Link>
+                  <a href="#how-it-works">See how it works</a>
                 </Button>
               </div>
+              <p className="mt-4 text-[12px] text-muted-foreground">
+                No credit card required • 1-day free trial • Cancel anytime
+              </p>
 
               <dl className="mt-10 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-border pt-6 sm:max-w-lg sm:grid-cols-3">
                 {[
@@ -199,17 +222,22 @@ function Landing() {
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <p className="eyebrow">The real problem</p>
-            <h2 className="mt-2 max-w-2xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
-              You're not short on skill. You're short on a system.
+            <h2 className="mt-2 max-w-3xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
+              Your business shouldn't lose customers because the process is broken.
             </h2>
-            <div className="mt-9 grid gap-3 md:grid-cols-3">
+            <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {PROBLEMS.map((p) => (
                 <Panel key={p.title} className="card-lift p-5">
-                  <h3 className="font-display text-[15px] font-semibold">{p.title}</h3>
+                  <h3 className="font-display text-[13px] font-bold tracking-[0.12em] uppercase">
+                    {p.title}
+                  </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
                 </Panel>
               ))}
             </div>
+            <p className="mt-6 text-[14px] text-foreground">
+              Revora connects the entire customer journey.
+            </p>
           </div>
         </section>
         {/* Customer journey */}
@@ -277,7 +305,7 @@ function Landing() {
         </section>
 
         {/* How it works */}
-        <section className="border-b border-border bg-card">
+        <section id="how-it-works" className="scroll-mt-20 border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="How it works" title="Live this week, not next quarter" />
             <ol className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -378,6 +406,27 @@ function Landing() {
           </div>
         </section>
 
+        {/* ROI estimator */}
+        <section id="roi" className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="Opportunity estimator"
+              title="See what a few more customers could mean for your business"
+            />
+            <div className="mt-8">
+              <ROICalculator />
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading eyebrow="FAQ" title="Straight answers before you start" />
+            <FAQ />
+          </div>
+        </section>
+
         {/* Founder mission */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
@@ -389,22 +438,26 @@ function Landing() {
         <section className="hero-aura bg-card">
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
             <h2 className="mx-auto max-w-2xl font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
-              Your next customer is searching right now.
+              Turn your website into a growth system.
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
-              Get the site, the quotes and the calendar working together — and stop losing jobs to
-              whoever answered first.
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+              Stop losing leads between the first click and the final booking. Revora brings your
+              website, leads, quotes, bookings, follow-up, reviews and analytics together in one
+              place.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild variant="signal" size="lg">
                 <Link to="/auth" search={{ mode: "signup" }}>
-                  Build my growth system <ArrowRight className="size-4" />
+                  Start my free trial <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/contact">Talk to Revora</Link>
+                <a href="#how-it-works">See how it works</a>
               </Button>
             </div>
+            <p className="mt-5 text-[12px] text-muted-foreground">
+              No credit card required for the 1-day trial. Cancel anytime.
+            </p>
           </div>
         </section>
 
