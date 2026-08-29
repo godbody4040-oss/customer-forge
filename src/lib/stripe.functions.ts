@@ -156,7 +156,7 @@ export const getBillingState = createServerFn({ method: "POST" })
     const { data: subscription } = await context.supabase
       .from("subscriptions")
       .select(
-        "plan_id, status, billing_interval, price_id, payment_provider, environment, cancel_at_period_end, current_period_end, trial_ends_at, provider_subscription_id",
+        "plan_id, status, billing_interval, price_id, payment_provider, environment, cancel_at_period_end, current_period_start, current_period_end, trial_start, trial_ends_at, provider_customer_id, provider_subscription_id",
       )
       .eq("organization_id", data.organizationId)
       .maybeSingle();
