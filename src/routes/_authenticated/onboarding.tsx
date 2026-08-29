@@ -239,7 +239,8 @@ function Onboarding() {
         testimonialCount: testimonials.length,
         hasCredentials: Boolean(draft.certifications || draft.awards || draft.yearsInBusiness),
         hasHours: Boolean(draft.hours),
-        socialLinks: socials.length,
+        socialLinks: [socialRow.instagram, socialRow.facebook, socialRow.google_business].filter(Boolean)
+          .length,
       });
 
       await supabase.from("website_settings").insert({
