@@ -33,6 +33,7 @@ import { Pill } from "@/components/app/Bits";
 import { useNotifications } from "@/lib/queries";
 import { useSignOut, useWorkspace } from "@/lib/use-tenant";
 import { endSupportSession } from "@/lib/admin.functions";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
 import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
