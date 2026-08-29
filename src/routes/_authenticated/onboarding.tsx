@@ -103,8 +103,55 @@ function Onboarding() {
     goals: ["quote"],
   });
 
+  // Signup answers are saved to the user's account, so signing out (or losing
+  // the tab) never loses progress — they sign back in and resume where they were.
+  const [restored, setRestored] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth.user;
+      if (!user) {
+        if (!cancelled) setRestored(true);
+        return;
+      }
+      const { data: row } = await supabase
+        .from("onboarding_drafts")
+        .select("step, data, updated_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (row?.data && typeof row.data === "object") {
+        setDraft((prev) => ({ ...prev, ...(row.data as Partial<Draft>) }));
+        setStep(Math.min(Math.max(row.step ?? 0, 0), STEPS.length - 1));
+        setSavedAt(row.updated_at ?? null);
+      }
+      setRestored(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!restored || ws?.workspace) return;
+    const timer = setTimeout(async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth.user;
+      if (!user) return;
+      const { error: saveError } = await supabase
+        .from("onboarding_drafts")
+        .upsert({ user_id: user.id, step, data: draft as never }, { onConflict: "user_id" });
+      if (!saveError) setSavedAt(new Date().toISOString());
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [draft, step, restored, ws?.workspace]);
+
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
+
 
   const toggleGoal = (goal: GoalKey) =>
     setDraft((prev) => ({
