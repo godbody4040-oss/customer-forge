@@ -87,7 +87,12 @@ function GetStarted() {
     trackConversion("signup_started");
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved) setIntake({ ...EMPTY, ...(JSON.parse(saved) as GrowthSystemIntake) });
+      if (saved) {
+        const restored = { ...EMPTY, ...(JSON.parse(saved) as GrowthSystemIntake) };
+        setIntake(restored);
+        // Returning from account creation: go straight back to payment.
+        if (restored.businessName.trim() && restored.email.trim() && restored.city.trim()) setStep(2);
+      }
     } catch {
       /* ignore unreadable drafts */
     }
