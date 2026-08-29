@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Revora is a done-for-you growth system for local businesses: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO, analytics and AI automation. $750 setup, first month free, then $100/month from month two.",
+          "Revora is a done-for-you growth system for local businesses: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO and AI automation. 3 days free full access, $750 setup, first month free, then $100/month.",
       },
       { property: "og:title", content: "Revora — Turn more visitors into paying customers" },
       {
