@@ -61,17 +61,19 @@ const ECOSYSTEM = [
 ] as const;
 
 const PROBLEMS = [
+  { title: "Missed leads", body: "Customers contact you while you're busy on a job." },
   {
-    title: "Leads land in five places",
-    body: "Texts, DMs, voicemails, form emails. Something always slips, and the ones that slip are the jobs you lost.",
+    title: "Slow follow-up",
+    body: "Interested customers move on when nobody responds quickly.",
+  },
+  { title: "Lost quotes", body: "Quotes get sent and then forgotten by both sides." },
+  {
+    title: "Booking friction",
+    body: "Customers have to call or message you just to schedule a time.",
   },
   {
-    title: "Your site doesn't ask for the job",
-    body: "A pretty brochure with a contact form buried at the bottom converts a fraction of the traffic you paid for.",
-  },
-  {
-    title: "Quoting eats your evenings",
-    body: "Every 'how much for…' becomes a phone call. Most of those callers were price shopping anyway.",
+    title: "No visibility",
+    body: "You don't know which traffic sources actually generate business.",
   },
 ];
 
