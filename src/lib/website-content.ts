@@ -95,7 +95,7 @@ export function readSectionSeo(settings: unknown): SectionSeo {
 
 export function writeSectionSeo(settings: unknown, patch: SectionSeo): Record<string, unknown> {
   const base = settings && typeof settings === "object" ? { ...(settings as Record<string, unknown>) } : {};
-  base.seo = { ...readSectionSeo(settings), ...patch };
+  base["seo"] = { ...readSectionSeo(settings), ...patch };
   return base;
 }
 
