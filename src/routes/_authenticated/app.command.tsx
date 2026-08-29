@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LoadingRows } from "@/components/app/Bits";
 import { GrowthCommandCenter } from "@/components/app/GrowthCommandCenter";
+import { SiteAuditor } from "@/components/app/SiteAuditor";
+import { IntakeHub } from "@/components/app/IntakeHub";
 import {
   useBusinessProfile,
+  useSaveBusinessProfile,
   useSaveWebsiteSettings,
   useServices,
+  useUpdateOrganization,
   useWebsiteSettings,
 } from "@/lib/queries";
 import { useRunSiteEngine, useScoreFacts, useSnapshotWebsiteVersion } from "@/lib/site-engine.hooks";
@@ -15,6 +19,16 @@ import { canManage } from "@/lib/domain";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
 import type { AutoFixKey, GrowthAuditInput } from "@/lib/growth-command";
+import { auditStructure, type LivePageResult } from "@/lib/site-audit";
+import { conversionGaps, normalizeGoal, type ConversionContext } from "@/lib/conversion-engine";
+import { proposeUpgrades, type UpgradeProposal } from "@/lib/auto-upgrade";
+import {
+  useApplyUpgrade,
+  useUndoUpgrade,
+  useLiveAudit,
+  type AppliedUpgrade,
+} from "@/lib/auto-upgrade.hooks";
+import type { IntakeValues } from "@/lib/intake-map";
 
 export const Route = createFileRoute("/_authenticated/app/command")({
   head: () => ({
@@ -101,6 +115,117 @@ function CommandCenterPage() {
     callClicks: facts.data?.signals.callClicks ?? 0,
   };
 
+  /* ---------------- Auditor · conversion engine · auto-upgrades ---------------- */
+
+  const goal = normalizeGoal(seo.primary_cta_label ?? copy?.primaryCta ?? null, "quote");
+
+  const conversionCtx: ConversionContext = {
+    phone: input.phone,
+    smsCapable: !!input.phone,
+    bookableCount: input.bookableCount,
+    quoteFormCount: input.quoteFormCount,
+    paymentsEnabled: (services ?? []).some((service) => Number(service.price ?? service.starting_price ?? 0) > 0),
+    email: input.email,
+    slug: org?.slug ?? null,
+  };
+
+  const structure = useMemo(
+    () =>
+      auditStructure({
+        pages: pages ?? [],
+        goal,
+        metaDescription: seo.meta_description ?? null,
+        headline: seo.headline ?? null,
+      }),
+    [pages, goal, seo.meta_description, seo.headline],
+  );
+
+  const sectionKinds = (pages ?? []).flatMap((page) =>
+    page.sections.filter((section) => section.is_visible).map((section) => section.kind),
+  );
+  const gaps = conversionGaps(goal, conversionCtx, sectionKinds, (copy?.faqs ?? []).map((faq) => faq.question));
+
+  const proposals = useMemo(
+    () =>
+      proposeUpgrades(structure.issues, {
+        goal,
+        copyHeadline: copy?.heroHeadline ?? null,
+        copyMetaDescription: copy?.metaDescription ?? null,
+        copyPrimaryCta: copy?.primaryCta ?? null,
+        headline: seo.headline ?? null,
+        metaDescription: seo.meta_description ?? null,
+        primaryCtaLabel: seo.primary_cta_label ?? null,
+        publishState: settings?.publish_state ?? "draft",
+        pages: (pages ?? []).map((page) => ({
+          id: page.id,
+          title: page.title,
+          slug: page.slug,
+          seo_title: page.seo_title,
+          seo_description: page.seo_description,
+          noindex: page.noindex,
+        })),
+        businessName: org?.name ?? null,
+        city: input.city,
+      }),
+    [structure.issues, goal, copy, seo, settings?.publish_state, pages, org?.name, input.city],
+  );
+
+  const liveAudit = useLiveAudit(orgId);
+  const applyUpgrade = useApplyUpgrade(orgId, seo as unknown as Record<string, unknown>);
+  const undoUpgrade = useUndoUpgrade(orgId);
+  const [live, setLive] = useState<LivePageResult[] | null>(null);
+  const [liveNote, setLiveNote] = useState<string | null>(null);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [lastApplied, setLastApplied] = useState<AppliedUpgrade | null>(null);
+
+  const scanLive = async () => {
+    const result = await liveAudit.mutateAsync();
+    setLive(result.pages ?? []);
+    setLiveNote(result.note ?? null);
+  };
+
+  const runUpgrade = async (proposal: UpgradeProposal) => {
+    if (!manage || !proposal.applyable) return;
+    setApplyingId(proposal.id);
+    try {
+      setLastApplied(await applyUpgrade.mutateAsync(proposal));
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  /* ------------------------------ One-input intake ---------------------------- */
+
+  const saveProfile = useSaveBusinessProfile(orgId);
+  const updateOrg = useUpdateOrganization();
+
+  const intakeValues: IntakeValues = {
+    name: org?.name ?? "",
+    description: input.description ?? "",
+    phone: input.phone ?? "",
+    email: input.email ?? "",
+    city: input.city ?? "",
+    service_area: input.serviceArea ?? "",
+    primary_goal: seo.primary_cta_label ?? "",
+  };
+
+  const saveIntake = async (patch: IntakeValues) => {
+    if (!manage || !orgId) return;
+    if (patch["name"] && patch["name"] !== org?.name) {
+      await updateOrg.mutateAsync({ id: orgId, patch: { name: patch["name"] } });
+    }
+    await saveProfile.mutateAsync({
+      description: patch["description"] ?? null,
+      phone: patch["phone"] ?? null,
+      email: patch["email"] ?? null,
+      city: patch["city"] ?? null,
+      service_area: patch["service_area"] ?? null,
+    });
+    if ((patch["primary_goal"] ?? "") !== (seo.primary_cta_label ?? "")) {
+      await saveSettings.mutateAsync({ seo: { ...seo, primary_cta_label: patch["primary_goal"] || null } });
+    }
+  };
+
   const applyFix = async (key: AutoFixKey) => {
     if (!manage) return;
     setBusyFix(key);
@@ -161,6 +286,34 @@ function CommandCenterPage() {
           void profileQuery.refetch();
         }}
         onAutoFix={(key) => void applyFix(key)}
+      />
+
+      <IntakeHub
+        values={intakeValues}
+        canManage={manage}
+        isSaving={saveProfile.isPending || updateOrg.isPending || saveSettings.isPending}
+        onSave={(patch) => void saveIntake(patch)}
+      />
+
+      <SiteAuditor
+        structureIssues={structure.issues}
+        pageScores={structure.pageScores}
+        goal={goal}
+        conversionCtx={conversionCtx}
+        conversionGaps={gaps}
+        proposals={proposals}
+        live={live}
+        liveNote={liveNote}
+        isScanning={liveAudit.isPending}
+        canManage={manage}
+        applyingId={applyingId}
+        lastApplied={lastApplied}
+        isUndoing={undoUpgrade.isPending}
+        onScanLive={() => void scanLive()}
+        onApply={(proposal) => void runUpgrade(proposal)}
+        onUndo={() => {
+          if (lastApplied) void undoUpgrade.mutateAsync(lastApplied).then(() => setLastApplied(null));
+        }}
       />
     </div>
   );

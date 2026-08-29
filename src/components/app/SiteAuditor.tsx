@@ -1,0 +1,311 @@
+import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ClipboardCheck,
+  Loader2,
+  RotateCcw,
+  ScanSearch,
+  ShieldCheck,
+  Undo2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Pill } from "@/components/app/Bits";
+import { cn } from "@/lib/utils";
+import type { AuditIssue, LivePageResult } from "@/lib/site-audit";
+import { auditScore, sortIssues } from "@/lib/site-audit";
+import { summarizeProposals, type UpgradeProposal } from "@/lib/auto-upgrade";
+import type { AppliedUpgrade } from "@/lib/auto-upgrade.hooks";
+import { ctaLadder, type ConversionContext, type ConversionGap, type ConversionGoal } from "@/lib/conversion-engine";
+
+const TONE = { critical: "danger", warning: "attention", opportunity: "info" } as const;
+
+function IssueList({ issues }: { issues: AuditIssue[] }) {
+  if (!issues.length)
+    return (
+      <p className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
+        <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> No issues found here.
+      </p>
+    );
+  return (
+    <ul className="divide-y divide-border">
+      {sortIssues(issues).map((issue) => (
+        <li key={`${issue.key}-${issue.scope}`} className="px-3.5 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone={TONE[issue.severity]}>{issue.severity}</Pill>
+            <p className="text-[13px] font-medium">{issue.title}</p>
+            <span className="text-[11px] text-muted-foreground">{issue.scope}</span>
+          </div>
+          <p className="mt-1 text-[12px] text-muted-foreground">{issue.detail}</p>
+          <p className="mt-1 text-[12px]">{issue.action}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function SiteAuditor({
+  structureIssues,
+  pageScores,
+  goal,
+  conversionCtx,
+  conversionGaps,
+  proposals,
+  live,
+  liveNote,
+  isScanning,
+  canManage,
+  applyingId,
+  lastApplied,
+  isUndoing,
+  onScanLive,
+  onApply,
+  onUndo,
+}: {
+  structureIssues: AuditIssue[];
+  pageScores: { pageId: string; title: string; score: number }[];
+  goal: ConversionGoal;
+  conversionCtx: ConversionContext;
+  conversionGaps: ConversionGap[];
+  proposals: UpgradeProposal[];
+  live: LivePageResult[] | null;
+  liveNote: string | null;
+  isScanning: boolean;
+  canManage: boolean;
+  applyingId: string | null;
+  lastApplied: AppliedUpgrade | null;
+  isUndoing: boolean;
+  onScanLive: () => void;
+  onApply: (proposal: UpgradeProposal) => void;
+  onUndo: () => void;
+}) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const liveIssues = useMemo(() => (live ?? []).flatMap((page) => page.issues), [live]);
+  const allIssues = useMemo(() => [...structureIssues, ...liveIssues], [structureIssues, liveIssues]);
+  const score = auditScore(allIssues, 60);
+  const summary = summarizeProposals(proposals);
+  const ladder = ctaLadder(goal, conversionCtx);
+
+  return (
+    <div className="space-y-6">
+      <section className="panel p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="eyebrow flex items-center gap-2">
+              <ScanSearch className="size-3.5 text-primary" aria-hidden="true" /> Website auditor
+            </p>
+            <p className="mt-2 font-display text-2xl font-semibold">
+              <span className="tnum">{score}</span>
+              <span className="text-[14px] font-normal text-muted-foreground">/100 page quality</span>
+            </p>
+            <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
+              Structure is scanned from your saved pages. Run the live scan to check the HTML your customers and Google
+              actually receive.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone={allIssues.some((i) => i.severity === "critical") ? "danger" : "signal"}>
+              {allIssues.length} finding{allIssues.length === 1 ? "" : "s"}
+            </Pill>
+            <Button size="sm" variant="outline" onClick={onScanLive} disabled={isScanning}>
+              {isScanning ? <Loader2 className="size-4 animate-spin" /> : <ScanSearch className="size-4" />}
+              Scan live pages
+            </Button>
+          </div>
+        </div>
+
+        {pageScores.length ? (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {pageScores.map((page) => (
+              <div key={page.pageId} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+                <p className="truncate text-[12px]">{page.title}</p>
+                <span className={cn("tnum text-[12px]", page.score >= 75 ? "text-primary" : "text-accent")}>
+                  {page.score}%
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="panel p-0">
+        <div className="border-b border-border px-3.5 py-3">
+          <p className="eyebrow flex items-center gap-2">
+            <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" /> Conversion engine
+          </p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Your site is built around one goal, with backup paths for visitors who convert differently.
+          </p>
+          <ol className="mt-3 flex flex-wrap items-center gap-1.5">
+            {ladder.map((step, index) => (
+              <li key={step.key} className="flex items-center gap-1.5">
+                <span
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px]",
+                    index === 0
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : step.available
+                        ? "border-border text-muted-foreground"
+                        : "border-dashed border-border text-muted-foreground/60",
+                  )}
+                  title={step.note}
+                >
+                  {index === 0 ? "Primary · " : ""}
+                  {step.label}
+                  {step.available ? "" : " (off)"}
+                </span>
+                {index < ladder.length - 1 ? (
+                  <ArrowRight className="size-3 text-muted-foreground" aria-hidden="true" />
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+        <ul className="divide-y divide-border">
+          {conversionGaps.length ? (
+            conversionGaps.map((gap) => (
+              <li key={gap.key} className="px-3.5 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Pill tone={TONE[gap.severity]}>{gap.severity}</Pill>
+                  <p className="text-[13px] font-medium">{gap.title}</p>
+                </div>
+                <p className="mt-1 text-[12px] text-muted-foreground">{gap.detail}</p>
+                <p className="mt-1 text-[12px]">{gap.action}</p>
+              </li>
+            ))
+          ) : (
+            <li className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
+              <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> Every conversion path for your goal is
+              wired up.
+            </li>
+          )}
+        </ul>
+      </section>
+
+      <section className="panel p-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3.5 py-3">
+          <div className="min-w-0">
+            <p className="eyebrow flex items-center gap-2">
+              <ClipboardCheck className="size-3.5 text-primary" aria-hidden="true" /> Auto-upgrade proposals
+            </p>
+            <p className="mt-1 text-[12px] text-muted-foreground">{summary.headline} Nothing is applied without your approval.</p>
+          </div>
+          {lastApplied?.versionId ? (
+            <Button size="sm" variant="outline" onClick={onUndo} disabled={isUndoing}>
+              {isUndoing ? <Loader2 className="size-4 animate-spin" /> : <Undo2 className="size-4" />}
+              Undo “{lastApplied.title}”
+            </Button>
+          ) : null}
+        </div>
+
+        {proposals.length ? (
+          <ul className="divide-y divide-border">
+            {proposals.map((proposal) => {
+              const open = openId === proposal.id;
+              return (
+                <li key={proposal.id} className="px-3.5 py-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-[13px] font-medium">{proposal.title}</p>
+                        <Pill tone={proposal.applyable ? "signal" : "attention"}>
+                          {proposal.applyable ? `+${proposal.impact} pts` : "Needs your input"}
+                        </Pill>
+                      </div>
+                      <p className="mt-1 text-[12px] text-muted-foreground">{proposal.why}</p>
+                      {proposal.needs ? <p className="mt-1 text-[12px]">{proposal.needs}</p> : null}
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      <Button size="sm" variant="ghost" onClick={() => setOpenId(open ? null : proposal.id)}>
+                        {open ? "Hide changes" : `Show changes (${proposal.changes.length})`}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="signal"
+                        disabled={!canManage || !proposal.applyable || applyingId !== null}
+                        onClick={() => onApply(proposal)}
+                      >
+                        {applyingId === proposal.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="size-4" />
+                        )}
+                        Approve &amp; apply
+                      </Button>
+                    </div>
+                  </div>
+
+                  {open ? (
+                    <ul className="mt-3 space-y-2 rounded-md border border-border p-3">
+                      {proposal.changes.map((change, index) => (
+                        <li key={index} className="text-[12px]">
+                          <p className="font-medium">{change.label}</p>
+                          <p className="mt-0.5 text-muted-foreground line-through decoration-destructive/60">
+                            {change.before}
+                          </p>
+                          <p className="text-foreground">{change.after}</p>
+                        </li>
+                      ))}
+                      <li className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <RotateCcw className="size-3" aria-hidden="true" /> A restore point is saved before this is
+                        applied, so it can be undone.
+                      </li>
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
+            <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> No upgrades needed right now.
+          </p>
+        )}
+      </section>
+
+      <section className="panel p-0">
+        <div className="border-b border-border px-3.5 py-3">
+          <p className="eyebrow">Structure findings</p>
+        </div>
+        <IssueList issues={structureIssues} />
+      </section>
+
+      <section className="panel p-0">
+        <div className="border-b border-border px-3.5 py-3">
+          <p className="eyebrow">Live page findings</p>
+          {liveNote ? <p className="mt-1 text-[12px] text-muted-foreground">{liveNote}</p> : null}
+        </div>
+        {live && live.length ? (
+          <>
+            <ul className="divide-y divide-border">
+              {live.map((page) => (
+                <li key={page.path} className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5">
+                  <p className="truncate text-[12px]">{page.path}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    HTTP {page.status} · {page.observed.wordCount} words · {page.observed.telLinks} call link
+                    {page.observed.telLinks === 1 ? "" : "s"} · {page.observed.forms} form
+                    {page.observed.forms === 1 ? "" : "s"}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <div className="border-t border-border">
+              <IssueList issues={liveIssues} />
+            </div>
+          </>
+        ) : (
+          <p className="px-3.5 py-6 text-[13px] text-muted-foreground">
+            {liveNote ? (
+              <Link to="/app/launch" className="text-primary hover:underline">
+                Open the launch checklist
+              </Link>
+            ) : (
+              "Run the live scan to check the pages your customers receive."
+            )}
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
