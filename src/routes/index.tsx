@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Revora is a done-for-you growth system for local businesses: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO, analytics and AI automation. $750 setup, 30 days free, then $100/month.",
+          "Revora is a done-for-you growth system for local businesses: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO, analytics and AI automation. $750 setup, first month free, then $100/month from month two.",
       },
       { property: "og:title", content: "Revora — Turn more visitors into paying customers" },
       {
@@ -316,7 +316,7 @@ function Landing() {
                       <span className="text-[13px] font-normal text-muted-foreground">/month</span>
                     </p>
                     <p className="mt-1.5 text-[13px] font-medium">
-                      Starts after {GROWTH_SYSTEM.trialDays} free days
+                      First month free
                     </p>
                     <p className="max-w-xs text-[12px] text-muted-foreground">
                       {GROWTH_SYSTEM.monthlyLabel}

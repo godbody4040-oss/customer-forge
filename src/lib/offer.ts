@@ -22,17 +22,17 @@ export const GROWTH_SYSTEM = {
   trialDays: 30,
   /** Length of the full-system free access window at signup, in days. */
   fullAccessTrialDays: 3,
-  trialBadge: "30-DAY FREE PLATFORM TRIAL",
+  trialBadge: "FIRST MONTH FREE",
   ctaPrimary: "START MY REVORA SYSTEM — $750 SETUP",
   ctaSecondary:
-    "$750 one-time setup + 30-day free platform trial + $100/month afterward. Cancel anytime. No hidden fees.",
+    "$750 one-time setup + first month free + $100/month from month two. Cancel anytime. No hidden fees.",
   ctaShort: "START MY REVORA SYSTEM",
   /** The single secondary CTA label used site-wide. */
   ctaDemo: "SEE REVORA IN ACTION",
 
   /** The single canonical offer sentence. Use this verbatim wherever the offer is explained. */
   explainer:
-    "$750 one-time setup. Your first 30 days of the $100/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $100/month unless canceled.",
+    "$750 one-time setup, charged today. Your first month of the $100/month platform fee is FREE — your first monthly payment is charged 30 days later (month two) and continues at $100/month unless canceled.",
   setupIncludes: [
     "Custom website",
     "Domain setup",

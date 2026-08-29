@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnv } from "@/lib/stripe.server";
 import { cleanText, parseStripeEnvironment, parseWorkspaceId } from "@/lib/stripe-input";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 
 export type GrowthSystemIntake = {
   fullName: string;
@@ -179,9 +180,10 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         customer: customerId,
         metadata,
-        // 30-day free platform trial: the $750 setup is charged today, the $100/month
-        // recurring price starts one month after signup.
-        subscription_data: { metadata, trial_period_days: 30 },
+        // The $750 setup is charged today. The first month of the $100/month fee
+        // is FREE: the recurring price is on a 30-day trial, so the first monthly
+        // charge lands 30 days later (i.e. the second month is the first paid one).
+        subscription_data: { metadata, trial_period_days: GROWTH_SYSTEM.trialDays },
       };
 
       // Live accounts run with full compliance handling, which rejects

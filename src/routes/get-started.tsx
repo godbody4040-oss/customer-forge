@@ -23,12 +23,12 @@ export const Route = createFileRoute("/get-started")({
       {
         name: "description",
         content:
-          "Launch your Revora Growth System: $750 one-time setup, a 30-day free platform trial, then $100/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+          "Launch your Revora Growth System: $750 one-time setup, a first month free, then $100/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
       { property: "og:title", content: "Start your Revora Growth System" },
       {
         property: "og:description",
-        content: "$750 one-time setup + 30-day free platform trial + $100/month afterward. One complete customer acquisition system.",
+        content: "$750 one-time setup + first month free + $100/month afterward. One complete customer acquisition system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
