@@ -34,6 +34,20 @@ export type SiteSectionSettings = {
   };
 } | null;
 
+export type SiteComponent = {
+  id: string;
+  section_id: string;
+  kind: string;
+  label: string | null;
+  body: string | null;
+  media_url: string | null;
+  /** Signed, viewable URL for private media. */
+  url: string | null;
+  link_url: string | null;
+  link_label: string | null;
+  sort_order: number;
+};
+
 export type SiteSection = {
   id: string;
   kind: string;
@@ -43,7 +57,9 @@ export type SiteSection = {
   body: string | null;
   settings: SiteSectionSettings;
   sort_order: number;
+  components?: SiteComponent[];
 };
+
 
 /**
  * Reads everything a business website renders. `allowUnpublished` is only ever
