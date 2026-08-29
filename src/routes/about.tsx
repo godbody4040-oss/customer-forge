@@ -16,7 +16,7 @@ export const Route = createFileRoute("/about")({
       { property: "og:title", content: "About Revora" },
       {
         property: "og:description",
-        content: "Revora is a business growth platform founded by Adam.",
+content: `Revora is a business growth platform founded by ${REVORA.founder.name}.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
