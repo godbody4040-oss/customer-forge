@@ -539,3 +539,46 @@ export const transcribeVoiceCommand = createServerFn({ method: "POST" })
 
     return { text: text.slice(0, PLAN_INSTRUCTION_LIMIT), message: null as string | null };
   });
+
+/* ------------------------------ video chapters ----------------------------- */
+
+/**
+ * Indexes an attached clip into short chapters. Runs on upload so the owner can
+ * say "use the moment at 0:12" when asking for a change. Nothing is written to
+ * the website here.
+ */
+export const summarizeClipChapters = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string; video?: unknown }) => {
+    const organizationId = orgIdOf(input);
+    const [attachment] = readAttachments([input?.video]);
+    if (!attachment || attachment.kind !== "video")
+      throw new Error("That clip couldn't be read. Try a shorter MP4 or WebM.");
+    return { organizationId, attachment };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    // RLS: a member can only read their own workspace, so this is the tenant gate.
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("id", data.organizationId)
+      .maybeSingle();
+    if (!org) throw new Error("Workspace not found.");
+
+    const { summarizeChapters, CHAPTER_MODEL } = await import("@/lib/site-agent.server");
+    const result = await summarizeChapters(data.attachment);
+
+    if (result.chapters.length) {
+      await supabase.from("ai_generations").insert({
+        organization_id: data.organizationId,
+        kind: "video_chapters",
+        model: CHAPTER_MODEL,
+        instruction: `(clip: ${data.attachment.name})`,
+        result: result as unknown as never,
+        created_by: userId,
+      });
+    }
+
+    return result;
+  });
