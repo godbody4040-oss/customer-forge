@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorNote, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import { ensureProfile } from "@/lib/auth-session";
+import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
@@ -164,7 +164,7 @@ function AuthPage() {
     setError(null);
     setBusy("google");
     try {
-      sessionStorage.setItem("lle:redirect", destination);
+      sessionStorage.setItem("lle:redirect", redirect ?? "/app");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
@@ -174,7 +174,7 @@ function AuthPage() {
       }
       if (result.redirected) return;
       await ensureProfile();
-      navigate({ to: destination, replace: true });
+      await goToWorkspace();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     } finally {
