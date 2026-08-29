@@ -65,8 +65,8 @@ function Pricing() {
 
         <section className="panel card-lift mt-10 overflow-hidden p-0">
           <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
-            <div className="border-b border-border p-7 md:border-r md:border-b-0">
-              <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-display text-[20px] font-semibold">{GROWTH_SYSTEM.name}</h2>
                 <Pill tone="signal">Complete system</Pill>
               </div>
@@ -89,7 +89,12 @@ function Pricing() {
                 </div>
               </div>
 
-              <Button asChild variant="signal" size="lg" className="mt-8 w-full">
+              <Button
+                asChild
+                variant="signal"
+                size="lg"
+                className="mt-8 h-auto w-full py-3 text-center leading-snug whitespace-normal"
+              >
                 <Link to="/get-started">{GROWTH_SYSTEM.ctaPrimary}</Link>
               </Button>
               <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.ctaSecondary}</p>
@@ -99,7 +104,7 @@ function Pricing() {
               </p>
             </div>
 
-            <div className="bg-card/40 p-7">
+            <div className="min-w-0 bg-card/40 p-6 sm:p-7">
               <p className="eyebrow">Everything included</p>
               <ul className="mt-4 space-y-2.5">
                 {GROWTH_SYSTEM.includes.map((feature) => (

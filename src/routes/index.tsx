@@ -297,8 +297,8 @@ function Landing() {
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="Pricing" title={GROWTH_SYSTEM.headline} />
             <div className="panel mt-8 grid gap-0 overflow-hidden p-0 md:grid-cols-[1.1fr_1fr]">
-              <div className="border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
-                <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-display text-[18px] font-semibold">{GROWTH_SYSTEM.name}</h3>
                   <Pill tone="signal">Complete system</Pill>
                 </div>
@@ -323,14 +323,19 @@ function Landing() {
                     </p>
                   </div>
                 </div>
-                <Button asChild variant="signal" size="lg" className="mt-7 w-full">
+                <Button
+                  asChild
+                  variant="signal"
+                  size="lg"
+                  className="mt-7 h-auto w-full py-3 text-center leading-snug whitespace-normal"
+                >
                   <Link to="/get-started">{GROWTH_SYSTEM.ctaShort}</Link>
                 </Button>
                 <p className="mt-2.5 text-[12px] text-muted-foreground">
                   {GROWTH_SYSTEM.explainer}
                 </p>
               </div>
-              <div className="bg-background/40 p-6 sm:p-7">
+              <div className="min-w-0 bg-background/40 p-6 sm:p-7">
                 <p className="eyebrow">Everything included</p>
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-1">
                   {GROWTH_SYSTEM.includes.map((feature) => (
