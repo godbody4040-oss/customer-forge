@@ -51,7 +51,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         businessName: text(raw.businessName, 120),
         email: text(raw.email, 160).toLowerCase(),
         phone: text(raw.phone, 40),
-        website: text(raw.website, 200) || undefined,
+        website: text(raw.website, 200),
         businessType: text(raw.businessType, 80),
         city: text(raw.city, 80),
         state: text(raw.state, 40),
