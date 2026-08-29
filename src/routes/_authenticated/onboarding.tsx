@@ -308,7 +308,7 @@ function Onboarding() {
           .length,
       });
 
-      await supabase.from("website_settings").insert({
+      const { error: settingsError } = await supabase.from("website_settings").insert({
         organization_id: org.id,
         template: plan.template,
         subdomain: org.slug,
@@ -324,13 +324,16 @@ function Onboarding() {
           title: plan.seoTitle,
         } as never,
       } as never);
+      assertNoError(settingsError, "Could not create your website draft");
 
       await supabase.from("onboarding_drafts").delete().eq("user_id", user.id);
 
       toast.success("Your website draft is ready to review.");
       navigate({ to: "/app/website", replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+      console.error("[onboarding] build failed", err);
+      setError(supabaseErrorMessage(err));
+
     } finally {
       setBusy(false);
     }
