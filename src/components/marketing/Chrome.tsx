@@ -2,7 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { Mail, Menu, Phone, Sparkles, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Mail, Menu, Phone, Sparkles, X } from "lucide-react";
+import { useSession } from "@/lib/auth-session";
+import { useSignOut } from "@/lib/use-tenant";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 import { GROWTH_SYSTEM } from "@/lib/offer";
 
@@ -17,6 +19,9 @@ const NAV = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { loading, user } = useSession();
+  const signOut = useSignOut();
+  const signedIn = !loading && user !== null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
@@ -41,17 +46,39 @@ export function SiteHeader() {
 
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/auth" className="text-primary">
-              Sign in
-            </Link>
-          </Button>
-          <Button asChild variant="signal" size="sm">
-            <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
-              <Sparkles className="size-3.5" aria-hidden="true" />
-              Start free
-            </Link>
-          </Button>
+          {signedIn ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void signOut()}
+                title="Sign out of Revora"
+              >
+                <LogOut className="size-3.5" aria-hidden="true" />
+                Sign out
+              </Button>
+              <Button asChild variant="signal" size="sm">
+                <Link to="/app">
+                  <LayoutDashboard className="size-3.5" aria-hidden="true" />
+                  My dashboard
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/auth" className="text-primary">
+                  Sign in
+                </Link>
+              </Button>
+              <Button asChild variant="signal" size="sm">
+                <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  Start free
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -83,21 +110,44 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2">
-            <Button asChild variant="signal">
-              <Link
-                to="/auth"
-                search={{ mode: "signup", redirect: "/get-started" }}
-                onClick={() => setOpen(false)}
-              >
-                <Sparkles className="size-3.5" aria-hidden="true" />
-                {`Start free — ${GROWTH_SYSTEM.fullAccessTrialDays} days full access`}
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/auth" onClick={() => setOpen(false)} className="text-primary">
-                Sign in
-              </Link>
-            </Button>
+            {signedIn ? (
+              <>
+                <Button asChild variant="signal">
+                  <Link to="/app" onClick={() => setOpen(false)}>
+                    <LayoutDashboard className="size-3.5" aria-hidden="true" />
+                    My dashboard
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setOpen(false);
+                    void signOut();
+                  }}
+                >
+                  <LogOut className="size-3.5" aria-hidden="true" />
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="signal">
+                  <Link
+                    to="/auth"
+                    search={{ mode: "signup", redirect: "/get-started" }}
+                    onClick={() => setOpen(false)}
+                  >
+                    <Sparkles className="size-3.5" aria-hidden="true" />
+                    {`Start free — ${GROWTH_SYSTEM.fullAccessTrialDays} days full access`}
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/auth" onClick={() => setOpen(false)} className="text-primary">
+                    Sign in
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       ) : null}
