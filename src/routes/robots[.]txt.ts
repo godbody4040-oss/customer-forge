@@ -15,18 +15,18 @@ export const Route = createFileRoute("/robots.txt")({
           console.error("robots host resolution failed", error);
         }
         const origin = host ? `${protocol}://${host.split(":")[0]}` : url.origin;
+        const disallowed = ["/app", "/admin", "/p/", "/api/"];
         const lines = [
           ...["Googlebot", "Bingbot", "Twitterbot", "facebookexternalhit"].flatMap((agent) => [
             `User-agent: ${agent}`,
             "Allow: /",
+            ...disallowed.map((path) => `Disallow: ${path}`),
             "",
           ]),
           "User-agent: *",
           "Allow: /",
-          "Disallow: /app",
-          "Disallow: /admin",
-          "Disallow: /p/",
-          "Disallow: /api/",
+          ...disallowed.map((path) => `Disallow: ${path}`),
+
           "",
           `Sitemap: ${site ? site.origin : origin}/sitemap.xml`,
           "",
