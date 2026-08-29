@@ -211,7 +211,15 @@ function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
-            {org?.subscription_status === "trialing" ? <Pill tone="attention">Trial</Pill> : null}
+            {trialStillActive ? (
+              <Pill tone="attention">
+                {trialHoursLeft > 1
+                  ? `Free day · ${trialHoursLeft}h left`
+                  : "Free day · under 1h left"}
+              </Pill>
+            ) : org?.subscription_status === "trialing" ? (
+              <Pill tone="attention">Trial</Pill>
+            ) : null}
             {org?.is_demo ? <Pill tone="info">Demo data</Pill> : null}
             <div className="relative">
               <button
