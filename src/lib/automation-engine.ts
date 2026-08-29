@@ -127,17 +127,44 @@ export async function enqueueAutomations(client: Client, ctx: AutomationContext)
     }
   }
 
-  if (!rows.length) return { queued: 0, sent: 0 };
+  if (!rows.length) return { queued: 0, sent: 0, skipped: 0, failed: 0 };
   await client.from("automation_runs").insert(rows);
-  const { sent } = await processDueRuns(client, ctx.organizationId);
-  return { queued: rows.length, sent };
+  const result = await processDueRuns(client, ctx.organizationId, options);
+  return { queued: rows.length, ...result };
 }
 
+/** Injected by server code so real messages are sent. Omitted on the client. */
+export type RunDelivery = (run: {
+  id: string;
+  action_type: string;
+  recipient: string | null;
+  subject: string | null;
+  body: string | null;
+}) => Promise<
+  { ok: true } | { ok: false; retry: boolean; reason: string; retryAfterSeconds?: number }
+>;
+
+export type ProcessOptions = { deliver?: RunDelivery; businessName?: string | null };
+
+const REASON_TEXT: Record<string, string> = {
+  no_email_address: "no email address on file",
+  no_phone_number: "no phone number on file",
+  invalid_phone_number: "the phone number isn't a valid mobile number",
+  recipient_suppressed: "the recipient unsubscribed or previously bounced",
+  sms_provider_not_connected: "no text-message provider is connected yet",
+  sms_provider_not_configured: "the text-message provider isn't finished configuring",
+};
+
 /**
- * Delivers everything that is due. Email and SMS steps are marked delivered
- * (or skipped when there is no contact detail); task steps become notifications.
+ * Delivers everything that is due. Email and SMS steps are handed to the
+ * injected `deliver` function; without one (client-side calls) message steps are
+ * left queued rather than falsely marked sent. Task steps become notifications.
  */
-export async function processDueRuns(client: Client, organizationId: string) {
+export async function processDueRuns(
+  client: Client,
+  organizationId: string,
+  options: ProcessOptions = {},
+) {
   const { data: due } = await client
     .from("automation_runs")
     .select("id, action_type, recipient, subject, body, lead_id, appointment_id")
@@ -147,40 +174,64 @@ export async function processDueRuns(client: Client, organizationId: string) {
     .order("scheduled_for")
     .limit(100);
 
-  if (!due?.length) return { sent: 0, skipped: 0 };
+  if (!due?.length) return { sent: 0, skipped: 0, failed: 0 };
 
   const nowIso = new Date().toISOString();
   let sent = 0;
   let skipped = 0;
+  let failed = 0;
   const activities: Database["public"]["Tables"]["lead_activities"]["Insert"][] = [];
   const notifications: Database["public"]["Tables"]["notifications"]["Insert"][] = [];
 
   for (const run of due) {
-    const needsContact = run.action_type === "email" || run.action_type === "sms";
-    const deliverable = !needsContact || !!run.recipient;
-    if (deliverable) sent += 1;
+    const isMessage = run.action_type === "email" || run.action_type === "sms";
+
+    // No delivery transport available here: leave it queued for the server pass.
+    if (isMessage && !options.deliver) continue;
+
+    const outcome = isMessage
+      ? await options.deliver!(run)
+      : ({ ok: true } as { ok: true });
+
+    if (!outcome.ok && outcome.retry) {
+      // Transient: push it out and try again on the next pass.
+      const delaySeconds =
+        "retryAfterSeconds" in outcome && outcome.retryAfterSeconds ? outcome.retryAfterSeconds : 60;
+      await client
+        .from("automation_runs")
+        .update({
+          scheduled_for: new Date(Date.now() + delaySeconds * 1000).toISOString(),
+        })
+        .eq("id", run.id);
+      continue;
+    }
+
+    const delivered = outcome.ok;
+    if (delivered) sent += 1;
+    else if (run.recipient) failed += 1;
     else skipped += 1;
 
     await client
       .from("automation_runs")
       .update({
-        status: deliverable ? "sent" : "skipped",
-        sent_at: deliverable ? nowIso : null,
+        status: delivered ? "sent" : run.recipient ? "failed" : "skipped",
+        sent_at: delivered ? nowIso : null,
       })
       .eq("id", run.id);
 
     if (run.lead_id) {
+      const reason = !outcome.ok ? (REASON_TEXT[outcome.reason] ?? outcome.reason) : "";
       activities.push({
         organization_id: organizationId,
         lead_id: run.lead_id,
         kind: `automation_${run.action_type}`,
-        body: deliverable
+        body: delivered
           ? `${run.subject ?? "Follow-up"} — sent automatically${run.recipient ? ` to ${run.recipient}` : ""}`
-          : `${run.subject ?? "Follow-up"} — skipped, no ${run.action_type === "email" ? "email address" : "phone number"} on file`,
+          : `${run.subject ?? "Follow-up"} — not sent: ${reason}`,
       });
     }
 
-    if (run.action_type === "task" && deliverable) {
+    if (run.action_type === "task" && delivered) {
       notifications.push({
         organization_id: organizationId,
         title: run.subject ?? "Automation task",
@@ -194,7 +245,7 @@ export async function processDueRuns(client: Client, organizationId: string) {
   if (activities.length) await client.from("lead_activities").insert(activities);
   if (notifications.length) await client.from("notifications").insert(notifications);
 
-  return { sent, skipped };
+  return { sent, skipped, failed };
 }
 
 /** Ready-made automations a business can switch on in one click. */
