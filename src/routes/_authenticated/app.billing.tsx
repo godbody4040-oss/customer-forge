@@ -67,6 +67,12 @@ function BillingPage() {
   const services = (products ?? []).filter((p) => p.kind !== "subscription");
   const subscription = billing?.subscription ?? null;
   const currentPlanId = subscription?.plan_id ?? org?.plan_id ?? null;
+  const currentPlan = (subscriptionPlans ?? []).find((plan) => plan.id === currentPlanId) ?? null;
+  const currentPrice = currentPlan
+    ? subscription?.billing_interval === "annual"
+      ? currentPlan.annual_price
+      : currentPlan.monthly_price
+    : null;
 
   const openPortal = async () => {
     if (!orgId) return;
@@ -103,12 +109,45 @@ function BillingPage() {
 
       <PaymentTestModeBanner />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      {subscription?.status === "past_due" ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+          <p className="font-medium">Your last payment did not go through.</p>
+          <p className="mt-1">
+            Update your card to keep your workspace active — access continues while the payment provider retries.
+          </p>
+          <Button variant="outline" size="sm" className="mt-2" onClick={openPortal} disabled={portalBusy || !manage}>
+            <ExternalLink className="size-4" /> {portalBusy ? "Opening…" : "Update payment method"}
+          </Button>
+        </div>
+      ) : null}
+
+      {subscription?.cancel_at_period_end ? (
+        <div className="rounded-md border border-border bg-muted/40 px-4 py-3 text-[13px] text-muted-foreground">
+          Cancellation is scheduled. You keep full access until{" "}
+          {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : "the end of the paid period"}
+          , then the workspace becomes read-only.
+        </div>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Current plan" value={currentPlanId ?? "No plan"} hint={subscription?.status ?? org?.subscription_status ?? ""} />
+        <MetricCard
+          label="Plan price"
+          value={currentPrice != null ? money(currentPrice, "USD") : "—"}
+          hint={subscription ? `billed ${subscription.billing_interval}` : "no active subscription"}
+        />
         <MetricCard label="Paid to date" value={money(paidTotal, "USD")} hint={`${paid.length} payment${paid.length === 1 ? "" : "s"}`} />
         <MetricCard
-          label={subscription?.cancel_at_period_end ? "Access ends" : "Renews"}
-          value={subscription?.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : "—"}
+          label={subscription?.cancel_at_period_end ? "Access ends" : subscription?.status === "trialing" ? "Trial ends" : "Renews"}
+          value={
+            subscription?.status === "trialing" && subscription.trial_ends_at
+              ? new Date(subscription.trial_ends_at).toLocaleDateString()
+              : subscription?.current_period_end
+                ? new Date(subscription.current_period_end).toLocaleDateString()
+                : org?.trial_ends_at
+                  ? new Date(org.trial_ends_at).toLocaleDateString()
+                  : "—"
+          }
           hint={subscription?.cancel_at_period_end ? "Cancellation scheduled" : "Next billing date"}
         />
       </div>
@@ -150,6 +189,24 @@ function BillingPage() {
             {(subscriptionPlans ?? []).map((plan) => {
               const price = interval === "annual" ? plan.annual_price : plan.monthly_price;
               const isCurrent = currentPlanId === plan.id && billing?.active;
+              // Same plan on the same billing interval: a second checkout would
+              // create a duplicate subscription, so send them to the portal.
+              const isExactCurrent = isCurrent && subscription?.billing_interval === interval;
+              const isUpgrade =
+                !!currentPrice && !isCurrent && price > currentPrice && !!billing?.active;
+              const isDowngrade =
+                !!currentPrice && !isCurrent && price < currentPrice && !!billing?.active;
+              const label = isExactCurrent
+                ? "Manage plan"
+                : isUpgrade
+                  ? "Upgrade"
+                  : isDowngrade
+                    ? "Downgrade"
+                    : isCurrent
+                      ? "Switch billing period"
+                      : currentPlanId && billing?.active
+                        ? "Switch to this plan"
+                        : "Subscribe";
               return (
                 <li
                   key={plan.id}
@@ -173,11 +230,19 @@ function BillingPage() {
                     variant={isCurrent ? "outline" : "signal"}
                     size="sm"
                     className="mt-3 w-full"
-                    disabled={!manage || !orgId}
-                    onClick={() => setCheckoutPlan({ id: plan.id, name: plan.name })}
+                    disabled={!manage || !orgId || portalBusy}
+                    onClick={() =>
+                      isExactCurrent || (billing?.active && subscription?.provider_subscription_id)
+                        ? void openPortal()
+                        : setCheckoutPlan({ id: plan.id, name: plan.name })
+                    }
                   >
-                    <CreditCard className="size-4" />
-                    {isCurrent ? "Change billing" : currentPlanId ? "Switch to this plan" : "Subscribe"}
+                    {isExactCurrent || (billing?.active && subscription?.provider_subscription_id) ? (
+                      <ExternalLink className="size-4" />
+                    ) : (
+                      <CreditCard className="size-4" />
+                    )}
+                    {label}
                   </Button>
                 </li>
               );

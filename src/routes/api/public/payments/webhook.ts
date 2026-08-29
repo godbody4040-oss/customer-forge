@@ -127,6 +127,29 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
   }
 }
 
+/**
+ * Event-level idempotency: Stripe delivers at least once, so a verified event
+ * id is claimed in `payment_events` (unique per provider) before any side
+ * effect runs. A duplicate delivery short-circuits with 200.
+ */
+async function claimEvent(event: { id?: string; type: string; data: { object: any } }, env: StripeEnv) {
+  const { adminClient } = await import("@/lib/payments.server");
+  const admin = await adminClient();
+  const eventId = String(event.id ?? "");
+  if (!eventId) return { claimed: true as const, admin, eventId };
+  const { error } = await admin.from("payment_events").insert({
+    provider: "stripe",
+    provider_event_id: eventId,
+    event_type: event.type,
+    resource_id: String(event.data?.object?.id ?? ""),
+    verification_status: "verified",
+    processed: false,
+    payload: { environment: env, type: event.type },
+  });
+  if (error) return { claimed: false as const, admin, eventId };
+  return { claimed: true as const, admin, eventId };
+}
+
 export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
     handlers: {
@@ -137,8 +160,21 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           return Response.json({ received: true, ignored: "invalid env" });
         }
         try {
-          const event = await verifyWebhook(request, rawEnv);
-          await handleEvent(event as { type: string; data: { object: any } }, rawEnv);
+          const event = (await verifyWebhook(request, rawEnv)) as {
+            id?: string;
+            type: string;
+            data: { object: any };
+          };
+          const claim = await claimEvent(event, rawEnv);
+          if (!claim.claimed) return Response.json({ received: true, duplicate: true });
+          await handleEvent(event, rawEnv);
+          if (claim.eventId) {
+            await claim.admin
+              .from("payment_events")
+              .update({ processed: true })
+              .eq("provider", "stripe")
+              .eq("provider_event_id", claim.eventId);
+          }
           return Response.json({ received: true });
         } catch (error) {
           console.error("[payments:webhook] error", (error as Error).message);
@@ -148,3 +184,4 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
     },
   },
 });
+

@@ -57,6 +57,24 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       return { error: "Only workspace owners and admins can change billing." };
     }
 
+    // Duplicate-subscription guard: an existing live card subscription must be
+    // changed through the provider's billing portal, never a second checkout.
+    const { data: existing } = await context.supabase
+      .from("subscriptions")
+      .select("status, provider_subscription_id, current_period_end")
+      .eq("organization_id", data.organizationId)
+      .eq("payment_provider", "stripe")
+      .maybeSingle();
+    if (
+      existing?.provider_subscription_id &&
+      ["active", "trialing", "past_due"].includes(existing.status)
+    ) {
+      return {
+        error:
+          "This workspace already has an active card subscription. Use Manage subscription to change or cancel your plan.",
+      };
+    }
+
     const priceKey = priceIdFor(data.planId, data.interval);
     if (!priceKey) return { error: "That plan is not available for checkout." };
 
@@ -156,7 +174,7 @@ export const getBillingState = createServerFn({ method: "POST" })
     const { data: subscription } = await context.supabase
       .from("subscriptions")
       .select(
-        "plan_id, status, billing_interval, price_id, payment_provider, environment, cancel_at_period_end, current_period_end, trial_ends_at, provider_subscription_id",
+        "plan_id, status, billing_interval, price_id, payment_provider, environment, cancel_at_period_end, current_period_start, current_period_end, trial_start, trial_ends_at, provider_customer_id, provider_subscription_id",
       )
       .eq("organization_id", data.organizationId)
       .maybeSingle();
