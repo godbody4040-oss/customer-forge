@@ -12,7 +12,7 @@
  */
 
 import { AiGatewayError } from "@/lib/site-engine.server";
-import { MAX_ACTIONS, type AgentAttachment, type AgentTurn } from "@/lib/site-agent";
+import { MAX_ACTIONS, readChapters, type AgentAttachment, type AgentChapter, type AgentTurn } from "@/lib/site-agent";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -286,3 +286,38 @@ export async function transcribeVoice(attachment: AgentAttachment): Promise<stri
   return (payload.text ?? "").trim();
 }
 
+
+/* ---------------------------- video chapters ------------------------------- */
+
+export const CHAPTER_MODEL = "google/gemini-3.7-flash";
+
+/**
+ * Writes short "chapters" for an attached clip so the owner can reference a
+ * moment ("use the shot at 0:12") instead of describing it. Descriptive only —
+ * no prices, ratings or claims are inferred from footage.
+ */
+export async function summarizeChapters(
+  attachment: AgentAttachment,
+): Promise<{ summary: string; chapters: AgentChapter[] }> {
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content:
+        'You index short business videos for a website editor. Reply as JSON only: ' +
+        '{"summary":"one sentence about the clip","chapters":[{"at":"0:12","label":"short title","detail":"what is visible or said"}]}. ' +
+        "Write between 2 and 8 chapters in time order, using m:ss timestamps that exist in the clip. " +
+        "Describe only what is actually visible or spoken. Never infer prices, ratings, awards, guarantees or business claims.",
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: `Index this clip ("${attachment.name}") into chapters.` },
+        attachmentPart(attachment),
+      ],
+    },
+  ];
+
+  const raw = await call(CHAPTER_MODEL, messages);
+  const summary = typeof raw["summary"] === "string" ? raw["summary"].slice(0, 400) : "";
+  return { summary, chapters: readChapters(raw["chapters"]) };
+}
