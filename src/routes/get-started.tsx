@@ -15,6 +15,7 @@ import { REVORA, revoraMailto } from "@/lib/brand";
 import { trackConversion } from "@/lib/conversion";
 import { useStepScroll } from "@/lib/use-step-scroll";
 import { safeSlug } from "@/lib/website-plan";
+import { smartIntakeValue } from "@/lib/intake-smart";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
