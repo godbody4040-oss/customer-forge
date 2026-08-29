@@ -220,6 +220,10 @@ function Onboarding() {
         );
       }
 
+      // Give the workspace a working quote calculator so the public site's
+      // primary "Get my quote" CTA has a real destination from day one.
+      await seedQuoteCalculator(supabase, org.id, services.map((s) => s.name.trim()));
+
       const plan = generateWebsitePlan({
         businessName: draft.businessName,
         industry: draft.industry,
