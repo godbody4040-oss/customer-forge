@@ -1,0 +1,1 @@
+CREATE POLICY orgs_creator_read ON public.organizations FOR SELECT TO authenticated USING (created_by = auth.uid());
