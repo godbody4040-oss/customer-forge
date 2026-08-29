@@ -91,22 +91,38 @@ export function SiteHeader() {
   );
 }
 
+const FOOTER_GROUPS = [
+  {
+    heading: "Platform",
+    links: [
+      { to: "/demo", label: "Product tour" },
+      { to: "/industries", label: "Solutions" },
+      { to: "/pricing", label: "Pricing" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { to: "/about", label: "About" },
+      { to: "/contact", label: "Contact" },
+    ],
+  },
+] as const;
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-          <div>
+      <div className="mx-auto max-w-6xl px-4 py-14">
+        <div className="grid gap-10 md:grid-cols-12">
+          <div className="md:col-span-5">
             <Logo tagline />
-            <p className="mt-4 max-w-xs text-[12px] leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-sm text-[12px] leading-relaxed text-muted-foreground">
               One system to get discovered, capture opportunities, convert leads, book customers and
               measure growth.
             </p>
             <div className="mt-6">
-              <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-                Contact
-              </p>
-              <ul className="mt-2 space-y-1.5 text-[12px]">
+              <p className="eyebrow">Contact</p>
+              <ul className="mt-2.5 space-y-2 text-[12px]">
                 <li className="flex items-center gap-2">
                   <Mail className="size-3.5 text-primary" aria-hidden="true" />
                   <a
@@ -128,41 +144,60 @@ export function SiteFooter() {
               </ul>
             </div>
           </div>
-          <nav
-            aria-label="Footer"
-            className="grid grid-cols-2 gap-x-10 gap-y-2.5 text-[13px] text-muted-foreground sm:grid-cols-3"
-          >
-            <Link to="/demo" className="transition-colors hover:text-primary">
-              Product
-            </Link>
-            <Link to="/industries" className="transition-colors hover:text-primary">
-              Solutions
-            </Link>
-            <Link to="/pricing" className="transition-colors hover:text-primary">
-              Pricing
-            </Link>
-            <Link to="/demo" className="transition-colors hover:text-primary">
-              Demo
-            </Link>
-            <Link to="/about" className="transition-colors hover:text-primary">
-              About
-            </Link>
-            <Link to="/contact" className="transition-colors hover:text-primary">
-              Contact
-            </Link>
-            <Link to="/auth" className="transition-colors hover:text-primary">
-              Login
-            </Link>
-            <Link
-              to="/s/$slug"
-              params={{ slug: "elite-mobile-detailing" }}
-              className="transition-colors hover:text-primary"
-            >
-              Live demo site
-            </Link>
-          </nav>
+
+          <div className="grid gap-8 sm:grid-cols-3 md:col-span-7">
+            {FOOTER_GROUPS.map((group) => (
+              <nav key={group.heading} aria-label={group.heading}>
+                <p className="eyebrow">{group.heading}</p>
+                <ul className="mt-3 space-y-2.5 text-[13px]">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        to={link.to}
+                        className="text-muted-foreground transition-colors hover:text-primary"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+            <nav aria-label="Get started">
+              <p className="eyebrow">Get started</p>
+              <ul className="mt-3 space-y-2.5 text-[13px]">
+                <li>
+                  <Link
+                    to="/auth"
+                    search={{ mode: "signup" }}
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    Start free trial
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/auth"
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    Sign in
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/s/$slug"
+                    params={{ slug: "elite-mobile-detailing" }}
+                    className="text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    Live demo site
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
-        <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+
+        <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[11px] text-muted-foreground">
             © {new Date().getFullYear()} <span className="text-foreground">REVORA™</span> — The
             Business Growth Operating System
@@ -175,3 +210,4 @@ export function SiteFooter() {
     </footer>
   );
 }
+
