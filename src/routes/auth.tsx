@@ -265,7 +265,10 @@ function AuthPage() {
               <span className="h-px flex-1 bg-border" />
             </div>
 
-            <form className="space-y-4" onSubmit={handleEmail}>
+            <form
+              className="space-y-4"
+              onSubmit={magicMode && !isSignup ? handleMagicLink : handleEmail}
+            >
               {isSignup ? (
                 <div className="space-y-1.5">
                   <Label htmlFor="a-name">Your name</Label>
@@ -284,43 +287,81 @@ function AuthPage() {
                   id="a-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setMagicSent(false);
+                  }}
                   autoComplete="email"
                   required
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="a-password">Password</Label>
-                <Input
-                  id="a-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={isSignup ? "new-password" : "current-password"}
-                  minLength={8}
-                  required
-                />
-              </div>
+              {magicMode && !isSignup ? null : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="a-password">Password</Label>
+                  <Input
+                    id="a-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={isSignup ? "new-password" : "current-password"}
+                    minLength={8}
+                    required
+                  />
+                </div>
+              )}
               {error ? <ErrorNote message={error} /> : null}
+              {magicSent && magicMode && !isSignup ? (
+                <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
+                  Link sent to <span className="gold-hl">{email}</span>. Open it on this device and
+                  you'll land straight in your dashboard.
+                </p>
+              ) : null}
               <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
-                {busy === "email" ? <Loader2 className="size-4 animate-spin" /> : null}
-                {isSignup ? "CREATE ACCOUNT — START FREE" : "Sign in"}
+                {busy === "email" || busy === "magic" ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {isSignup
+                  ? "CREATE ACCOUNT — START FREE"
+                  : magicMode
+                    ? magicSent
+                      ? "Resend sign-in link"
+                      : "Email me a sign-in link"
+                    : "Sign in"}
               </Button>
               {!isSignup ? (
-                <button
-                  type="button"
-                  className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
-                  onClick={handleForgotPassword}
-                  disabled={busy !== null}
-                >
-                  Forgot your password?
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="w-full cursor-pointer text-center text-[12.5px] text-primary transition-colors hover:underline"
+                    onClick={() => {
+                      setError(null);
+                      setMagicSent(false);
+                      setMagicMode((v) => !v);
+                    }}
+                    disabled={busy !== null}
+                  >
+                    {magicMode
+                      ? "Use my password instead"
+                      : "Sign in without a password — email me a magic link"}
+                  </button>
+                  {magicMode ? null : (
+                    <button
+                      type="button"
+                      className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                      onClick={handleForgotPassword}
+                      disabled={busy !== null}
+                    >
+                      Forgot your password?
+                    </button>
+                  )}
+                </>
               ) : null}
               <p className="text-center text-[11.5px] text-muted-foreground">
                 We keep you signed in on this device, so next time you land straight in your
                 dashboard.
               </p>
             </form>
+
           </div>
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
