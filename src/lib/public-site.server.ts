@@ -100,11 +100,8 @@ export async function loadSite(
     ? (await import("@/integrations/supabase/client.server")).supabaseAdmin
     : publicClient();
 
-  const { data: org } = await supabase
-    .from("public_organizations")
-    .select("id, name, slug, industry, is_demo")
-    .eq("slug", slug)
-    .maybeSingle();
+  const org = await publicOrganization({ slug });
+
 
   if (!org?.id) return null;
   const orgId: string = org.id;
