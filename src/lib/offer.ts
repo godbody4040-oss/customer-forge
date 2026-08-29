@@ -7,8 +7,8 @@ export const GROWTH_SYSTEM = {
   planId: "revora_growth_system",
   name: "Revora Growth System",
   setupProductId: "revora_growth_system_setup",
-  setupPrice: 1500,
-  monthlyPrice: 250,
+  setupPrice: 750,
+  monthlyPrice: 100,
   /** Stripe lookup keys (stable across test and live). */
   setupPriceKey: "revora_system_setup",
   monthlyPriceKey: "revora_system_monthly",
@@ -20,6 +20,8 @@ export const GROWTH_SYSTEM = {
     "Ongoing platform, automation, support, hosting/system management, and growth services.",
   /** Length of the free platform trial, in days. Mirrors the Stripe trial. */
   trialDays: 30,
+  /** Length of the full-system free access window at signup, in days. */
+  fullAccessTrialDays: 3,
   trialBadge: "30-DAY FREE PLATFORM TRIAL",
   ctaPrimary: "START MY REVORA SYSTEM — $750 SETUP",
   ctaSecondary:

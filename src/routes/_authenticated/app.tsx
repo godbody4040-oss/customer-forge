@@ -221,8 +221,8 @@ function AppShell() {
             {trialStillActive ? (
               <Pill tone="attention">
                 {trialHoursLeft > 1
-                  ? `Free day · ${trialHoursLeft}h left`
-                  : "Free day · under 1h left"}
+                  ? `Free access · ${trialHoursLeft}h left`
+                  : "Free access · under 1h left"}
               </Pill>
             ) : org?.subscription_status === "trialing" ? (
               <Pill tone="attention">Trial</Pill>

@@ -52,8 +52,8 @@ export const Route = createFileRoute("/industries/$slug")({
             offers: {
               "@type": "Offer",
               priceSpecification: [
-                { "@type": "PriceSpecification", price: 1500, priceCurrency: "USD", description: "One-time setup" },
-                { "@type": "UnitPriceSpecification", price: 250, priceCurrency: "USD", unitText: "MONTH" },
+                { "@type": "PriceSpecification", price: 750, priceCurrency: "USD", description: "One-time setup" },
+                { "@type": "UnitPriceSpecification", price: 100, priceCurrency: "USD", unitText: "MONTH" },
               ],
             },
           }),
