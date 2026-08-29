@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Film, ImagePlus, Loader2, Mic, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { transcribeVoiceCommand } from "@/lib/site-agent.functions";
+import { summarizeClipChapters, transcribeVoiceCommand } from "@/lib/site-agent.functions";
 import {
   ATTACHMENT_ACCEPT,
   ATTACHMENT_LIMITS,
@@ -16,6 +16,8 @@ import {
 
 const MB = 1024 * 1024;
 const RECORD_LIMIT_SECONDS = 120;
+const FOCUS =
+  "cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 function readAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -35,20 +37,23 @@ function blobToDataUrl(blob: Blob) {
  *
  * Files are turned into data URLs in the browser and sent with the next request
  * as context — the assistant reads them, and the owner still reviews every
- * change before it's written. Voice is transcribed into the message box so the
- * owner can correct a mis-heard word before anything is planned.
+ * change before it's written. Video clips are indexed into chapters on upload so
+ * a moment can be referenced by timestamp. Voice is transcribed into the message
+ * box so the owner can correct a mis-heard word before anything is planned.
  */
 export function AssistantMedia({
   organizationId,
   attachments,
   onChange,
   onTranscript,
+  onInsert,
   disabled,
 }: {
   organizationId: string | undefined;
   attachments: AgentAttachment[];
   onChange: (next: AgentAttachment[]) => void;
   onTranscript: (text: string) => void;
+  onInsert?: (text: string) => void;
   disabled?: boolean;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
@@ -56,8 +61,10 @@ export function AssistantMedia({
   const chunks = useRef<Blob[]>([]);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [indexing, setIndexing] = useState<string[]>([]);
 
   const transcribe = useServerFn(transcribeVoiceCommand);
+  const chapterFn = useServerFn(summarizeClipChapters);
 
   const voice = useMutation({
     mutationFn: (attachment: AgentAttachment) =>
@@ -78,6 +85,27 @@ export function AssistantMedia({
   useEffect(() => {
     if (recording && seconds >= RECORD_LIMIT_SECONDS) recorder.current?.stop();
   }, [recording, seconds]);
+
+  /** Indexes a clip in the background; a failure just means no chapters. */
+  const indexClip = async (attachment: AgentAttachment) => {
+    if (!organizationId) return;
+    setIndexing((prior) => [...prior, attachment.name]);
+    try {
+      const result = await chapterFn({ data: { organizationId, video: attachment } });
+      if (result.chapters.length) {
+        onChange(
+          attachments
+            .concat()
+            .map((item) => item)
+            .map((item) => (item.dataUrl === attachment.dataUrl ? { ...item, chapters: result.chapters } : item)),
+        );
+      }
+    } catch {
+      toast.error(`Couldn't index ${attachment.name}. You can still send it as-is.`);
+    } finally {
+      setIndexing((prior) => prior.filter((name) => name !== attachment.name));
+    }
+  };
 
   const pickFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -111,6 +139,7 @@ export function AssistantMedia({
     }
     if (next.length) onChange([...attachments, ...next]);
     if (fileInput.current) fileInput.current.value = "";
+    for (const attachment of next) if (attachment.kind === "video") void indexClip(attachment);
   };
 
   const startRecording = async () => {
@@ -132,7 +161,7 @@ export function AssistantMedia({
         const blob = new Blob(chunks.current, { type: instance.mimeType || "audio/webm" });
         chunks.current = [];
         if (blob.size < 1200) {
-          toast.error("That recording was too short. Hold the button while you speak.");
+          toast.error("That recording was too short. Hold on a moment while you speak.");
           return;
         }
         if (blob.size > ATTACHMENT_LIMITS.audio) {
@@ -159,14 +188,16 @@ export function AssistantMedia({
   const busy = disabled || !organizationId;
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5" role="group" aria-label="Photo, video and voice attachments">
       <div className="flex flex-wrap items-center gap-2">
         <input
           ref={fileInput}
           type="file"
           accept={ATTACHMENT_ACCEPT}
           multiple
-          className="hidden"
+          className="sr-only"
+          id="assistant-media-input"
+          aria-label="Choose photos or a video clip"
           onChange={(event) => void pickFiles(event.target.files)}
         />
         <Button
@@ -176,50 +207,92 @@ export function AssistantMedia({
           disabled={busy || attachments.length >= MAX_ATTACHMENTS}
           onClick={() => fileInput.current?.click()}
         >
-          <ImagePlus className="size-4" /> Add photo or video
+          <ImagePlus className="size-4" aria-hidden="true" /> Add photo or video
         </Button>
         {recording ? (
           <Button type="button" variant="destructive" size="sm" onClick={() => recorder.current?.stop()}>
-            <Square className="size-4" /> Stop ({seconds}s)
+            <Square className="size-4" aria-hidden="true" /> Stop recording ({seconds}s)
           </Button>
         ) : (
-          <Button type="button" variant="outline" size="sm" disabled={busy || voice.isPending} onClick={() => void startRecording()}>
-            {voice.isPending ? <Loader2 className="size-4 animate-spin" /> : <Mic className="size-4" />}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={busy || voice.isPending}
+            onClick={() => void startRecording()}
+          >
+            {voice.isPending ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Mic className="size-4" aria-hidden="true" />
+            )}
             {voice.isPending ? "Writing down what you said…" : "Speak your request"}
           </Button>
         )}
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-[11px] text-muted-foreground" aria-live="polite">
           {recording
-            ? "Recording — say what you want changed, then press stop."
-            : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
-                ATTACHMENT_LIMITS.video / MB,
-              )} MB, up to ${MAX_ATTACHMENTS} per message.`}
+            ? `Recording — say what you want changed, then press stop. ${seconds}s of ${RECORD_LIMIT_SECONDS}s.`
+            : voice.isPending
+              ? "Transcribing your voice request…"
+              : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
+                  ATTACHMENT_LIMITS.video / MB,
+                )} MB, up to ${MAX_ATTACHMENTS} per message.`}
         </span>
       </div>
 
       {attachments.length ? (
-        <ul className="flex flex-wrap gap-2">
+        <ul className="space-y-2">
           {attachments.map((attachment, index) => (
             <li
               key={`${attachment.name}-${index}`}
-              className="relative flex w-40 items-center gap-2 overflow-hidden rounded-md border border-border bg-elevated/60 p-2"
+              className="rounded-md border border-border bg-elevated/60 p-2.5"
             >
-              {attachment.kind === "image" ? (
-                <img src={attachment.dataUrl} alt="" className="size-10 shrink-0 rounded object-cover" />
-              ) : (
-                <span className="flex size-10 shrink-0 items-center justify-center rounded bg-surface">
-                  <Film className="size-4 text-primary" aria-hidden="true" />
-                </span>
-              )}
-              <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{attachment.name}</span>
-              <button
-                type="button"
-                aria-label={`Remove ${attachment.name}`}
-                className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => onChange(attachments.filter((_, position) => position !== index))}
-              >
-                <X className="size-3.5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {attachment.kind === "image" ? (
+                  <img src={attachment.dataUrl} alt="" className="size-10 shrink-0 rounded object-cover" />
+                ) : (
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded bg-surface">
+                    <Film className="size-4 text-primary" aria-hidden="true" />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">{attachment.name}</span>
+                {indexing.includes(attachment.name) ? (
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <Loader2 className="size-3 animate-spin" aria-hidden="true" /> Indexing moments…
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  aria-label={`Remove ${attachment.name}`}
+                  className={`${FOCUS} p-1 text-muted-foreground transition-colors hover:text-foreground`}
+                  onClick={() => onChange(attachments.filter((_, position) => position !== index))}
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {attachment.chapters?.length ? (
+                <div className="mt-2 border-t border-border pt-2">
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    Moments in this clip — click a timestamp to reference it
+                  </p>
+                  <ul className="mt-1.5 space-y-1">
+                    {attachment.chapters.map((chapter) => (
+                      <li key={`${chapter.at}-${chapter.label}`} className="text-[12px]">
+                        <button
+                          type="button"
+                          className={`${FOCUS} text-left hover:underline`}
+                          onClick={() => onInsert?.(`the moment at ${chapter.at} (${chapter.label})`)}
+                        >
+                          <span className="font-mono text-primary">{chapter.at}</span>{" "}
+                          <span className="font-medium">{chapter.label}</span>{" "}
+                          <span className="text-muted-foreground">— {chapter.detail}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
