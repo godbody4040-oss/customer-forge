@@ -304,7 +304,9 @@ function Landing() {
               <div className="min-w-0 border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-display text-[18px] font-semibold">{GROWTH_SYSTEM.name}</h3>
-                  <Pill tone="signal">Complete system</Pill>
+                  <Pill tone="signal">
+                    {GROWTH_SYSTEM.fullAccessTrialDays} days free full access
+                  </Pill>
                 </div>
                 <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-5">
                   <div>
