@@ -1,4 +1,5 @@
 import { Panel } from "@/components/app/Bits";
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 
 /** Purchase-objection FAQs. Answers must match the shipped product behaviour. */
 export const FAQ_ITEMS = [
@@ -28,7 +29,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "How does pricing work?",
-    a: "One offer: $1,500 one-time setup to build, customize and launch your system, then $250/month for the platform, automation, hosting, updates, growth services and support.",
+    a: `One offer: ${usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup to build, customize and launch your system, then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month for the platform, automation, hosting, updates, growth services and support.`,
   },
   {
     q: "Can I cancel?",

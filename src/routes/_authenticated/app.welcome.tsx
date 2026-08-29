@@ -45,7 +45,7 @@ function WelcomePage() {
     window.history.replaceState(null, "", "/app/welcome");
   }, [orgId, queryClient]);
 
-  const setupPaid = Boolean(org?.setup_paid_at);
+  const setupPaid = Boolean(billing?.setupPaid);
   const subActive = Boolean(billing?.active);
   const steps = [
     { label: "Setup payment received", done: setupPaid },

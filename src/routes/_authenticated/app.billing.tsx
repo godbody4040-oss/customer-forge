@@ -44,6 +44,16 @@ const STATUS_LABEL: Record<string, string> = {
   disputed: "Disputed",
 };
 
+function paymentReference(payment: { paypal_capture_id: string | null; paypal_order_id: string | null; metadata: unknown }) {
+  if (payment.paypal_capture_id) return payment.paypal_capture_id;
+  if (payment.paypal_order_id) return payment.paypal_order_id;
+  if (payment.metadata && typeof payment.metadata === "object" && !Array.isArray(payment.metadata)) {
+    const stripeId = (payment.metadata as Record<string, unknown>)["stripe_id"];
+    if (typeof stripeId === "string") return stripeId;
+  }
+  return "—";
+}
+
 function BillingPage() {
   const { data: ws } = useWorkspace();
   const org = ws?.workspace?.organization;
@@ -68,7 +78,7 @@ function BillingPage() {
     (p) => p.kind !== "subscription" && p.id !== GROWTH_SYSTEM.setupProductId,
   );
   const subscription = billing?.subscription ?? null;
-  const setupPaid = Boolean(org?.setup_paid_at);
+  const setupPaid = Boolean(billing?.setupPaid);
 
 
   // Stripe embedded checkout redirects here after a completed payment.
@@ -114,6 +124,7 @@ function BillingPage() {
             {subscription ? subscription.status.replace("_", " ") : "No subscription"}
           </Pill>
 
+          <Pill tone="neutral">Card payments {billing?.environment === "sandbox" ? "test" : "live"}</Pill>
           {config?.configured ? <Pill tone="neutral">PayPal {config.environment}</Pill> : null}
         </div>
       </div>
@@ -270,7 +281,8 @@ function BillingPage() {
         />
       ) : null}
 
-      <Panel className="p-5">
+      {services.length > 0 ? (
+        <Panel className="p-5">
         <SectionHeading eyebrow="Services" title="Revora services" />
         {loadingProducts ? (
           <LoadingRows rows={3} />
@@ -316,7 +328,8 @@ function BillingPage() {
             ))}
           </ul>
         )}
-      </Panel>
+        </Panel>
+      ) : null}
 
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
@@ -368,7 +381,7 @@ function BillingPage() {
                     </td>
                     <td className="py-2.5 pr-3 capitalize">{payment.payment_provider}</td>
                     <td className="py-2.5 font-mono text-[11px]">
-                      {payment.paypal_capture_id ?? payment.paypal_order_id ?? "—"}
+                      {paymentReference(payment)}
                     </td>
                   </tr>
                 ))}

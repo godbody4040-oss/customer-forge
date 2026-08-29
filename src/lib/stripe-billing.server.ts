@@ -96,7 +96,9 @@ export async function syncStripeSubscription(
     trial_ends_at: iso(subscription?.trial_end),
   };
 
-  await admin.from("subscriptions").upsert(record, { onConflict: "organization_id" });
+  await admin
+    .from("subscriptions")
+    .upsert(record, { onConflict: "organization_id,payment_provider,environment" });
 
   const orgStatus = status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
   await admin

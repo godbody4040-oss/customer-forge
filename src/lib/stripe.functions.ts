@@ -1,19 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnv } from "@/lib/stripe.server";
-
-const uuid = (value: unknown) => {
-  const id = String(value ?? "");
-  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Invalid workspace");
-  return id;
-};
-
-const env = (value: unknown): StripeEnv => {
-  if (value === "sandbox" || value === "live") return value;
-  throw new Error("Invalid payment environment");
-};
-
-const text = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
+import { cleanText, parseStripeEnvironment, parseWorkspaceId } from "@/lib/stripe-input";
 
 export type GrowthSystemIntake = {
   fullName: string;
@@ -43,19 +31,19 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       environment: StripeEnv;
       intake: GrowthSystemIntake;
     }) => {
-      const returnUrl = text(input?.returnUrl, 500);
+      const returnUrl = cleanText(input?.returnUrl, 500);
       if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
       const raw = input?.intake ?? ({} as GrowthSystemIntake);
       const intake: GrowthSystemIntake = {
-        fullName: text(raw.fullName, 120),
-        businessName: text(raw.businessName, 120),
-        email: text(raw.email, 160).toLowerCase(),
-        phone: text(raw.phone, 40),
-        website: text(raw.website, 200),
-        businessType: text(raw.businessType, 80),
-        city: text(raw.city, 80),
-        state: text(raw.state, 40),
-        services: text(raw.services, 400),
+        fullName: cleanText(raw.fullName, 120),
+        businessName: cleanText(raw.businessName, 120),
+        email: cleanText(raw.email, 160).toLowerCase(),
+        phone: cleanText(raw.phone, 40),
+        website: cleanText(raw.website, 200),
+        businessType: cleanText(raw.businessType, 80),
+        city: cleanText(raw.city, 80),
+        state: cleanText(raw.state, 40),
+        services: cleanText(raw.services, 400),
       };
       if (!intake.fullName || !intake.businessName) throw new Error("Add your name and business name");
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(intake.email)) throw new Error("Add a valid email address");
@@ -63,7 +51,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       if (!intake.businessType) throw new Error("Add your business type");
       if (!intake.city || !intake.state) throw new Error("Add your city and state");
       if (!intake.services) throw new Error("Add your primary services");
-      return { organizationId: uuid(input?.organizationId), returnUrl, environment: env(input?.environment), intake };
+      return { organizationId: parseWorkspaceId(input?.organizationId), returnUrl, environment: parseStripeEnvironment(input?.environment), intake };
     },
   )
   .handler(async ({ data, context }): Promise<{ clientSecret: string } | { error: string }> => {
@@ -97,6 +85,9 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       .select("status, provider_subscription_id")
       .eq("organization_id", data.organizationId)
       .eq("payment_provider", "stripe")
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (
       existing?.provider_subscription_id &&
@@ -222,10 +213,10 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       const returnUrl = String(input?.returnUrl ?? "").slice(0, 500);
       if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
       return {
-        organizationId: uuid(input?.organizationId),
+        organizationId: parseWorkspaceId(input?.organizationId),
         productId,
         returnUrl,
-        environment: env(input?.environment),
+        environment: parseStripeEnvironment(input?.environment),
       };
     },
   )
@@ -360,26 +351,70 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
 export const createBillingPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { organizationId: string; returnUrl?: string; environment: StripeEnv }) => ({
-    organizationId: uuid(input?.organizationId),
+    organizationId: parseWorkspaceId(input?.organizationId),
     returnUrl: input?.returnUrl ? String(input.returnUrl).slice(0, 500) : undefined,
-    environment: env(input?.environment),
+    environment: parseStripeEnvironment(input?.environment),
   }))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+
+    const { data: membership } = await context.supabase
+      .from("memberships")
+      .select("role")
+      .eq("organization_id", data.organizationId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!["owner", "admin", "manager"].includes(membership?.role ?? "")) {
+      return { error: "Only workspace owners and admins can manage billing." };
+    }
 
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("provider_customer_id, environment")
       .eq("organization_id", data.organizationId)
+      .eq("payment_provider", "stripe")
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (!sub?.provider_customer_id) {
       return { error: "No card subscription is active for this workspace yet." };
     }
 
     try {
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(sub.environment as StripeEnv);
+      let customerId = sub.provider_customer_id;
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        if ("deleted" in customer && customer.deleted) throw new Error("No such customer");
+      } catch (customerError) {
+        const message = getStripeErrorMessage(customerError);
+        if (!/no such customer|resource_missing/i.test(message)) throw customerError;
+        const found = await stripe.customers.search({
+          query: `metadata['organizationId']:'${data.organizationId}'`,
+          limit: 1,
+        });
+        const recovered = found.data[0]?.id;
+        if (!recovered) {
+          return {
+            error:
+              sub.environment === "sandbox"
+                ? "This test subscription is no longer available. Start a new test checkout to continue."
+                : "We could not locate your live billing profile. Contact Revora support and we’ll reconnect it safely.",
+          };
+        }
+        customerId = recovered;
+        const { adminClient } = await import("@/lib/payments.server");
+        const admin = await adminClient();
+        await admin
+          .from("subscriptions")
+          .update({ provider_customer_id: recovered })
+          .eq("organization_id", data.organizationId)
+          .eq("payment_provider", "stripe")
+          .eq("environment", sub.environment);
+      }
       const portal = await stripe.billingPortal.sessions.create({
-        customer: sub.provider_customer_id,
+        customer: customerId,
         ...(data.returnUrl ? { return_url: data.returnUrl } : {}),
       });
       return { url: portal.url };
@@ -392,8 +427,8 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
 export const getBillingState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { organizationId: string; environment: StripeEnv }) => ({
-    organizationId: uuid(input?.organizationId),
-    environment: env(input?.environment),
+    organizationId: parseWorkspaceId(input?.organizationId),
+    environment: parseStripeEnvironment(input?.environment),
   }))
   .handler(async ({ data, context }) => {
     const { data: subscription } = await context.supabase
@@ -402,12 +437,28 @@ export const getBillingState = createServerFn({ method: "POST" })
         "plan_id, status, billing_interval, price_id, payment_provider, environment, cancel_at_period_end, current_period_start, current_period_end, trial_start, trial_ends_at, provider_customer_id, provider_subscription_id",
       )
       .eq("organization_id", data.organizationId)
+      .eq("payment_provider", "stripe")
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     const { data: entitlements } = await context.supabase
       .from("plan_entitlements")
       .select("plan_id, feature_key, limit_value")
       .eq("plan_id", subscription?.plan_id ?? "");
+
+    const { data: setupPayment } = await context.supabase
+      .from("payments")
+      .select("id")
+      .eq("organization_id", data.organizationId)
+      .eq("payment_provider", "stripe")
+      .eq("environment", data.environment)
+      .eq("status", "completed")
+      .eq("description", "Revora Growth System setup fee")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
     const active =
@@ -420,6 +471,8 @@ export const getBillingState = createServerFn({ method: "POST" })
       entitlements: entitlements ?? [],
       features: (entitlements ?? []).map((row) => row.feature_key),
       active,
+      setupPaid: Boolean(setupPayment),
+      environment: data.environment,
     };
   });
 
@@ -431,7 +484,7 @@ export const getBillingState = createServerFn({ method: "POST" })
 export const configureWalletPayments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { environment: StripeEnv; domains?: string[] }) => ({
-    environment: env(input?.environment),
+    environment: parseStripeEnvironment(input?.environment),
     domains: (input?.domains ?? [])
       .map((d) => String(d).trim().toLowerCase())
       .filter((d) => /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d))

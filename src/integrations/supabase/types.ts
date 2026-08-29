@@ -2113,14 +2113,14 @@ export type Database = {
           {
             foreignKeyName: "subscriptions_organization_id_fkey"
             columns: ["organization_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "subscriptions_organization_id_fkey"
             columns: ["organization_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_organizations"
             referencedColumns: ["id"]
           },

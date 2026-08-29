@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaymentConfig } from "@/lib/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export type PaymentProduct = {
   id: string;
@@ -38,9 +39,10 @@ export function usePayments(organizationId: string | undefined) {
       const { data, error } = await supabase
         .from("payments")
         .select(
-          "id, product_id, plan_id, description, amount, currency, status, payment_provider, environment, paypal_order_id, paypal_capture_id, refund_status, refunded_amount, created_at, completed_at",
+          "id, product_id, plan_id, description, amount, currency, status, payment_provider, environment, paypal_order_id, paypal_capture_id, refund_status, refunded_amount, created_at, completed_at, metadata",
         )
         .eq("organization_id", organizationId!)
+        .eq("environment", getStripeEnvironment())
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];

@@ -150,8 +150,8 @@ export function ROICalculator() {
         </p>
 
         <Button asChild variant="signal" size="lg" className="mt-5 w-full">
-          <Link to="/auth" search={{ mode: "signup" }}>
-            Start free <ArrowRight className="size-4" aria-hidden="true" />
+          <Link to="/get-started">
+            Start my Revora system <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </Button>
       </Panel>

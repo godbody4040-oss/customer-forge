@@ -34,6 +34,7 @@ import { endSupportSession } from "@/lib/admin.functions";
 import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
 import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useBillingState } from "@/lib/stripe.hooks";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
@@ -69,15 +70,17 @@ function AppShell() {
   const endSupport = useServerFn(endSupportSession);
   const supporting = Boolean(data?.supporting && supportMode);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const trialExpired = Boolean(
+  const { data: billing, isLoading: billingLoading } = useBillingState(org?.id);
+  const trialStillActive = Boolean(
     org &&
       org.subscription_status === "trialing" &&
       org.trial_ends_at &&
-      new Date(org.trial_ends_at).getTime() < Date.now() &&
-      !data?.isSuperAdmin &&
-      !supporting,
+      new Date(org.trial_ends_at).getTime() >= Date.now(),
   );
-  const trialLocked = trialExpired && !pathname.startsWith("/app/billing");
+  const paymentRequired = Boolean(
+    org && !org.is_demo && !billing?.active && !trialStillActive && !data?.isSuperAdmin && !supporting,
+  );
+  const paymentLocked = paymentRequired && !pathname.startsWith("/app/billing");
 
   useEffect(() => {
     if (!isLoading && data && !data.workspace) navigate({ to: "/onboarding", replace: true });
@@ -256,7 +259,9 @@ function AppShell() {
         </header>
 
         <main className="mx-auto max-w-6xl px-4 py-6">
-          {trialLocked ? (
+          {billingLoading && org ? (
+            <div className="py-12 text-center text-[13px] text-muted-foreground">Checking workspace access…</div>
+          ) : paymentLocked ? (
             <div className="panel mx-auto mt-10 max-w-lg p-8 text-center">
               <p className="eyebrow">Access paused</p>
               <h1 className="mt-2 font-display text-2xl font-bold">Activate your Revora Growth System</h1>
