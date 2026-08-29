@@ -125,11 +125,11 @@ function WebsitePage() {
           <h1 className="mt-1 font-display text-[24px] font-semibold">Build your website</h1>
         </div>
         {org ? (
-          <Button asChild variant="outline">
-            <Link to="/s/$slug" params={{ slug: org.slug }} target="_blank">
-              Preview site <ExternalLink className="size-4" />
-            </Link>
-          </Button>
+          <PreviewSiteButton
+            organizationId={orgId}
+            slug={org.slug}
+            publishState={settingsQuery.data?.publish_state ?? null}
+          />
         ) : null}
       </div>
 
