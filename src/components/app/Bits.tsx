@@ -92,17 +92,32 @@ export function SectionHeading({
   title,
   action,
   className,
+  description,
 }: {
   eyebrow?: string;
   title: string;
   action?: ReactNode;
   className?: string;
+  description?: string;
 }) {
   return (
-    <div className={cn("flex items-end justify-between gap-3", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:justify-between",
+        className,
+      )}
+    >
       <div className="min-w-0">
-        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-        <h2 className="mt-1 truncate font-display text-[17px] font-semibold">{title}</h2>
+        {eyebrow ? (
+          <p className="eyebrow flex items-center gap-2">
+            <span aria-hidden="true" className="h-3 w-0.5 rounded-full bg-primary" />
+            <span className="truncate text-primary/90">{eyebrow}</span>
+          </p>
+        ) : null}
+        <h2 className="mt-1.5 truncate font-display text-[17px] font-semibold">{title}</h2>
+        {description ? (
+          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{description}</p>
+        ) : null}
       </div>
       {action}
     </div>
@@ -116,6 +131,8 @@ export function MetricCard({
   tone = "neutral",
   progress,
   className,
+  key: _key,
+  badge,
 }: {
   label: string;
   value: string;
@@ -123,6 +140,9 @@ export function MetricCard({
   tone?: Tone;
   progress?: number;
   className?: string;
+  key?: never;
+  /** Small gold badge in the corner for key metrics. */
+  badge?: string;
 }) {
   const hintTone: Record<Tone, string> = {
     signal: "text-primary",
@@ -139,12 +159,28 @@ export function MetricCard({
     danger: "bg-destructive",
   };
   return (
-    <div className={cn("panel p-3.5", className)}>
-      <p className="eyebrow flex items-center gap-1.5">
-        {tone !== "neutral" ? <Dot tone={tone} /> : null}
-        {label}
+    <div
+      className={cn(
+        "panel card-lift relative p-3.5 transition-colors",
+        tone === "signal" ? "border-primary/25" : null,
+        className,
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="eyebrow flex min-w-0 items-center gap-1.5">
+          {tone !== "neutral" ? <Dot tone={tone} /> : null}
+          <span className="truncate">{label}</span>
+        </p>
+        {badge ? <KeyLabel className="shrink-0">{badge}</KeyLabel> : null}
+      </div>
+      <p
+        className={cn(
+          "tnum mt-2 font-display text-[26px] leading-none font-semibold",
+          tone === "signal" ? "text-primary" : null,
+        )}
+      >
+        {value}
       </p>
-      <p className="tnum mt-1.5 font-display text-[26px] leading-none font-semibold">{value}</p>
       {hint ? <p className={cn("mt-1.5 text-[11px]", hintTone[tone])}>{hint}</p> : null}
       {typeof progress === "number" ? (
         <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-elevated">
@@ -157,6 +193,7 @@ export function MetricCard({
     </div>
   );
 }
+
 
 export function EmptyState({
   title,
