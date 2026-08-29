@@ -80,6 +80,7 @@ export async function syncStripeSubscription(
 
   const record = {
     organization_id: organizationId,
+    user_id: (subscription?.metadata?.userId as string | undefined) ?? null,
     plan_id: mapped?.planId ?? (subscription?.metadata?.planId as string | undefined) ?? null,
     status,
     billing_interval: mapped?.interval ?? ("monthly" as Interval),
@@ -92,6 +93,7 @@ export async function syncStripeSubscription(
     cancel_at_period_end: Boolean(subscription?.cancel_at_period_end),
     current_period_start: periodStart,
     current_period_end: periodEnd,
+    trial_start: iso(subscription?.trial_start),
     trial_ends_at: iso(subscription?.trial_end),
   };
 
