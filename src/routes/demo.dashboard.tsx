@@ -188,50 +188,52 @@ function DemoDashboard() {
           <DemoBanner />
 
           {/* Controls */}
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-            <div
-              role="tablist"
-              aria-label="Demo dashboard sections"
-              className="flex flex-wrap gap-1.5"
-            >
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  role="tab"
-                  type="button"
-                  aria-selected={tab === t.id}
-                  onClick={() => setTab(t.id)}
-                  className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                    tab === t.id
-                      ? "border-primary/40 bg-primary/12 text-primary"
-                      : "border-border bg-elevated text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1.5" aria-label="Demo date range">
-              {DEMO_RANGES.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  aria-pressed={range === r.id}
-                  onClick={() => setRange(r.id)}
-                  className={`rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
-                    range === r.id
-                      ? "border-primary/40 bg-primary/12 text-primary"
-                      : "border-border bg-elevated text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
+          <div className="sticky top-[4.25rem] z-20 -mx-4 mt-5 border-y border-border bg-background/85 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div
+                role="tablist"
+                aria-label="Demo dashboard sections"
+                className="-mx-1 flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-0.5"
+              >
+                {TABS.map((t) => (
+                  <button
+                    key={t.id}
+                    role="tab"
+                    type="button"
+                    aria-selected={tab === t.id}
+                    onClick={() => setTab(t.id)}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all duration-200 ${
+                      tab === t.id
+                        ? "border-primary/45 bg-primary/12 text-primary gold-glow"
+                        : "border-border bg-elevated text-muted-foreground hover:-translate-y-px hover:border-primary/30 hover:text-foreground"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5" aria-label="Demo date range">
+                {DEMO_RANGES.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    aria-pressed={range === r.id}
+                    onClick={() => setRange(r.id)}
+                    className={`rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
+                      range === r.id
+                        ? "border-primary/40 bg-primary/12 text-primary"
+                        : "border-border bg-elevated text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {tab === "overview" ? (
-            <div className="mt-5 space-y-5">
+            <div key={range} className="reveal mt-5 space-y-5">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   label={`Leads · last ${rangeLabel}`}
@@ -275,49 +277,133 @@ function DemoDashboard() {
 
               <Panel>
                 <SectionHeading
-                  eyebrow="The full flow"
-                  title="Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat"
+                  eyebrow={`Demo performance · last ${rangeLabel}`}
+                  title="Leads and booked jobs over time"
+                  action={
+                    <span className="hidden items-center gap-1.5 text-[11px] text-muted-foreground sm:inline-flex">
+                      <LiveDot /> demo data
+                    </span>
+                  }
                 />
-                <p className="mt-2 text-[12px] text-muted-foreground">
-                  Select a stage to see what Revora does at that step. Demo data.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-1.5">
+                <TrendChart points={series} />
+              </Panel>
+
+              <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+                <Panel>
+                  <SectionHeading
+                    eyebrow="The full flow"
+                    title="Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat"
+                  />
+                  <p className="mt-2 text-[12px] text-muted-foreground">
+                    Tap any step to open those demo records in the pipeline.
+                  </p>
+                  <FunnelChart
+                    rows={funnel}
+                    activeId={stageFilter === "all" ? null : stageFilter}
+                    onSelect={(id) => {
+                      setStageFilter((prev) => (prev === id ? "all" : (id as DemoStage)));
+                      setTab("pipeline");
+                    }}
+                  />
+                </Panel>
+
+                <div className="space-y-4">
+                  <Panel>
+                    <SectionHeading
+                      eyebrow="Revenue pipeline"
+                      title={`${usd(pipelineTotal)} in play (demo)`}
+                    />
+                    <ul className="mt-4 space-y-3">
+                      {pipeline.map((row) => (
+                        <li key={row.stage}>
+                          <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <span className="inline-flex items-center gap-2 text-[13px] font-medium">
+                              <Pill tone={row.tone}>{row.count}</Pill>
+                              {row.stage}
+                            </span>
+                            <span className="tnum text-[12px] gold-hl">{usd(row.value)}</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-elevated">
+                            <div
+                              className={`h-full rounded-full transition-[width] duration-500 ${
+                                row.tone === "signal"
+                                  ? "bg-primary"
+                                  : row.tone === "info"
+                                    ? "bg-info"
+                                    : "bg-accent"
+                              }`}
+                              style={{
+                                width: `${Math.max(4, Math.round((row.value / Math.max(1, pipelineTotal)) * 100))}%`,
+                              }}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </Panel>
+
+                  <Panel>
+                    <SectionHeading eyebrow="Activity feed" title="What the system just did" />
+                    <ol className="mt-4 space-y-2.5">
+                      {activity.slice(0, 6).map((entry) => {
+                        const Icon = ACTIVITY_ICON[entry.kind];
+                        return (
+                          <li
+                            key={entry.id}
+                            className="flex items-start gap-2.5 rounded-md border border-border bg-elevated p-2.5 transition-colors hover:border-primary/30"
+                          >
+                            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                              <Icon className="size-3.5" aria-hidden="true" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-[12px] font-medium">{entry.title}</p>
+                              <p className="text-[12px] text-muted-foreground">{entry.detail}</p>
+                            </div>
+                            <span className="tnum ml-auto shrink-0 text-[11px] text-muted-foreground">
+                              {formatAgo(entry.minutesAgo)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                    <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Activity className="size-3.5" aria-hidden="true" /> Simulated events — demo data
+                      only.
+                    </p>
+                  </Panel>
+                </div>
+              </div>
+
+              <Panel>
+                <SectionHeading eyebrow="What happens at each step" title="Revora runs the whole loop" />
+                <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {DEMO_STAGES.map((stage) => {
                     const count = workspace.leads.filter((l) => l.stage === stage.id).length;
-                    const active = stageFilter === stage.id;
                     return (
-                      <button
+                      <li
                         key={stage.id}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => {
-                          setStageFilter(active ? "all" : stage.id);
-                          setTab("pipeline");
-                        }}
-                        className={`rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
-                          active
-                            ? "border-primary/40 bg-primary/12 text-primary"
-                            : "border-border bg-elevated text-muted-foreground hover:text-foreground"
-                        }`}
+                        className="card-lift rounded-md border border-border bg-elevated p-3"
                       >
-                        {stage.label}
-                        <span className="tnum ml-1.5 opacity-70">{count}</span>
-                      </button>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[12px] font-semibold">{stage.label}</p>
+                          <Pill tone={STAGE_TONE[stage.id]}>{count}</Pill>
+                        </div>
+                        <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                          {stage.blurb}
+                        </p>
+                        <div className="mt-2">
+                          <Sparkline
+                            values={series.slice(-10).map((p) => p.leads)}
+                            tone={STAGE_TONE[stage.id] === "info" ? "info" : "primary"}
+                          />
+                        </div>
+                      </li>
                     );
                   })}
-                </div>
-                <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {DEMO_STAGES.map((stage) => (
-                    <li key={stage.id} className="rounded-md border border-border bg-elevated p-3">
-                      <p className="text-[12px] font-semibold">{stage.label}</p>
-                      <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                        {stage.blurb}
-                      </p>
-                    </li>
-                  ))}
                 </ul>
               </Panel>
             </div>
+
           ) : null}
 
           {tab === "pipeline" ? (
