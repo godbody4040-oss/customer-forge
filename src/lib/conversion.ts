@@ -1,0 +1,75 @@
+import { recordConversion, type ConversionEvent } from "@/lib/conversion.functions";
+
+const KEY = "revora.attribution.v1";
+
+interface Attribution {
+  landingPath: string;
+  industrySlug: string | null;
+  referrer: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  sessionId: string;
+}
+
+const isBrowser = () => typeof window !== "undefined";
+
+function newSessionId() {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `s_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+  }
+}
+
+/** Captures (once per browser session) where the visitor first landed. */
+export function getAttribution(): Attribution | null {
+  if (!isBrowser()) return null;
+  try {
+    const stored = window.sessionStorage.getItem(KEY);
+    if (stored) return JSON.parse(stored) as Attribution;
+  } catch {
+    /* storage unavailable */
+  }
+  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+  const match = /^\/industries\/([a-z0-9-]+)$/.exec(path);
+  const attribution: Attribution = {
+    landingPath: path.slice(0, 200),
+    industrySlug: match?.[1] ?? null,
+    referrer: document.referrer ? document.referrer.slice(0, 300) : null,
+    utmSource: params.get("utm_source"),
+    utmMedium: params.get("utm_medium"),
+    utmCampaign: params.get("utm_campaign"),
+    sessionId: newSessionId(),
+  };
+  try {
+    window.sessionStorage.setItem(KEY, JSON.stringify(attribution));
+  } catch {
+    /* storage unavailable */
+  }
+  return attribution;
+}
+
+/** Fire-and-forget conversion event with first-touch attribution attached. */
+export function trackConversion(
+  event: ConversionEvent,
+  extra?: { email?: string | null; amountCents?: number | null },
+) {
+  if (!isBrowser()) return;
+  const attribution = getAttribution();
+  void recordConversion({
+    data: {
+      event,
+      landingPath: attribution?.landingPath ?? window.location.pathname,
+      industrySlug: attribution?.industrySlug ?? null,
+      referrer: attribution?.referrer ?? null,
+      utmSource: attribution?.utmSource ?? null,
+      utmMedium: attribution?.utmMedium ?? null,
+      utmCampaign: attribution?.utmCampaign ?? null,
+      sessionId: attribution?.sessionId ?? null,
+      email: extra?.email ?? null,
+      amountCents: extra?.amountCents ?? null,
+    },
+  }).catch(() => undefined);
+}
