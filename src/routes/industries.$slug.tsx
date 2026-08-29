@@ -26,7 +26,7 @@ export const Route = createFileRoute("/industries/$slug")({
     const industry = (match.context as { industry?: (typeof INDUSTRIES)[number] }).industry;
     const name = industry?.name ?? "Local Services";
     const title = `Websites & lead generation for ${name.toLowerCase()} — Revora`;
-    const description = `Revora builds ${name.toLowerCase()} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up. ${usdExact(GROWTH_SYSTEM.setup)} setup, then ${usdExact(GROWTH_SYSTEM.monthly)}/month.`;
+    const description = `Revora builds ${name.toLowerCase()} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up. ${usdExact(GROWTH_SYSTEM.setupPrice)} setup, then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.`;
     return {
       meta: [
         { title },
@@ -107,7 +107,7 @@ function IndustryPage() {
         <section className="panel mt-14 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-display text-[17px] font-semibold">
-              {usdExact(GROWTH_SYSTEM.setup)} setup, then {usdExact(GROWTH_SYSTEM.monthly)}/month
+              {usdExact(GROWTH_SYSTEM.setupPrice)} setup, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
             </h2>
             <p className="mt-1.5 text-[13px] text-muted-foreground">
               Website, CRM, quotes, booking, automations, reviews and analytics — one system, no
