@@ -5,6 +5,8 @@ import { Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
 import { currency } from "@/lib/format";
+import { SalesCTA } from "@/components/marketing/SalesCTA";
+
 
 const plansQuery = queryOptions({ queryKey: ["plans"], queryFn: () => getPlans() });
 
