@@ -619,3 +619,448 @@ export function specBrief(spec: PortableSpec): string {
   }
   return out.filter((v): v is string => v !== null).join("\n");
 }
+
+/* ------------------------------------------------------------------ *
+ * Automatic environment detection (with manual override elsewhere)
+ * ------------------------------------------------------------------ */
+
+export type PlatformDetection = {
+  platform: PlatformId;
+  confidence: "high" | "medium" | "low";
+  signals: string[];
+};
+
+/**
+ * Detects the environment the site is actually running in from real runtime
+ * signals (host, injected globals, meta generator tag). Never guesses silently:
+ * low confidence means the caller should keep the manual override visible.
+ */
+export function detectPlatform(input?: {
+  host?: string | null;
+  generator?: string | null;
+  globals?: string[];
+}): PlatformDetection {
+  const host = (input?.host ?? "").toLowerCase();
+  const generator = (input?.generator ?? "").toLowerCase();
+  const globals = (input?.globals ?? []).map((g) => g.toLowerCase());
+  const signals: string[] = [];
+  const hit = (platform: PlatformId, signal: string, confidence: PlatformDetection["confidence"]) => {
+    signals.push(signal);
+    return { platform, confidence, signals };
+  };
+
+  const hostRules: { match: string; platform: PlatformId }[] = [
+    { match: "lovable.app", platform: "lovable" },
+    { match: "lovableproject.com", platform: "lovable" },
+    { match: "bolt.new", platform: "bolt" },
+    { match: "netlify.app", platform: "bolt" },
+    { match: "replit.dev", platform: "replit" },
+    { match: "repl.co", platform: "replit" },
+    { match: "vercel.app", platform: "v0" },
+    { match: "base44.app", platform: "base44" },
+    { match: "framer.app", platform: "framer" },
+    { match: "framer.website", platform: "framer" },
+    { match: "webflow.io", platform: "webflow" },
+    { match: "wixsite.com", platform: "wix" },
+    { match: "squarespace.com", platform: "squarespace" },
+    { match: "hostingersite.com", platform: "hostinger" },
+  ];
+  for (const rule of hostRules) {
+    if (host.endsWith(rule.match) || host.includes(`.${rule.match}`) || host === rule.match) {
+      return hit(rule.platform, `Host matches ${rule.match}`, "high");
+    }
+  }
+
+  const generatorRules: { match: string; platform: PlatformId }[] = [
+    { match: "wix", platform: "wix" },
+    { match: "squarespace", platform: "squarespace" },
+    { match: "webflow", platform: "webflow" },
+    { match: "framer", platform: "framer" },
+    { match: "hostinger", platform: "hostinger" },
+  ];
+  for (const rule of generatorRules) {
+    if (generator.includes(rule.match)) {
+      return hit(rule.platform, `Generator meta tag reports ${rule.match}`, "high");
+    }
+  }
+
+  const globalRules: { match: string; platform: PlatformId }[] = [
+    { match: "wixdevelopersanalyticsapp", platform: "wix" },
+    { match: "wix", platform: "wix" },
+    { match: "squarespace", platform: "squarespace" },
+    { match: "webflow", platform: "webflow" },
+    { match: "__framer", platform: "framer" },
+    { match: "__next_data__", platform: "v0" },
+    { match: "__replit", platform: "replit" },
+  ];
+  for (const rule of globalRules) {
+    if (globals.some((g) => g.includes(rule.match))) {
+      return hit(rule.platform, `Runtime global "${rule.match}" present`, "medium");
+    }
+  }
+
+  signals.push("No platform-specific host, generator or global found");
+  return {
+    platform: "lovable",
+    confidence: "low",
+    signals: [...signals, "Falling back to the full-stack code strategy — override if that is wrong"],
+  };
+}
+
+/** Browser-side detection. Safe to call only after hydration. */
+export function detectPlatformFromBrowser(): PlatformDetection {
+  if (typeof window === "undefined") {
+    return { platform: "lovable", confidence: "low", signals: ["No browser context"] };
+  }
+  const generator = document.querySelector('meta[name="generator"]')?.getAttribute("content") ?? null;
+  const globals = Object.keys(window).filter((key) => key.startsWith("__") || /wix|webflow|squarespace|framer|replit/i.test(key));
+  return detectPlatform({ host: window.location.hostname, generator, globals });
+}
+
+/* ------------------------------------------------------------------ *
+ * Normalized content schema — one shape for every platform
+ * ------------------------------------------------------------------ */
+
+export const CONTENT_SCHEMA_VERSION = "revora.website.v1";
+
+export type JourneyStage = "attract" | "convince" | "convert" | "confirm" | "retain" | "compliance";
+
+const SECTION_JOURNEY: Record<string, JourneyStage> = {
+  hero: "attract",
+  trust_bar: "attract",
+  services: "convince",
+  service_detail: "convince",
+  process: "convince",
+  about: "convince",
+  reviews: "convince",
+  gallery: "convince",
+  faq: "convince",
+  areas: "convince",
+  pricing: "convert",
+  quote: "convert",
+  booking: "convert",
+  cta: "convert",
+  sticky_cta: "convert",
+  contact: "convert",
+  offer: "convert",
+  guarantee: "convince",
+  thank_you: "confirm",
+  confirmation: "confirm",
+  privacy: "compliance",
+  terms: "compliance",
+  legal: "compliance",
+};
+
+const PAGE_JOURNEY: Record<string, JourneyStage> = {
+  home: "attract",
+  services: "convince",
+  service: "convince",
+  areas: "convince",
+  about: "convince",
+  reviews: "convince",
+  gallery: "convince",
+  faq: "convince",
+  pricing: "convert",
+  quote: "convert",
+  booking: "convert",
+  offers: "convert",
+  contact: "convert",
+  thank_you: "confirm",
+  privacy: "compliance",
+  terms: "compliance",
+};
+
+export const journeyStageForSection = (kind: string): JourneyStage =>
+  SECTION_JOURNEY[kind] ?? "convince";
+
+export const journeyStageForPage = (kind: string): JourneyStage => PAGE_JOURNEY[kind] ?? "convince";
+
+const CAPTURE_SECTIONS = new Set(["quote", "booking", "contact", "cta", "sticky_cta", "offer"]);
+
+export type NormalizedSpec = {
+  schema: typeof CONTENT_SCHEMA_VERSION;
+  generatedAt: string;
+  targetPlatform: PlatformId;
+  platformKind: PlatformKind;
+  strategy: string[];
+  doNot: string[];
+  business: PortableSpec["business"];
+  design: {
+    tokens: DesignTokens;
+    tokensCss: string;
+    responsiveBreakpoints: number[];
+    qualityTargets: string[];
+  };
+  seo: {
+    siteTitle: string | null;
+    siteDescription: string | null;
+    headline: string | null;
+    pages: { slug: string; title: string | null; description: string | null; canonical: string | null; noindex: boolean }[];
+  };
+  services: {
+    id: string;
+    name: string;
+    description: string | null;
+    startingPrice: number | null;
+    bookable: boolean;
+    journeyStage: JourneyStage;
+  }[];
+  journey: Record<JourneyStage, { pages: string[]; sections: string[] }>;
+  captureFlows: { page: string; section: string; kind: string; ctaLabels: string[]; destination: string | null }[];
+  pages: {
+    slug: string;
+    path: string;
+    title: string;
+    kind: string;
+    journeyStage: JourneyStage;
+    noindex: boolean;
+    seo: { title: string | null; description: string | null; canonical: string | null };
+    sections: {
+      id: string;
+      kind: string;
+      variant: string;
+      journeyStage: JourneyStage;
+      isCapture: boolean;
+      heading: string | null;
+      subheading: string | null;
+      body: string | null;
+      components: { id: string; kind: string; label: string | null; body: string | null; link: string | null }[];
+    }[];
+  }[];
+  limitations: LimitationRow[];
+  auditChecklist: AuditItem[];
+};
+
+const slugId = (value: string, fallback: string) =>
+  (value || fallback).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback;
+
+/**
+ * Normalizes the portable spec into one stable, platform-agnostic schema so the
+ * complete customer journey (pages, sections, services, SEO, capture flows)
+ * survives an import into any other environment.
+ */
+export function normalizedSpec(spec: PortableSpec): NormalizedSpec {
+  const profile = platformProfile(spec.targetPlatform);
+  const journey: NormalizedSpec["journey"] = {
+    attract: { pages: [], sections: [] },
+    convince: { pages: [], sections: [] },
+    convert: { pages: [], sections: [] },
+    confirm: { pages: [], sections: [] },
+    retain: { pages: [], sections: [] },
+    compliance: { pages: [], sections: [] },
+  };
+  const captureFlows: NormalizedSpec["captureFlows"] = [];
+
+  const pages = spec.pages.map((page) => {
+    const pageStage = journeyStageForPage(page.kind);
+    const path = `/${page.slug.replace(/^\//, "")}`.replace(/\/+$/, "") || "/";
+    journey[pageStage].pages.push(path);
+    const sections = page.sections.map((section, index) => {
+      const stage = journeyStageForSection(section.kind);
+      journey[stage].sections.push(`${path}#${section.kind}`);
+      const isCapture = CAPTURE_SECTIONS.has(section.kind);
+      if (isCapture) {
+        captureFlows.push({
+          page: path,
+          section: section.heading ?? section.kind,
+          kind: section.kind,
+          ctaLabels: section.items.map((item) => item.label).filter((v): v is string => !!v),
+          destination: section.items.find((item) => item.link)?.link ?? null,
+        });
+      }
+      return {
+        id: `${slugId(page.slug, "home")}-${slugId(section.kind, `section-${index + 1}`)}-${index + 1}`,
+        kind: section.kind,
+        variant: section.variant,
+        journeyStage: stage,
+        isCapture,
+        heading: section.heading,
+        subheading: section.subheading,
+        body: section.body,
+        components: section.items.map((item, i) => ({
+          id: `${slugId(section.kind, "section")}-item-${i + 1}`,
+          kind: item.kind,
+          label: item.label,
+          body: item.body,
+          link: item.link,
+        })),
+      };
+    });
+    return {
+      slug: page.slug,
+      path,
+      title: page.title,
+      kind: page.kind,
+      journeyStage: pageStage,
+      noindex: page.noindex,
+      seo: page.seo,
+      sections,
+    };
+  });
+
+  const normalized: NormalizedSpec = {
+    schema: CONTENT_SCHEMA_VERSION,
+    generatedAt: spec.generatedAt,
+    targetPlatform: spec.targetPlatform,
+    platformKind: profile.kind,
+    strategy: spec.strategy,
+    doNot: profile.avoid,
+    business: spec.business,
+    design: {
+      tokens: spec.designTokens,
+      tokensCss: tokensCss(spec.designTokens),
+      responsiveBreakpoints: spec.responsiveBreakpoints,
+      qualityTargets: [...QUALITY_TARGETS],
+    },
+    seo: {
+      siteTitle: spec.seo.title ?? null,
+      siteDescription: spec.seo.description ?? null,
+      headline: spec.seo.headline ?? null,
+      pages: pages.map((page) => ({
+        slug: page.path,
+        title: page.seo.title,
+        description: page.seo.description,
+        canonical: page.seo.canonical,
+        noindex: page.noindex,
+      })),
+    },
+    services: spec.services.map((service, index) => ({
+      id: slugId(service.name, `service-${index + 1}`),
+      name: service.name,
+      description: service.description ?? null,
+      startingPrice: service.price ?? null,
+      bookable: service.bookable === true,
+      journeyStage: service.bookable ? "convert" : "convince",
+    })),
+    journey,
+    captureFlows,
+    pages,
+    limitations: spec.limitations,
+    auditChecklist: [],
+  };
+  normalized.auditChecklist = auditChecklist(normalized);
+  return normalized;
+}
+
+/* ------------------------------------------------------------------ *
+ * Build → test → audit checklist
+ * ------------------------------------------------------------------ */
+
+export type AuditItem = {
+  id: string;
+  area: string;
+  task: string;
+  test: string;
+  severity: "blocker" | "required" | "recommended";
+  source: "limitation" | "content" | "quality";
+};
+
+/** Actionable build/test checklist derived from the real spec + limitation report. */
+export function auditChecklist(spec: NormalizedSpec): AuditItem[] {
+  const items: AuditItem[] = [];
+  const push = (item: AuditItem) => items.push(item);
+
+  spec.limitations.forEach((row, index) => {
+    push({
+      id: `limitation-${index + 1}`,
+      area: row.feature,
+      task: `Implement the fallback: ${row.best}`,
+      test: `Confirm ${row.feature.toLowerCase()} behaves honestly on the live build (${row.limitation}). To remove the fallback: ${row.toEnable}`,
+      severity: "blocker",
+      source: "limitation",
+    });
+  });
+
+  if (spec.captureFlows.length === 0) {
+    push({
+      id: "capture-missing",
+      area: "Lead capture",
+      task: "Add at least one quote, booking or contact section — the site cannot generate leads without one.",
+      test: "Submit the form on the rebuilt site and confirm the owner receives the lead.",
+      severity: "blocker",
+      source: "content",
+    });
+  } else {
+    spec.captureFlows.forEach((flow, index) => {
+      push({
+        id: `capture-${index + 1}`,
+        area: `Capture — ${flow.kind}`,
+        task: `Wire the ${flow.kind} block on ${flow.page} to a real destination${flow.destination ? ` (${flow.destination})` : ""}.`,
+        test: "Submit with valid and invalid data: validation, loading, error and success states all fire, and the record reaches the owner's inbox/CRM.",
+        severity: "blocker",
+        source: "content",
+      });
+    });
+  }
+
+  if (!spec.business.phone) {
+    push({
+      id: "phone-missing",
+      area: "Contact",
+      task: "Add the business phone number before finalizing — tap-to-call is the highest-converting mobile CTA.",
+      test: "Tap the call CTA on a phone and confirm the dialer opens with the right number.",
+      severity: "blocker",
+      source: "content",
+    });
+  }
+  if (!spec.business.email) {
+    push({
+      id: "email-missing",
+      area: "Contact",
+      task: "Add a contact email so form notifications have a destination.",
+      test: "Send a test submission and confirm it arrives.",
+      severity: "required",
+      source: "content",
+    });
+  }
+  if (spec.services.length === 0) {
+    push({
+      id: "services-missing",
+      area: "Services",
+      task: "Enter the real services — never invent offerings during a rebuild.",
+      test: "Every service on the rebuilt site matches the owner's own list.",
+      severity: "blocker",
+      source: "content",
+    });
+  }
+  if (!spec.services.some((service) => service.startingPrice !== null)) {
+    push({
+      id: "pricing-missing",
+      area: "Pricing",
+      task: "Add starting prices or an explicit price range so visitors can self-qualify.",
+      test: "Pricing copy states a real number or an honest range, never a placeholder.",
+      severity: "recommended",
+      source: "content",
+    });
+  }
+
+  const missingSeo = spec.seo.pages.filter((page) => !page.title || !page.description);
+  if (missingSeo.length) {
+    push({
+      id: "seo-metadata",
+      area: "SEO",
+      task: `Write unique titles and meta descriptions for ${missingSeo.length} page(s): ${missingSeo
+        .map((page) => page.slug)
+        .join(", ")}.`,
+      test: "View source on each page: unique <title>, meta description, canonical and Open Graph tags.",
+      severity: "required",
+      source: "content",
+    });
+  }
+
+  push({
+    id: "responsive",
+    area: "Responsive",
+    task: `Verify layout at ${spec.design.responsiveBreakpoints.join(", ")}px.`,
+    test: "No horizontal scroll, no clipped text, tap targets at least 44px.",
+    severity: "required",
+    source: "quality",
+  });
+  push({
+    id: "journey",
+    area: "Customer journey",
+    task: "Confirm every stage is present: attract → convince → convert → confirm.",
+    test `= ` as never,
+  } as never);
+  return items;
+}
