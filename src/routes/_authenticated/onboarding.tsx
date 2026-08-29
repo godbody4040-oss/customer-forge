@@ -175,16 +175,24 @@ function Onboarding() {
       const user = auth.user;
       if (!user) throw new Error("Your session expired. Please sign in again.");
 
-      const base = safeSlug(draft.businessName);
-      let slug = base;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const { data: existing } = await supabase
-          .from("organizations")
-          .select("id")
-          .eq("slug", slug)
-          .maybeSingle();
-        if (!existing) break;
-        slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
+      // Signing up for the setup payment already creates a bare workspace.
+      // In that case we finish that workspace instead of creating a second one.
+      const existingOrg = ws?.workspace?.organization ?? null;
+      const existingId = existingOrg && !existingOrg.onboarding_completed ? existingOrg.id : null;
+
+      let slug = existingOrg?.slug ?? safeSlug(draft.businessName);
+      if (!existingId) {
+        const base = safeSlug(draft.businessName);
+        slug = base;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const { data: existing } = await supabase
+            .from("organizations")
+            .select("id")
+            .eq("slug", slug)
+            .maybeSingle();
+          if (!existing) break;
+          slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
+        }
       }
 
       const services = draft.services.filter((s) => s.name.trim());
@@ -202,50 +210,67 @@ function Onboarding() {
                 ? "purchases"
                 : "quotes";
 
-      const { data: org, error: orgError } = await supabase
-        .from("organizations")
-        .insert({
-          name: draft.businessName.trim(),
-          slug,
-          industry: draft.industry,
-          conversion_goal: legacyGoal as never,
-          created_by: user.id,
-          onboarding_completed: true,
-          onboarding_step: STEPS.length,
-        })
-        .select("id, slug")
-        .single();
-      if (orgError) throw orgError;
+      const orgFields = {
+        name: draft.businessName.trim(),
+        industry: draft.industry,
+        conversion_goal: legacyGoal as never,
+        onboarding_completed: true,
+        onboarding_step: STEPS.length,
+      };
 
-      const { error: membershipError } = await supabase
-        .from("memberships")
-        .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
-      assertNoError(membershipError, "Could not link your account to the new workspace");
+      let org: { id: string; slug: string };
+      if (existingId) {
+        const { data: updated, error: updateError } = await supabase
+          .from("organizations")
+          .update(orgFields)
+          .eq("id", existingId)
+          .select("id, slug")
+          .single();
+        if (updateError) throw updateError;
+        org = updated;
+      } else {
+        const { data: inserted, error: orgError } = await supabase
+          .from("organizations")
+          .insert({ ...orgFields, slug, created_by: user.id })
+          .select("id, slug")
+          .single();
+        if (orgError) throw orgError;
+        org = inserted;
 
-      const { error: profileError } = await supabase.from("business_profiles").insert({
-        organization_id: org.id,
-        phone: draft.phone || null,
-        email: draft.email || null,
-        address: draft.address || null,
-        city: draft.city || null,
-        state: draft.state || null,
-        service_area: draft.serviceArea || draft.city || null,
-        description: draft.about || null,
-        tagline: `${draft.industry}${draft.city ? ` in ${draft.city}` : ""}`,
-        // hours is NOT NULL in the database — always send an object.
-        hours: (draft.hours ? { summary: draft.hours } : {}) as never,
-        website: draft.website || null,
-        logo_url: draft.logoUrl || null,
-        hero_image_url: draft.heroImageUrl || null,
-        primary_color: draft.primaryColor,
-        accent_color: draft.accentColor,
-        years_in_business: draft.yearsInBusiness ? Number(draft.yearsInBusiness) : null,
-        certifications: draft.certifications || null,
-        awards: draft.awards || null,
-        testimonials: testimonials as never,
-        website_goals: goals,
-      } as never);
+        const { error: membershipError } = await supabase
+          .from("memberships")
+          .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
+        assertNoError(membershipError, "Could not link your account to the new workspace");
+      }
+
+      const { error: profileError } = await supabase.from("business_profiles").upsert(
+        {
+          organization_id: org.id,
+          phone: draft.phone || null,
+          email: draft.email || null,
+          address: draft.address || null,
+          city: draft.city || null,
+          state: draft.state || null,
+          service_area: draft.serviceArea || draft.city || null,
+          description: draft.about || null,
+          tagline: `${draft.industry}${draft.city ? ` in ${draft.city}` : ""}`,
+          // hours is NOT NULL in the database — always send an object.
+          hours: (draft.hours ? { summary: draft.hours } : {}) as never,
+          website: draft.website || null,
+          logo_url: draft.logoUrl || null,
+          hero_image_url: draft.heroImageUrl || null,
+          primary_color: draft.primaryColor,
+          accent_color: draft.accentColor,
+          years_in_business: draft.yearsInBusiness ? Number(draft.yearsInBusiness) : null,
+          certifications: draft.certifications || null,
+          awards: draft.awards || null,
+          testimonials: testimonials as never,
+          website_goals: goals,
+        } as never,
+        { onConflict: "organization_id" },
+      );
       assertNoError(profileError, "Could not save your business details");
+
 
       const socialRow = {
         organization_id: org.id,
