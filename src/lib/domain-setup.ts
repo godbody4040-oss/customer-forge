@@ -78,10 +78,10 @@ function stem(value: string | null | undefined) {
  * name, city and trade. No invented brand words.
  */
 export function domainSuggestions(input: {
-  businessName?: string | null;
-  city?: string | null;
-  industry?: string | null;
-  slug?: string | null;
+  businessName?: string | null | undefined;
+  city?: string | null | undefined;
+  industry?: string | null | undefined;
+  slug?: string | null | undefined;
 }): string[] {
   const name = stem(input.businessName) || stem(input.slug);
   const city = stem(input.city);
