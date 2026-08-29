@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Check, Lock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,8 @@ function GetStarted() {
   const [payNow, setPayNow] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [provisioning, setProvisioning] = useState(false);
+  const [startingTrial, setStartingTrial] = useState(false);
+  const navigate = useNavigate();
 
   const session = useQuery({
     queryKey: ["get-started", "session"],
@@ -176,6 +178,10 @@ function GetStarted() {
         slug,
         industry: intake.businessType.trim() || null,
         created_by: user.id,
+        subscription_status: "trialing",
+        trial_ends_at: new Date(
+          Date.now() + GROWTH_SYSTEM.fullAccessTrialDays * 24 * 60 * 60 * 1000,
+        ).toISOString(),
       })
       .select("id")
       .single();
@@ -198,6 +204,29 @@ function GetStarted() {
 
     setOrganizationId(org.id);
     return org.id;
+  }
+
+  /** Start the free full-access trial: provision the workspace, then open the app. */
+  async function startFreeAccess() {
+    setError(null);
+    if (!signedIn) {
+      navigate({ to: "/auth", search: { mode: "signup", redirect: "/get-started" } });
+      return;
+    }
+    setStartingTrial(true);
+    try {
+      await ensureWorkspace();
+      trackConversion("signup_completed", { email: intake.email.trim() });
+      navigate({ to: "/app" });
+    } catch (cause) {
+      setError(
+        cause instanceof Error && cause.message
+          ? cause.message
+          : "We could not start your free access. Please try again.",
+      );
+    } finally {
+      setStartingTrial(false);
+    }
   }
 
   async function startPayment() {
@@ -370,6 +399,31 @@ function GetStarted() {
                 Continue to secure payment <ArrowRight className="size-4" />
               </Button>
             </div>
+            <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+              <p className="text-[13px] font-semibold">
+                <span className="gold-text">Not paying yet?</span> Start your{" "}
+                {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+              </p>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Your business info is saved and your workspace opens instantly — website builder, leads,
+                quotes, bookings, automations and analytics, all unlocked for {GROWTH_SYSTEM.fullAccessTrialDays} days.
+                No card required.
+              </p>
+              <Button
+                variant="signal"
+                size="lg"
+                className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                disabled={startingTrial}
+                onClick={startFreeAccess}
+              >
+                <Sparkles className="size-4" aria-hidden="true" />{" "}
+                {startingTrial
+                  ? "Opening your workspace…"
+                  : signedIn
+                    ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
+                    : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+              </Button>
+            </div>
           </section>
         ) : null}
 
@@ -434,6 +488,36 @@ function GetStarted() {
                   {error}
                 </p>
               ) : null}
+
+              {!payNow ? (
+<>
+            <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+              <p className="text-[13px] font-semibold">
+                <span className="gold-text">Not paying yet?</span> Start your{" "}
+                {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+              </p>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Your business info is saved and your workspace opens instantly — website builder, leads,
+                quotes, bookings, automations and analytics, all unlocked for {GROWTH_SYSTEM.fullAccessTrialDays} days.
+                No card required.
+              </p>
+              <Button
+                variant="signal"
+                size="lg"
+                className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                disabled={startingTrial}
+                onClick={startFreeAccess}
+              >
+                <Sparkles className="size-4" aria-hidden="true" />{" "}
+                {startingTrial
+                  ? "Opening your workspace…"
+                  : signedIn
+                    ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
+                    : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+              </Button>
+            </div>
+</>
+) : null}
 
               {!payNow ? (
                 <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
