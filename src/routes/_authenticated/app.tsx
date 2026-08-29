@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -63,6 +63,16 @@ function AppShell() {
   const { mode: supportMode } = useSupportMode();
   const endSupport = useServerFn(endSupportSession);
   const supporting = Boolean(data?.supporting && supportMode);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const trialExpired = Boolean(
+    org &&
+      org.subscription_status === "trialing" &&
+      org.trial_ends_at &&
+      new Date(org.trial_ends_at).getTime() < Date.now() &&
+      !data?.isSuperAdmin &&
+      !supporting,
+  );
+  const trialLocked = trialExpired && !pathname.startsWith("/app/billing");
 
   useEffect(() => {
     if (!isLoading && data && !data.workspace) navigate({ to: "/onboarding", replace: true });
@@ -241,7 +251,27 @@ function AppShell() {
         </header>
 
         <main className="mx-auto max-w-6xl px-4 py-6">
-          <Outlet />
+          {trialLocked ? (
+            <div className="panel mx-auto mt-10 max-w-lg p-8 text-center">
+              <p className="eyebrow">Trial ended</p>
+              <h1 className="mt-2 font-display text-2xl font-bold">Your 1-day trial has expired</h1>
+              <p className="mt-3 text-[14px] text-muted-foreground">
+                Your website, leads, bookings, and settings are saved — nothing is lost. Choose a
+                plan and complete payment to restore full access to your workspace.
+              </p>
+              <Button asChild variant="signal" className="mt-6">
+                <Link to="/app/billing">
+                  <CreditCard className="size-4" aria-hidden="true" /> Choose a plan to continue
+                </Link>
+              </Button>
+              <p className="mt-4 text-[12px] text-muted-foreground">
+                Questions? <a href="mailto:Revorabusiness0@gmail.com" className="text-primary hover:underline">Email support</a> or{" "}
+                <a href="tel:+19196226620" className="text-primary hover:underline">call (919) 622-6620</a>.
+              </p>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>

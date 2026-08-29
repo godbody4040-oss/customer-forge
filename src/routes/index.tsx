@@ -153,7 +153,7 @@ function Landing() {
 
               <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-border pt-6">
                 {[
-                  ["14 days", "Free trial, no card"],
+                  ["1 day", "Free trial, no card"],
                   ["1 day", "From signup to live site"],
                   ["1 inbox", "Calls, quotes and bookings"],
                 ].map(([value, label]) => (
@@ -363,7 +363,7 @@ function Landing() {
               ))}
             </div>
             <p className="mt-5 text-[12px] text-muted-foreground">
-              Every plan starts with a 14-day trial. No card, no setup fee, cancel any time.{" "}
+              Every plan starts with a 1-day trial. No card, no setup fee, cancel any time.{" "}
               <Link to="/pricing" className="text-primary hover:underline">
                 Full comparison
               </Link>
