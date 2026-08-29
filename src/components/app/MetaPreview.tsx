@@ -15,22 +15,22 @@ export function MetaPreview({ meta, label }: { meta: PrivateMetaResult; label: s
   useEffect(() => {
     if (typeof document === "undefined") return;
     const read: Record<string, string> = {};
-    read.title = document.title;
+    read["title"] = document.title;
     document.querySelectorAll<HTMLMetaElement>("meta[name], meta[property]").forEach((el) => {
       const key = el.getAttribute("name") ?? el.getAttribute("property");
       if (key) read[key] = el.content;
     });
     const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (canonical) read.canonical = canonical.href;
+    if (canonical) read["canonical"] = canonical.href;
     setLive(read);
   }, []);
 
   const rows = useMemo(
     () => [
-      { label: "Title", value: meta.resolved.title, live: live?.title },
-      { label: "Description", value: meta.resolved.description, live: live?.description },
-      { label: "Canonical", value: meta.resolved.canonical, live: live?.canonical },
-      { label: "Robots", value: meta.resolved.robots, live: live?.robots },
+      { label: "Title", value: meta.resolved.title, live: live?.["title"] },
+      { label: "Description", value: meta.resolved.description, live: live?.["description"] },
+      { label: "Canonical", value: meta.resolved.canonical, live: live?.["canonical"] },
+      { label: "Robots", value: meta.resolved.robots, live: live?.["robots"] },
       { label: "og:title", value: meta.resolved.ogTitle, live: live?.["og:title"] },
       { label: "og:description", value: meta.resolved.ogDescription, live: live?.["og:description"] },
       { label: "og:url", value: meta.resolved.ogUrl, live: live?.["og:url"] },
