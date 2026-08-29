@@ -6,6 +6,7 @@ import { useWorkspace } from "@/lib/use-tenant";
 import { DATE_RANGES, sourceLabel } from "@/lib/domain";
 import { currency, dateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { ConversionOptimizer } from "@/components/app/ConversionOptimizer";
 
 export const Route = createFileRoute("/_authenticated/app/analytics")({
   head: () => ({
@@ -204,6 +205,8 @@ function AnalyticsPage() {
           </ul>
         </Panel>
       </div>
+
+      <ConversionOptimizer organizationId={orgId} />
     </div>
   );
 }

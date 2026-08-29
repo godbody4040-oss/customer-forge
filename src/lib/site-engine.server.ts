@@ -18,7 +18,7 @@ export const COPY_MODEL = "google/gemini-3-flash-preview";
  * the copy model, and if the whole pass fails the build still completes using
  * the deterministic brief in `fallbackBrief`.
  */
-export const ANALYSIS_MODEL = "google/gemini-3-pro-preview";
+export const ANALYSIS_MODEL = "google/gemini-3.1-pro-preview";
 
 const SAFETY = `You write marketing copy for local business websites.
 ABSOLUTE RULES:
@@ -328,6 +328,8 @@ export function fallbackBrief(facts: CopyFacts): SiteBrief {
       ...(priced ? [] : ["A price or starting price on at least one service"]),
     ],
     source: "rules",
+    approved: false,
+    factAnswers: {},
   };
 }
 

@@ -110,6 +110,9 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const orgId = job.organization_id;
   const { GENERATION_STEPS } = await import("@/lib/site-engine");
   const { generateWebsitePlan } = await import("@/lib/website-plan");
+  const { readBrief } = await import("@/lib/site-brief");
+  const { captureQa } = await import("@/lib/launch-qa");
+  const { gatherBriefFacts } = await import("@/lib/site-brief.server");
   const { generateSiteCopy, analyzeBusiness, fallbackBrief, AiGatewayError, COPY_MODEL } = await import(
     "@/lib/site-engine.server"
   );
@@ -185,23 +188,34 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   };
 
   // Orchestrator pass: business intelligence, customer intent and conversion
-  // strategy. Every later stage reads this one shared brief.
-  let brief = fallbackBrief(copyFacts);
-  try {
-    brief = await analyzeBusiness(copyFacts);
-  } catch (error) {
-    if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
-    console.error("[site-engine] analysis fell back to rules", error);
+  // strategy. If the owner already reviewed and approved a brief, that exact
+  // brief is used — the build never silently replaces their edits.
+  const priorSettings = await db
+    .from("website_settings")
+    .select("generation")
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  const priorGeneration = (priorSettings.data?.generation ?? {}) as Record<string, unknown>;
+  const approvedBrief = readBrief(priorGeneration["brief"]);
+
+  let brief = approvedBrief?.approved ? approvedBrief : fallbackBrief(copyFacts);
+  if (!approvedBrief?.approved) {
+    try {
+      brief = { ...(await analyzeBusiness(copyFacts)), factAnswers: approvedBrief?.factAnswers ?? {}, approved: false };
+    } catch (error) {
+      if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
+      console.error("[site-engine] analysis fell back to rules", error);
+    }
+    await db.from("ai_generations").insert({
+      organization_id: orgId,
+      job_id: job.id,
+      kind: "business_brief",
+      model: brief.source,
+      instruction: null,
+      result: brief as unknown as never,
+      created_by: job.created_by,
+    } as never);
   }
-  await db.from("ai_generations").insert({
-    organization_id: orgId,
-    job_id: job.id,
-    kind: "business_brief",
-    model: brief.source,
-    instruction: null,
-    result: brief as unknown as never,
-    created_by: job.created_by,
-  } as never);
   await step("analysis");
 
   const plan = generateWebsitePlan({
@@ -237,6 +251,13 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   } as never);
   await step("conversion");
 
+  const qaFacts = await gatherBriefFacts(db, orgId, brief.missingFacts);
+  const qa = captureQa({
+    ...qaFacts.qaInput,
+    primaryCtaLabel: copy.primaryCta || plan.primaryCtaLabel,
+    secondaryCtaLabel: copy.secondaryCta || qaFacts.qaInput.secondaryCtaLabel,
+  });
+
   const report = {
     builtAt: new Date().toISOString(),
     pages: plan.pages.length,
@@ -251,7 +272,9 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
     analyticsConfigured: true,
     briefSource: brief.source,
     copyModel: COPY_MODEL,
+    checks: qa.checks,
     attention: [
+      ...qa.blockers.map((c) => c.fix),
       ...((forms.data ?? []).length || (bookable.data ?? []).length
         ? []
         : ["Turn on the quote calculator or make a service bookable so visitors can enquire."]),

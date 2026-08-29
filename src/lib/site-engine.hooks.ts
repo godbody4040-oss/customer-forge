@@ -258,3 +258,82 @@ export function useScoreFacts(organizationId: string | undefined) {
     },
   });
 }
+
+/* ------------------- brief review, missing facts, self-test ------------------- */
+
+import {
+  analyzeSiteBrief,
+  getBuildReadiness,
+  runSiteEngineCheck,
+  saveMissingFacts,
+  saveSiteBrief,
+} from "@/lib/site-engine.functions";
+import type { SiteBrief } from "@/lib/site-brief";
+
+/** Real blanks, brief approval state and lead-capture QA for this workspace. */
+export function useBuildReadiness(organizationId: string | undefined) {
+  const readiness = useServerFn(getBuildReadiness);
+  return useQuery({
+    queryKey: ["build_readiness", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => readiness({ data: { organizationId: organizationId! } }),
+  });
+}
+
+export function useAnalyzeBrief(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  const analyze = useServerFn(analyzeSiteBrief);
+  return useMutation({
+    mutationFn: async () => analyze({ data: { organizationId: organizationId! } }),
+    onSuccess: (result) => {
+      if (result.aiError)
+        toast.message("Prepared from your information", {
+          description: "Revora's AI analysis wasn't available, so the brief was built from rules.",
+        });
+      else toast.success("Revora analysed your business — review the brief before building.");
+      void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
+      void queryClient.invalidateQueries({ queryKey: ["build_readiness", organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't analyse your business."),
+  });
+}
+
+export function useSaveBrief(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  const save = useServerFn(saveSiteBrief);
+  return useMutation({
+    mutationFn: async (vars: { brief: SiteBrief; approved: boolean }) =>
+      save({ data: { organizationId: organizationId!, brief: vars.brief, approved: vars.approved } }),
+    onSuccess: (_r, vars) => {
+      toast.success(vars.approved ? "Brief approved — Revora can build from it." : "Brief saved.");
+      void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
+      void queryClient.invalidateQueries({ queryKey: ["build_readiness", organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't save the brief."),
+  });
+}
+
+export function useSaveMissingFacts(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  const save = useServerFn(saveMissingFacts);
+  return useMutation({
+    mutationFn: async (answers: Record<string, string>) =>
+      save({ data: { organizationId: organizationId!, answers } }),
+    onSuccess: () => {
+      toast.success("Saved — Revora will use this in your website.");
+      void queryClient.invalidateQueries({ queryKey: ["business_profile"] });
+      void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
+      void queryClient.invalidateQueries({ queryKey: ["build_readiness", organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't save your answers."),
+  });
+}
+
+/** Signed-in end-to-end check of the live AI call, QA and public preview. */
+export function useSiteEngineCheck(organizationId: string | undefined) {
+  const check = useServerFn(runSiteEngineCheck);
+  return useMutation({
+    mutationFn: async () => check({ data: { organizationId: organizationId! } }),
+    onError: (error: Error) => toast.error(error.message || "The system check couldn't run."),
+  });
+}

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { GENERATION_STEPS, stepLabel } from "@/lib/site-engine";
 import type { Recommendation, ScoreFactor } from "@/lib/site-engine";
 import {
+  useBuildReadiness,
   useAiCopyEdit,
   useLatestGenerationJob,
   useRestoreWebsiteVersion,
@@ -31,12 +32,30 @@ export function SiteEnginePanel({
   hasCopy: boolean;
 }) {
   const { data: job } = useLatestGenerationJob(organizationId);
+  const { data: readiness } = useBuildReadiness(organizationId);
   const run = useRunSiteEngine(organizationId);
 
   const status = run.isPending ? "processing" : ((job?.status as string | undefined) ?? "none");
   const doneSteps = Array.isArray(job?.steps) ? (job?.steps as string[]) : [];
   const progress = run.isPending && !doneSteps.length ? 5 : Number(job?.progress ?? 0);
   const running = status === "processing" || status === "queued";
+
+  // Generation is gated on an approved brief and the facts Revora needs, so it
+  // never produces a website from guesses.
+  const requiredGaps = readiness?.requiredGaps ?? [];
+  const briefReady = readiness ? readiness.hasBrief && readiness.briefApproved : true;
+  const blockedReason = !readiness
+    ? null
+    : requiredGaps.length
+      ? `Answer ${requiredGaps.length} required question${requiredGaps.length === 1 ? "" : "s"} below first: ${requiredGaps
+          .map((gap) => gap.label)
+          .join(", ")}.`
+      : !readiness.hasBrief
+        ? "Run the analysis below so Revora understands your business before it builds."
+        : !readiness.briefApproved
+          ? "Review and approve “What Revora understood” below, then build."
+          : null;
+  const blocked = !!blockedReason;
 
   return (
     <Panel className="p-5">
@@ -61,12 +80,27 @@ export function SiteEnginePanel({
           </p>
         </div>
         {canManage ? (
-          <Button variant={hasCopy ? "outline" : "signal"} disabled={running} onClick={() => run.mutate()}>
+          <Button
+            variant={hasCopy ? "outline" : "signal"}
+            disabled={running || blocked}
+            onClick={() => run.mutate()}
+            title={blockedReason ?? undefined}
+          >
             {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
             {status === "failed" ? "Retry build" : hasCopy ? "Rebuild from my info" : "Build my complete website"}
           </Button>
         ) : null}
       </div>
+
+      {blocked && canManage ? (
+        <div className="mt-4 flex items-start gap-2.5 rounded-md border border-accent/40 bg-accent/5 p-3.5">
+          <TriangleAlert className="mt-0.5 size-4 text-accent" aria-hidden="true" />
+          <div>
+            <p className="text-[13px] font-medium">Not ready to build yet</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">{blockedReason}</p>
+          </div>
+        </div>
+      ) : null}
 
       {status === "failed" && job?.error_message ? (
         <div className="mt-4 flex items-start gap-2.5 rounded-md border border-destructive/40 bg-destructive/5 p-3.5">

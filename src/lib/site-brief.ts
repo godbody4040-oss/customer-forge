@@ -11,6 +11,8 @@
  * client entered or explicitly listed under `missingFacts`.
  */
 
+import type { CaptureCheck } from "@/lib/launch-qa";
+
 export type CustomerIntent =
   | "ready_to_book"
   | "ready_to_call"
@@ -53,6 +55,10 @@ export type SiteBrief = {
   missingFacts: string[];
   /** Which model produced the brief, or "rules" for the deterministic fallback. */
   source: string;
+  /** The owner reviewed (and possibly edited) this brief and approved the build. */
+  approved: boolean;
+  /** Answers the owner gave to Revora's questions, kept with the brief. */
+  factAnswers: Record<string, string>;
 };
 
 const strings = (value: unknown, max: number, cap = 160) =>
@@ -83,7 +89,18 @@ export function readBrief(value: unknown): SiteBrief | null {
     toneNotes: text(raw["toneNotes"], ""),
     missingFacts: strings(raw["missingFacts"], 6),
     source: text(raw["source"], "rules", 60),
+    approved: raw["approved"] === true,
+    factAnswers: readAnswers(raw["factAnswers"]),
   };
+}
+
+function readAnswers(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, v] of Object.entries(value as Record<string, unknown>).slice(0, 20)) {
+    if (typeof v === "string" && v.trim()) out[key.slice(0, 60)] = v.trim().slice(0, 600);
+  }
+  return out;
 }
 
 /* ------------------------------- build report ------------------------------- */
@@ -102,6 +119,8 @@ export type BuildReport = {
   analyticsConfigured: boolean;
   briefSource: string;
   copyModel: string;
+  /** Lead-capture and booking QA results from the build run. */
+  checks: CaptureCheck[];
   /** Plain-language items the owner still needs to handle. */
   attention: string[];
 };
@@ -125,6 +144,7 @@ export function readReport(value: unknown): BuildReport | null {
     analyticsConfigured: raw["analyticsConfigured"] === true,
     briefSource: text(raw["briefSource"], "rules", 60),
     copyModel: text(raw["copyModel"], "", 60),
+    checks: Array.isArray(raw["checks"]) ? (raw["checks"] as CaptureCheck[]).slice(0, 20) : [],
     attention: strings(raw["attention"], 8, 200),
   };
 }
