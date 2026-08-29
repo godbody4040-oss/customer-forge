@@ -134,6 +134,9 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    /* In-page CTAs ("See how it works", nav anchors) glide to their section
+       instead of snapping, so people can see where they landed. */
+    scroll-behavior: smooth;
   }
 
   body {
