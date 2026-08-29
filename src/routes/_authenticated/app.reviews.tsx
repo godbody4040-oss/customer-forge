@@ -18,30 +18,14 @@ import { useWorkspace } from "@/lib/use-tenant";
 import { useAppointments, useBusinessProfile, useReviews } from "@/lib/queries";
 import { useRequestReview, useSetReviewPublished } from "@/lib/growth-hooks";
 import { relative } from "@/lib/format";
+import { REVIEWS_META } from "@/lib/app-meta";
+import { MetaPreview } from "@/components/app/MetaPreview";
 
 export const Route = createFileRoute("/_authenticated/app/reviews")({
-  head: () => {
-    const title = "Reviews & Reputation — Revora";
-    const description =
-      "Collect 5-star reviews automatically after every completed job, reply fast, and publish the best testimonials straight to your website.";
-    return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:type", content: "website" },
-        { property: "og:site_name", content: "Revora" },
-        { name: "twitter:card", content: "summary" },
-        { name: "twitter:title", content: title },
-        { name: "twitter:description", content: description },
-        { name: "robots", content: "noindex, nofollow" },
-      ],
-    };
-  },
-
+  head: () => ({ meta: REVIEWS_META.meta, links: REVIEWS_META.links }),
   component: ReviewsPage,
 });
+
 
 function Stars({ rating }: { rating: number }) {
   return (
