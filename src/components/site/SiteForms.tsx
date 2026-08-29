@@ -82,7 +82,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
   const complete = answered === quote.questions.length && quote.questions.length > 0;
 
   return (
-    <div className="panel overflow-hidden">
+    <div ref={stepRef} className="panel overflow-hidden">
       <div className="border-b border-border px-5 py-4">
         <p className="eyebrow">Instant estimate</p>
         <h3 className="mt-1 font-display text-[19px] font-semibold">{quote.form.name}</h3>
