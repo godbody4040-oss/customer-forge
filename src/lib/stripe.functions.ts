@@ -187,7 +187,8 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
 
       // Accounts with Managed Payments enabled by default reject
       // `adaptive_pricing: { enabled: false }`; retry without that parameter.
-      async function createSessionWithCompat(payload: typeof base) {
+      type SessionPayload = typeof base & { automatic_tax?: { enabled: boolean } };
+      async function createSessionWithCompat(payload: SessionPayload) {
         try {
           return await stripe.checkout.sessions.create(payload);
         } catch (compatError) {
