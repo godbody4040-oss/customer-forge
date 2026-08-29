@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MediaLibrary } from "@/components/app/MediaLibrary";
-import { GoogleListingImport } from "@/components/app/GoogleListingImport";
+
 import { useAutosaveOrganization, useAutosaveProfile } from "@/lib/website-content.hooks";
 import { WIZARD_STEPS, type WizardStepKey } from "@/lib/website-content";
 import { WEBSITE_GOALS, type GoalKey } from "@/lib/website-plan";
@@ -145,7 +145,7 @@ export function BuilderWizard({
         <div className="mt-5 space-y-4">
           {step === "business" ? (
             <>
-              <GoogleListingImport organizationId={organizationId} canManage={canManage} />
+              
               <AutoField
                 label="Business name"
                 value={org?.name ?? ""}
