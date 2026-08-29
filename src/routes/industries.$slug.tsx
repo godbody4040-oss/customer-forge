@@ -66,6 +66,7 @@ export const Route = createFileRoute("/industries/$slug")({
 
 function IndustryPage() {
   useEffect(() => {
+    console.log("[conv] landing effect");
     trackConversion("landing_view");
   }, []);
   const { industry } = Route.useRouteContext() as { industry: (typeof INDUSTRIES)[number] };
