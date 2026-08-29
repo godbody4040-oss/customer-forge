@@ -2,8 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnv } from "@/lib/stripe.server";
 
-type Interval = "monthly" | "annual";
-
 const uuid = (value: unknown) => {
   const id = String(value ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Invalid workspace");
@@ -15,28 +13,64 @@ const env = (value: unknown): StripeEnv => {
   throw new Error("Invalid payment environment");
 };
 
-/** Starts an embedded Stripe subscription checkout for a workspace the member can manage. */
-export const createSubscriptionCheckout = createServerFn({ method: "POST" })
+const text = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
+
+export type GrowthSystemIntake = {
+  fullName: string;
+  businessName: string;
+  email: string;
+  phone: string;
+  website?: string;
+  businessType: string;
+  city: string;
+  state: string;
+  services: string;
+};
+
+/**
+ * Starts the single Revora Growth System checkout:
+ *   • $1,500 one-time setup (charged on the first invoice)
+ *   • $250/month recurring subscription
+ * Both live on ONE Stripe subscription session, so the recurring amount is
+ * never $1,750 — only the first invoice includes the setup line.
+ */
+export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     (input: {
       organizationId: string;
-      planId: string;
-      interval: Interval;
       returnUrl: string;
       environment: StripeEnv;
+      intake: GrowthSystemIntake;
     }) => {
-      const planId = String(input?.planId ?? "").slice(0, 40);
-      if (!/^[a-z0-9_-]+$/.test(planId)) throw new Error("Choose a plan");
-      const interval: Interval = input?.interval === "annual" ? "annual" : "monthly";
-      const returnUrl = String(input?.returnUrl ?? "").slice(0, 500);
+      const returnUrl = text(input?.returnUrl, 500);
       if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
-      return { organizationId: uuid(input?.organizationId), planId, interval, returnUrl, environment: env(input?.environment) };
+      const raw = input?.intake ?? ({} as GrowthSystemIntake);
+      const intake: GrowthSystemIntake = {
+        fullName: text(raw.fullName, 120),
+        businessName: text(raw.businessName, 120),
+        email: text(raw.email, 160).toLowerCase(),
+        phone: text(raw.phone, 40),
+        website: text(raw.website, 200) || undefined,
+        businessType: text(raw.businessType, 80),
+        city: text(raw.city, 80),
+        state: text(raw.state, 40),
+        services: text(raw.services, 400),
+      };
+      if (!intake.fullName || !intake.businessName) throw new Error("Add your name and business name");
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(intake.email)) throw new Error("Add a valid email address");
+      if (intake.phone.replace(/\D/g, "").length < 10) throw new Error("Add a valid phone number");
+      if (!intake.businessType) throw new Error("Add your business type");
+      if (!intake.city || !intake.state) throw new Error("Add your city and state");
+      if (!intake.services) throw new Error("Add your primary services");
+      return { organizationId: uuid(input?.organizationId), returnUrl, environment: env(input?.environment), intake };
     },
   )
   .handler(async ({ data, context }): Promise<{ clientSecret: string } | { error: string }> => {
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
-    const { priceIdFor } = await import("@/lib/stripe-billing.server");
+    const { GROWTH_PLAN_ID, MONTHLY_PRICE_KEY, SETUP_PRICE_KEY } = await import(
+      "@/lib/stripe-billing.server"
+    );
 
     // RLS proves membership: a non-member cannot read this organization.
     const { data: org } = await context.supabase
@@ -52,16 +86,15 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       .eq("organization_id", data.organizationId)
       .eq("user_id", context.userId)
       .maybeSingle();
-    const role = membership?.role ?? "";
-    if (!["owner", "admin", "manager"].includes(role)) {
-      return { error: "Only workspace owners and admins can change billing." };
+    if (!["owner", "admin", "manager"].includes(membership?.role ?? "")) {
+      return { error: "Only workspace owners and admins can start billing." };
     }
 
-    // Duplicate-subscription guard: an existing live card subscription must be
-    // changed through the provider's billing portal, never a second checkout.
+    // Duplicate-subscription guard: an existing live subscription must be
+    // changed through the billing portal, never a second checkout.
     const { data: existing } = await context.supabase
       .from("subscriptions")
-      .select("status, provider_subscription_id, current_period_end")
+      .select("status, provider_subscription_id")
       .eq("organization_id", data.organizationId)
       .eq("payment_provider", "stripe")
       .maybeSingle();
@@ -71,20 +104,49 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
     ) {
       return {
         error:
-          "This workspace already has an active card subscription. Use Manage subscription to change or cancel your plan.",
+          "This workspace already has an active Revora subscription. Use Manage subscription to update payment details or cancel.",
       };
     }
 
-    const priceKey = priceIdFor(data.planId, data.interval);
-    if (!priceKey) return { error: "That plan is not available for checkout." };
+    // Store the customer information collected at checkout (tenant-scoped).
+    const { intake } = data;
+    await context.supabase
+      .from("organizations")
+      .update({ name: intake.businessName, industry: intake.businessType })
+      .eq("id", data.organizationId);
+    const { data: profile } = await context.supabase
+      .from("business_profiles")
+      .select("id")
+      .eq("organization_id", data.organizationId)
+      .maybeSingle();
+    const profileFields = {
+      owner_name: intake.fullName,
+      owner_email: intake.email,
+      email: intake.email,
+      phone: intake.phone,
+      ...(intake.website ? { website: intake.website } : {}),
+      city: intake.city,
+      state: intake.state,
+      service_area: `${intake.city}, ${intake.state}`,
+      description: intake.services,
+    };
+    if (profile) {
+      await context.supabase.from("business_profiles").update(profileFields).eq("id", profile.id);
+    } else {
+      await context.supabase
+        .from("business_profiles")
+        .insert({ organization_id: data.organizationId, ...profileFields });
+    }
 
     try {
       const stripe = createStripeClient(data.environment);
-      const prices = await stripe.prices.list({ lookup_keys: [priceKey] });
-      const price = prices.data[0];
-      if (!price) return { error: "That plan price is not set up in the payment provider yet." };
+      const prices = await stripe.prices.list({ lookup_keys: [MONTHLY_PRICE_KEY, SETUP_PRICE_KEY] });
+      const monthly = prices.data.find((p) => p.lookup_key === MONTHLY_PRICE_KEY);
+      const setup = prices.data.find((p) => p.lookup_key === SETUP_PRICE_KEY);
+      if (!monthly || !setup) {
+        return { error: "Revora Growth System pricing is not set up in the payment provider yet." };
+      }
 
-      const email = (context.claims as { email?: string } | null)?.email ?? undefined;
       const found = await stripe.customers.search({
         query: `metadata['organizationId']:'${data.organizationId}'`,
         limit: 1,
@@ -92,20 +154,35 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       let customerId = found.data[0]?.id;
       if (!customerId) {
         const created = await stripe.customers.create({
-          ...(email ? { email } : {}),
-          name: org.name,
+          email: intake.email,
+          name: intake.businessName,
+          phone: intake.phone,
           metadata: { organizationId: data.organizationId, userId: context.userId },
         });
         customerId = created.id;
+      } else {
+        await stripe.customers.update(customerId, {
+          email: intake.email,
+          name: intake.businessName,
+          phone: intake.phone,
+        });
       }
 
       const metadata = {
+        kind: "growth_system",
         organizationId: data.organizationId,
-        planId: data.planId,
+        planId: GROWTH_PLAN_ID,
         userId: context.userId,
+        setupAmount: "1500",
+        monthlyAmount: "250",
       };
       const base = {
-        line_items: [{ price: price.id, quantity: 1 }],
+        // One-time setup line is billed on the FIRST invoice only; the
+        // recurring price stays $250/month.
+        line_items: [
+          { price: monthly.id, quantity: 1 },
+          { price: setup.id, quantity: 1 },
+        ],
         mode: "subscription" as const,
         ui_mode: "embedded_page" as const,
         return_url: data.returnUrl,
@@ -130,6 +207,7 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(error) };
     }
   });
+
 
 /** Starts an embedded Stripe one-time checkout for a Revora service (cards + wallets). */
 export const createServiceCheckout = createServerFn({ method: "POST" })
