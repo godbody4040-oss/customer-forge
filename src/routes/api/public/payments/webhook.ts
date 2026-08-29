@@ -206,10 +206,45 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       }
       break;
     }
+    case "payment_intent.succeeded":
+    case "payment_intent.payment_failed": {
+      // Bookkeeping/observability only — activation always comes from the
+      // checkout session and subscription events above, never from here.
+      const organizationId = (object?.metadata?.organizationId as string | undefined) ?? null;
+      const succeeded = event.type === "payment_intent.succeeded";
+      if (organizationId) {
+        await admin.from("audit_logs").insert({
+          organization_id: organizationId,
+          action: `payment_intent.${succeeded ? "succeeded" : "failed"}`,
+          entity: "payment_intent",
+          entity_id: String(object?.id ?? ""),
+          metadata: {
+            provider: "stripe",
+            environment: env,
+            amount: Number(object?.amount ?? 0) / 100,
+            currency: String(object?.currency ?? "usd"),
+            failure_reason: succeeded
+              ? null
+              : ((object?.last_payment_error?.message as string | undefined) ?? "Card payment failed"),
+          },
+        });
+        if (!succeeded) {
+          await admin.from("notifications").insert({
+            organization_id: organizationId,
+            title: "Card payment failed",
+            body: `${(object?.last_payment_error?.message as string | undefined) ?? "The card payment did not go through."} Update your payment method to activate or keep your Revora system.`,
+            kind: "warning",
+            link: "/app/billing",
+          });
+        }
+      }
+      break;
+    }
     default:
       console.log("[payments:webhook] unhandled event", event.type);
   }
 }
+
 
 /**
  * Event-level idempotency: Stripe delivers at least once, so a verified event
