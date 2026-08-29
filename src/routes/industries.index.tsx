@@ -72,6 +72,17 @@ function Industries() {
           </ul>
         </section>
 
+        <p className="mt-6 text-[13px] text-muted-foreground">
+          Contractors, HVAC, plumbing and roofing crews: see how the{" "}
+          <Link
+            to="/crm-for-contractors"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            CRM for contractors
+          </Link>{" "}
+          runs leads, quotes, follow-ups and reviews in one place.
+        </p>
+
         <div className="panel mt-14 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-display text-[17px] font-semibold">Don't see your trade?</h2>
