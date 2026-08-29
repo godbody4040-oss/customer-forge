@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarCheck, FileText, MessageSquare, PhoneCall, Star, Users } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
-import { OFFER } from "@/lib/offer";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 
 const TITLE = "CRM for Contractors — Leads, Quotes & Follow-Up | Revora";
 const DESCRIPTION =
@@ -35,8 +35,8 @@ export const Route = createFileRoute("/crm-for-contractors")({
           offers: {
             "@type": "Offer",
             priceCurrency: "USD",
-            price: String(OFFER.setupPrice ?? 750),
-            description: `One-time setup, then $${OFFER.monthlyPrice ?? 100}/month after the first month free.`,
+            price: String(GROWTH_SYSTEM.setupPrice),
+            description: `One-time setup, then $${GROWTH_SYSTEM.monthlyPrice}/month after the first month free.`,
           },
         }),
       },
