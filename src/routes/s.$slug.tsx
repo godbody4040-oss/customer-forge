@@ -190,7 +190,9 @@ export function PublicSiteView({
             </Button>
           </div>
         </div>
+        <SiteNav site={site} />
       </header>
+
 
       <section className="border-b border-border">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 lg:grid-cols-[1.1fr_1fr] lg:py-20">
