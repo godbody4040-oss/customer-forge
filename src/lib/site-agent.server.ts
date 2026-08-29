@@ -12,7 +12,7 @@
  */
 
 import { AiGatewayError } from "@/lib/site-engine.server";
-import { MAX_ACTIONS, type AgentTurn } from "@/lib/site-agent";
+import { MAX_ACTIONS, type AgentAttachment, type AgentTurn } from "@/lib/site-agent";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
