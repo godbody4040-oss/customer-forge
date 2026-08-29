@@ -17,6 +17,8 @@ export const Route = createFileRoute("/_authenticated/admin/clients")({
 
 const FILTERS = [
   { value: "all", label: "All" },
+  { value: "paid", label: "Paid" },
+  { value: "unpaid", label: "Awaiting payment" },
   { value: "live", label: "Live" },
   { value: "setup", label: "In setup" },
   { value: "suspended", label: "Suspended" },
@@ -38,17 +40,23 @@ function AdminClients() {
         [client.name, client.owner_name, client.owner_email, client.city, client.custom_domain]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(term));
+      const paid = Boolean(client.setup_paid_at) && client.subscription_state === "active";
       const state =
         filter === "all"
           ? true
-          : filter === "live"
-            ? client.publish_state === "published" && !client.is_suspended
-            : filter === "setup"
-              ? client.publish_state !== "published" && !client.is_suspended
-              : client.is_suspended;
+          : filter === "paid"
+            ? paid
+            : filter === "unpaid"
+              ? !paid && !client.is_demo
+              : filter === "live"
+                ? client.publish_state === "published" && !client.is_suspended
+                : filter === "setup"
+                  ? client.publish_state !== "published" && !client.is_suspended
+                  : client.is_suspended;
       return matches && state;
     });
   }, [clients.data, search, filter]);
+
 
   return (
     <div className="space-y-5">
