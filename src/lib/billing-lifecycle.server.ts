@@ -45,7 +45,7 @@ async function markRan(admin: Admin, organizationId: string, marker: string, met
     action: "billing.lifecycle",
     entity: "billing_lifecycle",
     entity_id: marker,
-    metadata: metadata as Database["public"]["Tables"]["audit_logs"]["Insert"]["metadata"],
+    metadata: JSON.parse(JSON.stringify(metadata)),
   });
 }
 
