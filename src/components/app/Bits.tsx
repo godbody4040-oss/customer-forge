@@ -56,7 +56,7 @@ export function Panel({
   ref?: Ref<HTMLElement>;
 } & Omit<HTMLAttributes<HTMLElement>, "className" | "children">) {
   return (
-    <As ref={ref} className={cn("panel p-4", className)} {...rest}>
+    <As ref={ref as Ref<HTMLDivElement> & Ref<HTMLElement>} className={cn("panel p-4", className)} {...rest}>
       {children}
     </As>
   );
