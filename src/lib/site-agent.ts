@@ -645,7 +645,9 @@ export function readAttachments(value: unknown): AgentAttachment[] {
     const clean = `data:${mimeType};base64,${(match[2] ?? "").replace(/\s+/g, "")}`;
     if (base64Bytes(clean) > ATTACHMENT_LIMITS[kind]) continue;
     const name = typeof item["name"] === "string" ? item["name"].slice(0, 120) : `${kind} attachment`;
-    out.push({ kind, mimeType, name, dataUrl: clean });
+    const chapters = kind === "video" ? readChapters(item["chapters"]) : [];
+    out.push({ kind, mimeType, name, dataUrl: clean, ...(chapters.length ? { chapters } : {}) });
+
   }
   return out;
 }
