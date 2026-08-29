@@ -10,6 +10,7 @@ import { submitPublicLead, trackPublicEvent, type PublicSite } from "@/lib/publi
 import { readAttribution } from "@/lib/attribution";
 import { currency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useStepScroll } from "@/lib/use-step-scroll";
 
 type Site = NonNullable<PublicSite>;
 
@@ -46,16 +47,19 @@ export function QuoteCalculator({ site }: { site: Site }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [picked, setPicked] = useState<string[]>([]);
   const [step, setStep] = useState<"questions" | "contact">("questions");
+  const stepRef = useStepScroll<HTMLDivElement>(step);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
 
   if (!quote) return null;
   if (done) {
     return (
-      <Success
-        title="Your estimate is on its way"
-        body={`${site.org.name} has your details and price range, and will confirm the exact quote shortly.`}
-      />
+      <div ref={stepRef}>
+        <Success
+          title="Your estimate is on its way"
+          body={`${site.org.name} has your details and price range, and will confirm the exact quote shortly.`}
+        />
+      </div>
     );
   }
 
@@ -80,7 +84,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
   const complete = answered === quote.questions.length && quote.questions.length > 0;
 
   return (
-    <div className="panel overflow-hidden">
+    <div ref={stepRef} className="panel overflow-hidden">
       <div className="border-b border-border px-5 py-4">
         <p className="eyebrow">Instant estimate</p>
         <h3 className="mt-1 font-display text-[19px] font-semibold">{quote.form.name}</h3>
@@ -275,13 +279,16 @@ export function BookingForm({ site }: { site: Site }) {
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [serviceId, setServiceId] = useState(bookable[0]?.id ?? "");
+  const doneRef = useStepScroll<HTMLDivElement>(done);
 
   if (done) {
     return (
-      <Success
-        title="Booking request received"
-        body={`${site.org.name} will confirm your time slot by phone or email shortly.`}
-      />
+      <div ref={doneRef}>
+        <Success
+          title="Booking request received"
+          body={`${site.org.name} will confirm your time slot by phone or email shortly.`}
+        />
+      </div>
     );
   }
 

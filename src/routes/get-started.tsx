@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { REVORA, revoraMailto } from "@/lib/brand";
 import { trackConversion } from "@/lib/conversion";
+import { useStepScroll } from "@/lib/use-step-scroll";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -53,6 +54,7 @@ const STEPS = ["Your information", "Order summary", "Payment"] as const;
 
 function GetStarted() {
   const [step, setStep] = useState(0);
+  const stepRef = useStepScroll<HTMLDivElement>(step);
   const [intake, setIntake] = useState<GrowthSystemIntake>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [payNow, setPayNow] = useState(false);
@@ -166,6 +168,7 @@ function GetStarted() {
           ))}
         </ol>
 
+        <div ref={stepRef}>
         {step === 0 ? (
           <section className="panel mt-6 p-5">
             <h2 className="font-display text-[17px] font-semibold">Tell us about your business</h2>
@@ -345,6 +348,7 @@ function GetStarted() {
             ) : null}
           </section>
         ) : null}
+        </div>
 
         <p className="mt-8 text-[12px] text-muted-foreground">
           Questions before you start? {REVORA.phoneDisplay} ·{" "}
