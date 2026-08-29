@@ -55,7 +55,7 @@ export const monitorCertificate = createServerFn({ method: "POST" })
       patch['ssl_last_ok_at'] = now;
       if (!settings.ssl_issued_at) patch['ssl_issued_at'] = now;
     }
-    await context.supabase.from("website_settings").update(patch).eq("organization_id", data.organizationId);
+    await context.supabase.from("website_settings").update(patch as never).eq("organization_id", data.organizationId);
 
     // A certificate that used to answer and now doesn't is worth interrupting for.
     if (!check.sslOk && settings.ssl_last_ok_at) {

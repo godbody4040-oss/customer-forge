@@ -37,9 +37,9 @@ export const getTrafficReport = createServerFn({ method: "POST" })
         .limit(1),
       context.supabase
         .from("services")
-        .select("id, is_bookable")
+        .select("id, bookable")
         .eq("organization_id", data.organizationId)
-        .eq("is_bookable", true),
+        .eq("bookable", true),
       context.supabase
         .from("reviews")
         .select("id", { count: "exact", head: true })
