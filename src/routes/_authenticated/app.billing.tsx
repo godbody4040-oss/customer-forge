@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { CreditCard, ExternalLink, Receipt, Wallet } from "lucide-react";
 import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { PayPalCheckout } from "@/components/app/PayPalCheckout";
-import { StripeCheckout } from "@/components/app/StripeCheckout";
 import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
 import { usePaymentConfig, usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
-import { useBillingState, usePlans } from "@/lib/stripe.hooks";
+import { useBillingState } from "@/lib/stripe.hooks";
 import { createBillingPortalSession } from "@/lib/stripe.functions";
 import { getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/use-tenant";
 import { REVORA } from "@/lib/brand";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/app/billing")({
   head: () => ({
@@ -51,12 +52,9 @@ function BillingPage() {
   const { data: products, isLoading: loadingProducts } = usePaymentProducts();
   const { data: payments, isLoading: loadingPayments } = usePayments(orgId);
   const { data: config } = usePaymentConfig();
-  const { data: subscriptionPlans, isLoading: loadingPlans } = usePlans();
   const { data: billing } = useBillingState(orgId);
   const [selected, setSelected] = useState<PaymentProduct | null>(null);
   const [cardService, setCardService] = useState<PaymentProduct | null>(null);
-  const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
-  const [checkoutPlan, setCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
   const queryClient = useQueryClient();
   const cardsReady = isPaymentsConfigured();
@@ -66,15 +64,12 @@ function BillingPage() {
   const paidTotal = paid.reduce((sum, p) => sum + Number(p.amount), 0);
   const pending = rows.filter((p) => p.status === "pending" || p.status === "approved").length;
 
-  const services = (products ?? []).filter((p) => p.kind !== "subscription");
+  const services = (products ?? []).filter(
+    (p) => p.kind !== "subscription" && p.id !== GROWTH_SYSTEM.setupProductId,
+  );
   const subscription = billing?.subscription ?? null;
-  const currentPlanId = subscription?.plan_id ?? org?.plan_id ?? null;
-  const currentPlan = (subscriptionPlans ?? []).find((plan) => plan.id === currentPlanId) ?? null;
-  const currentPrice = currentPlan
-    ? subscription?.billing_interval === "annual"
-      ? currentPlan.annual_price
-      : currentPlan.monthly_price
-    : null;
+  const setupPaid = Boolean(org?.setup_paid_at);
+
 
   // Stripe embedded checkout redirects here after a completed payment.
   useEffect(() => {
@@ -116,10 +111,9 @@ function BillingPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={subscription?.status === "active" ? "signal" : "neutral"}>
-            {subscription
-              ? `${subscription.status.replace("_", " ")} · ${subscription.billing_interval}`
-              : "No subscription"}
+            {subscription ? subscription.status.replace("_", " ") : "No subscription"}
           </Pill>
+
           {config?.configured ? <Pill tone="neutral">PayPal {config.environment}</Pill> : null}
         </div>
       </div>
@@ -147,12 +141,17 @@ function BillingPage() {
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Current plan" value={currentPlanId ?? "No plan"} hint={subscription?.status ?? org?.subscription_status ?? ""} />
         <MetricCard
-          label="Plan price"
-          value={currentPrice != null ? money(currentPrice, "USD") : "—"}
-          hint={subscription ? `billed ${subscription.billing_interval}` : "no active subscription"}
+          label="Your system"
+          value={GROWTH_SYSTEM.name}
+          hint={subscription?.status ?? org?.subscription_status ?? ""}
         />
+        <MetricCard
+          label="Setup fee"
+          value={usdExact(GROWTH_SYSTEM.setupPrice)}
+          hint={setupPaid ? "Paid" : "Due at checkout"}
+        />
+
         <MetricCard label="Paid to date" value={money(paidTotal, "USD")} hint={`${paid.length} payment${paid.length === 1 ? "" : "s"}`} />
         <MetricCard
           label={subscription?.cancel_at_period_end ? "Access ends" : subscription?.status === "trialing" ? "Trial ends" : "Renews"}
@@ -171,106 +170,62 @@ function BillingPage() {
 
       <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <SectionHeading eyebrow="Subscription" title="Choose your Revora plan" />
-          <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-md border border-border p-0.5">
-              {(["monthly", "annual"] as const).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setInterval(option)}
-                  aria-pressed={interval === option}
-                  className={`rounded px-3 py-1.5 text-[12px] capitalize ${interval === option ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-            {subscription?.provider_subscription_id ? (
-              <Button variant="outline" size="sm" onClick={openPortal} disabled={portalBusy || !manage}>
-                <ExternalLink className="size-4" /> {portalBusy ? "Opening…" : "Manage subscription"}
-              </Button>
-            ) : null}
+          <SectionHeading eyebrow="Your system" title={GROWTH_SYSTEM.name} />
+          {subscription?.provider_subscription_id ? (
+            <Button variant="outline" size="sm" onClick={openPortal} disabled={portalBusy || !manage}>
+              <ExternalLink className="size-4" /> {portalBusy ? "Opening…" : "Manage subscription"}
+            </Button>
+          ) : null}
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-md border border-border p-4">
+            <p className="text-[12px] text-muted-foreground">Setup</p>
+            <p className="tnum mt-1 text-[22px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+            <Pill tone={setupPaid ? "signal" : "neutral"}>{setupPaid ? "Paid" : "Not paid yet"}</Pill>
+          </div>
+          <div className="rounded-md border border-primary/40 p-4">
+            <p className="text-[12px] text-muted-foreground">Monthly</p>
+            <p className="tnum mt-1 text-[22px] font-semibold">{usdExact(GROWTH_SYSTEM.monthlyPrice)}</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
+            <Pill tone={billing?.active ? "signal" : "neutral"}>
+              {subscription ? subscription.status.replace("_", " ") : "Not active"}
+            </Pill>
           </div>
         </div>
 
+        <ul className="mt-4 grid gap-1 text-[12px] text-muted-foreground sm:grid-cols-2">
+          {GROWTH_SYSTEM.includes.map((feature) => (
+            <li key={feature}>· {feature}</li>
+          ))}
+        </ul>
+
         {!cardsReady ? (
           <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
-            Card checkout is not configured for this build yet, so no payment can be taken. Finish payment go-live in
-            your Revora project settings.
+            Card checkout is not configured for this build yet, so no payment can be taken.
           </p>
-        ) : loadingPlans ? (
-          <LoadingRows rows={3} />
+        ) : billing?.active && subscription?.provider_subscription_id ? (
+          <p className="mt-4 text-[12px] text-muted-foreground">
+            Your system is active. Update your card, view invoices or cancel from Manage subscription — access
+            continues until the end of the paid period.
+          </p>
         ) : (
-          <ul className="mt-4 grid gap-3 md:grid-cols-3">
-            {(subscriptionPlans ?? []).map((plan) => {
-              const price = interval === "annual" ? plan.annual_price : plan.monthly_price;
-              const isCurrent = currentPlanId === plan.id && billing?.active;
-              // Same plan on the same billing interval: a second checkout would
-              // create a duplicate subscription, so send them to the portal.
-              const isExactCurrent = isCurrent && subscription?.billing_interval === interval;
-              const isUpgrade =
-                !!currentPrice && !isCurrent && price > currentPrice && !!billing?.active;
-              const isDowngrade =
-                !!currentPrice && !isCurrent && price < currentPrice && !!billing?.active;
-              const label = isExactCurrent
-                ? "Manage plan"
-                : isUpgrade
-                  ? "Upgrade"
-                  : isDowngrade
-                    ? "Downgrade"
-                    : isCurrent
-                      ? "Switch billing period"
-                      : currentPlanId && billing?.active
-                        ? "Switch to this plan"
-                        : "Subscribe";
-              return (
-                <li
-                  key={plan.id}
-                  className={`rounded-md border p-4 ${plan.is_featured ? "border-primary/50" : "border-border"}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[14px] font-medium">{plan.name}</p>
-                    {isCurrent ? <Pill tone="signal">Current</Pill> : null}
-                  </div>
-                  <p className="tnum mt-1 text-[20px] font-semibold">{money(price, "USD")}</p>
-                  <p className="text-[12px] text-muted-foreground">
-                    per {interval === "annual" ? "year" : "month"}
-                  </p>
-                  {plan.tagline ? <p className="mt-2 text-[12px] text-muted-foreground">{plan.tagline}</p> : null}
-                  <ul className="mt-3 space-y-1 text-[12px] text-muted-foreground">
-                    {(plan.features ?? []).slice(0, 5).map((feature) => (
-                      <li key={feature}>· {feature}</li>
-                    ))}
-                  </ul>
-                  <Button
-                    variant={isCurrent ? "outline" : "signal"}
-                    size="sm"
-                    className="mt-3 w-full"
-                    disabled={!manage || !orgId || portalBusy}
-                    onClick={() =>
-                      isExactCurrent || (billing?.active && subscription?.provider_subscription_id)
-                        ? void openPortal()
-                        : setCheckoutPlan({ id: plan.id, name: plan.name })
-                    }
-                  >
-                    {isExactCurrent || (billing?.active && subscription?.provider_subscription_id) ? (
-                      <ExternalLink className="size-4" />
-                    ) : (
-                      <CreditCard className="size-4" />
-                    )}
-                    {label}
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            <Button asChild variant="signal" size="lg" className="mt-4 w-full sm:w-auto" disabled={!manage}>
+              <Link to="/get-started">
+                <CreditCard className="size-4" /> {GROWTH_SYSTEM.ctaPrimary}
+              </Link>
+            </Button>
+            <p className="mt-2 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.ctaSecondary}</p>
+          </>
         )}
         <p className="mt-4 text-[12px] text-muted-foreground">
           Checkout accepts cards, Apple Pay, Google Pay and Cash App Pay where the provider and your device support
-          them. Cancel any time from Manage subscription — access continues until the end of the paid period.
+          them. {GROWTH_SYSTEM.explainer}
         </p>
       </Panel>
+
 
       <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -288,20 +243,8 @@ function BillingPage() {
         </p>
       </Panel>
 
-      {checkoutPlan && orgId ? (
-        <StripeCheckout
-          organizationId={orgId}
-          planId={checkoutPlan.id}
-          planName={checkoutPlan.name}
-          interval={interval}
-          onClose={() => {
-            setCheckoutPlan(null);
-            void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
-            void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
-            void queryClient.invalidateQueries({ queryKey: ["workspace"] });
-          }}
-        />
-      ) : null}
+
+
 
       {cardService && orgId ? (
         <StripeServiceCheckout

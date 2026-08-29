@@ -1,0 +1,398 @@
+import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ArrowRight, Check, Lock, ShieldCheck } from "lucide-react";
+import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { GrowthSystemCheckout } from "@/components/app/GrowthSystemCheckout";
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import type { GrowthSystemIntake } from "@/lib/stripe.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { isPaymentsConfigured } from "@/lib/stripe";
+import { REVORA, revoraMailto } from "@/lib/brand";
+
+export const Route = createFileRoute("/get-started")({
+  head: () => ({
+    meta: [
+      { title: "Start your Revora Growth System — $1,500 setup + $250/mo" },
+      {
+        name: "description",
+        content:
+          "Launch your Revora Growth System: $1,500 one-time setup and $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+      },
+      { property: "og:title", content: "Start your Revora Growth System" },
+      {
+        property: "og:description",
+        content: "$1,500 one-time setup, then $250/month. One complete customer acquisition system.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: GetStarted,
+});
+
+const STORAGE_KEY = "revora.getstarted.intake";
+
+const EMPTY: GrowthSystemIntake = {
+  fullName: "",
+  businessName: "",
+  email: "",
+  phone: "",
+  website: "",
+  businessType: "",
+  city: "",
+  state: "",
+  services: "",
+};
+
+const STEPS = ["Your information", "Order summary", "Payment"] as const;
+
+function GetStarted() {
+  const [step, setStep] = useState(0);
+  const [intake, setIntake] = useState<GrowthSystemIntake>(EMPTY);
+  const [error, setError] = useState<string | null>(null);
+  const [payNow, setPayNow] = useState(false);
+
+  const session = useQuery({
+    queryKey: ["get-started", "session"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return { userId: null as string | null, organizationId: null as string | null };
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("organization_id, role")
+        .eq("user_id", data.user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return {
+        userId: data.user.id,
+        organizationId: membership?.organization_id ?? null,
+        email: data.user.email ?? null,
+      };
+    },
+  });
+
+  // Restore anything typed before signing in, so nothing is re-entered.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) setIntake({ ...EMPTY, ...(JSON.parse(saved) as GrowthSystemIntake) });
+    } catch {
+      /* ignore unreadable drafts */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(intake));
+    } catch {
+      /* storage unavailable */
+    }
+  }, [intake]);
+
+  useEffect(() => {
+    if (session.data?.email && !intake.email) {
+      setIntake((prev) => ({ ...prev, email: session.data!.email! }));
+    }
+  }, [session.data?.email]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const set = (key: keyof GrowthSystemIntake) => (value: string) =>
+    setIntake((prev) => ({ ...prev, [key]: value }));
+
+  const missing = useMemo(() => {
+    const problems: string[] = [];
+    if (!intake.fullName.trim()) problems.push("Full name");
+    if (!intake.businessName.trim()) problems.push("Business name");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(intake.email.trim())) problems.push("Email");
+    if (intake.phone.replace(/\D/g, "").length < 10) problems.push("Phone number");
+    if (!intake.businessType.trim()) problems.push("Business type");
+    if (!intake.city.trim()) problems.push("City");
+    if (!intake.state.trim()) problems.push("State");
+    if (!intake.services.trim()) problems.push("Primary services");
+    return problems;
+  }, [intake]);
+
+  const goToSummary = () => {
+    if (missing.length) {
+      setError(`Add: ${missing.join(", ")}`);
+      return;
+    }
+    setError(null);
+    setStep(1);
+  };
+
+  const signedIn = Boolean(session.data?.userId && session.data?.organizationId);
+  const cardsReady = isPaymentsConfigured();
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
+        <p className="eyebrow">Get started</p>
+        <h1 className="mt-2 font-display text-[clamp(1.6rem,5vw,2.3rem)] leading-tight font-semibold">
+          {GROWTH_SYSTEM.headline}
+        </h1>
+        <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
+          {usdExact(GROWTH_SYSTEM.setupPrice)} setup today, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
+          One complete growth system — no packages to compare.
+        </p>
+
+        <ol className="mt-7 grid gap-2 sm:grid-cols-3" aria-label="Checkout steps">
+          {STEPS.map((label, index) => (
+            <li
+              key={label}
+              aria-current={step === index ? "step" : undefined}
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[12px] ${
+                step === index
+                  ? "border-primary/50 bg-primary/10 text-foreground"
+                  : step > index
+                    ? "border-border bg-card text-muted-foreground"
+                    : "border-border text-muted-foreground"
+              }`}
+            >
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-border text-[11px]">
+                {step > index ? <Check className="size-3 text-primary" /> : index + 1}
+              </span>
+              {label}
+            </li>
+          ))}
+        </ol>
+
+        {step === 0 ? (
+          <section className="panel mt-6 p-5">
+            <h2 className="font-display text-[17px] font-semibold">Tell us about your business</h2>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              This is what we use to build and configure your system — it takes about a minute.
+            </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <Field label="Full name" value={intake.fullName} onChange={set("fullName")} autoComplete="name" required />
+              <Field
+                label="Business name"
+                value={intake.businessName}
+                onChange={set("businessName")}
+                autoComplete="organization"
+                required
+              />
+              <Field label="Email" type="email" value={intake.email} onChange={set("email")} autoComplete="email" required />
+              <Field label="Phone number" type="tel" value={intake.phone} onChange={set("phone")} autoComplete="tel" required />
+              <Field
+                label="Business website (optional)"
+                value={intake.website ?? ""}
+                onChange={set("website")}
+                placeholder="yourbusiness.com"
+              />
+              <Field
+                label="Business type"
+                value={intake.businessType}
+                onChange={set("businessType")}
+                placeholder="Mobile detailing, HVAC, landscaping…"
+                required
+              />
+              <Field label="City" value={intake.city} onChange={set("city")} autoComplete="address-level2" required />
+              <Field label="State" value={intake.state} onChange={set("state")} autoComplete="address-level1" required />
+              <div className="sm:col-span-2">
+                <Label htmlFor="services" className="text-[12px]">
+                  Primary services <span aria-hidden="true">*</span>
+                </Label>
+                <textarea
+                  id="services"
+                  value={intake.services}
+                  onChange={(event) => set("services")(event.target.value)}
+                  rows={3}
+                  className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  placeholder="Interior + exterior detailing, ceramic coating, fleet cleaning"
+                  required
+                />
+              </div>
+            </div>
+            {error ? (
+              <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+                {error}
+              </p>
+            ) : null}
+            <Button variant="signal" size="lg" className="mt-5 w-full sm:w-auto" onClick={goToSummary}>
+              Continue to order summary <ArrowRight className="size-4" />
+            </Button>
+          </section>
+        ) : null}
+
+        {step === 1 ? (
+          <section className="panel mt-6 p-5">
+            <h2 className="font-display text-[17px] font-semibold">Order summary</h2>
+            <div className="mt-5 rounded-md border border-border">
+              <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
+                <div>
+                  <p className="text-[14px] font-medium">{GROWTH_SYSTEM.name}</p>
+                  <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                </div>
+                <p className="tnum text-[15px] font-semibold whitespace-nowrap">
+                  {usdExact(GROWTH_SYSTEM.setupPrice)}
+                </p>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
+                <div>
+                  <p className="text-[14px] font-medium">Monthly subscription</p>
+                  <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
+                </div>
+                <p className="tnum text-[15px] font-semibold whitespace-nowrap">
+                  {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
+                </p>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+                <p className="text-[13px] font-medium">Charged today</p>
+                <p className="tnum text-[17px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice + GROWTH_SYSTEM.monthlyPrice)}</p>
+              </div>
+            </div>
+            <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
+              {GROWTH_SYSTEM.explainer} Today's total includes your {usdExact(GROWTH_SYSTEM.setupPrice)} setup and
+              your first {usdExact(GROWTH_SYSTEM.monthlyPrice)} month. After that, only{" "}
+              {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month recurs.
+            </p>
+            <dl className="mt-5 grid gap-2 border-t border-border pt-4 text-[12px] sm:grid-cols-2">
+              <Summary label="Name" value={intake.fullName} />
+              <Summary label="Business" value={intake.businessName} />
+              <Summary label="Email" value={intake.email} />
+              <Summary label="Phone" value={intake.phone} />
+              <Summary label="Business type" value={intake.businessType} />
+              <Summary label="Location" value={`${intake.city}, ${intake.state}`} />
+              {intake.website ? <Summary label="Website" value={intake.website} /> : null}
+              <Summary label="Primary services" value={intake.services} />
+            </dl>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" size="lg" onClick={() => setStep(0)}>
+                <ArrowLeft className="size-4" /> Edit information
+              </Button>
+              <Button variant="signal" size="lg" className="sm:flex-1" onClick={() => setStep(2)}>
+                Continue to secure payment <ArrowRight className="size-4" />
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 2 ? (
+          <section className="mt-6 space-y-4">
+            <div className="panel p-5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-4 text-primary" />
+                <h2 className="font-display text-[17px] font-semibold">Payment</h2>
+              </div>
+              <p className="mt-2 text-[13px] text-muted-foreground">
+                {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup plus your first{" "}
+                {usdExact(GROWTH_SYSTEM.monthlyPrice)} month today, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
+                Payments are processed securely by our payment provider — Revora never sees your card details.
+              </p>
+
+              {session.isLoading ? (
+                <p className="mt-4 text-[13px] text-muted-foreground">Checking your account…</p>
+              ) : !signedIn ? (
+                <div className="mt-4 rounded-md border border-border bg-muted/30 p-4">
+                  <p className="text-[13px] font-medium">Create your Revora account to pay</p>
+                  <p className="mt-1 text-[12px] text-muted-foreground">
+                    Your details are saved on this device, so nothing is re-entered. After creating your account
+                    you'll come straight back here to complete payment.
+                  </p>
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <Button asChild variant="signal" size="lg">
+                      <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+                        Create account
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                      <Link to="/auth" search={{ mode: "signin", redirect: "/get-started" }}>
+                        I already have an account
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ) : !cardsReady ? (
+                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                  Card checkout is not configured for this build yet, so no payment can be taken. Contact{" "}
+                  <a className="underline" href={revoraMailto("Revora checkout")}>
+                    {REVORA.email}
+                  </a>
+                  .
+                </p>
+              ) : payNow ? null : (
+                <Button variant="signal" size="lg" className="mt-4 w-full sm:w-auto" onClick={() => setPayNow(true)}>
+                  <Lock className="size-4" /> Pay {usdExact(GROWTH_SYSTEM.setupPrice)} setup &amp; start subscription
+                </Button>
+              )}
+
+              {!payNow ? (
+                <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
+                  <ArrowLeft className="size-4" /> Back to summary
+                </Button>
+              ) : null}
+            </div>
+
+            {payNow && signedIn && cardsReady ? (
+              <GrowthSystemCheckout
+                organizationId={session.data!.organizationId!}
+                intake={intake}
+                onClose={() => setPayNow(false)}
+              />
+            ) : null}
+          </section>
+        ) : null}
+
+        <p className="mt-8 text-[12px] text-muted-foreground">
+          Questions before you start? {REVORA.phoneDisplay} ·{" "}
+          <a className="text-primary hover:underline" href={revoraMailto("Revora Growth System")}>
+            {REVORA.email}
+          </a>
+        </p>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  autoComplete,
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  placeholder?: string;
+  autoComplete?: string;
+  required?: boolean;
+}) {
+  const id = label.toLowerCase().replace(/[^a-z]+/g, "-");
+  return (
+    <div>
+      <Label htmlFor={id} className="text-[12px]">
+        {label} {required ? <span aria-hidden="true">*</span> : null}
+      </Label>
+      <Input
+        id={id}
+        className="mt-1.5"
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        required={required}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </div>
+  );
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="truncate">{value || "—"}</dd>
+    </div>
+  );
+}

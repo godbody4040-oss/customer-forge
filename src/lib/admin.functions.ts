@@ -56,7 +56,7 @@ export const listClients = createServerFn({ method: "GET" })
     const { data: orgs, error } = await supabaseAdmin
       .from("organizations")
       .select(
-        "id, name, slug, industry, plan_id, subscription_status, is_suspended, is_demo, created_at",
+        "id, name, slug, industry, plan_id, subscription_status, is_suspended, is_demo, created_at, setup_paid_at, setup_checkout_session_id",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -64,7 +64,7 @@ export const listClients = createServerFn({ method: "GET" })
     const ids = (orgs ?? []).map((o) => o.id);
     if (!ids.length) return [];
 
-    const [profiles, sites, services, media, forms, leads, appts, events] = await Promise.all([
+    const [profiles, sites, services, media, forms, leads, appts, events, subs, pays] = await Promise.all([
       supabaseAdmin.from("business_profiles").select("*").in("organization_id", ids),
       supabaseAdmin.from("website_settings").select("*").in("organization_id", ids),
       supabaseAdmin.from("services").select("organization_id, bookable, is_active").in("organization_id", ids),
@@ -73,7 +73,18 @@ export const listClients = createServerFn({ method: "GET" })
       supabaseAdmin.from("leads").select("organization_id").in("organization_id", ids),
       supabaseAdmin.from("appointments").select("organization_id").in("organization_id", ids),
       supabaseAdmin.from("analytics_events").select("organization_id").in("organization_id", ids).limit(20000),
+      supabaseAdmin
+        .from("subscriptions")
+        .select(
+          "organization_id, status, provider_customer_id, provider_subscription_id, current_period_end, cancel_at_period_end, price_id",
+        )
+        .in("organization_id", ids),
+      supabaseAdmin
+        .from("payments")
+        .select("organization_id, amount, status")
+        .in("organization_id", ids),
     ]);
+
 
     const countBy = (rows: { organization_id: string }[] | null, id: string) =>
       (rows ?? []).filter((r) => r.organization_id === id).length;
@@ -92,6 +103,12 @@ export const listClients = createServerFn({ method: "GET" })
         analyticsCount: countBy(events.data, org.id),
       }).score;
 
+      const sub = (subs.data ?? []).find((s) => s.organization_id === org.id) ?? null;
+      const orgPayments = (pays.data ?? []).filter((p) => p.organization_id === org.id);
+      const paidTotal = orgPayments
+        .filter((p) => p.status === "completed")
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+
       return {
         id: org.id,
         name: org.name,
@@ -104,6 +121,7 @@ export const listClients = createServerFn({ method: "GET" })
         created_at: org.created_at,
         owner_name: profile?.owner_name ?? null,
         owner_email: profile?.owner_email ?? profile?.email ?? null,
+        owner_phone: profile?.phone ?? null,
         city: profile?.city ?? null,
         custom_domain: settings?.custom_domain ?? null,
         domain_status: settings?.domain_status ?? "not_connected",
@@ -111,10 +129,22 @@ export const listClients = createServerFn({ method: "GET" })
         domain_error: settings?.domain_error ?? null,
         publish_state: settings?.publish_state ?? "draft",
 
+        // Billing
+        setup_paid_at: org.setup_paid_at,
+        setup_session_id: org.setup_checkout_session_id,
+        subscription_state: sub?.status ?? null,
+        stripe_customer_id: sub?.provider_customer_id ?? null,
+        stripe_subscription_id: sub?.provider_subscription_id ?? null,
+        current_period_end: sub?.current_period_end ?? null,
+        cancel_at_period_end: Boolean(sub?.cancel_at_period_end),
+        paid_total: paidTotal,
+        payment_count: orgPayments.length,
+
         leads: countBy(leads.data, org.id),
         appointments: countBy(appts.data, org.id),
         readinessScore: score,
       };
+
     });
   });
 

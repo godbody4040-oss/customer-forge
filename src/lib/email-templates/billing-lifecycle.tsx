@@ -118,14 +118,15 @@ const PlanChangedEmail = (p: BillingProps) => (
 
 const data = {
   businessName: 'Elite Mobile Detailing',
-  planName: 'Growth',
+  planName: 'Revora Growth System',
   interval: 'monthly',
-  amount: '$249.00',
+  amount: '$250.00',
   accessUntil: 'September 28, 2026',
-  previousPlan: 'Starter',
-  newPlan: 'Growth',
+  previousPlan: 'Revora Growth System',
+  newPlan: 'Revora Growth System',
   billingUrl: 'https://revoragrowthsystems.com/app/billing',
 }
+
 
 export const welcomeTemplate = {
   component: WelcomeEmail,

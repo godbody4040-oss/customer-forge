@@ -118,11 +118,41 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       break;
     }
     case "checkout.session.completed": {
-      // Subscription state arrives through customer.subscription.* events.
-      if (object?.mode !== "payment") break;
       const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
+
+      // Revora Growth System: one subscription session that also carries the
+      // one-time setup line. Setup is only marked paid when Stripe confirms it.
+      if (md["kind"] === "growth_system" && md["organizationId"]) {
+        if (object?.payment_status === "unpaid") break;
+        const organizationId = md["organizationId"];
+        await admin
+          .from("organizations")
+          .update({
+            setup_paid_at: new Date().toISOString(),
+            setup_checkout_session_id: String(object?.id ?? ""),
+            plan_id: md["planId"] ?? null,
+          })
+          .eq("id", organizationId);
+        await recordStripeTransaction(admin, {
+          organizationId,
+          stripeId: `setup:${String(object?.id ?? "")}`,
+          amount: Number(md["setupAmount"] ?? 1500),
+          currency: String(object?.currency ?? "usd"),
+          description: "Revora Growth System setup fee",
+          status: "completed",
+          planId: md["planId"] ?? null,
+          interval: "monthly",
+          customerEmail: (object?.customer_details?.email as string | undefined) ?? null,
+          environment: env,
+        });
+        break;
+      }
+
+      // Subscription state otherwise arrives through customer.subscription.* events.
+      if (object?.mode !== "payment") break;
       if (md["kind"] !== "service" || !md["paymentId"]) break;
       if (object?.payment_status !== "paid") break;
+
 
       const { data: payment } = await admin
         .from("payments")
@@ -176,10 +206,45 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       }
       break;
     }
+    case "payment_intent.succeeded":
+    case "payment_intent.payment_failed": {
+      // Bookkeeping/observability only — activation always comes from the
+      // checkout session and subscription events above, never from here.
+      const organizationId = (object?.metadata?.organizationId as string | undefined) ?? null;
+      const succeeded = event.type === "payment_intent.succeeded";
+      if (organizationId) {
+        await admin.from("audit_logs").insert({
+          organization_id: organizationId,
+          action: `payment_intent.${succeeded ? "succeeded" : "failed"}`,
+          entity: "payment_intent",
+          entity_id: String(object?.id ?? ""),
+          metadata: {
+            provider: "stripe",
+            environment: env,
+            amount: Number(object?.amount ?? 0) / 100,
+            currency: String(object?.currency ?? "usd"),
+            failure_reason: succeeded
+              ? null
+              : ((object?.last_payment_error?.message as string | undefined) ?? "Card payment failed"),
+          },
+        });
+        if (!succeeded) {
+          await admin.from("notifications").insert({
+            organization_id: organizationId,
+            title: "Card payment failed",
+            body: `${(object?.last_payment_error?.message as string | undefined) ?? "The card payment did not go through."} Update your payment method to activate or keep your Revora system.`,
+            kind: "warning",
+            link: "/app/billing",
+          });
+        }
+      }
+      break;
+    }
     default:
       console.log("[payments:webhook] unhandled event", event.type);
   }
 }
+
 
 /**
  * Event-level idempotency: Stripe delivers at least once, so a verified event

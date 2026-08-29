@@ -1,30 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { Check, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { getPlans } from "@/lib/plans.functions";
-import { currency } from "@/lib/format";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
-
-
-const plansQuery = queryOptions({ queryKey: ["plans"], queryFn: () => getPlans() });
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 
 export const Route = createFileRoute("/pricing")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
-      { title: "Pricing — Revora" },
+      { title: "Pricing — Revora Growth System | $1,500 setup + $250/mo" },
       {
         name: "description",
         content:
-          "Simple monthly pricing for local service businesses: website, instant quotes, booking, CRM and analytics. 1-day free trial, no card required.",
+          "One complete growth system for local businesses: $1,500 one-time setup and $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
-      { property: "og:title", content: "Pricing — Revora" },
+      { property: "og:title", content: "Pricing — Revora Growth System" },
       {
         property: "og:description",
-        content: "Plans from Starter to Pro. Everything you need to turn local searches into booked jobs.",
+        content: "$1,500 one-time setup, then $250/month. No confusing packages. One complete growth system.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Pricing,
@@ -32,79 +29,85 @@ export const Route = createFileRoute("/pricing")({
 
 const FAQ = [
   {
-    q: "Do I need a card to start?",
-    a: "No. The 1-day trial is free and gives you the full platform, including a live website address.",
+    q: "What does the $1,500 setup cover?",
+    a: "The initial build, customization, configuration and launch of your system: website, lead capture, CRM, booking, quote flow, follow-up automation and local SEO foundation.",
+  },
+  {
+    q: "What does the $250/month cover?",
+    a: "Ongoing platform access, automation, hosting and system management, updates, growth services and technical support.",
   },
   {
     q: "Can I use my own domain?",
-    a: "Yes. Start on your Revora address, then point your own domain at it whenever you're ready.",
-  },
-  {
-    q: "What if I have more than one location?",
-    a: "Pro supports multiple businesses under one login, each with its own site, calendar and pipeline.",
+    a: "Yes. Domain connection and setup is included — start on your Revora address and point your own domain at it whenever you're ready.",
   },
   {
     q: "Can I cancel?",
-    a: "Any time, from billing settings. You keep access until the end of the period you've paid for.",
+    a: "Any time, from billing settings. You keep access until the end of the period you've paid for, and your data is preserved.",
   },
 ];
 
 function Pricing() {
-  const { data: plans } = useSuspenseQuery(plansQuery);
-
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="hero-aura mx-auto max-w-6xl px-4 py-16">
+      <main className="hero-aura mx-auto max-w-5xl px-4 py-16">
         <p className="eyebrow">Pricing</p>
         <h1 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
-          One tool instead of five subscriptions
+          {GROWTH_SYSTEM.headline}
         </h1>
-        <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-          Website, instant quoting, booking, CRM, reviews and analytics in one place. Pick the plan
-          that matches how much you're growing.
+        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+          {GROWTH_SYSTEM.positioning}
         </p>
 
-        <div className="mt-10 grid items-stretch gap-3 md:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`panel card-lift flex h-full flex-col p-6 ${plan.is_featured ? "border-primary/40" : ""}`}
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-base font-semibold">{plan.name}</h2>
-                {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
+        <section className="panel card-lift mt-10 overflow-hidden p-0">
+          <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
+            <div className="border-b border-border p-7 md:border-r md:border-b-0">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-[20px] font-semibold">{GROWTH_SYSTEM.name}</h2>
+                <Pill tone="signal">Complete system</Pill>
               </div>
-              <p className="tnum mt-5 font-display text-[34px] leading-none font-semibold">
-                {currency(Number(plan.monthly_price))}
-                <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
+
+              <div className="mt-7 flex flex-wrap items-end gap-x-8 gap-y-5">
+                <div>
+                  <p className="tnum font-display text-[40px] leading-none font-semibold">
+                    {usdExact(GROWTH_SYSTEM.setupPrice)}
+                  </p>
+                  <p className="mt-1.5 text-[13px] font-medium">Setup</p>
+                  <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                </div>
+                <div>
+                  <p className="tnum font-display text-[40px] leading-none font-semibold">
+                    {usdExact(GROWTH_SYSTEM.monthlyPrice)}
+                    <span className="text-[14px] font-normal text-muted-foreground">/month</span>
+                  </p>
+                  <p className="mt-1.5 text-[13px] font-medium">Ongoing</p>
+                  <p className="max-w-xs text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
+                </div>
+              </div>
+
+              <Button asChild variant="signal" size="lg" className="mt-8 w-full">
+                <Link to="/get-started">{GROWTH_SYSTEM.ctaPrimary}</Link>
+              </Button>
+              <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.ctaSecondary}</p>
+              <p className="mt-4 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+                {GROWTH_SYSTEM.explainer}
               </p>
-              <p className="mt-1.5 text-[12px] text-muted-foreground">
-                or {currency(Number(plan.annual_price))}/yr — two months free
-              </p>
-              <p className="mt-3 text-[13px] text-muted-foreground">{plan.tagline}</p>
-              <ul className="mt-5 flex-1 space-y-2 border-t border-border pt-5">
-                {((plan.features as string[] | null) ?? []).map((f) => (
-                  <li key={f} className="flex gap-2 text-[13px] text-muted-foreground">
-                    <span aria-hidden="true" className="text-primary">
-                      ✓
-                    </span>
-                    {f}
+            </div>
+
+            <div className="bg-card/40 p-7">
+              <p className="eyebrow">Everything included</p>
+              <ul className="mt-4 space-y-2.5">
+                {GROWTH_SYSTEM.includes.map((feature) => (
+                  <li key={feature} className="flex gap-2 text-[13px] text-muted-foreground">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                    {feature}
                   </li>
                 ))}
               </ul>
-              <Button
-                asChild
-                variant={plan.is_featured ? "signal" : "outline"}
-                className="mt-6 w-full"
-              >
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Start 1-day trial
-                </Link>
-              </Button>
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
 
         <section className="mt-16" id="faq">
           <h2 className="font-display text-[19px] font-semibold">Questions owners actually ask</h2>

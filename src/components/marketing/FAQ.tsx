@@ -27,13 +27,14 @@ export const FAQ_ITEMS = [
     a: "No. Revora gives you the system, the follow-up and the measurement. Nobody can honestly guarantee leads, rankings or revenue, and we don't.",
   },
   {
-    q: "How does the free trial work?",
-    a: "Every plan starts with a 1-day free trial. No card is required to start. When the trial ends you choose a plan to keep workspace access.",
+    q: "How does pricing work?",
+    a: "One offer: $1,500 one-time setup to build, customize and launch your system, then $250/month for the platform, automation, hosting, updates, growth services and support.",
   },
   {
     q: "Can I cancel?",
-    a: "Yes. You can cancel from billing at any time and keep access until the end of the paid period. There is no setup fee.",
+    a: "Yes. You can cancel from billing at any time and keep access until the end of the paid period. Your data is preserved.",
   },
+
   {
     q: "Can I use my own domain?",
     a: "Yes. Connect a domain you already own from the Domain Center, follow the DNS steps, and Revora verifies DNS and HTTPS before reporting the domain as live.",

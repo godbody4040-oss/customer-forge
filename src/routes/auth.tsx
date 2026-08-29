@@ -134,8 +134,9 @@ function AuthPage() {
           </h1>
           <p className="mt-2 text-[13px] text-muted-foreground">
             {isSignup
-              ? "1-day free trial. No card required."
+              ? "Create your account, then launch your Revora Growth System."
               : "Sign in to your business command center."}
+
           </p>
 
           <div className="panel mt-6 p-5">

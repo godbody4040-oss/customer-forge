@@ -11,27 +11,26 @@ type Admin = SupabaseClient<Database>;
 type SubStatus = Database["public"]["Enums"]["subscription_status"];
 type Interval = Database["public"]["Enums"]["billing_interval"];
 
-export const PLAN_PRICES: Record<string, { monthly: string; annual: string }> = {
-  starter: { monthly: "revora_starter_monthly", annual: "revora_starter_yearly" },
-  growth: { monthly: "revora_growth_monthly", annual: "revora_growth_yearly" },
-  pro: { monthly: "revora_pro_monthly", annual: "revora_pro_yearly" },
-};
+/** The single Revora offer: $1,500 setup + $250/month. */
+export const GROWTH_PLAN_ID = "revora_growth_system";
+export const MONTHLY_PRICE_KEY = "revora_system_monthly";
+export const SETUP_PRICE_KEY = "revora_system_setup";
+export const SETUP_AMOUNT = 1500;
+export const MONTHLY_AMOUNT = 250;
 
-/** Human-readable price id (lookup key) -> { planId, interval }. */
+/** Price lookup key -> plan mapping. Only one plan exists. */
 export function planFromPriceId(priceId: string | null | undefined) {
   if (!priceId) return null;
-  for (const [planId, prices] of Object.entries(PLAN_PRICES)) {
-    if (prices.monthly === priceId) return { planId, interval: "monthly" as Interval };
-    if (prices.annual === priceId) return { planId, interval: "annual" as Interval };
-  }
+  if (priceId === MONTHLY_PRICE_KEY) return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
+  if (priceId === SETUP_PRICE_KEY) return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
   return null;
 }
 
-export function priceIdFor(planId: string, interval: Interval): string | null {
-  const prices = PLAN_PRICES[planId];
-  if (!prices) return null;
-  return interval === "annual" ? prices.annual : prices.monthly;
+/** The recurring price key for the single plan. */
+export function priceIdFor(planId: string): string | null {
+  return planId === GROWTH_PLAN_ID ? MONTHLY_PRICE_KEY : null;
 }
+
 
 export function resolvePriceKey(price: {
   lookup_key?: string | null;

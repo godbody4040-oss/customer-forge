@@ -44,8 +44,8 @@ export function SiteHeader() {
             <Link to="/auth">Sign in</Link>
           </Button>
           <Button asChild variant="signal" size="sm">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Start free
+            <Link to="/get-started">
+              Get started
             </Link>
           </Button>
         </div>
@@ -85,8 +85,8 @@ export function SiteHeader() {
               </Link>
             </Button>
             <Button asChild variant="signal">
-              <Link to="/auth" search={{ mode: "signup" }} onClick={() => setOpen(false)}>
-                Start free
+              <Link to="/get-started" onClick={() => setOpen(false)}>
+                Get started
               </Link>
             </Button>
           </div>
@@ -168,18 +168,18 @@ export function SiteFooter() {
                 </ul>
               </nav>
             ))}
-            <nav aria-label="Start free">
-              <p className="eyebrow">Start free</p>
+            <nav aria-label="Get started">
+              <p className="eyebrow">Get started</p>
               <ul className="mt-3 space-y-2.5 text-[13px]">
                 <li>
                   <Link
-                    to="/auth"
-                    search={{ mode: "signup" }}
+                    to="/get-started"
                     className="text-muted-foreground transition-colors hover:text-primary"
                   >
-                    Start free trial
+                    Start my Revora system
                   </Link>
                 </li>
+
                 <li>
                   <Link
                     to="/auth"

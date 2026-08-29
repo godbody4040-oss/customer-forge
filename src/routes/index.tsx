@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   CalendarCheck,
@@ -21,22 +20,19 @@ import { ROICalculator } from "@/components/marketing/ROICalculator";
 import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { getPlans } from "@/lib/plans.functions";
 import { INDUSTRIES } from "@/lib/domain";
-import { currency } from "@/lib/format";
-
-const plansQuery = queryOptions({ queryKey: ["plans"], queryFn: () => getPlans() });
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
       { title: "Revora — Turn Website Visitors Into Paying Customers" },
       {
         name: "description",
         content:
-          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. 1-day free trial.",
+          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. $1,500 setup, then $250/month.",
       },
+
       { property: "og:title", content: "Revora — Turn website visitors into paying customers" },
       {
         property: "og:description",
@@ -139,7 +135,7 @@ const STEPS = [
 ];
 
 function Landing() {
-  const { data: plans } = useSuspenseQuery(plansQuery);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -162,8 +158,8 @@ function Landing() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button asChild variant="signal" size="lg">
-                  <Link to="/auth" search={{ mode: "signup" }}>
-                    Start free <ArrowRight className="size-4" />
+                  <Link to="/get-started">
+                    {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
@@ -171,13 +167,14 @@ function Landing() {
                 </Button>
               </div>
               <p className="mt-4 text-[12px] text-muted-foreground">
-                No credit card required • 1-day free trial • Cancel anytime
+                {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup • {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month •
+                Cancel anytime
               </p>
 
               <dl className="mt-10 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-border pt-6 sm:max-w-lg sm:grid-cols-3">
                 {[
-                  ["1 day", "Free trial, no card"],
-                  ["1 day", "From signup to live site"],
+                  ["1 system", "Instead of five subscriptions"],
+                  ["Done for you", "Built, launched and managed"],
                   ["1 inbox", "Calls, quotes and bookings"],
                 ].map(([value, label]) => (
                   <div key={label}>
@@ -188,6 +185,7 @@ function Landing() {
                   </div>
                 ))}
               </dl>
+
             </div>
             <DashboardPreview />
           </div>
@@ -353,58 +351,62 @@ function Landing() {
           </div>
         </section>
 
-        {/* Pricing */}
-        <section className="border-b border-border bg-card">
+        {/* Pricing — one offer only */}
+        <section id="pricing" className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading eyebrow="Pricing" title="Priced like one extra job a month" />
-            <div className="mt-8 grid items-stretch gap-3 md:grid-cols-3">
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`panel card-lift flex h-full flex-col p-5 ${
-                    plan.is_featured ? "border-primary/40" : ""
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-display text-[15px] font-semibold">{plan.name}</h3>
-                    {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
-                  </div>
-                  <p className="tnum mt-4 font-display text-[30px] leading-none font-semibold">
-                    {currency(Number(plan.monthly_price))}
-                    <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
-                  </p>
-                  <p className="mt-2 text-[13px] text-muted-foreground">{plan.tagline}</p>
-                  <ul className="mt-4 flex-1 space-y-2 border-t border-border pt-4">
-                    {((plan.features as string[] | null) ?? []).map((f) => (
-                      <li key={f} className="flex gap-2 text-[13px] text-muted-foreground">
-                        <span aria-hidden="true" className="text-primary">
-                          ✓
-                        </span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    asChild
-                    variant={plan.is_featured ? "signal" : "outline"}
-                    className="mt-5 w-full"
-                  >
-                    <Link to="/auth" search={{ mode: "signup" }}>
-                      Start free trial
-                    </Link>
-                  </Button>
+            <SectionHeading eyebrow="Pricing" title={GROWTH_SYSTEM.headline} />
+            <div className="panel card-lift mt-8 grid gap-0 overflow-hidden p-0 md:grid-cols-[1.1fr_1fr]">
+              <div className="border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-display text-[18px] font-semibold">{GROWTH_SYSTEM.name}</h3>
+                  <Pill tone="signal">Complete system</Pill>
                 </div>
-              ))}
+                <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-5">
+                  <div>
+                    <p className="tnum font-display text-[34px] leading-none font-semibold">
+                      {usdExact(GROWTH_SYSTEM.setupPrice)}
+                    </p>
+                    <p className="mt-1.5 text-[13px] font-medium">Setup</p>
+                    <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                  </div>
+                  <div>
+                    <p className="tnum font-display text-[34px] leading-none font-semibold">
+                      {usdExact(GROWTH_SYSTEM.monthlyPrice)}
+                      <span className="text-[13px] font-normal text-muted-foreground">/month</span>
+                    </p>
+                    <p className="mt-1.5 text-[13px] font-medium">Ongoing</p>
+                    <p className="max-w-xs text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
+                  </div>
+                </div>
+                <Button asChild variant="signal" size="lg" className="mt-7 w-full">
+                  <Link to="/get-started">{GROWTH_SYSTEM.ctaPrimary}</Link>
+                </Button>
+                <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.ctaSecondary}</p>
+              </div>
+              <div className="bg-background/40 p-6 sm:p-7">
+                <p className="eyebrow">Everything included</p>
+                <ul className="mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-1">
+                  {GROWTH_SYSTEM.includes.map((feature) => (
+                    <li key={feature} className="flex gap-2 text-[13px] text-muted-foreground">
+                      <span aria-hidden="true" className="text-primary">
+                        ✓
+                      </span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
             <p className="mt-5 text-[12px] text-muted-foreground">
-              Every plan starts with a 1-day trial. No card, no setup fee, cancel any time.{" "}
+              {GROWTH_SYSTEM.explainer}{" "}
               <Link to="/pricing" className="text-primary hover:underline">
-                Full comparison
+                Pricing details
               </Link>
               .
             </p>
           </div>
         </section>
+
 
         {/* ROI estimator */}
         <section id="roi" className="border-b border-border">
@@ -447,8 +449,8 @@ function Landing() {
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild variant="signal" size="lg">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Start my free trial <ArrowRight className="size-4" />
+                <Link to="/get-started">
+                  {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
@@ -456,8 +458,9 @@ function Landing() {
               </Button>
             </div>
             <p className="mt-5 text-[12px] text-muted-foreground">
-              No credit card required for the 1-day trial. Cancel anytime.
+              {usdExact(GROWTH_SYSTEM.setupPrice)} setup, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
             </p>
+
           </div>
         </section>
 
