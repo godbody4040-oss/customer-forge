@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,8 +103,55 @@ function Onboarding() {
     goals: ["quote"],
   });
 
+  // Signup answers are saved to the user's account, so signing out (or losing
+  // the tab) never loses progress — they sign back in and resume where they were.
+  const [restored, setRestored] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth.user;
+      if (!user) {
+        if (!cancelled) setRestored(true);
+        return;
+      }
+      const { data: row } = await supabase
+        .from("onboarding_drafts")
+        .select("step, data, updated_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (row?.data && typeof row.data === "object") {
+        setDraft((prev) => ({ ...prev, ...(row.data as Partial<Draft>) }));
+        setStep(Math.min(Math.max(row.step ?? 0, 0), STEPS.length - 1));
+        setSavedAt(row.updated_at ?? null);
+      }
+      setRestored(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!restored || ws?.workspace) return;
+    const timer = setTimeout(async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth.user;
+      if (!user) return;
+      const { error: saveError } = await supabase
+        .from("onboarding_drafts")
+        .upsert({ user_id: user.id, step, data: draft as never }, { onConflict: "user_id" });
+      if (!saveError) setSavedAt(new Date().toISOString());
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [draft, step, restored, ws?.workspace]);
+
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
+
 
   const toggleGoal = (goal: GoalKey) =>
     setDraft((prev) => ({
@@ -266,6 +313,8 @@ function Onboarding() {
         } as never,
       } as never);
 
+      await supabase.from("onboarding_drafts").delete().eq("user_id", user.id);
+
       toast.success("Your website draft is ready to review.");
       navigate({ to: "/app/website", replace: true });
     } catch (err) {
@@ -306,6 +355,11 @@ function Onboarding() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12">
+        {savedAt ? (
+          <p className="mb-4 text-[12px] text-muted-foreground">
+            Progress saved to your account — sign out any time and pick up where you left off.
+          </p>
+        ) : null}
         <ol className="flex flex-wrap items-center gap-2" aria-label="Progress">
           {STEPS.map((label, index) => (
             <li key={label} className="flex items-center gap-2">
