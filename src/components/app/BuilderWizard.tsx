@@ -69,6 +69,10 @@ export function BuilderWizard({
     launch: true,
   };
 
+  const completion = Math.round(
+    (Object.values(done).filter(Boolean).length / Object.keys(done).length) * 100,
+  );
+
   const index = WIZARD_STEPS.findIndex((s) => s.key === step);
   const current = WIZARD_STEPS[index]!;
   const previous = index > 0 ? WIZARD_STEPS[index - 1] : null;
