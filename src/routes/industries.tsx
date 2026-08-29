@@ -56,11 +56,17 @@ function Industries() {
           <h2 className="font-display text-[19px] font-semibold">Trades we cover</h2>
           <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {INDUSTRIES.map((i) => (
-              <li key={i.name} className="panel p-4">
-                <p className="font-display text-[14px] font-semibold">{i.name}</p>
-                <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
-                  {i.emphasis}
-                </p>
+              <li key={i.name}>
+                <Link
+                  to="/industries/$slug"
+                  params={{ slug: industrySlug(i.name) }}
+                  className="panel card-lift block h-full p-4 transition-colors hover:border-primary/40"
+                >
+                  <p className="font-display text-[14px] font-semibold">{i.name}</p>
+                  <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                    {i.emphasis}
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>
