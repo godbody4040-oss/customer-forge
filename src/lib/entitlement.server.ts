@@ -32,7 +32,7 @@ export async function orgEntitlement(
 
   return {
     allowed: false,
-    reason: "Your free access has ended. Complete the $1,500 setup payment to keep using your system.",
+    reason: "Your free access has ended. Complete the $750 setup payment to keep using your system.",
   };
 }
 

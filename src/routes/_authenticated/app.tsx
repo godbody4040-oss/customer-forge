@@ -33,6 +33,7 @@ import { Pill } from "@/components/app/Bits";
 import { useNotifications } from "@/lib/queries";
 import { useSignOut, useWorkspace } from "@/lib/use-tenant";
 import { endSupportSession } from "@/lib/admin.functions";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
 import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -221,8 +222,8 @@ function AppShell() {
             {trialStillActive ? (
               <Pill tone="attention">
                 {trialHoursLeft > 1
-                  ? `Free day · ${trialHoursLeft}h left`
-                  : "Free day · under 1h left"}
+                  ? `Free access · ${trialHoursLeft}h left`
+                  : "Free access · under 1h left"}
               </Pill>
             ) : org?.subscription_status === "trialing" ? (
               <Pill tone="attention">Trial</Pill>
@@ -281,9 +282,9 @@ function AppShell() {
               <p className="eyebrow">Access paused</p>
               <h1 className="mt-2 font-display text-2xl font-bold">Activate your Revora Growth System</h1>
               <p className="mt-3 text-[14px] text-muted-foreground">
-                Your 1-day free trial has ended. Your website, leads, bookings, and settings are saved —
-                nothing is lost. Pay the $1,500 one-time setup to restore full access; your first 30 days of
-                the $250/month platform fee are free, then it continues at $250/month unless canceled.
+                Your {GROWTH_SYSTEM.fullAccessTrialDays}-day free full-access trial has ended. Your website, leads, bookings, and settings are saved —
+                nothing is lost. Pay the $750 one-time setup to restore full access; your first 30 days of
+                the $100/month platform fee are free, then it continues at $100/month unless canceled.
               </p>
 
               <Button asChild variant="signal" className="mt-6">

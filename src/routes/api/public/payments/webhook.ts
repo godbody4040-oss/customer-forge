@@ -137,7 +137,7 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         await recordStripeTransaction(admin, {
           organizationId,
           stripeId: `setup:${String(object?.id ?? "")}`,
-          amount: Number(md["setupAmount"] ?? 1500),
+          amount: Number(md["setupAmount"] ?? 750),
           currency: String(object?.currency ?? "usd"),
           description: "Revora Growth System setup fee",
           status: "completed",

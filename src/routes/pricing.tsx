@@ -10,16 +10,16 @@ import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Revora Growth System | $1,500 setup + $250/mo" },
+      { title: "Pricing — Revora Growth System | $750 setup + $100/mo" },
       {
         name: "description",
         content:
-          "$1,500 one-time setup. Your first 30 days of the $250/month platform fee are free. After the 30-day trial your subscription continues at $250/month unless canceled. Website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+          "$750 one-time setup. Your first 30 days of the $100/month platform fee are free. After the 30-day trial your subscription continues at $100/month unless canceled. Website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
       { property: "og:title", content: "Pricing — Revora Growth System" },
       {
         property: "og:description",
-        content: "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. One complete growth system.",
+        content: "$750 one-time setup + 30-day free platform trial + $100/month afterward. One complete growth system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,12 +30,12 @@ export const Route = createFileRoute("/pricing")({
 
 const FAQ = [
   {
-    q: "What does the $1,500 setup cover?",
+    q: "What does the $750 setup cover?",
     a: "The initial build, customization, configuration and launch of your system: website, domain setup, lead capture, CRM, booking, quote flow, follow-up automation, local SEO foundation and analytics. It is charged today.",
   },
   {
-    q: "What does the $250/month cover?",
-    a: "Ongoing platform access, automation, hosting and system management, maintenance, website updates, reporting, optimization and technical support. Your first 30 days are free, then $250/month unless canceled.",
+    q: "What does the $100/month cover?",
+    a: "Ongoing platform access, automation, hosting and system management, maintenance, website updates, reporting, optimization and technical support. Your first 30 days are free, then $100/month unless canceled.",
   },
   {
     q: "Can I use my own domain?",

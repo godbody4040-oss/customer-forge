@@ -1,14 +1,14 @@
 /**
  * Revora's single commercial offer. Every price shown or charged anywhere in
  * the application derives from this module — there is exactly one offer:
- * $1,500 one-time setup + $250/month.
+ * $750 one-time setup + $100/month.
  */
 export const GROWTH_SYSTEM = {
   planId: "revora_growth_system",
   name: "Revora Growth System",
   setupProductId: "revora_growth_system_setup",
-  setupPrice: 1500,
-  monthlyPrice: 250,
+  setupPrice: 750,
+  monthlyPrice: 100,
   /** Stripe lookup keys (stable across test and live). */
   setupPriceKey: "revora_system_setup",
   monthlyPriceKey: "revora_system_monthly",
@@ -20,17 +20,19 @@ export const GROWTH_SYSTEM = {
     "Ongoing platform, automation, support, hosting/system management, and growth services.",
   /** Length of the free platform trial, in days. Mirrors the Stripe trial. */
   trialDays: 30,
+  /** Length of the full-system free access window at signup, in days. */
+  fullAccessTrialDays: 3,
   trialBadge: "30-DAY FREE PLATFORM TRIAL",
-  ctaPrimary: "START MY REVORA SYSTEM — $1,500 SETUP",
+  ctaPrimary: "START MY REVORA SYSTEM — $750 SETUP",
   ctaSecondary:
-    "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. Cancel anytime. No hidden fees.",
+    "$750 one-time setup + 30-day free platform trial + $100/month afterward. Cancel anytime. No hidden fees.",
   ctaShort: "START MY REVORA SYSTEM",
   /** The single secondary CTA label used site-wide. */
   ctaDemo: "SEE REVORA IN ACTION",
 
   /** The single canonical offer sentence. Use this verbatim wherever the offer is explained. */
   explainer:
-    "$1,500 one-time setup. Your first 30 days of the $250/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $250/month unless canceled.",
+    "$750 one-time setup. Your first 30 days of the $100/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $100/month unless canceled.",
   setupIncludes: [
     "Custom website",
     "Domain setup",

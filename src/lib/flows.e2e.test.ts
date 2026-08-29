@@ -45,7 +45,7 @@ describe("marketing and discovery", () => {
   live("serves the home page with pricing and a signup path", async () => {
     const { status, body } = await get("/");
     expect(status).toBe(200);
-    expect(body).toMatch(/1,500/);
+    expect(body).toMatch(/750/);
     expect(body).toMatch(/250/);
     expect(body).toMatch(/get-started|Get started/i);
   });
