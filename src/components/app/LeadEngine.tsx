@@ -20,7 +20,7 @@ export function LeadEngine({
   const build = useBuildWebsiteStructure(organizationId);
   const audit = leadEngineAudit(pages);
 
-  const tone = audit.score >= 85 ? "positive" : audit.score >= 60 ? "attention" : "critical";
+  const tone = audit.score >= 85 ? "signal" : audit.score >= 60 ? "attention" : "danger";
 
   return (
     <section className="panel p-5">
@@ -37,7 +37,7 @@ export function LeadEngine({
         </div>
         <div className="text-right">
           <p className="tnum font-display text-[30px] leading-none font-semibold">{audit.score}</p>
-          <Pill tone={tone as "positive" | "attention" | "critical"}>out of 100</Pill>
+          <Pill tone={tone}>out of 100</Pill>
         </div>
       </div>
 
