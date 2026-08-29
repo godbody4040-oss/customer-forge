@@ -51,12 +51,9 @@ function BillingPage() {
   const { data: products, isLoading: loadingProducts } = usePaymentProducts();
   const { data: payments, isLoading: loadingPayments } = usePayments(orgId);
   const { data: config } = usePaymentConfig();
-  const { data: subscriptionPlans, isLoading: loadingPlans } = usePlans();
   const { data: billing } = useBillingState(orgId);
   const [selected, setSelected] = useState<PaymentProduct | null>(null);
   const [cardService, setCardService] = useState<PaymentProduct | null>(null);
-  const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
-  const [checkoutPlan, setCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
   const queryClient = useQueryClient();
   const cardsReady = isPaymentsConfigured();
@@ -66,15 +63,12 @@ function BillingPage() {
   const paidTotal = paid.reduce((sum, p) => sum + Number(p.amount), 0);
   const pending = rows.filter((p) => p.status === "pending" || p.status === "approved").length;
 
-  const services = (products ?? []).filter((p) => p.kind !== "subscription");
+  const services = (products ?? []).filter(
+    (p) => p.kind !== "subscription" && p.id !== GROWTH_SYSTEM.setupProductId,
+  );
   const subscription = billing?.subscription ?? null;
-  const currentPlanId = subscription?.plan_id ?? org?.plan_id ?? null;
-  const currentPlan = (subscriptionPlans ?? []).find((plan) => plan.id === currentPlanId) ?? null;
-  const currentPrice = currentPlan
-    ? subscription?.billing_interval === "annual"
-      ? currentPlan.annual_price
-      : currentPlan.monthly_price
-    : null;
+  const setupPaid = Boolean(org?.setup_paid_at);
+
 
   // Stripe embedded checkout redirects here after a completed payment.
   useEffect(() => {
