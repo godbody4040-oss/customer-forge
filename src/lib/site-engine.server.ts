@@ -7,6 +7,8 @@
  */
 
 import type { SiteCopy } from "@/lib/site-engine";
+import type { SiteBrief } from "@/lib/site-brief";
+import { INTENT_META, readBrief } from "@/lib/site-brief";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 export const COPY_MODEL = "google/gemini-3-flash-preview";
@@ -251,3 +253,97 @@ Rules:
   }
   return { edits, reply: str(data["reply"], edits.length ? "Here are the changes I suggest." : "I couldn't make that change without more information.") };
 }
+
+/* ---------------------- Business intelligence orchestrator ---------------------- */
+
+/**
+ * Business Intelligence + Customer Intent + Conversion Architecture pass.
+ *
+ * Runs before structure and copy so every later stage shares one business
+ * context. Facts are never invented: anything the client hasn't supplied is
+ * returned in `missingFacts` for the owner to fill in.
+ */
+export async function analyzeBusiness(facts: CopyFacts): Promise<SiteBrief> {
+  const system = `You analyse a local business so a website can be built around how its customers actually buy.
+Return JSON with exactly these keys:
+positioning (one plain sentence, max 200 chars, what the business does and for whom),
+buyer (who the site is written for, max 160 chars),
+buyerGoal (what that person is trying to get done, max 160 chars),
+intents (array, 2-4 values, only from: ${Object.keys(INTENT_KEYS).join(", ")}),
+primaryAction (max 30 chars, the single most valuable action for this business model),
+secondaryAction (max 30 chars),
+objections (array of 3-5 real hesitations a buyer in this category has, max 120 chars each),
+trustNeeds (array of 3-5 things the site must show to be believed, based only on supplied facts),
+qualifyingFields (array of 4-8 short lead-form field names that are genuinely relevant to this category),
+pagePriorities (array of 3-6 short page names in order of value),
+toneNotes (max 200 chars, how the copy should sound for this buyer),
+missingFacts (array of up to 5 short items the owner should supply to make the site stronger).
+Never assert reviews, credentials, prices, guarantees or history that were not supplied.`;
+
+  const attempt = async (model: string) =>
+    chatJson(system, `Analyse this business.\n\nFACTS:\n${factSheet(facts)}`, model);
+
+  let data: Record<string, unknown>;
+  try {
+    data = await attempt(ANALYSIS_MODEL);
+  } catch (error) {
+    // Credit and policy failures must surface so the queue can pause correctly.
+    if (error instanceof AiGatewayError && (error.status === 402 || error.status === 403 || error.status === 429))
+      throw error;
+    data = await attempt(COPY_MODEL);
+  }
+
+  const brief = readBrief({ ...data, source: ANALYSIS_MODEL });
+  return brief ?? fallbackBrief(facts);
+}
+
+const INTENT_KEYS = INTENT_META;
+
+/** Deterministic brief used when the analysis pass is unavailable. */
+export function fallbackBrief(facts: CopyFacts): SiteBrief {
+  const bookable = facts.goals.includes("bookings");
+  const priced = facts.services.some((s) => s.price != null || s.starting_price != null);
+  return {
+    positioning: facts.description?.trim()
+      ? facts.description.trim().slice(0, 200)
+      : `${facts.businessName} provides ${facts.industry || "local services"}${facts.city ? ` in ${facts.city}` : ""}.`,
+    buyer: `People nearby looking for ${facts.industry || "this service"}.`,
+    buyerGoal: bookable ? "Book a time without a back-and-forth." : "Find out what it costs and who to trust.",
+    intents: bookable ? ["ready_to_book", "wants_price", "local_search"] : ["wants_price", "researching", "local_search"],
+    primaryAction: facts.ctaLabel,
+    secondaryAction: "See services",
+    objections: [
+      "Not sure what this will cost.",
+      "Not sure the business covers my area.",
+      "Not sure how quickly they can get to me.",
+    ],
+    trustNeeds: ["Clear service detail", "A real way to make contact", priced ? "Visible pricing" : "Honest pricing guidance"],
+    qualifyingFields: ["Name", "Phone", "Email", "Service needed", "Location", "Preferred timing", "Notes"],
+    pagePriorities: ["Home", "Services", facts.goals.includes("bookings") ? "Booking" : "Quote", "Contact"],
+    toneNotes: "Plain, specific and local. No hype.",
+    missingFacts: [
+      ...(facts.description ? [] : ["A short description of the business in your own words"]),
+      ...(facts.phone ? [] : ["A phone number customers can call"]),
+      ...(facts.serviceArea || facts.city ? [] : ["The areas you serve"]),
+      ...(priced ? [] : ["A price or starting price on at least one service"]),
+    ],
+    source: "rules",
+  };
+}
+
+const briefContext = (brief?: SiteBrief | null) =>
+  brief
+    ? `\n\nSHARED BUSINESS BRIEF (use this so every section reads as one website):\n${JSON.stringify(
+        {
+          positioning: brief.positioning,
+          buyer: brief.buyer,
+          buyerGoal: brief.buyerGoal,
+          intents: brief.intents,
+          objectionsToAnswer: brief.objections,
+          trustToEstablish: brief.trustNeeds,
+          tone: brief.toneNotes,
+        },
+        null,
+        2,
+      )}`
+    : "";
