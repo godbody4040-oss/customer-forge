@@ -65,7 +65,7 @@ const iso = (seconds: unknown) =>
  */
 export async function syncStripeSubscription(
   admin: Admin,
-  subscription: Record<string, any>,
+  subscription: any,
   env: StripeEnv,
 ): Promise<{ ok: boolean; organizationId?: string; reason?: string }> {
   const organizationId = subscription?.metadata?.organizationId as string | undefined;

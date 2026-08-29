@@ -47,7 +47,7 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
     if (!org) return { error: "You do not have access to this workspace." };
 
     const { data: membership } = await context.supabase
-      .from("organization_members")
+      .from("memberships")
       .select("role")
       .eq("organization_id", data.organizationId)
       .eq("user_id", context.userId)

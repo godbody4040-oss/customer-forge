@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
-async function handleEvent(event: { type: string; data: { object: Record<string, any> } }, env: StripeEnv) {
+async function handleEvent(event: { type: string; data: { object: any } }, env: StripeEnv) {
   const { adminClient } = await import("@/lib/payments.server");
   const { syncStripeSubscription, recordStripeTransaction, planFromPriceId, resolvePriceKey } = await import(
     "@/lib/stripe-billing.server"
@@ -70,7 +70,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
         }
         try {
           const event = await verifyWebhook(request, rawEnv);
-          await handleEvent(event as { type: string; data: { object: Record<string, any> } }, rawEnv);
+          await handleEvent(event as { type: string; data: { object: any } }, rawEnv);
           return Response.json({ received: true });
         } catch (error) {
           console.error("[payments:webhook] error", (error as Error).message);
