@@ -34,6 +34,20 @@ export type SiteSectionSettings = {
   };
 } | null;
 
+export type SiteComponent = {
+  id: string;
+  section_id: string;
+  kind: string;
+  label: string | null;
+  body: string | null;
+  media_url: string | null;
+  /** Signed, viewable URL for private media. */
+  url: string | null;
+  link_url: string | null;
+  link_label: string | null;
+  sort_order: number;
+};
+
 export type SiteSection = {
   id: string;
   kind: string;
@@ -43,14 +57,20 @@ export type SiteSection = {
   body: string | null;
   settings: SiteSectionSettings;
   sort_order: number;
+  components?: SiteComponent[];
 };
+
 
 /**
  * Reads everything a business website renders. `allowUnpublished` is only ever
  * true behind an authorised, unexpired preview token.
  */
-export async function loadSite(slug: string, options?: { allowUnpublished?: boolean }) {
+export async function loadSite(
+  slug: string,
+  options?: { allowUnpublished?: boolean; pageSlug?: string },
+) {
   const allowUnpublished = options?.allowUnpublished === true;
+
   // Anonymous reads are limited to published sites by policy, so an authorised
   // draft preview reads with the privileged client instead.
   const supabase = allowUnpublished
@@ -181,36 +201,58 @@ export async function loadSite(slug: string, options?: { allowUnpublished?: bool
   }
   const resolve = (value: string | null): string | null => (value ? (signed.get(value) ?? value) : value);
 
-  // Structured content: the builder's page/section tree for the home page,
-  // including the per-page search and social settings.
+  // Structured content: the builder's page/section tree. Loads the requested
+  // page when one is asked for, otherwise the home page, plus the navigation
+  // list of every page that is allowed to be shown.
   const pageColumns =
-    "id, slug, title, seo_title, seo_description, seo_canonical, og_title, og_description, og_image_url, noindex";
-  const { data: homePage } = await (allowUnpublished
-    ? supabase
-        .from("website_pages")
-        .select(pageColumns)
-        .eq("organization_id", orgId)
-        .eq("kind", "home")
-        .maybeSingle()
-    : supabase
-        .from("website_pages")
-        .select(pageColumns)
-        .eq("organization_id", orgId)
-        .eq("kind", "home")
-        .eq("is_visible", true)
-        .maybeSingle());
+    "id, slug, title, kind, seo_title, seo_description, seo_canonical, og_title, og_description, og_image_url, noindex";
+  const pageQuery = supabase.from("website_pages").select(pageColumns).eq("organization_id", orgId);
+  const scopedPage = options?.pageSlug
+    ? pageQuery.eq("slug", options.pageSlug)
+    : pageQuery.eq("kind", "home");
+  const { data: currentPage } = await (allowUnpublished
+    ? scopedPage.maybeSingle()
+    : scopedPage.eq("is_visible", true).maybeSingle());
+
+  const navQuery = supabase
+    .from("website_pages")
+    .select("slug, title, kind, noindex, sort_order")
+    .eq("organization_id", orgId);
+  const { data: navRows } = await (allowUnpublished
+    ? navQuery.order("sort_order")
+    : navQuery.eq("is_visible", true).order("sort_order"));
 
   let sections: SiteSection[] = [];
-  if (homePage?.id) {
+  if (currentPage?.id) {
     const query = supabase
       .from("website_sections")
       .select("id, kind, variant, heading, subheading, body, settings, sort_order")
-      .eq("page_id", homePage.id);
+      .eq("page_id", currentPage.id);
     const { data: rows } = await (allowUnpublished
       ? query.order("sort_order")
       : query.eq("is_visible", true).order("sort_order"));
     sections = (rows ?? []) as SiteSection[];
   }
+
+  let components: SiteComponent[] = [];
+  if (sections.length) {
+    const componentQuery = supabase
+      .from("website_components")
+      .select("id, section_id, kind, label, body, media_url, link_url, link_label, sort_order")
+      .in(
+        "section_id",
+        sections.map((section) => section.id),
+      );
+    const { data: rows } = await (allowUnpublished
+      ? componentQuery.order("sort_order")
+      : componentQuery.eq("is_visible", true).order("sort_order"));
+    components = (rows ?? []).map((row) => ({ ...row, url: resolve(row.media_url) })) as SiteComponent[];
+  }
+
+  const sectionsWithComponents = sections.map((section) => ({
+    ...section,
+    components: components.filter((component) => component.section_id === section.id),
+  }));
 
   return {
     org: { ...org, id: orgId, name: org.name ?? "", slug: org.slug ?? "" },
@@ -233,7 +275,10 @@ export async function loadSite(slug: string, options?: { allowUnpublished?: bool
     })),
     gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
     quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
-    content: homePage ? { page: homePage, sections } : null,
+    content: currentPage ? { page: currentPage, sections: sectionsWithComponents } : null,
+    nav: (navRows ?? []).filter((row) => !row.noindex || row.kind !== "thanks"),
+    pageFound: options?.pageSlug ? !!currentPage : true,
+
     publishState: gate?.publish_state ?? "draft",
   };
 }

@@ -23,15 +23,18 @@ function publicClient() {
 
 /** Everything a public business website needs, in one SSR-friendly read. */
 export const getPublicSite = createServerFn({ method: "GET" })
-  .inputValidator((input: { slug: string }) => {
+  .inputValidator((input: { slug: string; pageSlug?: string }) => {
     const slug = String(input?.slug ?? "").trim().slice(0, 80);
     if (!/^[a-z0-9-]+$/.test(slug)) throw new Error("Invalid business address");
-    return { slug };
+    const raw = String(input?.pageSlug ?? "").trim().slice(0, 80);
+    if (raw && !/^[a-z0-9-]+$/.test(raw)) throw new Error("Invalid page address");
+    return raw ? { slug, pageSlug: raw } : { slug };
   })
   .handler(async ({ data }) => {
     const { loadSite } = await import("@/lib/public-site.server");
-    return loadSite(data.slug);
+    return loadSite(data.slug, data.pageSlug ? { pageSlug: data.pageSlug } : undefined);
   });
+
 
 export type PublicSite = Awaited<ReturnType<typeof loadSite>>;
 

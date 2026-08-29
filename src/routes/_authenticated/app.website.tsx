@@ -14,6 +14,7 @@ import { readSeo } from "@/lib/site-seo";
 import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
+import { LeadEngine } from "@/components/app/LeadEngine";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks } from "@/components/app/PreviewLinks";
@@ -159,6 +160,7 @@ function WebsitePage() {
             <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
             <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
             <BusinessBriefPanel brief={brief} />
+            <LeadEngine organizationId={orgId} canManage={manage} />
             <WebsiteStructure organizationId={orgId} canManage={manage} />
             <AiCopyAssistant
               organizationId={orgId}

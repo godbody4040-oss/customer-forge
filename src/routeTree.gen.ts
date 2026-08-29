@@ -40,6 +40,7 @@ import { Route as AuthenticatedAppQuotesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
+import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsSiteEngineRouteImport } from './routes/api/public/jobs/site-engine'
 import { Route as ApiPublicPaypalWebhookRouteImport } from './routes/api/public/paypal/webhook'
@@ -210,6 +211,11 @@ const AuthenticatedAppWebsiteRoute = AuthenticatedAppWebsiteRouteImport.update({
   path: '/website',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const SSlugPageRoute = SSlugPageRouteImport.update({
+  id: '/$page',
+  path: '/$page',
+  getParentRoute: () => SSlugRoute,
+} as any)
 const AuthenticatedAdminClientsOrgIdRoute =
   AuthenticatedAdminClientsOrgIdRouteImport.update({
     id: '/$orgId',
@@ -255,7 +261,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/p/$token': typeof PTokenRoute
-  '/s/$slug': typeof SSlugRoute
+  '/s/$slug': typeof SSlugRouteWithChildren
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
@@ -291,7 +298,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/p/$token': typeof PTokenRoute
-  '/s/$slug': typeof SSlugRoute
+  '/s/$slug': typeof SSlugRouteWithChildren
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -308,6 +315,7 @@ export interface FileRoutesByTo {
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
@@ -331,7 +339,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/p/$token': typeof PTokenRoute
-  '/s/$slug': typeof SSlugRoute
+  '/s/$slug': typeof SSlugRouteWithChildren
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/app/services'
     | '/app/settings'
     | '/app/website'
+    | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
     | '/admin/clients/$orgId'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/app/services'
     | '/app/settings'
     | '/app/website'
+    | '/s/$slug/$page'
     | '/admin'
     | '/app'
     | '/admin/clients/$orgId'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/services'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/website'
+    | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/admin/clients/$orgId'
@@ -483,7 +495,7 @@ export interface RootRouteChildren {
   IndustriesRoute: typeof IndustriesRoute
   PricingRoute: typeof PricingRoute
   PTokenRoute: typeof PTokenRoute
-  SSlugRoute: typeof SSlugRoute
+  SSlugRoute: typeof SSlugRouteWithChildren
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaypalWebhookRoute: typeof ApiPublicPaypalWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -710,6 +722,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppWebsiteRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/s/$slug/$page': {
+      id: '/s/$slug/$page'
+      path: '/$page'
+      fullPath: '/s/$slug/$page'
+      preLoaderRoute: typeof SSlugPageRouteImport
+      parentRoute: typeof SSlugRoute
+    }
     '/_authenticated/admin/clients/$orgId': {
       id: '/_authenticated/admin/clients/$orgId'
       path: '/$orgId'
@@ -838,6 +857,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface SSlugRouteChildren {
+  SSlugPageRoute: typeof SSlugPageRoute
+}
+
+const SSlugRouteChildren: SSlugRouteChildren = {
+  SSlugPageRoute: SSlugPageRoute,
+}
+
+const SSlugRouteWithChildren = SSlugRoute._addFileChildren(SSlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -848,7 +877,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndustriesRoute: IndustriesRoute,
   PricingRoute: PricingRoute,
   PTokenRoute: PTokenRoute,
-  SSlugRoute: SSlugRoute,
+  SSlugRoute: SSlugRouteWithChildren,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaypalWebhookRoute: ApiPublicPaypalWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

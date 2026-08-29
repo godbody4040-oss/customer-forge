@@ -9,6 +9,9 @@ import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-s
 import { currency, dateShort } from "@/lib/format";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
+import { SiteNav } from "@/routes/s.$slug.$page";
+import { StickyCallBar } from "@/components/site/SiteSections";
+
 
 export const Route = createFileRoute("/s/$slug")({
   loader: async ({ params }) => {
@@ -190,7 +193,9 @@ export function PublicSiteView({
             </Button>
           </div>
         </div>
+        <SiteNav site={site} />
       </header>
+
 
       <section className="border-b border-border">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 lg:grid-cols-[1.1fr_1fr] lg:py-20">
@@ -465,6 +470,9 @@ export function PublicSiteView({
           </div>
         </div>
       </footer>
+
+      <StickyCallBar site={site} label={ctaLabel} />
     </div>
+
   );
 }
