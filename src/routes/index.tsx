@@ -212,10 +212,8 @@ function Landing() {
             </div>
           </div>
         </section>
-
-
         {/* Customer journey */}
-        <section className="border-b border-border">
+        <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
               eyebrow="From search to customer"
@@ -226,7 +224,8 @@ function Landing() {
         </section>
 
         {/* Without vs with */}
-        <section className="border-b border-border bg-card">
+        <section className="border-b border-border">
+
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
               eyebrow="The difference"
