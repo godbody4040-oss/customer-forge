@@ -13,10 +13,78 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
+      const lifecycle = await import("@/lib/billing-lifecycle.server");
       const payload =
         event.type === "customer.subscription.deleted" ? { ...object, status: "canceled" } : object;
+
+      // Snapshot the previous row so plan changes and new cancellations are detectable.
+      const { data: previous } = object?.id
+        ? await admin
+            .from("subscriptions")
+            .select("plan_id, cancel_at_period_end, status")
+            .eq("provider_subscription_id", String(object.id))
+            .maybeSingle()
+        : { data: null };
+
       const result = await syncStripeSubscription(admin, payload, env);
-      if (!result.ok) console.error("[payments:webhook] subscription not linked", result.reason);
+      if (!result.ok || !result.organizationId) {
+        console.error("[payments:webhook] subscription not linked", result.reason);
+        break;
+      }
+      const organizationId = result.organizationId;
+      const stripeStatus = String(payload?.status ?? "");
+      const periodEnd = payload?.items?.data?.[0]?.current_period_end ?? payload?.current_period_end;
+      const accessUntil =
+        typeof periodEnd === "number" ? new Date(periodEnd * 1000).toISOString() : null;
+
+      if (event.type === "customer.subscription.created" && ["active", "trialing"].includes(stripeStatus)) {
+        const priceKey = payload?.items?.data?.[0]?.price
+          ? resolvePriceKey(payload.items.data[0].price)
+          : null;
+        const mapped = planFromPriceId(priceKey);
+        await lifecycle.handleSubscriptionActivated(admin, {
+          organizationId,
+          stripeSubscriptionId: String(object.id),
+          planId: mapped?.planId ?? (payload?.metadata?.planId as string | undefined) ?? null,
+          interval: mapped?.interval ?? null,
+          environment: env,
+        });
+      }
+
+      if (event.type === "customer.subscription.updated") {
+        const newPriceKey = payload?.items?.data?.[0]?.price
+          ? resolvePriceKey(payload.items.data[0].price)
+          : null;
+        const newPlan = planFromPriceId(newPriceKey)?.planId ?? null;
+        if (newPlan && previous?.plan_id && newPlan !== previous.plan_id) {
+          await lifecycle.handlePlanChanged(admin, {
+            organizationId,
+            stripeSubscriptionId: String(object.id),
+            previousPlanId: previous.plan_id,
+            newPlanId: newPlan,
+            environment: env,
+          });
+        }
+        if (payload?.cancel_at_period_end && !previous?.cancel_at_period_end) {
+          await lifecycle.handleSubscriptionCanceled(admin, {
+            organizationId,
+            stripeSubscriptionId: String(object.id),
+            accessUntil,
+            environment: env,
+            phase: "scheduled",
+          });
+        }
+      }
+
+      if (event.type === "customer.subscription.deleted") {
+        await lifecycle.handleSubscriptionCanceled(admin, {
+          organizationId,
+          stripeSubscriptionId: String(object.id),
+          accessUntil,
+          environment: env,
+          phase: "ended",
+        });
+      }
       break;
     }
     case "invoice.paid":

@@ -1,6 +1,12 @@
 import type { ComponentType } from 'react'
 import { template as automationMessageTemplate } from './automation-message'
 import { template as leadAlertTemplate } from './lead-alert'
+import {
+  canceledTemplate,
+  planChangedTemplate,
+  saleAlertTemplate,
+  welcomeTemplate,
+} from './billing-lifecycle'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -22,4 +28,8 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'automation-message': automationMessageTemplate,
   'lead-alert': leadAlertTemplate,
+  'billing-welcome': welcomeTemplate,
+  'billing-sale-alert': saleAlertTemplate,
+  'billing-canceled': canceledTemplate,
+  'billing-plan-changed': planChangedTemplate,
 }
