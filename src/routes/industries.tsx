@@ -26,7 +26,7 @@ function Industries() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-16">
+      <main className="hero-aura mx-auto max-w-6xl px-4 py-16">
         <p className="eyebrow">Industries</p>
         <h1 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
           Every trade sells differently
@@ -39,9 +39,9 @@ function Industries() {
 
         <section className="mt-12">
           <h2 className="font-display text-[19px] font-semibold">Templates</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-4 grid items-stretch gap-3 md:grid-cols-3">
             {TEMPLATES.filter((t) => t.id !== "default").map((t) => (
-              <div key={t.id} className="panel p-5">
+              <div key={t.id} className="panel card-lift flex h-full flex-col p-5">
                 <h3 className="font-display text-[15px] font-semibold">{t.name}</h3>
                 <p className="mt-2 text-[13px] text-muted-foreground">{t.focus}</p>
                 <p className="mt-3 text-[11px] tracking-wider uppercase text-primary">

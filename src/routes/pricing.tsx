@@ -53,7 +53,7 @@ function Pricing() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-16">
+      <main className="hero-aura mx-auto max-w-6xl px-4 py-16">
         <p className="eyebrow">Pricing</p>
         <h1 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
           One tool instead of five subscriptions
@@ -63,9 +63,12 @@ function Pricing() {
           that matches how much you're growing.
         </p>
 
-        <div className="mt-10 grid gap-3 md:grid-cols-3">
+        <div className="mt-10 grid items-stretch gap-3 md:grid-cols-3">
           {plans.map((plan) => (
-            <div key={plan.id} className={`panel p-6 ${plan.is_featured ? "border-primary/40" : ""}`}>
+            <div
+              key={plan.id}
+              className={`panel card-lift flex h-full flex-col p-6 ${plan.is_featured ? "border-primary/40" : ""}`}
+            >
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-base font-semibold">{plan.name}</h2>
                 {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
@@ -78,7 +81,7 @@ function Pricing() {
                 or {currency(Number(plan.annual_price))}/yr — two months free
               </p>
               <p className="mt-3 text-[13px] text-muted-foreground">{plan.tagline}</p>
-              <ul className="mt-5 space-y-2 border-t border-border pt-5">
+              <ul className="mt-5 flex-1 space-y-2 border-t border-border pt-5">
                 {((plan.features as string[] | null) ?? []).map((f) => (
                   <li key={f} className="flex gap-2 text-[13px] text-muted-foreground">
                     <span aria-hidden="true" className="text-primary">
@@ -101,11 +104,11 @@ function Pricing() {
           ))}
         </div>
 
-        <section className="mt-16">
+        <section className="mt-16" id="faq">
           <h2 className="font-display text-[19px] font-semibold">Questions owners actually ask</h2>
           <dl className="mt-5 grid gap-3 md:grid-cols-2">
             {FAQ.map((item) => (
-              <div key={item.q} className="panel p-5">
+              <div key={item.q} className="panel card-lift p-5">
                 <dt className="font-display text-[14px] font-semibold">{item.q}</dt>
                 <dd className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{item.a}</dd>
               </div>
