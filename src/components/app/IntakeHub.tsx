@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { INTAKE_FIELDS, intakeCompleteness, intakeGaps, type IntakeValues } from "@/lib/intake-map";
 import { CONVERSION_GOALS, normalizeGoal, type ConversionGoal } from "@/lib/conversion-engine";
+import { smartIntakeValue } from "@/lib/intake-smart";
 import { cn } from "@/lib/utils";
 
 /**
@@ -90,6 +91,9 @@ export function IntakeHub({
                   disabled={!canManage}
                   rows={3}
                   onChange={(event) => setDraft((d) => ({ ...d, [field.key]: event.target.value }))}
+                  onBlur={(event) =>
+                    setDraft((d) => ({ ...d, [field.key]: smartIntakeValue(field.key, event.target.value) }))
+                  }
                   className={cn(
                     "mt-2 w-full rounded-md border bg-background px-2.5 py-2 text-[13px] outline-none focus:border-primary",
                     missing ? "border-accent/60" : "border-border",
@@ -101,6 +105,23 @@ export function IntakeHub({
                   value={value}
                   disabled={!canManage}
                   onChange={(event) => setDraft((d) => ({ ...d, [field.key]: event.target.value }))}
+                  onBlur={(event) =>
+                    setDraft((d) => ({ ...d, [field.key]: smartIntakeValue(field.key, event.target.value) }))
+                  }
+                  inputMode={field.key === "phone" ? "tel" : field.key === "email" ? "email" : "text"}
+                  autoComplete={
+                    field.key === "phone"
+                      ? "tel"
+                      : field.key === "email"
+                        ? "email"
+                        : field.key === "city"
+                          ? "address-level2"
+                          : field.key === "name"
+                            ? "organization"
+                            : "off"
+                  }
+                  autoCapitalize={field.key === "email" ? "none" : "words"}
+                  spellCheck={field.key === "email" ? false : undefined}
                   className={cn(
                     "mt-2 w-full rounded-md border bg-background px-2.5 py-2 text-[13px] outline-none focus:border-primary",
                     missing ? "border-accent/60" : "border-border",
