@@ -43,6 +43,8 @@ const NAV = [
   { to: "/app/services", label: "Services", icon: Wrench, exact: false },
   { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false },
   { to: "/app/automations", label: "Automations", icon: Zap, exact: false },
+  { to: "/app/campaigns", label: "Campaigns & QR", icon: QrCode, exact: false },
+  { to: "/app/reviews", label: "Reviews", icon: Star, exact: false },
   { to: "/app/website", label: "Website", icon: Globe, exact: false },
   { to: "/app/domain", label: "Domain", icon: Globe2, exact: false },
   { to: "/app/launch", label: "Launch", icon: Rocket, exact: false },

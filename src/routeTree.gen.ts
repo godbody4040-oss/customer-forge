@@ -40,6 +40,7 @@ import { Route as AuthenticatedAppDomainRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppLaunchRouteImport } from './routes/_authenticated/app.launch'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppQuotesRouteImport } from './routes/_authenticated/app.quotes'
+import { Route as AuthenticatedAppReviewsRouteImport } from './routes/_authenticated/app.reviews'
 import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
@@ -213,6 +214,11 @@ const AuthenticatedAppQuotesRoute = AuthenticatedAppQuotesRouteImport.update({
   path: '/quotes',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppReviewsRoute = AuthenticatedAppReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppServicesRoute =
   AuthenticatedAppServicesRouteImport.update({
     id: '/services',
@@ -297,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/quotes': typeof AuthenticatedAppQuotesRoute
+  '/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/quotes': typeof AuthenticatedAppQuotesRoute
+  '/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/_authenticated/app/launch': typeof AuthenticatedAppLaunchRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/quotes': typeof AuthenticatedAppQuotesRoute
+  '/_authenticated/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/app/launch'
     | '/app/leads'
     | '/app/quotes'
+    | '/app/reviews'
     | '/app/services'
     | '/app/settings'
     | '/app/website'
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/app/launch'
     | '/app/leads'
     | '/app/quotes'
+    | '/app/reviews'
     | '/app/services'
     | '/app/settings'
     | '/app/website'
@@ -508,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/launch'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/quotes'
+    | '/_authenticated/app/reviews'
     | '/_authenticated/app/services'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/website'
@@ -761,6 +773,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppQuotesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/reviews': {
+      id: '/_authenticated/app/reviews'
+      path: '/reviews'
+      fullPath: '/app/reviews'
+      preLoaderRoute: typeof AuthenticatedAppReviewsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/services': {
       id: '/_authenticated/app/services'
       path: '/services'
@@ -879,6 +898,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppLaunchRoute: typeof AuthenticatedAppLaunchRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppQuotesRoute: typeof AuthenticatedAppQuotesRoute
+  AuthenticatedAppReviewsRoute: typeof AuthenticatedAppReviewsRoute
   AuthenticatedAppServicesRoute: typeof AuthenticatedAppServicesRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppWebsiteRoute: typeof AuthenticatedAppWebsiteRoute
@@ -895,6 +915,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppLaunchRoute: AuthenticatedAppLaunchRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppQuotesRoute: AuthenticatedAppQuotesRoute,
+  AuthenticatedAppReviewsRoute: AuthenticatedAppReviewsRoute,
   AuthenticatedAppServicesRoute: AuthenticatedAppServicesRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppWebsiteRoute: AuthenticatedAppWebsiteRoute,
