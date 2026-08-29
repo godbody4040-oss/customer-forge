@@ -19,6 +19,7 @@ import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
+import { PlatformEngine } from "@/components/app/PlatformEngine";
 import {
   AiCopyAssistant,
   RevoraScorePanel,
@@ -213,6 +214,23 @@ function WebsitePage() {
             <PreviewLinks organizationId={orgId} canManage={manage} />
             <VersionHistory organizationId={orgId} canManage={manage} />
             <VersionDiff organizationId={orgId} />
+            <PlatformEngine
+              businessName={org?.name ?? null}
+              slug={org?.slug ?? null}
+              profile={profile}
+              services={(services ?? []).map((s) => ({
+                name: s.name,
+                description: s.description,
+                price: s.starting_price,
+                bookable: s.bookable,
+              }))}
+              seo={{
+                title: seo.headline ?? null,
+                description: seo.meta_description ?? null,
+                headline: seo.headline ?? copy?.heroHeadline ?? null,
+              }}
+              pages={pages ?? []}
+            />
           </div>
         }
       />
