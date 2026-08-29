@@ -7,20 +7,49 @@
  * blocks with no data are simply left out.
  */
 
-export type PageKind = "home" | "services" | "about" | "contact" | "custom";
+export type PageKind =
+  | "home"
+  | "services"
+  | "service"
+  | "area"
+  | "pricing"
+  | "book"
+  | "about"
+  | "reviews"
+  | "gallery"
+  | "faq"
+  | "offers"
+  | "contact"
+  | "thanks"
+  | "privacy"
+  | "custom";
 
 export type SectionKind =
   | "hero"
+  | "trust_bar"
   | "intro"
   | "services"
+  | "service_detail"
   | "benefits"
+  | "process"
+  | "stats"
   | "gallery"
   | "reviews"
+  | "guarantee"
+  | "offer"
+  | "lead_magnet"
   | "area"
+  | "areas"
   | "faq"
+  | "pricing"
+  | "quote"
+  | "booking"
   | "cta"
+  | "sticky_cta"
   | "contact"
+  | "policy"
   | "custom";
+
 
 export type ContentComponent = {
   id: string;
