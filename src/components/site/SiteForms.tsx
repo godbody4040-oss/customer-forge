@@ -10,6 +10,7 @@ import { submitPublicLead, trackPublicEvent, type PublicSite } from "@/lib/publi
 import { readAttribution } from "@/lib/attribution";
 import { currency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useStepScroll } from "@/lib/use-step-scroll";
 
 type Site = NonNullable<PublicSite>;
 

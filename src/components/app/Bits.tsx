@@ -47,14 +47,16 @@ export function Panel({
   children,
   className,
   as: As = "section",
+  ref,
   ...rest
 }: {
   children: ReactNode;
   className?: string;
   as?: "section" | "div" | "article";
+  ref?: Ref<HTMLElement>;
 } & Omit<HTMLAttributes<HTMLElement>, "className" | "children">) {
   return (
-    <As className={cn("panel p-4", className)} {...rest}>
+    <As ref={ref} className={cn("panel p-4", className)} {...rest}>
       {children}
     </As>
   );

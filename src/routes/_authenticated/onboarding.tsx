@@ -14,6 +14,7 @@ import { ErrorNote } from "@/components/app/Bits";
 import { INDUSTRIES } from "@/lib/domain";
 import { useWorkspace } from "@/lib/use-tenant";
 import { cn } from "@/lib/utils";
+import { useStepScroll } from "@/lib/use-step-scroll";
 import {
   WEBSITE_GOALS,
   generateWebsitePlan,
