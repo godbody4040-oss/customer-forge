@@ -135,7 +135,7 @@ const STEPS = [
 ];
 
 function Landing() {
-  const { data: plans } = useSuspenseQuery(plansQuery);
+
 
   return (
     <div className="min-h-screen bg-background">
