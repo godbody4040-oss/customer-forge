@@ -161,11 +161,12 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       });
     }
 
+    let appointmentId: string | null = null;
     if (data.booking) {
       const starts = new Date(data.booking.startsAt);
       if (Number.isNaN(starts.getTime())) throw new Error("Pick a valid appointment time.");
       const ends = new Date(starts.getTime() + data.booking.durationMinutes * 60_000);
-      await supabase.from("appointments").insert({
+      const { data: appointment } = await supabase.from("appointments").insert({
         organization_id: orgId,
         lead_id: lead.id,
         service_id: data.serviceId || null,
@@ -176,8 +177,37 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         ends_at: ends.toISOString(),
         status: "pending",
         notes: data.message || null,
-      });
+      })
+        .select("id")
+        .single();
+      appointmentId = appointment?.id ?? null;
     }
+
+    // Origin event for the CRM timeline: every public submission is visible as
+    // the first activity on the lead, with the channel it came from.
+    const originBody =
+      data.kind === "booking"
+        ? `Booking requested from the public website${data.serviceInterest ? ` — ${data.serviceInterest}` : ""}.`
+        : data.kind === "quote"
+          ? `Quote submitted from the public website — estimate $${data.quote?.min ?? 0}–$${data.quote?.max ?? 0}.`
+          : data.kind === "contact"
+            ? "Contact form submitted from the public website."
+            : "Lead captured from the public website.";
+    const { error: activityError } = await supabase.from("lead_activities").insert({
+      organization_id: orgId,
+      lead_id: lead.id,
+      appointment_id: appointmentId,
+      kind: data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "form_submission",
+      body: [originBody, data.message ? `"${data.message}"` : null].filter(Boolean).join(" "),
+      metadata: {
+        source: data.source || "website",
+        campaign: data.campaign ?? null,
+        city: data.city || null,
+        service_interest: data.serviceInterest || null,
+        estimated_value: data.estimatedValue,
+      } as never,
+    });
+    if (activityError) console.error("public lead activity insert failed", activityError);
 
     const titles: Record<string, string> = {
       inquiry: `New lead: ${data.name}`,
