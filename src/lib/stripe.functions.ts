@@ -131,6 +131,150 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
     }
   });
 
+/** Starts an embedded Stripe one-time checkout for a Revora service (cards + wallets). */
+export const createServiceCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { organizationId: string; productId: string; returnUrl: string; environment: StripeEnv }) => {
+      const productId = String(input?.productId ?? "").slice(0, 80);
+      if (!/^[0-9a-f-]{36}$/i.test(productId)) throw new Error("Choose a service to pay for");
+      const returnUrl = String(input?.returnUrl ?? "").slice(0, 500);
+      if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
+      return {
+        organizationId: uuid(input?.organizationId),
+        productId,
+        returnUrl,
+        environment: env(input?.environment),
+      };
+    },
+  )
+  .handler(async ({ data, context }): Promise<{ clientSecret: string; paymentId: string } | { error: string }> => {
+    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+    const { adminClient, logPaymentError } = await import("@/lib/payments.server");
+
+    // RLS proves membership: a non-member cannot read this organization.
+    const { data: org } = await context.supabase
+      .from("organizations")
+      .select("id, name")
+      .eq("id", data.organizationId)
+      .maybeSingle();
+    if (!org) return { error: "You do not have access to this workspace." };
+
+    const { data: membership } = await context.supabase
+      .from("memberships")
+      .select("role")
+      .eq("organization_id", data.organizationId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!["owner", "admin", "manager"].includes(membership?.role ?? "")) {
+      return { error: "Only workspace owners and admins can make payments." };
+    }
+
+    const admin = await adminClient();
+    const { data: product } = await admin
+      .from("payment_products")
+      .select("id, name, description, amount, currency, kind, plan_id, billing_interval, is_active")
+      .eq("id", data.productId)
+      .maybeSingle();
+    if (!product?.is_active) return { error: "That service is not available." };
+
+    const email = (context.claims as { email?: string } | null)?.email ?? null;
+    const { data: payment, error: insertError } = await admin
+      .from("payments")
+      .insert({
+        organization_id: data.organizationId,
+        user_id: context.userId,
+        product_id: product.id,
+        plan_id: product.plan_id,
+        amount: product.amount,
+        currency: product.currency,
+        description: product.name,
+        billing_interval: product.billing_interval,
+        environment: data.environment,
+        payment_provider: "stripe",
+        status: "created",
+        customer_email: email,
+        metadata: { checkout: "stripe_service" },
+      })
+      .select("id, amount, currency")
+      .single();
+    if (insertError || !payment) {
+      logPaymentError("stripe-service-record", { productId: product.id, message: insertError?.message });
+      return { error: "We could not start that payment. Please try again." };
+    }
+
+    try {
+      const stripe = createStripeClient(data.environment);
+      const found = await stripe.customers.search({
+        query: `metadata['organizationId']:'${data.organizationId}'`,
+        limit: 1,
+      });
+      let customerId = found.data[0]?.id;
+      if (!customerId) {
+        const created = await stripe.customers.create({
+          ...(email ? { email } : {}),
+          name: org.name,
+          metadata: { organizationId: data.organizationId, userId: context.userId },
+        });
+        customerId = created.id;
+      }
+
+      const metadata = {
+        kind: "service",
+        organizationId: data.organizationId,
+        productId: product.id,
+        paymentId: payment.id,
+        userId: context.userId,
+      };
+      const base = {
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: payment.currency.toLowerCase(),
+              unit_amount: Math.round(Number(payment.amount) * 100),
+              product_data: {
+                name: product.name,
+                ...(product.description ? { description: product.description.slice(0, 300) } : {}),
+              },
+            },
+          },
+        ],
+        mode: "payment" as const,
+        ui_mode: "embedded_page" as const,
+        return_url: data.returnUrl,
+        customer: customerId,
+        metadata,
+        payment_intent_data: { metadata },
+      };
+
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({ ...base, automatic_tax: { enabled: true } });
+      } catch (taxError) {
+        const message = getStripeErrorMessage(taxError);
+        if (!/automatic tax|head office|tax calculation/i.test(message)) throw taxError;
+        session = await stripe.checkout.sessions.create(base);
+      }
+      if (!session.client_secret) throw new Error("The payment provider did not return a checkout session.");
+
+      await admin
+        .from("payments")
+        .update({ status: "pending", metadata: { checkout: "stripe_service", stripe_session_id: session.id } })
+        .eq("id", payment.id);
+
+      return { clientSecret: session.client_secret, paymentId: payment.id };
+    } catch (error) {
+      const message = getStripeErrorMessage(error);
+      logPaymentError("stripe-service-checkout", { paymentId: payment.id, message });
+      await admin
+        .from("payments")
+        .update({ status: "failed", failure_reason: "Checkout creation failed" })
+        .eq("id", payment.id);
+      return { error: message };
+    }
+  });
+
 /** Stripe-hosted billing portal for cancelling, switching plan or updating cards. */
 export const createBillingPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

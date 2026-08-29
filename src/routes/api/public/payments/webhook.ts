@@ -119,7 +119,61 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
     }
     case "checkout.session.completed": {
       // Subscription state arrives through customer.subscription.* events.
-      if (object?.payment_status === "unpaid") break;
+      if (object?.mode !== "payment") break;
+      const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
+      if (md["kind"] !== "service" || !md["paymentId"]) break;
+      if (object?.payment_status !== "paid") break;
+
+      const { data: payment } = await admin
+        .from("payments")
+        .select("*")
+        .eq("id", md["paymentId"])
+        .maybeSingle();
+      if (!payment || payment.status === "completed") break;
+
+      const { data: updated } = await admin
+        .from("payments")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+          customer_email: (object?.customer_details?.email as string | undefined) ?? payment.customer_email,
+          metadata: {
+            ...((payment.metadata as Record<string, unknown> | null) ?? {}),
+            stripe_session_id: String(object?.id ?? ""),
+            stripe_payment_intent:
+              typeof object?.payment_intent === "string" ? object.payment_intent : null,
+          },
+        })
+        .eq("id", payment.id)
+        .select("*")
+        .single();
+
+      if (updated) {
+        const { applyEntitlement, logPaymentActivity } = await import("@/lib/payments.server");
+        await applyEntitlement(admin, updated);
+        await logPaymentActivity(admin, updated, "completed");
+      }
+      break;
+    }
+    case "checkout.session.expired": {
+      const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
+      if (md["kind"] !== "service" || !md["paymentId"]) break;
+      const { data: payment } = await admin
+        .from("payments")
+        .select("*")
+        .eq("id", md["paymentId"])
+        .maybeSingle();
+      if (!payment || payment.status === "completed") break;
+      const { data: failed } = await admin
+        .from("payments")
+        .update({ status: "failed", failure_reason: "Checkout session expired" })
+        .eq("id", payment.id)
+        .select("*")
+        .single();
+      if (failed) {
+        const { logPaymentActivity } = await import("@/lib/payments.server");
+        await logPaymentActivity(admin, failed, "failed");
+      }
       break;
     }
     default:

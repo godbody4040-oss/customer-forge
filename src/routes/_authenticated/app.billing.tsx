@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditCard, ExternalLink, Receipt } from "lucide-react";
+import { CreditCard, ExternalLink, Receipt, Wallet } from "lucide-react";
 import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { PayPalCheckout } from "@/components/app/PayPalCheckout";
 import { StripeCheckout } from "@/components/app/StripeCheckout";
+import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
 import { usePaymentConfig, usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
 import { useBillingState, usePlans } from "@/lib/stripe.hooks";
@@ -53,6 +54,7 @@ function BillingPage() {
   const { data: subscriptionPlans, isLoading: loadingPlans } = usePlans();
   const { data: billing } = useBillingState(orgId);
   const [selected, setSelected] = useState<PaymentProduct | null>(null);
+  const [cardService, setCardService] = useState<PaymentProduct | null>(null);
   const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
   const [checkoutPlan, setCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
@@ -73,6 +75,21 @@ function BillingPage() {
       ? currentPlan.annual_price
       : currentPlan.monthly_price
     : null;
+
+  // Stripe embedded checkout redirects here after a completed payment.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") !== "complete") return;
+    toast.success("Payment received — your service is being activated.");
+    if (orgId) {
+      void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
+      void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications", orgId] });
+      void queryClient.invalidateQueries({ queryKey: ["workspace"] });
+    }
+    window.history.replaceState(null, "", "/app/billing");
+    setCardService(null);
+  }, [orgId, queryClient]);
 
   const openPortal = async () => {
     if (!orgId) return;
@@ -255,6 +272,22 @@ function BillingPage() {
         </p>
       </Panel>
 
+      <Panel className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <SectionHeading eyebrow="Payment methods" title="Saved cards & wallets" />
+          {subscription?.provider_customer_id ? (
+            <Button variant="outline" size="sm" onClick={openPortal} disabled={portalBusy || !manage}>
+              <Wallet className="size-4" /> {portalBusy ? "Opening…" : "Manage payment methods"}
+            </Button>
+          ) : null}
+        </div>
+        <p className="mt-3 text-[13px] text-muted-foreground">
+          {subscription?.provider_customer_id
+            ? "Your cards are stored securely by our payment provider — Revora never sees or stores card numbers. Add, remove or set a default card, and manage Apple Pay / Cash App Pay from the secure billing portal."
+            : "A saved payment method is added automatically the first time you subscribe or pay by card. Cards, Apple Pay, Google Pay and Cash App Pay are supported where your device and the provider support them."}
+        </p>
+      </Panel>
+
       {checkoutPlan && orgId ? (
         <StripeCheckout
           organizationId={orgId}
@@ -266,6 +299,17 @@ function BillingPage() {
             void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
             void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
             void queryClient.invalidateQueries({ queryKey: ["workspace"] });
+          }}
+        />
+      ) : null}
+
+      {cardService && orgId ? (
+        <StripeServiceCheckout
+          organizationId={orgId}
+          product={cardService}
+          onClose={() => {
+            setCardService(null);
+            void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
           }}
         />
       ) : null}
@@ -300,15 +344,31 @@ function BillingPage() {
                   </div>
                   <p className="tnum text-[15px] font-semibold">{money(product.amount, product.currency)}</p>
                 </div>
-                <Button
-                  variant="signal"
-                  size="sm"
-                  className="mt-3"
-                  disabled={!manage}
-                  onClick={() => setSelected(product)}
-                >
-                  <CreditCard className="size-4" /> Pay with PayPal
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    variant="signal"
+                    size="sm"
+                    disabled={!manage || !cardsReady}
+                    onClick={() => setCardService(product)}
+                  >
+                    <CreditCard className="size-4" /> Pay by card
+                  </Button>
+                  {config?.configured ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!manage}
+                      onClick={() => setSelected(product)}
+                    >
+                      Pay with PayPal
+                    </Button>
+                  ) : null}
+                </div>
+                {!cardsReady ? (
+                  <p className="mt-2 text-[11px] text-destructive">
+                    Card checkout is not configured for this build yet.
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -318,8 +378,9 @@ function BillingPage() {
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
         <p className="mt-3 text-[13px] text-muted-foreground">
-          One-off services above are charged once via PayPal. Software plans are billed as a subscription and can be
-          changed or cancelled at any time. Questions: {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
+          One-off services above are charged once by card (or PayPal where available). Software plans are billed as a
+          subscription and can be changed or cancelled at any time. Questions: {REVORA.email} ·{" "}
+          {REVORA.phoneDisplay ?? REVORA.phone}
         </p>
       </Panel>
 
