@@ -127,11 +127,16 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
       .eq("status", "requested");
   }
 
+  const meta = (payment.metadata ?? {}) as Record<string, unknown>;
   await admin.from("invoices").insert({
     organization_id: payment.organization_id,
     amount: payment.amount,
     status: "paid",
-    provider_invoice_id: payment.paypal_capture_id ?? payment.paypal_order_id,
+    provider_invoice_id:
+      payment.paypal_capture_id ??
+      payment.paypal_order_id ??
+      (typeof meta.stripe_payment_intent === "string" ? meta.stripe_payment_intent : null) ??
+      (typeof meta.stripe_session_id === "string" ? meta.stripe_session_id : null),
     period_start: payment.period_start,
     period_end: payment.period_end,
   });
@@ -147,12 +152,13 @@ export async function logPaymentActivity(
 ) {
   const label = payment.description ?? payment.product_id ?? "Revora service";
   const amount = money(Number(payment.amount), payment.currency);
+  const providerLabel = payment.payment_provider === "stripe" ? "card" : "PayPal";
 
   const notice =
     kind === "completed"
-      ? { title: "Payment received", body: `${label} — ${amount} paid with PayPal.`, tone: "success" }
+      ? { title: "Payment received", body: `${label} — ${amount} paid by ${providerLabel}.`, tone: "success" }
       : kind === "failed"
-        ? { title: "Payment could not be completed", body: `${label} — PayPal checkout was unsuccessful.`, tone: "warning" }
+        ? { title: "Payment could not be completed", body: `${label} — checkout was unsuccessful.`, tone: "warning" }
         : kind === "cancelled"
           ? { title: "Payment cancelled", body: `${label} — checkout was cancelled, nothing was charged.`, tone: "info" }
           : { title: "Refund processed", body: `${label} — refund issued via PayPal.`, tone: "info" };
