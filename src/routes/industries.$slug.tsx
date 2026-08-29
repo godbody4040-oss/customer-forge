@@ -3,12 +3,9 @@ import { CalendarCheck, Calculator, LineChart, Search, Star, Users } from "lucid
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { INDUSTRIES } from "@/lib/domain";
+import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 
-export function industrySlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
 
 const BENEFITS = [
   { icon: Search, title: "Get found on Google", body: "Service and city pages, structured data and fast load times tuned for local search." },
