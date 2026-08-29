@@ -358,6 +358,16 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
 
+    const { data: membership } = await context.supabase
+      .from("memberships")
+      .select("role")
+      .eq("organization_id", data.organizationId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!["owner", "admin", "manager"].includes(membership?.role ?? "")) {
+      return { error: "Only workspace owners and admins can manage billing." };
+    }
+
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("provider_customer_id, environment")
@@ -375,7 +385,8 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
       const stripe = createStripeClient(sub.environment as StripeEnv);
       let customerId = sub.provider_customer_id;
       try {
-        await stripe.customers.retrieve(customerId);
+        const customer = await stripe.customers.retrieve(customerId);
+        if ("deleted" in customer && customer.deleted) throw new Error("No such customer");
       } catch (customerError) {
         const message = getStripeErrorMessage(customerError);
         if (!/no such customer|resource_missing/i.test(message)) throw customerError;
@@ -393,7 +404,9 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
           };
         }
         customerId = recovered;
-        await context.supabase
+        const { adminClient } = await import("@/lib/payments.server");
+        const admin = await adminClient();
+        await admin
           .from("subscriptions")
           .update({ provider_customer_id: recovered })
           .eq("organization_id", data.organizationId)

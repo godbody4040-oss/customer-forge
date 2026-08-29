@@ -44,6 +44,16 @@ const STATUS_LABEL: Record<string, string> = {
   disputed: "Disputed",
 };
 
+function paymentReference(payment: { paypal_capture_id: string | null; paypal_order_id: string | null; metadata: unknown }) {
+  if (payment.paypal_capture_id) return payment.paypal_capture_id;
+  if (payment.paypal_order_id) return payment.paypal_order_id;
+  if (payment.metadata && typeof payment.metadata === "object" && !Array.isArray(payment.metadata)) {
+    const stripeId = (payment.metadata as Record<string, unknown>)["stripe_id"];
+    if (typeof stripeId === "string") return stripeId;
+  }
+  return "—";
+}
+
 function BillingPage() {
   const { data: ws } = useWorkspace();
   const org = ws?.workspace?.organization;
@@ -169,7 +179,7 @@ function BillingPage() {
         />
       </div>
 
-      <Panel className="p-5">
+      {services.length > 0 ? <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHeading eyebrow="Your system" title={GROWTH_SYSTEM.name} />
           {subscription?.provider_subscription_id ? (
@@ -369,14 +379,7 @@ function BillingPage() {
                     </td>
                     <td className="py-2.5 pr-3 capitalize">{payment.payment_provider}</td>
                     <td className="py-2.5 font-mono text-[11px]">
-                      {payment.paypal_capture_id ??
-                        payment.paypal_order_id ??
-                        (typeof payment.metadata === "object" &&
-                        payment.metadata !== null &&
-                        !Array.isArray(payment.metadata) &&
-                        typeof payment.metadata.stripe_id === "string"
-                          ? payment.metadata.stripe_id
-                          : "—")}
+                      {paymentReference(payment)}
                     </td>
                   </tr>
                 ))}
@@ -384,7 +387,7 @@ function BillingPage() {
             </table>
           </div>
         )}
-      </Panel>
+      </Panel> : null}
     </div>
   );
 }

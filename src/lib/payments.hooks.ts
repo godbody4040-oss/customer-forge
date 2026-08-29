@@ -42,7 +42,7 @@ export function usePayments(organizationId: string | undefined) {
           "id, product_id, plan_id, description, amount, currency, status, payment_provider, environment, paypal_order_id, paypal_capture_id, refund_status, refunded_amount, created_at, completed_at, metadata",
         )
         .eq("organization_id", organizationId!)
-        .or(`payment_provider.neq.stripe,environment.eq.${getStripeEnvironment()}`)
+        .eq("environment", getStripeEnvironment())
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
