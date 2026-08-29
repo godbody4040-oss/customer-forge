@@ -134,7 +134,7 @@ function AuthPage() {
           </h1>
           <p className="mt-2 text-[13px] text-muted-foreground">
             {isSignup
-              ? "14-day free trial. No card required."
+              ? "1-day free trial. No card required."
               : "Sign in to your business command center."}
           </p>
 

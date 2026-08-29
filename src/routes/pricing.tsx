@@ -16,7 +16,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Simple monthly pricing for local service businesses: website, instant quotes, booking, CRM and analytics. 14-day free trial, no card required.",
+          "Simple monthly pricing for local service businesses: website, instant quotes, booking, CRM and analytics. 1-day free trial, no card required.",
       },
       { property: "og:title", content: "Pricing — Revora" },
       {
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/pricing")({
 const FAQ = [
   {
     q: "Do I need a card to start?",
-    a: "No. The 14-day trial is free and gives you the full platform, including a live website address.",
+    a: "No. The 1-day trial is free and gives you the full platform, including a live website address.",
   },
   {
     q: "Can I use my own domain?",
@@ -94,7 +94,7 @@ function Pricing() {
                 className="mt-6 w-full"
               >
                 <Link to="/auth" search={{ mode: "signup" }}>
-                  Start 14-day trial
+                  Start 1-day trial
                 </Link>
               </Button>
             </div>
