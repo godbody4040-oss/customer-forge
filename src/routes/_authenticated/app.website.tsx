@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ExternalLink } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
 import { LoadingRows } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +16,7 @@ import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { LaunchChecks } from "@/components/app/LaunchChecks";
-import { PreviewLinks } from "@/components/app/PreviewLinks";
+import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
 import { PlatformEngine } from "@/components/app/PlatformEngine";
 import {
@@ -125,11 +124,11 @@ function WebsitePage() {
           <h1 className="mt-1 font-display text-[24px] font-semibold">Build your website</h1>
         </div>
         {org ? (
-          <Button asChild variant="outline">
-            <Link to="/s/$slug" params={{ slug: org.slug }} target="_blank">
-              Preview site <ExternalLink className="size-4" />
-            </Link>
-          </Button>
+          <PreviewSiteButton
+            organizationId={orgId}
+            slug={org.slug}
+            publishState={settingsQuery.data?.publish_state ?? null}
+          />
         ) : null}
       </div>
 
