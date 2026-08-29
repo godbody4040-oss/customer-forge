@@ -205,6 +205,10 @@ function ReviewsPage() {
         </div>
       )}
 
+      <MetaPreview meta={REVIEWS_META} label="/app/reviews" />
+
+
+
       <Dialog open={!!asking} onOpenChange={(open) => !open && setAsking(null)}>
         <DialogContent>
           <DialogHeader>
