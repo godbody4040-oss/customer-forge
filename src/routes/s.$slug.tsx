@@ -9,6 +9,9 @@ import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-s
 import { currency, dateShort } from "@/lib/format";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
+import { SiteNav } from "@/routes/s.$slug.$page";
+import { StickyCallBar } from "@/components/site/SiteSections";
+
 
 export const Route = createFileRoute("/s/$slug")({
   loader: async ({ params }) => {
