@@ -86,10 +86,13 @@ export async function resolveHostSite(
 /** Absolute URLs for a tenant site, or for Revora's own marketing pages. */
 export function sitemapUrls(site: HostSite | null, origin: string) {
   if (!site) {
-    return ["", "/pricing", "/industries", "/about", "/contact", "/demo"].map((path) => ({
-      loc: `${origin}${path}`,
-      lastmod: null as string | null,
-    }));
+    const industryPaths = INDUSTRIES.map((i) => `/industries/${industrySlug(i.name)}`);
+    return ["", "/pricing", "/industries", ...industryPaths, "/about", "/contact", "/demo"].map(
+      (path) => ({
+        loc: `${origin}${path}`,
+        lastmod: null as string | null,
+      }),
+    );
   }
   const paths = [{ slug: "home", updatedAt: null as string | null }, ...site.pages].filter(
     (p, i, all) => all.findIndex((x) => x.slug === p.slug) === i,
