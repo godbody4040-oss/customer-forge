@@ -115,7 +115,12 @@ function Pricing() {
             ))}
           </dl>
         </section>
+
+        <section className="mt-16">
+          <SalesCTA />
+        </section>
       </main>
+
       <SiteFooter />
     </div>
   );
