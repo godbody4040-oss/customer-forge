@@ -103,6 +103,12 @@ export const listClients = createServerFn({ method: "GET" })
         analyticsCount: countBy(events.data, org.id),
       }).score;
 
+      const sub = (subs.data ?? []).find((s) => s.organization_id === org.id) ?? null;
+      const orgPayments = (pays.data ?? []).filter((p) => p.organization_id === org.id);
+      const paidTotal = orgPayments
+        .filter((p) => p.status === "completed")
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+
       return {
         id: org.id,
         name: org.name,
@@ -115,6 +121,7 @@ export const listClients = createServerFn({ method: "GET" })
         created_at: org.created_at,
         owner_name: profile?.owner_name ?? null,
         owner_email: profile?.owner_email ?? profile?.email ?? null,
+        owner_phone: profile?.phone ?? null,
         city: profile?.city ?? null,
         custom_domain: settings?.custom_domain ?? null,
         domain_status: settings?.domain_status ?? "not_connected",
@@ -122,10 +129,22 @@ export const listClients = createServerFn({ method: "GET" })
         domain_error: settings?.domain_error ?? null,
         publish_state: settings?.publish_state ?? "draft",
 
+        // Billing
+        setup_paid_at: org.setup_paid_at,
+        setup_session_id: org.setup_checkout_session_id,
+        subscription_state: sub?.status ?? null,
+        stripe_customer_id: sub?.provider_customer_id ?? null,
+        stripe_subscription_id: sub?.provider_subscription_id ?? null,
+        current_period_end: sub?.current_period_end ?? null,
+        cancel_at_period_end: Boolean(sub?.cancel_at_period_end),
+        paid_total: paidTotal,
+        payment_count: orgPayments.length,
+
         leads: countBy(leads.data, org.id),
         appointments: countBy(appts.data, org.id),
         readinessScore: score,
       };
+
     });
   });
 
