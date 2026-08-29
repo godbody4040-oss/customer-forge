@@ -131,7 +131,6 @@ export function MetricCard({
   tone = "neutral",
   progress,
   className,
-  key: _key,
   badge,
 }: {
   label: string;
@@ -140,7 +139,6 @@ export function MetricCard({
   tone?: Tone;
   progress?: number;
   className?: string;
-  key?: never;
   /** Small gold badge in the corner for key metrics. */
   badge?: string;
 }) {
