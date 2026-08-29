@@ -61,10 +61,10 @@ export type AgentAction =
       type: "add_section";
       pageId: string;
       kind: string;
-      heading?: string;
-      subheading?: string;
-      body?: string;
-      position?: number;
+      heading?: string | undefined;
+      subheading?: string | undefined;
+      body?: string | undefined;
+      position?: number | undefined;
     }
   | { type: "delete_section"; sectionId: string }
   | { type: "reorder_sections"; pageId: string; sectionIds: string[] }
