@@ -112,7 +112,8 @@ describe("CRM, notifications and analytics surfaces", () => {
 
 describe("payment and webhook endpoints", () => {
   live("rejects unsigned payment webhooks", async () => {
-    for (const path of ["/api/public/payments/webhook", "/api/public/paypal/webhook"]) {
+    // The Stripe route needs its environment marker; without it the event is ignored, not processed.
+    for (const path of ["/api/public/payments/webhook?env=live", "/api/public/paypal/webhook"]) {
       const response = await fetch(`${BASE}${path}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
