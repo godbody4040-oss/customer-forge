@@ -19,6 +19,7 @@ import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
+import { PlatformEngine } from "@/components/app/PlatformEngine";
 import {
   AiCopyAssistant,
   RevoraScorePanel,
