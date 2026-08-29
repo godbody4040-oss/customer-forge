@@ -23,18 +23,19 @@ export function SiteHeader() {
           <Logo />
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-7 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {NAV.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-              activeProps={{ className: "text-foreground" }}
+              className="rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
+              activeProps={{ className: "bg-elevated text-foreground" }}
             >
               {item.label}
             </Link>
           ))}
         </nav>
+
 
         <div className="hidden items-center gap-2 md:flex">
           <Button asChild variant="ghost" size="sm">
