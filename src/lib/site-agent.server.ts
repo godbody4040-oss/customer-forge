@@ -135,7 +135,22 @@ function siteMap(context: AgentContext) {
   );
 }
 
-async function call(model: string, messages: { role: string; content: string }[]) {
+type TextPart = { type: "text"; text: string };
+type ImagePart = { type: "image_url"; image_url: { url: string } };
+type VideoPart = { type: "video_url"; video_url: { url: string } };
+type AudioPart = { type: "input_audio"; input_audio: { data: string; format: string } };
+type ContentPart = TextPart | ImagePart | VideoPart | AudioPart;
+type ChatMessage = { role: string; content: string | ContentPart[] };
+
+/** Maps an attachment onto the gateway's multimodal content-part shape. */
+function attachmentPart(attachment: AgentAttachment): ContentPart {
+  if (attachment.kind === "image") return { type: "image_url", image_url: { url: attachment.dataUrl } };
+  if (attachment.kind === "video") return { type: "video_url", video_url: { url: attachment.dataUrl } };
+  const format = attachment.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "webm";
+  return { type: "input_audio", input_audio: { data: attachment.dataUrl.slice(attachment.dataUrl.indexOf(",") + 1), format } };
+}
+
+async function call(model: string, messages: ChatMessage[]) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("The website assistant isn't configured for this workspace.");
 
@@ -155,6 +170,8 @@ async function call(model: string, messages: { role: string; content: string }[]
       throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to keep editing with the assistant.");
     if (response.status === 403)
       throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+    if (response.status === 413)
+      throw new AiGatewayError(413, "That attachment is too large for the assistant. Try a shorter clip or a smaller photo.");
     console.error("[site-agent] gateway error", response.status, body.slice(0, 500));
     throw new AiGatewayError(response.status, "The assistant couldn't be reached. Try again.");
   }
@@ -177,17 +194,35 @@ async function call(model: string, messages: { role: string; content: string }[]
 /**
  * Runs one planning turn. `history` carries the conversation so follow-ups like
  * "now do the same on the pricing page" work without repeating the brief.
+ * `attachments` are photos, video clips or voice notes the owner sent with the
+ * request — the model reads them for context and still may not invent facts.
  */
 export async function planChanges(
   context: AgentContext,
   instruction: string,
   history: AgentTurn[],
+  attachments: AgentAttachment[] = [],
 ): Promise<Record<string, unknown>> {
-  const messages = [
+  const parts: ContentPart[] = [{ type: "text", text: `REQUEST FROM THE OWNER:\n${instruction}` }];
+  if (attachments.length) {
+    parts.push({
+      type: "text",
+      text:
+        `The owner attached ${attachments.length} file(s): ${attachments
+          .map((attachment) => `${attachment.kind} — ${attachment.name}`)
+          .join("; ")}. ` +
+        `Use them as context for the request: read any words shown or spoken, describe what is pictured only when it helps the copy, ` +
+        `and follow spoken instructions exactly as if they had been typed. Never state a fact (price, award, rating, guarantee) that ` +
+        `only appears to be true from a photo — if it matters, ask for it in "questions".`,
+    });
+    for (const attachment of attachments) parts.push(attachmentPart(attachment));
+  }
+
+  const messages: ChatMessage[] = [
     { role: "system", content: SYSTEM },
     { role: "user", content: `SITE MAP AND BUSINESS FACTS:\n${siteMap(context)}` },
     ...history.slice(-8).map((turn) => ({ role: turn.role, content: turn.content })),
-    { role: "user", content: `REQUEST FROM THE OWNER:\n${instruction}` },
+    { role: "user", content: parts.length === 1 ? (parts[0] as TextPart).text : parts },
   ];
 
   try {
@@ -198,3 +233,46 @@ export async function planChanges(
     return await call(AGENT_FALLBACK_MODEL, messages);
   }
 }
+
+/* ------------------------------ voice commands ----------------------------- */
+
+const TRANSCRIBE_URL = "https://ai.gateway.lovable.dev/v1/audio/transcriptions";
+export const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe";
+
+/**
+ * Turns a recorded voice command into editable text. The owner sees the words
+ * before anything is planned, so a mis-heard phrase never becomes a site edit.
+ */
+export async function transcribeVoice(attachment: AgentAttachment): Promise<string> {
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) throw new Error("Voice commands aren't configured for this workspace.");
+
+  const base64 = attachment.dataUrl.slice(attachment.dataUrl.indexOf(",") + 1);
+  const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+  const extension = attachment.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "webm";
+
+  const form = new FormData();
+  form.append("file", new Blob([bytes], { type: attachment.mimeType }), `voice.${extension}`);
+  form.append("model", TRANSCRIBE_MODEL);
+
+  const response = await fetch(TRANSCRIBE_URL, {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}` },
+    body: form,
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    if (response.status === 429)
+      throw new AiGatewayError(429, "Voice is busy right now. Try again in a moment.", Number(response.headers.get("retry-after")) || null);
+    if (response.status === 402)
+      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to keep using voice.");
+    if (response.status === 403) throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+    console.error("[site-agent] transcribe error", response.status, body.slice(0, 300));
+    throw new AiGatewayError(response.status, "Couldn't transcribe that recording. Try again or type the request.");
+  }
+
+  const payload = (await response.json()) as { text?: string };
+  return (payload.text ?? "").trim();
+}
+
