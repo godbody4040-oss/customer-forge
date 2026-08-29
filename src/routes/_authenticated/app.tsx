@@ -95,7 +95,7 @@ function AppShell() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "border-border bg-card lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:shrink-0 lg:border-r",
+          "border-border bg-card lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:shrink-0 lg:overflow-y-auto lg:overscroll-contain lg:border-r",
           navOpen ? "block" : "hidden lg:block",
         )}
       >

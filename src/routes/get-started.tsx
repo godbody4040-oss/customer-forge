@@ -15,6 +15,7 @@ import { REVORA, revoraMailto } from "@/lib/brand";
 import { trackConversion } from "@/lib/conversion";
 import { useStepScroll } from "@/lib/use-step-scroll";
 import { safeSlug } from "@/lib/website-plan";
+import { smartIntakeValue } from "@/lib/intake-smart";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -580,7 +581,23 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
+        inputMode={type === "tel" ? "tel" : type === "email" ? "email" : undefined}
+        autoCapitalize={type === "email" ? "none" : "words"}
+        spellCheck={type === "email" ? false : undefined}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={(event) => {
+          const key =
+            type === "tel"
+              ? "phone"
+              : type === "email"
+                ? "email"
+                : autoComplete === "address-level2"
+                  ? "city"
+                  : autoComplete === "organization"
+                    ? "name"
+                    : "other";
+          onChange(smartIntakeValue(key, event.target.value));
+        }}
       />
     </div>
   );
