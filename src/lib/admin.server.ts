@@ -310,6 +310,12 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
     );
   }
 
+  // Every workspace launches with a working quote calculator so the public site's
+  // primary CTA always has a real destination (the owner can edit it afterwards).
+  await provisionDefaultQuoteForm(admin, organizationId, services.map((s) => s.name.trim()));
+
+
+
   await admin.from("subscriptions").insert({
     organization_id: organizationId,
     plan_id: input.plan_id ?? null,
