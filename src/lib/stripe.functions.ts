@@ -185,15 +185,31 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         subscription_data: { metadata },
       };
 
+      // Accounts with Managed Payments enabled by default reject
+      // `adaptive_pricing: { enabled: false }`; retry without that parameter.
+      type SessionPayload = typeof base & { automatic_tax?: { enabled: boolean } };
+      async function createSessionWithCompat(payload: SessionPayload) {
+        try {
+          return await stripe.checkout.sessions.create(payload);
+        } catch (compatError) {
+          const message = getStripeErrorMessage(compatError);
+          if (!/adaptive_pricing|managed payments/i.test(message)) throw compatError;
+          const { adaptive_pricing: _omit, ...withoutAdaptivePricing } = payload as typeof base & {
+            adaptive_pricing?: { enabled: boolean };
+          };
+          return stripe.checkout.sessions.create(withoutAdaptivePricing);
+        }
+      }
+
       // Tax calculation is used when the payment account has a head-office
       // address configured; otherwise checkout still works without it.
       let session;
       try {
-        session = await stripe.checkout.sessions.create({ ...base, automatic_tax: { enabled: true } });
+        session = await createSessionWithCompat({ ...base, automatic_tax: { enabled: true } });
       } catch (taxError) {
         const message = getStripeErrorMessage(taxError);
         if (!/automatic tax|head office|tax calculation/i.test(message)) throw taxError;
-        session = await stripe.checkout.sessions.create(base);
+        session = await createSessionWithCompat(base);
       }
 
       return { clientSecret: session.client_secret ?? "" };
