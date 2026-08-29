@@ -16,6 +16,11 @@ export const Route = createFileRoute("/robots.txt")({
         }
         const origin = host ? `${protocol}://${host.split(":")[0]}` : url.origin;
         const lines = [
+          ...["Googlebot", "Bingbot", "Twitterbot", "facebookexternalhit"].flatMap((agent) => [
+            `User-agent: ${agent}`,
+            "Allow: /",
+            "",
+          ]),
           "User-agent: *",
           "Allow: /",
           "Disallow: /app",
@@ -26,6 +31,7 @@ export const Route = createFileRoute("/robots.txt")({
           `Sitemap: ${site ? site.origin : origin}/sitemap.xml`,
           "",
         ];
+
         return new Response(lines.join("\n"), {
           headers: {
             "content-type": "text/plain; charset=utf-8",
