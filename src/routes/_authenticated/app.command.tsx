@@ -108,12 +108,13 @@ function CommandCenterPage() {
       // Safe AI: keep a restorable version before Revora changes saved content.
       if (key !== "generate_site") {
         try {
-          await snapshot.mutateAsync({ label: `Before auto fix: ${key}` });
+          await snapshot.mutateAsync(`Before auto fix: ${key}`);
         } catch {
           /* snapshotting is best effort — never block the fix */
         }
       }
-      if (key === "generate_site") await runEngine.mutateAsync({});
+      if (key === "generate_site") await runEngine.mutateAsync();
+
       if (key === "apply_cta" && copy?.primaryCta) {
         await saveSettings.mutateAsync({ seo: { ...seo, primary_cta_label: copy.primaryCta } });
       }
