@@ -158,7 +158,7 @@ function Contact() {
                     name="interest"
                     value={interest}
                     onChange={(e) => setInterest(e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground"
+                    className="select-field h-10 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground"
                   >
                     {INTERESTS.map((i) => (
                       <option key={i} value={i}>
@@ -174,7 +174,11 @@ function Contact() {
                 <Button type="submit" variant="signal" className="w-full">
                   Send message
                 </Button>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Prefer to talk it through? Call {REVORA.phoneDisplay} — no automated queue.
+                </p>
               </form>
+
             )}
           </div>
         </div>
