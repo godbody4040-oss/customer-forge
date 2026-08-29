@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
-import { MetricCard, Panel, Pill, SectionHeading, LoadingRows, EmptyState } from "@/components/app/Bits";
+import {
+  MetricCard,
+  Panel,
+  Pill,
+  SectionHeading,
+  LoadingRows,
+  EmptyState,
+  KeyLabel,
+} from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +38,63 @@ export const Route = createFileRoute("/_authenticated/app/")({
 });
 
 const DAY = 86_400_000;
+
+const SYSTEM_SECTIONS = [
+  {
+    to: "/app/website",
+    title: "Website builder",
+    description: "Edit pages, sections and copy. Every change publishes to your live site.",
+    key: true,
+  },
+  {
+    to: "/app/command",
+    title: "AI Command Center",
+    description: "Scans your site and hands you one-click fixes that lift conversion.",
+    key: true,
+  },
+  {
+    to: "/app/leads",
+    title: "Leads & CRM",
+    description: "Work every enquiry from new to won on one board with full history.",
+    key: true,
+  },
+  {
+    to: "/app/quotes",
+    title: "Quote calculator",
+    description: "Visitors price their job instantly and land in your pipeline.",
+    key: false,
+  },
+  {
+    to: "/app/calendar",
+    title: "Calendar & bookings",
+    description: "Customers book real time slots that fit your working hours.",
+    key: false,
+  },
+  {
+    to: "/app/automations",
+    title: "Automations",
+    description: "Instant replies and follow-ups so no lead goes cold.",
+    key: false,
+  },
+  {
+    to: "/app/reviews",
+    title: "Reviews",
+    description: "Request reviews after each job and show your best ones on site.",
+    key: false,
+  },
+  {
+    to: "/app/domain",
+    title: "Domain & SSL",
+    description: "Connect your own domain with a secure certificate.",
+    key: false,
+  },
+  {
+    to: "/app/launch",
+    title: "Launch checklist",
+    description: "Final checks before your site goes live to customers.",
+    key: true,
+  },
+] as const;
 
 const RANGES = [
   { value: "1", label: "Today", days: 1 },
