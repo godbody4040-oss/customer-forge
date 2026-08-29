@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LoadingRows } from "@/components/app/Bits";
 import { DomainCenter } from "@/components/app/DomainCenter";
+import { DomainOperations } from "@/components/app/DomainOperations";
 import { useBusinessProfile, useWebsiteSettings } from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/domain";
@@ -46,6 +47,12 @@ function DomainPage() {
         businessName={org?.name ?? null}
         city={(profile?.["city"] as string) ?? null}
         industry={org?.industry ?? null}
+        settings={settingsQuery.data}
+        canManage={canManage(ws?.workspace?.role ?? "viewer")}
+      />
+
+      <DomainOperations
+        organizationId={orgId}
         settings={settingsQuery.data}
         canManage={canManage(ws?.workspace?.role ?? "viewer")}
       />

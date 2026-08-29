@@ -7,6 +7,9 @@ import { DATE_RANGES, sourceLabel } from "@/lib/domain";
 import { currency, dateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ConversionOptimizer } from "@/components/app/ConversionOptimizer";
+import { TrafficMonitor } from "@/components/app/TrafficMonitor";
+import { canManage } from "@/lib/domain";
+import { useWebsiteSettings } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/app/analytics")({
   head: () => ({
@@ -28,6 +31,7 @@ function AnalyticsPage() {
   const { data: events, isLoading } = useAnalytics(orgId, days);
   const { data: leads } = useLeads(orgId);
   const { data: appointments } = useAppointments(orgId);
+  const settingsQuery = useWebsiteSettings(orgId);
 
   const model = useMemo(() => {
     const since = Date.now() - days * DAY;
@@ -205,6 +209,12 @@ function AnalyticsPage() {
           </ul>
         </Panel>
       </div>
+
+      <TrafficMonitor
+        organizationId={orgId}
+        alertsEnabled={(settingsQuery.data as { traffic_alerts_enabled?: boolean | null } | undefined)?.traffic_alerts_enabled !== false}
+        canManage={canManage(ws?.workspace?.role ?? "viewer")}
+      />
 
       <ConversionOptimizer organizationId={orgId} />
     </div>
