@@ -145,7 +145,7 @@ serviceCards (array of {name, copy} — one per supplied service, copy max 220 c
 faqs (array of 4-6 {question, answer} relevant to this category, services and area — never promise anything not supplied),
 areaCopy (2 sentences about where they work; omit places not supplied),
 metaTitle (max 60 chars), metaDescription (max 155 chars), ogTitle (max 60 chars), ogDescription (max 155 chars).`,
-    `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.\n\nFACTS:\n${factSheet(facts)}`,
+    `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.${briefContext(brief)}\n\nFACTS:\n${factSheet(facts)}`,
   );
 
   const cards = Array.isArray(data["serviceCards"]) ? (data["serviceCards"] as Record<string, unknown>[]) : [];
