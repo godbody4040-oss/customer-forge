@@ -23,6 +23,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
@@ -124,6 +125,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => IndustriesRoute,
 } as any)
 const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
   id: '/$slug',
@@ -316,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/industries/': typeof IndustriesIndexRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -353,7 +360,6 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/get-started': typeof GetStartedRoute
-  '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -361,6 +367,7 @@ export interface FileRoutesByTo {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/industries': typeof IndustriesIndexRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -410,6 +417,7 @@ export interface FileRoutesById {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/industries/': typeof IndustriesIndexRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -459,6 +467,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
+    | '/industries/'
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/payments'
@@ -496,7 +505,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/demo'
     | '/get-started'
-    | '/industries'
     | '/pricing'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -504,6 +512,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
+    | '/industries'
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/payments'
@@ -552,6 +561,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
+    | '/industries/'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
     | '/_authenticated/admin/payments'
@@ -704,6 +714,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/industries/': {
+      id: '/industries/'
+      path: '/'
+      fullPath: '/industries/'
+      preLoaderRoute: typeof IndustriesIndexRouteImport
+      parentRoute: typeof IndustriesRoute
     }
     '/industries/$slug': {
       id: '/industries/$slug'
@@ -1023,10 +1040,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface IndustriesRouteChildren {
   IndustriesSlugRoute: typeof IndustriesSlugRoute
+  IndustriesIndexRoute: typeof IndustriesIndexRoute
 }
 
 const IndustriesRouteChildren: IndustriesRouteChildren = {
   IndustriesSlugRoute: IndustriesSlugRoute,
+  IndustriesIndexRoute: IndustriesIndexRoute,
 }
 
 const IndustriesRouteWithChildren = IndustriesRoute._addFileChildren(
