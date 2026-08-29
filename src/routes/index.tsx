@@ -383,6 +383,27 @@ function Landing() {
           </div>
         </section>
 
+        {/* ROI estimator */}
+        <section id="roi" className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="Opportunity estimator"
+              title="See what a few more customers could mean for your business"
+            />
+            <div className="mt-8">
+              <ROICalculator />
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading eyebrow="FAQ" title="Straight answers before you start" />
+            <FAQ />
+          </div>
+        </section>
+
         {/* Founder mission */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
