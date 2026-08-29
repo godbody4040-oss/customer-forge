@@ -216,7 +216,7 @@ function GetStarted() {
     setStartingTrial(true);
     try {
       await ensureWorkspace();
-      trackConversion("trial_started", { email: intake.email.trim() });
+      trackConversion("signup_completed", { email: intake.email.trim() });
       navigate({ to: "/app" });
     } catch (cause) {
       setError(
