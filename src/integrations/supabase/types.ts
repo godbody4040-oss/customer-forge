@@ -2053,7 +2053,9 @@ export type Database = {
           provider_subscription_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at: string | null
+          trial_start: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           billing_interval?: Database["public"]["Enums"]["billing_interval"]
@@ -2071,7 +2073,9 @@ export type Database = {
           provider_subscription_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
+          trial_start?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           billing_interval?: Database["public"]["Enums"]["billing_interval"]
@@ -2089,7 +2093,9 @@ export type Database = {
           provider_subscription_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
+          trial_start?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
