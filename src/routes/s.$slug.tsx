@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { captureAttribution } from "@/lib/attribution";
 import { useServerFn } from "@tanstack/react-start";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -108,14 +109,14 @@ export function PublicSiteView({
 
   useEffect(() => {
     if (preview) return;
-    const params = new URLSearchParams(window.location.search);
+    const attribution = captureAttribution();
     void track({
       data: {
         slug: org.slug,
         eventType: "page_view",
         path: window.location.pathname,
-        source: params.get("utm_source") ?? (document.referrer ? "referral" : "direct"),
-        campaign: params.get("utm_campaign"),
+        source: attribution.source,
+        campaign: attribution.campaign,
         device: window.innerWidth < 768 ? "mobile" : "desktop",
       },
     }).catch(() => undefined);
