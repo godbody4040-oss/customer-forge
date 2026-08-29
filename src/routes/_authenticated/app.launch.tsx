@@ -243,6 +243,9 @@ function Launch() {
           }
         />
         <p className="text-[12px] text-muted-foreground">{DOMAIN_STATES[domainStatus]?.help}</p>
+        <Button size="sm" variant="outline" asChild>
+          <Link to="/app/domain">Open domain setup</Link>
+        </Button>
         {manage ? (
           <div className="flex flex-wrap items-end gap-2">
             <div className="min-w-56 flex-1">
