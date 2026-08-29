@@ -272,6 +272,22 @@ function BillingPage() {
         </p>
       </Panel>
 
+      <Panel className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <SectionHeading eyebrow="Payment methods" title="Saved cards & wallets" />
+          {subscription?.provider_customer_id ? (
+            <Button variant="outline" size="sm" onClick={openPortal} disabled={portalBusy || !manage}>
+              <Wallet className="size-4" /> {portalBusy ? "Opening…" : "Manage payment methods"}
+            </Button>
+          ) : null}
+        </div>
+        <p className="mt-3 text-[13px] text-muted-foreground">
+          {subscription?.provider_customer_id
+            ? "Your cards are stored securely by our payment provider — Revora never sees or stores card numbers. Add, remove or set a default card, and manage Apple Pay / Cash App Pay from the secure billing portal."
+            : "A saved payment method is added automatically the first time you subscribe or pay by card. Cards, Apple Pay, Google Pay and Cash App Pay are supported where your device and the provider support them."}
+        </p>
+      </Panel>
+
       {checkoutPlan && orgId ? (
         <StripeCheckout
           organizationId={orgId}
