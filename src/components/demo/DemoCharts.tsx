@@ -198,7 +198,7 @@ export function FunnelChart({
                     "h-full rounded-full transition-[width] duration-500",
                     i >= 4 ? "bg-primary" : i >= 2 ? "bg-accent" : "bg-info",
                   )}
-                  style={{ width: `${Math.max(3, row.share)}%` }}
+                  style={{ width: `${Math.max(8, Math.round(Math.sqrt(row.share / 100) * 100))}%` }}
                 />
               </div>
             </button>
