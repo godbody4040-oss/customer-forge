@@ -93,9 +93,10 @@ export function ROICalculator() {
                   step={f.step}
                   value={value}
                   aria-describedby={`${id}-hint`}
-                  onChange={(e) =>
-                    setState((s) => ({ ...s, [f.key]: Number(e.currentTarget.value) }))
-                  }
+                  onChange={(e) => {
+                    const next = Number(e.target.value);
+                    setState((s) => ({ ...s, [f.key]: next }));
+                  }}
                   className="mt-3 h-11 w-full cursor-pointer accent-[var(--primary)]"
                 />
                 <p id={`${id}-hint`} className="text-[12px] leading-snug text-muted-foreground">
