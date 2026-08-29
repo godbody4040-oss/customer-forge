@@ -160,11 +160,6 @@ function WebsitePage() {
             <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
             <BusinessBriefPanel brief={brief} />
             <WebsiteStructure organizationId={orgId} canManage={manage} />
-            <SiteChatbot
-              organizationId={orgId}
-              canManage={manage}
-              hasSections={visibleSections > 0}
-            />
             <AiCopyAssistant
               organizationId={orgId}
               fields={copyFields}
