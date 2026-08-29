@@ -60,10 +60,10 @@ function clean(value: string | undefined, fallback: string) {
 }
 
 export function normalizePath(path: string) {
-  if (!path.startsWith("/")) return `/${path}`;
-  if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
-  return path;
+  const withSlash = path.startsWith("/") ? path : `/${path}`;
+  return withSlash.length > 1 && withSlash.endsWith("/") ? withSlash.slice(0, -1) : withSlash;
 }
+
 
 function absoluteImage(image: string | undefined): string | null {
   if (!image) return null;
