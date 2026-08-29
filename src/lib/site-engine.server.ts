@@ -136,7 +136,7 @@ const str = (value: unknown, fallback = "") =>
   typeof value === "string" && value.trim() ? value.trim() : fallback;
 
 /** Full website copy pass. */
-export async function generateSiteCopy(facts: CopyFacts): Promise<SiteCopy> {
+export async function generateSiteCopy(facts: CopyFacts, brief?: SiteBrief | null): Promise<SiteCopy> {
   const data = await chatJson(
     `Return JSON with exactly these keys: heroHeadline (max 70 chars), heroSubheadline (max 160 chars),
 primaryCta (max 24 chars), secondaryCta (max 24 chars), intro (2 sentences),
