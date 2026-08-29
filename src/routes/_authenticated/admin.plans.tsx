@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LoadingRows, Panel, Pill, SectionHeading, StatCard } from "@/components/app/Bits";
+import { LoadingRows, Panel, Pill, SectionHeading, MetricCard } from "@/components/app/Bits";
 import { listClients } from "@/lib/admin.functions";
 import { GROWTH_SYSTEM } from "@/lib/offer";
 import { currency, number } from "@/lib/format";
@@ -29,10 +29,10 @@ function AdminPlans() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Active subscribers" value={number(paid.length)} />
-            <StatCard label="Recurring revenue" value={`${currency(mrr)}/mo`} />
-            <StatCard label="Collected to date" value={currency(collected)} />
-            <StatCard label="Awaiting payment" value={number(awaiting.length)} />
+            <MetricCard label="Active subscribers" value={number(paid.length)} />
+            <MetricCard label="Recurring revenue" value={`${currency(mrr)}/mo`} />
+            <MetricCard label="Collected to date" value={currency(collected)} />
+            <MetricCard label="Awaiting payment" value={number(awaiting.length)} />
           </div>
 
           <Panel className="space-y-3">
@@ -40,7 +40,7 @@ function AdminPlans() {
               <p className="font-display text-[15px] font-semibold">{GROWTH_SYSTEM.name}</p>
               <Pill tone="signal">Only offer</Pill>
             </div>
-            <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.tagline}</p>
+            <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.positioning}</p>
             <p className="font-display text-[24px] font-semibold">
               {currency(GROWTH_SYSTEM.setupPrice)}
               <span className="text-[12px] font-normal text-muted-foreground"> one-time setup</span>
@@ -50,13 +50,13 @@ function AdminPlans() {
               <span className="text-[12px] font-normal text-muted-foreground">/month</span>
             </p>
             <ul className="space-y-1 border-t border-border pt-3 text-[12px] text-muted-foreground">
-              {GROWTH_SYSTEM.features.map((feature) => (
+              {GROWTH_SYSTEM.includes.map((feature) => (
                 <li key={feature}>· {feature}</li>
               ))}
             </ul>
             <p className="text-[11px] text-muted-foreground">
-              Setup lookup key <code>{GROWTH_SYSTEM.setupLookupKey}</code> · monthly lookup key{" "}
-              <code>{GROWTH_SYSTEM.monthlyLookupKey}</code>
+              Setup lookup key <code>{GROWTH_SYSTEM.setupPriceKey}</code> · monthly lookup key{" "}
+              <code>{GROWTH_SYSTEM.monthlyPriceKey}</code>
             </p>
           </Panel>
         </>
