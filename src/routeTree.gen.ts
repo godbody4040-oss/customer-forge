@@ -23,6 +23,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as PTokenRouteImport } from './routes/p.$token'
@@ -125,6 +126,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoRoute,
 } as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
   id: '/',
@@ -310,7 +316,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/demo': typeof DemoRoute
+  '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
@@ -358,7 +365,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/demo': typeof DemoRoute
   '/get-started': typeof GetStartedRoute
   '/pricing': typeof PricingRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -367,6 +373,7 @@ export interface FileRoutesByTo {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/demo': typeof DemoIndexRoute
   '/industries': typeof IndustriesIndexRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
@@ -405,7 +412,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
-  '/demo': typeof DemoRoute
+  '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
@@ -417,6 +424,7 @@ export interface FileRoutesById {
   '/industries/$slug': typeof IndustriesSlugRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
@@ -467,6 +475,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
+    | '/demo/'
     | '/industries/'
     | '/admin/clients'
     | '/admin/domains'
@@ -503,7 +512,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
-    | '/demo'
     | '/get-started'
     | '/pricing'
     | '/robots.txt'
@@ -512,6 +520,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
+    | '/demo'
     | '/industries'
     | '/admin/clients'
     | '/admin/domains'
@@ -561,6 +570,7 @@ export interface FileRouteTypes {
     | '/industries/$slug'
     | '/p/$token'
     | '/s/$slug'
+    | '/demo/'
     | '/industries/'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
@@ -599,7 +609,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
-  DemoRoute: typeof DemoRoute
+  DemoRoute: typeof DemoRouteWithChildren
   GetStartedRoute: typeof GetStartedRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
   PricingRoute: typeof PricingRoute
@@ -714,6 +724,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/demo/': {
+      id: '/demo/'
+      path: '/'
+      fullPath: '/demo/'
+      preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
     }
     '/industries/': {
       id: '/industries/'
@@ -1038,6 +1055,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface DemoRouteChildren {
+  DemoIndexRoute: typeof DemoIndexRoute
+}
+
+const DemoRouteChildren: DemoRouteChildren = {
+  DemoIndexRoute: DemoIndexRoute,
+}
+
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
+
 interface IndustriesRouteChildren {
   IndustriesSlugRoute: typeof IndustriesSlugRoute
   IndustriesIndexRoute: typeof IndustriesIndexRoute
@@ -1068,7 +1095,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
-  DemoRoute: DemoRoute,
+  DemoRoute: DemoRouteWithChildren,
   GetStartedRoute: GetStartedRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
   PricingRoute: PricingRoute,
