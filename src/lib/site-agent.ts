@@ -313,7 +313,10 @@ export type SiteIndex = {
 };
 
 /** Human-readable "where" for a step, e.g. `Home → Hero`. */
-function locate(index: SiteIndex, ids: { pageId?: string; sectionId?: string; componentId?: string }) {
+function locate(
+  index: SiteIndex,
+  ids: { pageId?: string | undefined; sectionId?: string | undefined; componentId?: string | undefined },
+): string {
   if (ids.componentId) {
     const component = index.components.get(ids.componentId);
     if (component) {
