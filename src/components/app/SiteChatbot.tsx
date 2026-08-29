@@ -23,10 +23,16 @@ export function SiteChatbot({
   organizationId,
   canManage,
   hasSections,
+  publishState,
+  onPublishNow,
+  isPublishing = false,
 }: {
   organizationId: string | undefined;
   canManage: boolean;
   hasSections: boolean;
+  publishState?: string | null;
+  onPublishNow?: () => void;
+  isPublishing?: boolean;
 }) {
   const [instruction, setInstruction] = useState("");
   const [reply, setReply] = useState<string | null>(null);
