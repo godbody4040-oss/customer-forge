@@ -407,7 +407,7 @@ function DemoDashboard() {
           ) : null}
 
           {tab === "pipeline" ? (
-            <div className="mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="reveal mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
               <Panel>
                 <SectionHeading
                   eyebrow={`Demo pipeline · ${leads.length} records`}
@@ -427,7 +427,7 @@ function DemoDashboard() {
                         type="button"
                         onClick={() => setSelectedId(lead.id)}
                         aria-current={selected?.id === lead.id}
-                        className={`w-full rounded-md border p-3 text-left transition-colors ${
+                        className={`w-full rounded-md border p-3 text-left transition-all duration-200 hover:-translate-y-px ${
                           selected?.id === lead.id
                             ? "border-primary/40 bg-primary/8"
                             : "border-border bg-elevated hover:border-primary/25"
@@ -541,13 +541,13 @@ function DemoDashboard() {
           ) : null}
 
           {tab === "bookings" ? (
-            <Panel className="mt-5">
+            <Panel className="reveal mt-5">
               <SectionHeading eyebrow="Demo calendar" title="Upcoming and completed jobs" />
               <ul className="mt-4 space-y-2">
                 {workspace.bookings.map((booking) => (
                   <li
                     key={booking.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-elevated p-3"
+                    className="card-lift flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-elevated p-3"
                   >
                     <div className="min-w-0">
                       <p className="text-[13px] font-semibold">{booking.lead}</p>
@@ -582,7 +582,7 @@ function DemoDashboard() {
           ) : null}
 
           {tab === "automations" ? (
-            <Panel className="mt-5">
+            <Panel className="reveal mt-5">
               <SectionHeading eyebrow="Demo automations" title="Follow-up sequences that run themselves" />
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-[12px]">
@@ -598,7 +598,7 @@ function DemoDashboard() {
                   </thead>
                   <tbody>
                     {workspace.automations.map((a) => (
-                      <tr key={a.name} className="border-t border-border">
+                      <tr key={a.name} className="border-t border-border transition-colors hover:bg-elevated/60">
                         <td className="py-2.5 font-medium">
                           <span className="inline-flex items-center gap-1.5">
                             <Zap className="size-3.5 text-primary" aria-hidden="true" />
@@ -622,11 +622,11 @@ function DemoDashboard() {
           ) : null}
 
           {tab === "reviews" ? (
-            <Panel className="mt-5">
+            <Panel className="reveal mt-5">
               <SectionHeading eyebrow="Demo reviews" title="Review requests and responses" />
               <ul className="mt-4 space-y-2">
                 {workspace.reviews.map((review) => (
-                  <li key={review.name} className="rounded-md border border-border bg-elevated p-3">
+                  <li key={review.name} className="card-lift rounded-md border border-border bg-elevated p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold">
                         <BadgeCheck className="size-3.5 text-primary" aria-hidden="true" />
@@ -654,7 +654,7 @@ function DemoDashboard() {
           ) : null}
 
           {tab === "traffic" ? (
-            <Panel className="mt-5">
+            <Panel className="reveal mt-5">
               <SectionHeading eyebrow={`Demo traffic · last ${rangeLabel}`} title="Where the demo leads came from" />
               <ul className="mt-4 space-y-3">
                 {workspace.traffic.map((row) => {
