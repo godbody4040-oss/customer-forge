@@ -21,6 +21,60 @@ const EXPIRY_CHOICES = [
 ];
 
 /**
+ * Header preview button. Published sites open the live public URL; drafts open a
+ * private preview link instead, reusing the newest active link when one exists
+ * so the client can always see their site before publishing.
+ */
+export function PreviewSiteButton({
+  organizationId,
+  slug,
+  publishState,
+}: {
+  organizationId: string | undefined;
+  slug: string;
+  publishState: string | null | undefined;
+}) {
+  const { data: links } = usePreviewLinks(organizationId);
+  const create = useCreatePreviewLink(organizationId);
+
+  if (publishState === "published") {
+    return (
+      <Button asChild variant="outline">
+        <Link to="/s/$slug" params={{ slug }} target="_blank">
+          Preview site <ExternalLink className="size-4" />
+        </Link>
+      </Button>
+    );
+  }
+
+  const openDraftPreview = async () => {
+    const active = (links ?? []).find(
+      (link) => !link.revoked && new Date(link.expires_at).getTime() > Date.now(),
+    );
+    let token = active?.token;
+    if (!token) {
+      token = await create.mutateAsync({ label: "Builder preview", hours: 168 });
+    }
+    window.open(`/p/${token}`, "_blank", "noopener");
+  };
+
+  return (
+    <Button
+      variant="outline"
+      disabled={create.isPending}
+      onClick={() => void openDraftPreview().catch(() => undefined)}
+    >
+      {create.isPending ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : (
+        <ExternalLink className="size-4" />
+      )}
+      Preview site (draft)
+    </Button>
+  );
+}
+
+/**
  * Time-limited share links so a partner or spouse can review the draft without
  * the website going live. Links can be switched off at any moment.
  */
