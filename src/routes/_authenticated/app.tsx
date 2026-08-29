@@ -63,6 +63,16 @@ function AppShell() {
   const { mode: supportMode } = useSupportMode();
   const endSupport = useServerFn(endSupportSession);
   const supporting = Boolean(data?.supporting && supportMode);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const trialExpired = Boolean(
+    org &&
+      org.subscription_status === "trialing" &&
+      org.trial_ends_at &&
+      new Date(org.trial_ends_at).getTime() < Date.now() &&
+      !data?.isSuperAdmin &&
+      !supporting,
+  );
+  const trialLocked = trialExpired && !pathname.startsWith("/app/billing");
 
   useEffect(() => {
     if (!isLoading && data && !data.workspace) navigate({ to: "/onboarding", replace: true });
