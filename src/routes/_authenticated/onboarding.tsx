@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { seedQuoteCalculator } from "@/lib/quote-seed";
+import { assertNoError, supabaseErrorMessage } from "@/lib/supabase-error";
+
 
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
