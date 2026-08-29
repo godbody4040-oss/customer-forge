@@ -115,8 +115,11 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
-    const supabase = publicClient();
-    const { data: org } = await supabase
+    const lookup = publicClient();
+    // Inserts use the admin client: anonymous callers have INSERT but no SELECT
+    // on leads, so a `.insert().select()` round-trip is blocked by RLS.
+    const { supabaseAdmin: supabase } = await import("@/integrations/supabase/client.server");
+    const { data: org } = await lookup
       .from("public_organizations")
       .select("id, name")
       .eq("slug", data.slug)
@@ -142,7 +145,10 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error("We couldn't save your request. Please try again.");
+    if (error) {
+      console.error("public lead insert failed", error);
+      throw new Error("We couldn't save your request. Please try again.");
+    }
 
     if (data.quote) {
       await supabase.from("quote_requests").insert({
