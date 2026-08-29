@@ -131,20 +131,55 @@ export function writeSectionSeo(settings: unknown, patch: SectionSeo): Record<st
 /** Section types a business owner can add, in plain language. */
 export const SECTION_LIBRARY: { kind: SectionKind; label: string; help: string }[] = [
   { kind: "hero", label: "Headline banner", help: "The first thing visitors read, with your main button." },
+  { kind: "trust_bar", label: "Trust strip", help: "Quick reassurance line: area covered, rating, response time." },
   { kind: "intro", label: "Short introduction", help: "Two sentences on what you do and who you help." },
   { kind: "services", label: "Services", help: "One card per service you offer, pulled from your service list." },
+  { kind: "service_detail", label: "Service detail", help: "The full write-up for one service, with its own button." },
   { kind: "benefits", label: "Why choose us", help: "Short reasons to pick you — only ones you supplied." },
+  { kind: "process", label: "How it works", help: "The three or four steps from enquiry to job done." },
+  { kind: "stats", label: "Numbers", help: "Simple counts you can stand behind, like jobs completed." },
   { kind: "gallery", label: "Photos of your work", help: "Uses the photos in your media library." },
   { kind: "reviews", label: "Customer reviews", help: "Shows published reviews only." },
-  { kind: "area", label: "Areas you serve", help: "Where you work, for local search." },
+  { kind: "guarantee", label: "Guarantee", help: "The promise you make — only what you actually offer." },
+  { kind: "offer", label: "Current offer", help: "A time-limited offer. Hidden until you write one." },
+  { kind: "lead_magnet", label: "Free guide / checklist", help: "Trades an email for something useful." },
+  { kind: "area", label: "Area you serve", help: "Where you work, for local search." },
+  { kind: "areas", label: "All service areas", help: "Links to every town or neighbourhood page." },
   { kind: "faq", label: "Questions & answers", help: "Answers common questions before people call." },
+  { kind: "pricing", label: "Pricing guide", help: "Starting prices so visitors self-qualify." },
+  { kind: "quote", label: "Instant quote form", help: "The quote calculator that creates a lead." },
+  { kind: "booking", label: "Booking form", help: "Lets visitors pick a service and time." },
   { kind: "cta", label: "Call to action", help: "A prompt to call, book or request a quote." },
+  { kind: "sticky_cta", label: "Sticky call bar", help: "Always-visible call and quote buttons on mobile." },
   { kind: "contact", label: "Contact & hours", help: "Phone, email and opening hours." },
+  { kind: "policy", label: "Policy text", help: "Plain policy wording, like a privacy notice." },
   { kind: "custom", label: "Your own section", help: "A heading and text you write yourself." },
+];
+
+/** Page types Revora can lay out, in plain language. */
+export const PAGE_LIBRARY: { kind: PageKind; label: string; help: string }[] = [
+  { kind: "home", label: "Home", help: "The main landing page with your strongest offer." },
+  { kind: "services", label: "Services hub", help: "Every service in one place, each linking to its own page." },
+  { kind: "service", label: "Single service page", help: "One page per service — this is what ranks locally." },
+  { kind: "area", label: "Service area page", help: "One page per town or neighbourhood you cover." },
+  { kind: "pricing", label: "Pricing & instant quote", help: "Starting prices plus the quote calculator." },
+  { kind: "book", label: "Book online", help: "A page dedicated to taking the booking." },
+  { kind: "about", label: "About", help: "Who you are and why customers trust you." },
+  { kind: "reviews", label: "Reviews", help: "Published customer reviews in one place." },
+  { kind: "gallery", label: "Work gallery", help: "Photos of real jobs." },
+  { kind: "faq", label: "FAQ", help: "Answers that remove hesitation before calling." },
+  { kind: "offers", label: "Offers", help: "Current promotions you write yourself." },
+  { kind: "contact", label: "Contact", help: "Phone, email, hours and a form." },
+  { kind: "thanks", label: "Thank you", help: "Shown after a form is sent — used for ad tracking." },
+  { kind: "privacy", label: "Privacy notice", help: "Required by Google Ads and Meta Ads." },
+  { kind: "custom", label: "Your own page", help: "Anything else you need." },
 ];
 
 export const sectionLabel = (kind: string) =>
   SECTION_LIBRARY.find((s) => s.kind === kind)?.label ?? "Section";
+
+export const pageLabel = (kind: string) => PAGE_LIBRARY.find((p) => p.kind === kind)?.label ?? "Page";
+
 
 /** Fields the AI assistant and the editor are allowed to change on a section. */
 export const SECTION_TEXT_FIELDS = ["heading", "subheading", "body"] as const;
