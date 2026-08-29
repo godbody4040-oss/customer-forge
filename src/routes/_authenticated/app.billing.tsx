@@ -67,6 +67,12 @@ function BillingPage() {
   const services = (products ?? []).filter((p) => p.kind !== "subscription");
   const subscription = billing?.subscription ?? null;
   const currentPlanId = subscription?.plan_id ?? org?.plan_id ?? null;
+  const currentPlan = (subscriptionPlans ?? []).find((plan) => plan.id === currentPlanId) ?? null;
+  const currentPrice = currentPlan
+    ? subscription?.billing_interval === "annual"
+      ? currentPlan.annual_price
+      : currentPlan.monthly_price
+    : null;
 
   const openPortal = async () => {
     if (!orgId) return;
