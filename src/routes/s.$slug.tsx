@@ -127,7 +127,13 @@ export function PublicSiteView({
     seo.subheadline ||
     profile?.tagline ||
     "Straight answers, honest pricing, and work booked in under two minutes.";
-  const ctaLabel = copy?.primaryCta || seo.primary_cta_label || "Get my instant quote";
+  // Only point the primary CTA at the quote calculator when this tenant actually
+  // has one configured; otherwise send visitors to the booking form instead of
+  // rendering a second, duplicate booking form under #quote.
+  const hasQuote = Boolean(site.quote);
+  const quoteHref = hasQuote ? "#quote" : "#book";
+  const ctaLabel =
+    copy?.primaryCta || seo.primary_cta_label || (hasQuote ? "Get my instant quote" : "Book an appointment");
   const secondaryCta = copy?.secondaryCta || "Book an appointment";
 
   const jsonLd = {
@@ -180,7 +186,7 @@ export function PublicSiteView({
               </Button>
             ) : null}
             <Button asChild variant="signal" size="sm">
-              <a href="#quote">{ctaLabel}</a>
+              <a href={quoteHref}>{ctaLabel}</a>
             </Button>
           </div>
         </div>
@@ -203,7 +209,7 @@ export function PublicSiteView({
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">{sub}</p>
             <div className="mt-7 flex flex-wrap gap-2.5">
               <Button asChild variant="signal" size="lg">
-                <a href="#quote">{ctaLabel}</a>
+                <a href={quoteHref}>{ctaLabel}</a>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <a href="#book">{secondaryCta}</a>
@@ -248,11 +254,7 @@ export function PublicSiteView({
           </div>
 
           <div id="quote" className="scroll-mt-24">
-            {site.quote ? (
-              <QuoteCalculator site={site} />
-            ) : (
-              <BookingForm site={site} />
-            )}
+            {site.quote ? <QuoteCalculator site={site} /> : null}
           </div>
         </div>
       </section>

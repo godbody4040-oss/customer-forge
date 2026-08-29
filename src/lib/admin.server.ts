@@ -1,6 +1,7 @@
 /** Server-only helpers for platform admin (client creation, domains, support mode). */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NewClientInput } from "@/lib/admin-types";
+import { seedQuoteCalculator } from "@/lib/quote-seed";
 
 /** Where clients point their domain. Both records are checked automatically. */
 export const DOMAIN_TARGET = "revoragrowthsystems.com";
@@ -310,6 +311,12 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
     );
   }
 
+  // Every workspace launches with a working quote calculator so the public site's
+  // primary CTA always has a real destination (the owner can edit it afterwards).
+  await seedQuoteCalculator(admin, organizationId, services.map((s) => s.name.trim()));
+
+
+
   await admin.from("subscriptions").insert({
     organization_id: organizationId,
     plan_id: input.plan_id ?? null,
@@ -328,3 +335,4 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
 
   return { organizationId, slug, ownerId, tempPassword, email };
 }
+
