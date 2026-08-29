@@ -165,6 +165,43 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const goalsRaw = (p["website_goals"] as string[] | undefined) ?? [];
   const goals = (goalsRaw.length ? goalsRaw : [org.data.conversion_goal ?? "quote"]) as string[];
 
+  const copyFacts = {
+    businessName: org.data.name ?? "",
+    industry: org.data.industry ?? "",
+    description: (p["description"] as string) ?? null,
+    city: (p["city"] as string) ?? null,
+    state: (p["state"] as string) ?? null,
+    serviceArea: (p["service_area"] as string) ?? null,
+    phone: (p["phone"] as string) ?? null,
+    email: (p["email"] as string) ?? null,
+    yearsInBusiness: (p["years_in_business"] as number) ?? null,
+    hasHours: Boolean(p["hours"] && Object.keys(p["hours"] as object).length),
+    style: (p["font_preference"] as string) ?? null,
+    goals,
+    ctaLabel: "Get in touch",
+    services: serviceRows,
+  };
+
+  // Orchestrator pass: business intelligence, customer intent and conversion
+  // strategy. Every later stage reads this one shared brief.
+  let brief = fallbackBrief(copyFacts);
+  try {
+    brief = await analyzeBusiness(copyFacts);
+  } catch (error) {
+    if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
+    console.error("[site-engine] analysis fell back to rules", error);
+  }
+  await db.from("ai_generations").insert({
+    organization_id: orgId,
+    job_id: job.id,
+    kind: "business_brief",
+    model: brief.source,
+    instruction: null,
+    result: brief as unknown as never,
+    created_by: job.created_by,
+  } as never);
+  await step("analysis");
+
   const plan = generateWebsitePlan({
     businessName: org.data.name ?? "",
     industry: org.data.industry ?? "",
