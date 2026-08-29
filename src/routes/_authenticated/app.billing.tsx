@@ -251,36 +251,13 @@ function BillingPage() {
       </Panel>
 
       <Panel className="p-5">
-        <SectionHeading eyebrow="Plans" title="Monthly software plans" />
-        {plans.length ? (
-          <ul className="mt-4 grid gap-3 md:grid-cols-3">
-            {plans.map((product) => (
-              <li key={product.id} className="rounded-md border border-border p-4">
-                <p className="text-[14px] font-medium">{product.name}</p>
-                <p className="tnum mt-1 text-[18px] font-semibold">{money(product.amount, product.currency)}</p>
-                <p className="mt-1 text-[12px] text-muted-foreground">
-                  {product.billing_interval === "annual" ? "One year of access" : "One month of access"}
-                </p>
-                <Button
-                  variant={org?.plan_id === product.plan_id ? "outline" : "signal"}
-                  size="sm"
-                  className="mt-3"
-                  disabled={!manage}
-                  onClick={() => setSelected(product)}
-                >
-                  {org?.plan_id === product.plan_id ? "Renew / extend" : "Upgrade with PayPal"}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 text-[13px] text-muted-foreground">No plans are available for purchase yet.</p>
-        )}
-        <p className="mt-4 text-[12px] text-muted-foreground">
-          Plans are paid term by term — there is no automatic recurring charge, so nothing renews without you.
-          Questions: {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
+        <SectionHeading eyebrow="Support" title="Billing questions" />
+        <p className="mt-3 text-[13px] text-muted-foreground">
+          One-off services above are charged once via PayPal. Software plans are billed as a subscription and can be
+          changed or cancelled at any time. Questions: {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
         </p>
       </Panel>
+
 
       <Panel className="p-5">
         <SectionHeading eyebrow="History" title="Payment history" />
