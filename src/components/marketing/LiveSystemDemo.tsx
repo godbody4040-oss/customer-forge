@@ -19,7 +19,7 @@ type Stage = {
   icon: typeof MousePointerClick;
   headline: string;
   body: string;
-  screen: () => JSX.Element;
+  screen: () => React.ReactElement;
 };
 
 function Row({
