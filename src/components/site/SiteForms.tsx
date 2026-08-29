@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
@@ -263,6 +263,8 @@ export function QuoteCalculator({ site }: { site: Site }) {
 }
 
 export function BookingForm({ site }: { site: Site }) {
+  const uid = useId();
+  const fid = (key: string) => `b-${key}-${uid}`;
   const submit = useServerFn(submitPublicLead);
   const track = useTracker(site.org.slug);
   const bookable = site.services.filter((s) => s.bookable);
@@ -326,9 +328,9 @@ export function BookingForm({ site }: { site: Site }) {
 
       {bookable.length ? (
         <div className="space-y-1.5">
-          <Label htmlFor="b-service">Service</Label>
+          <Label htmlFor={fid("service")}>Service</Label>
           <select
-            id="b-service"
+            id={fid("service")}
             value={serviceId}
             onChange={(e) => setServiceId(e.target.value)}
             className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-[13px]"
@@ -345,38 +347,38 @@ export function BookingForm({ site }: { site: Site }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="b-name">Your name</Label>
-          <Input id="b-name" name="name" required />
+          <Label htmlFor={fid("name")}>Your name</Label>
+          <Input id={fid("name")} name="name" required />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="b-phone">Phone</Label>
-          <Input id="b-phone" name="phone" type="tel" />
+          <Label htmlFor={fid("phone")}>Phone</Label>
+          <Input id={fid("phone")} name="phone" type="tel" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="b-email">Email</Label>
-          <Input id="b-email" name="email" type="email" />
+          <Label htmlFor={fid("email")}>Email</Label>
+          <Input id={fid("email")} name="email" type="email" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="b-city">City / address</Label>
-          <Input id="b-city" name="city" />
+          <Label htmlFor={fid("city")}>City / address</Label>
+          <Input id={fid("city")} name="city" />
         </div>
         {bookable.length ? (
           <>
             <div className="space-y-1.5">
-              <Label htmlFor="b-date">Preferred date</Label>
-              <Input id="b-date" name="date" type="date" min={today} required />
+              <Label htmlFor={fid("date")}>Preferred date</Label>
+              <Input id={fid("date")} name="date" type="date" min={today} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="b-time">Preferred time</Label>
-              <Input id="b-time" name="time" type="time" defaultValue="09:00" required />
+              <Label htmlFor={fid("time")}>Preferred time</Label>
+              <Input id={fid("time")} name="time" type="time" defaultValue="09:00" required />
             </div>
           </>
         ) : null}
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="b-message">Details</Label>
-        <Textarea id="b-message" name="message" rows={3} />
+        <Label htmlFor={fid("message")}>Details</Label>
+        <Textarea id={fid("message")} name="message" rows={3} />
       </div>
 
       <Button type="submit" variant="signal" disabled={pending}>

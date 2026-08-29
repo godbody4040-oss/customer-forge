@@ -191,22 +191,19 @@ function Onboarding() {
         website_goals: goals,
       } as never);
 
-      const socials = [
-        { platform: "instagram", url: draft.instagram },
-        { platform: "facebook", url: draft.facebook },
-        { platform: "google", url: draft.google },
-      ].filter((s) => s.url.trim());
-      if (socials.length) {
-        await supabase
+      const socialRow = {
+        organization_id: org.id,
+        instagram: draft.instagram.trim() || null,
+        facebook: draft.facebook.trim() || null,
+        google_business: draft.google.trim() || null,
+      };
+      if (socialRow.instagram || socialRow.facebook || socialRow.google_business) {
+        const { error: socialError } = await supabase
           .from("social_profiles")
-          .insert(
-            socials.map((s) => ({
-              organization_id: org.id,
-              platform: s.platform,
-              url: s.url.trim(),
-            })) as never,
-          );
+          .insert(socialRow as never);
+        if (socialError) throw socialError;
       }
+
 
       if (services.length) {
         await supabase.from("services").insert(
@@ -242,7 +239,8 @@ function Onboarding() {
         testimonialCount: testimonials.length,
         hasCredentials: Boolean(draft.certifications || draft.awards || draft.yearsInBusiness),
         hasHours: Boolean(draft.hours),
-        socialLinks: socials.length,
+        socialLinks: [socialRow.instagram, socialRow.facebook, socialRow.google_business].filter(Boolean)
+          .length,
       });
 
       await supabase.from("website_settings").insert({
