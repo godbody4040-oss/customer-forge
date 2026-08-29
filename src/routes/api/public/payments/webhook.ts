@@ -121,13 +121,13 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       // Subscription state arrives through customer.subscription.* events.
       if (object?.mode !== "payment") break;
       const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
-      if (md.kind !== "service" || !md.paymentId) break;
+      if (md["kind"] !== "service" || !md["paymentId"]) break;
       if (object?.payment_status !== "paid") break;
 
       const { data: payment } = await admin
         .from("payments")
         .select("*")
-        .eq("id", md.paymentId)
+        .eq("id", md["paymentId"])
         .maybeSingle();
       if (!payment || payment.status === "completed") break;
 
@@ -157,11 +157,11 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
     }
     case "checkout.session.expired": {
       const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
-      if (md.kind !== "service" || !md.paymentId) break;
+      if (md["kind"] !== "service" || !md["paymentId"]) break;
       const { data: payment } = await admin
         .from("payments")
         .select("*")
-        .eq("id", md.paymentId)
+        .eq("id", md["paymentId"])
         .maybeSingle();
       if (!payment || payment.status === "completed") break;
       const { data: failed } = await admin

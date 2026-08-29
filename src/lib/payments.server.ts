@@ -135,8 +135,8 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
     provider_invoice_id:
       payment.paypal_capture_id ??
       payment.paypal_order_id ??
-      (typeof meta.stripe_payment_intent === "string" ? meta.stripe_payment_intent : null) ??
-      (typeof meta.stripe_session_id === "string" ? meta.stripe_session_id : null),
+      (typeof meta["stripe_payment_intent"] === "string" ? meta["stripe_payment_intent"] : null) ??
+      (typeof meta["stripe_session_id"] === "string" ? meta["stripe_session_id"] : null),
     period_start: payment.period_start,
     period_end: payment.period_end,
   });
