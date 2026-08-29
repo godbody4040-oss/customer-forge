@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { seedQuoteCalculator } from "@/lib/quote-seed";
+import { newTrialEndsAt } from "@/lib/trial";
 import { assertNoError, supabaseErrorMessage } from "@/lib/supabase-error";
 
 
@@ -233,7 +234,13 @@ function Onboarding() {
       } else {
         const { data: inserted, error: orgError } = await supabase
           .from("organizations")
-          .insert({ ...orgFields, slug, created_by: user.id })
+          .insert({
+            ...orgFields,
+            slug,
+            created_by: user.id,
+            subscription_status: "trialing" as never,
+            trial_ends_at: newTrialEndsAt(),
+          })
           .select("id, slug")
           .single();
         if (orgError) throw orgError;

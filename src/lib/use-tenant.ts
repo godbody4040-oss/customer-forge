@@ -26,6 +26,7 @@ export type Workspace = {
     plan_id: string | null;
     subscription_status: string;
     trial_ends_at: string | null;
+    created_at?: string | null;
     onboarding_completed: boolean;
     onboarding_step: number;
     is_demo: boolean;
@@ -37,7 +38,7 @@ export type Workspace = {
 };
 
 const ORG_FIELDS =
-  "id, name, slug, industry, plan_id, subscription_status, trial_ends_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal, setup_paid_at";
+  "id, name, slug, industry, plan_id, subscription_status, trial_ends_at, created_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal, setup_paid_at";
 
 
 /** Current user's workspace (or the client workspace being supported) plus platform-admin flag. */

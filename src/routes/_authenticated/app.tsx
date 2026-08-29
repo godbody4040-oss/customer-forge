@@ -38,6 +38,7 @@ import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
 import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useBillingState } from "@/lib/stripe.hooks";
+import { isTrialActive, trialHoursLeft } from "@/lib/trial";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
@@ -215,8 +216,8 @@ function AppShell() {
           <div className="flex items-center gap-2">
             {trialStillActive ? (
               <Pill tone="attention">
-                {trialHoursLeft > 1
-                  ? `Free access · ${trialHoursLeft}h left`
+                {hoursLeft > 1
+                  ? `Free access · ${hoursLeft}h left`
                   : "Free access · under 1h left"}
               </Pill>
             ) : org?.subscription_status === "trialing" ? (
