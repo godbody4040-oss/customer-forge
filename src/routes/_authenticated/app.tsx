@@ -106,20 +106,29 @@ function AppShell() {
           </Link>
         </div>
         <nav aria-label="App" className="flex flex-col gap-0.5 p-2.5">
-          {NAV.map(({ to, label, icon: Icon, exact }) => (
+          {NAV.map(({ to, label, icon: Icon, exact, key }) => (
             <Link
               key={to}
               to={to}
               activeOptions={{ exact }}
               onClick={() => setNavOpen(false)}
-              className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
-              activeProps={{ className: "bg-elevated text-foreground" }}
+              className="group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
+              activeProps={{
+                className: "border-primary/35 bg-primary/10 text-primary",
+              }}
             >
-              <Icon className="size-4" aria-hidden="true" />
-              {label}
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{label}</span>
+              {key ? (
+                <span
+                  aria-hidden="true"
+                  className="ml-auto size-1.5 shrink-0 rounded-full bg-primary/70"
+                />
+              ) : null}
             </Link>
           ))}
         </nav>
+
 
         {org ? (
           <div className="mx-2.5 mt-2 rounded-md border border-border p-3">
