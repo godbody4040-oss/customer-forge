@@ -44,6 +44,7 @@ export function BuilderWizard({
   launchSlot,
 }: Props) {
   const [step, setStep] = useState<WizardStepKey>("business");
+  const stepRef = useStepScroll<HTMLDivElement>(step);
   const saveProfile = useAutosaveProfile(organizationId);
   const saveOrg = useAutosaveOrganization(organizationId);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -119,7 +120,7 @@ export function BuilderWizard({
         </ol>
       </Panel>
 
-      <Panel className="p-5">
+      <Panel ref={stepRef} className="p-5">
         <SectionHeading
           eyebrow={current.help}
           title={current.title}

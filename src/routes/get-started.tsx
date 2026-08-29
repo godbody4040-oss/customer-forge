@@ -53,6 +53,7 @@ const STEPS = ["Your information", "Order summary", "Payment"] as const;
 
 function GetStarted() {
   const [step, setStep] = useState(0);
+  const stepRef = useStepScroll<HTMLDivElement>(step);
   const [intake, setIntake] = useState<GrowthSystemIntake>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [payNow, setPayNow] = useState(false);
@@ -166,6 +167,7 @@ function GetStarted() {
           ))}
         </ol>
 
+        <div ref={stepRef}>
         {step === 0 ? (
           <section className="panel mt-6 p-5">
             <h2 className="font-display text-[17px] font-semibold">Tell us about your business</h2>

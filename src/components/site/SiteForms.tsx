@@ -46,6 +46,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [picked, setPicked] = useState<string[]>([]);
   const [step, setStep] = useState<"questions" | "contact">("questions");
+  const stepRef = useStepScroll<HTMLDivElement>(step);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
 

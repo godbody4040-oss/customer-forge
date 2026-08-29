@@ -74,6 +74,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const { data: ws } = useWorkspace();
   const [step, setStep] = useState(0);
+  const stepRef = useStepScroll<HTMLDivElement>(step);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>({
@@ -386,7 +387,7 @@ function Onboarding() {
           ))}
         </ol>
 
-        <div className="panel mt-8 p-6">
+        <div ref={stepRef} className="panel mt-8 p-6">
           {step === 0 ? (
             <div className="space-y-5">
               <div>
