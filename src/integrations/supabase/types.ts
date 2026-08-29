@@ -1008,6 +1008,54 @@ export type Database = {
           },
         ]
       }
+      marketing_conversions: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          email: string | null
+          event_name: string
+          id: string
+          industry_slug: string | null
+          landing_path: string | null
+          metadata: Json
+          referrer: string | null
+          session_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          email?: string | null
+          event_name: string
+          id?: string
+          industry_slug?: string | null
+          landing_path?: string | null
+          metadata?: Json
+          referrer?: string | null
+          session_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          email?: string | null
+          event_name?: string
+          id?: string
+          industry_slug?: string | null
+          landing_path?: string | null
+          metadata?: Json
+          referrer?: string | null
+          session_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       media: {
         Row: {
           alt_text: string | null
