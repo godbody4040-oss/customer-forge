@@ -121,10 +121,17 @@ function indexOf(site: LoadedSite): { index: SiteIndex; currentText: Map<string,
 export const planWebsiteChanges = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { organizationId: string; instruction: string; history?: { role: string; content: string }[] }) => {
+    (input: {
+      organizationId: string;
+      instruction: string;
+      history?: { role: string; content: string }[];
+      attachments?: unknown;
+    }) => {
       const organizationId = orgIdOf(input);
       const instruction = str(input?.instruction, PLAN_INSTRUCTION_LIMIT);
-      if (instruction.length < 3) throw new Error("Tell Revora what you'd like changed.");
+      const attachments = readAttachments(input?.attachments);
+      if (instruction.length < 3 && !attachments.length)
+        throw new Error("Tell Revora what you'd like changed — type it, say it, or attach a photo or clip.");
       const history: AgentTurn[] = Array.isArray(input?.history)
         ? input.history
             .slice(-8)
@@ -134,9 +141,10 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
             }))
             .filter((turn) => turn.content.length > 0)
         : [];
-      return { organizationId, instruction, history };
+      return { organizationId, instruction, history, attachments };
     },
   )
+
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
