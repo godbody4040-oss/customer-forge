@@ -4,6 +4,7 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
+import { AfterYouStart, TrialBadge, ValueSplit, WhyRevora } from "@/components/marketing/OfferSections";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 
 export const Route = createFileRoute("/pricing")({
@@ -13,12 +14,12 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "One complete growth system for local businesses: $1,500 one-time setup with the first month free, then $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+          "$1,500 one-time setup. Your first 30 days of the $250/month platform fee are free. After the 30-day trial your subscription continues at $250/month unless canceled. Website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
       { property: "og:title", content: "Pricing — Revora Growth System" },
       {
         property: "og:description",
-        content: "$1,500 one-time setup, first month free, then $250/month. No confusing packages. One complete growth system.",
+        content: "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. One complete growth system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,11 +31,11 @@ export const Route = createFileRoute("/pricing")({
 const FAQ = [
   {
     q: "What does the $1,500 setup cover?",
-    a: "The initial build, customization, configuration and launch of your system: website, lead capture, CRM, booking, quote flow, follow-up automation and local SEO foundation.",
+    a: "The initial build, customization, configuration and launch of your system: website, domain setup, lead capture, CRM, booking, quote flow, follow-up automation, local SEO foundation and analytics. It is charged today.",
   },
   {
     q: "What does the $250/month cover?",
-    a: "Ongoing platform access, automation, hosting and system management, updates, growth services and technical support.",
+    a: "Ongoing platform access, automation, hosting and system management, maintenance, website updates, reporting, optimization and technical support. Your first 30 days are free, then $250/month unless canceled.",
   },
   {
     q: "Can I use my own domain?",
@@ -58,6 +59,9 @@ function Pricing() {
         <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
           {GROWTH_SYSTEM.positioning}
         </p>
+        <div className="mt-5">
+          <TrialBadge />
+        </div>
 
         <section className="panel card-lift mt-10 overflow-hidden p-0">
           <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
@@ -108,6 +112,10 @@ function Pricing() {
             </div>
           </div>
         </section>
+
+        <ValueSplit />
+        <WhyRevora />
+        <AfterYouStart />
 
         <section className="mt-16" id="faq">
           <h2 className="font-display text-[19px] font-semibold">Questions owners actually ask</h2>

@@ -18,12 +18,39 @@ export const GROWTH_SYSTEM = {
   setupLabel: "One-time implementation and customization.",
   monthlyLabel:
     "Ongoing platform, automation, support, hosting/system management, and growth services.",
+  /** Length of the free platform trial, in days. Mirrors the Stripe trial. */
+  trialDays: 30,
+  trialBadge: "30-DAY FREE PLATFORM TRIAL",
   ctaPrimary: "GET STARTED — $1,500 SETUP",
   ctaSecondary:
-    "First month free, then $250/month. No confusing packages. One complete growth system.",
-  ctaShort: "START MY REVORA SYSTEM",
+    "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. Cancel anytime. No hidden fees.",
+  ctaShort: "BUILD MY GROWTH SYSTEM",
+  /** The single canonical offer sentence. Use this verbatim wherever the offer is explained. */
   explainer:
-    "The $1,500 setup fee covers the initial build, customization, configuration, and launch of your Revora Growth System. Your first month is free — the $250/month for ongoing platform access, automation, support, maintenance, and growth services starts one month after signup.",
+    "$1,500 one-time setup. Your first 30 days of the $250/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $250/month unless canceled.",
+  setupIncludes: [
+    "Custom website",
+    "Domain setup",
+    "CRM configuration",
+    "Lead capture",
+    "Quote system",
+    "Booking system",
+    "Automated follow-up",
+    "Local SEO foundation",
+    "Analytics setup",
+    "System configuration",
+    "Launch",
+  ],
+  monthlyIncludes: [
+    "Platform access",
+    "Hosting/system management",
+    "Automation",
+    "Maintenance",
+    "Website updates",
+    "Technical support",
+    "Reporting",
+    "Ongoing optimization",
+  ],
   includes: [
     "Professional business website",
     "Custom domain connection/setup",

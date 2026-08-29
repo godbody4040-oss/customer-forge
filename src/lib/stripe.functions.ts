@@ -182,7 +182,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         // in USD instead of letting the provider convert by visitor location.
         adaptive_pricing: { enabled: false },
         metadata,
-        // First month free: the $1,500 setup is charged today, the $250/month
+        // 30-day free platform trial: the $1,500 setup is charged today, the $250/month
         // recurring price starts one month after signup.
         subscription_data: { metadata, trial_period_days: 30 },
       };

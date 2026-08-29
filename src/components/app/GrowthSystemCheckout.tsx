@@ -59,7 +59,6 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
           <p className="eyebrow">Secure checkout</p>
           <h2 className="mt-1 font-display text-[18px] font-semibold">{GROWTH_SYSTEM.name}</h2>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            {usdExact(GROWTH_SYSTEM.setupPrice)} setup today. First month free, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
             Cards, Apple Pay, Google Pay and Cash App Pay appear where supported.
           </p>
         </div>
@@ -67,6 +66,27 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
           <X className="size-4" />
         </Button>
       </div>
+      <dl className="mt-4 divide-y divide-border rounded-md border border-border bg-elevated text-[13px]">
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
+          <dt>Setup — one time</dt>
+          <dd className="tnum font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
+          <dt>Platform — first {GROWTH_SYSTEM.trialDays} days</dt>
+          <dd className="tnum font-semibold text-primary">{usdExact(0)}</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
+          <dt>Then, monthly</dt>
+          <dd className="tnum font-semibold">{usdExact(GROWTH_SYSTEM.monthlyPrice)}/month</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
+          <dt className="font-medium">Charged today</dt>
+          <dd className="tnum text-[15px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</dd>
+        </div>
+      </dl>
+      <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+        {GROWTH_SYSTEM.explainer}
+      </p>
       {error ? (
         <div
           role="alert"

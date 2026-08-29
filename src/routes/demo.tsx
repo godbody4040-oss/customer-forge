@@ -97,13 +97,14 @@ function DemoPage() {
       <main>
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <Pill tone="signal">Live demo</Pill>
+            <Pill tone="attention">DEMO ACCOUNT</Pill>
             <h1 className="mt-5 max-w-3xl font-display text-[clamp(1.9rem,4.5vw,3rem)] leading-[1.06] font-semibold tracking-tight">
               Walk the customer journey yourself.
             </h1>
             <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-              Elite Mobile Detailing is a fully working demo business — clearly labelled demo data.
-              Every quote and booking you submit creates real records in its dashboard.
+              Elite Mobile Detailing is a sample business dashboard. Illustrative data — not client
+              results. Every quote and booking you submit creates records inside this demo workspace
+              only.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild variant="signal" size="lg">

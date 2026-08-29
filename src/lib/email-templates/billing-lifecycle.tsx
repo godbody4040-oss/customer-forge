@@ -53,9 +53,14 @@ const WelcomeEmail = (p: BillingProps) => (
     heading={`Welcome aboard, ${p.businessName || 'there'} — ${p.planName || 'your plan'} is live`}
   >
     <Text style={text}>
-      Your {p.planName || 'Revora'} subscription ({p.interval || 'monthly'}
-      {p.amount ? ` — ${p.amount}` : ''}) is active and your workspace is ready. Your website
-      builder, CRM, booking calendar, quote engine, and automations are unlocked right now.
+      <strong>$1,500 setup payment received.</strong> Your {p.planName || 'Revora Growth System'}{' '}
+      workspace is ready — website builder, CRM, booking calendar, quote engine and automations are
+      unlocked right now.
+    </Text>
+    <Text style={text}>
+      <strong>30-day platform trial active.</strong> $250/month begins after the trial unless
+      canceled{p.accessUntil ? ` — your trial ends ${p.accessUntil}` : ''}. Cancel anytime from
+      billing. No hidden fees.
     </Text>
     <Text style={text}>
       Best first step: open your Growth Center and finish the website brief — Revora can draft
