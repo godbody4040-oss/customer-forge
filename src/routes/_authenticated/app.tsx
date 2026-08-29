@@ -16,7 +16,9 @@ import {
   Rocket,
   Settings,
   Shield,
+  Sparkles,
   Star,
+
 
   Users,
   Wrench,
