@@ -192,9 +192,13 @@ export const configureWalletPayments = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
 
-    const { data: isSuper } = await context.supabase.rpc("is_super_admin" as never).single();
-    const superAdmin = Boolean(isSuper);
-    if (!superAdmin) return { error: "Only the Revora platform owner can change payment methods." };
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (!(roles ?? []).some((r) => r.role === "super_admin")) {
+      return { error: "Only the Revora platform owner can change payment methods." };
+    }
 
     try {
       const stripe = createStripeClient(data.environment);
