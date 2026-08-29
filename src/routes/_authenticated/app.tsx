@@ -266,9 +266,11 @@ function AppShell() {
               <p className="eyebrow">Access paused</p>
               <h1 className="mt-2 font-display text-2xl font-bold">Activate your Revora Growth System</h1>
               <p className="mt-3 text-[14px] text-muted-foreground">
-                Your website, leads, bookings, and settings are saved — nothing is lost. Complete the
-                $1,500 setup and $250/month subscription to restore full access to your workspace.
+                Your 1-day free trial has ended. Your website, leads, bookings, and settings are saved —
+                nothing is lost. Pay the $1,500 one-time setup to restore full access; your first 30 days of
+                the $250/month platform fee are free, then it continues at $250/month unless canceled.
               </p>
+
               <Button asChild variant="signal" className="mt-6">
                 <Link to="/app/billing">
                   <CreditCard className="size-4" aria-hidden="true" /> Activate my system
