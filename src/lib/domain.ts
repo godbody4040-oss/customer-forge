@@ -121,3 +121,7 @@ export const DATE_RANGES = [
 
 /** Owners, admins and managers may change publishing, domains and billing-facing settings. */
 export const canManage = (role: AppRole) => role === "owner" || role === "admin" || role === "manager";
+
+export function industrySlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
