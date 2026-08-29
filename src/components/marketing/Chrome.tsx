@@ -44,8 +44,8 @@ export function SiteHeader() {
             <Link to="/auth">Sign in</Link>
           </Button>
           <Button asChild variant="signal" size="sm">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Start free
+            <Link to="/get-started">
+              Get started
             </Link>
           </Button>
         </div>
@@ -85,8 +85,8 @@ export function SiteHeader() {
               </Link>
             </Button>
             <Button asChild variant="signal">
-              <Link to="/auth" search={{ mode: "signup" }} onClick={() => setOpen(false)}>
-                Start free
+              <Link to="/get-started" onClick={() => setOpen(false)}>
+                Get started
               </Link>
             </Button>
           </div>

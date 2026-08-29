@@ -112,7 +112,7 @@ function DemoPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/auth" search={{ mode: "signup" }}>
+                <Link to="/get-started">
                   Build my growth system
                 </Link>
               </Button>

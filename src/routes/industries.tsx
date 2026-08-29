@@ -75,8 +75,8 @@ function Industries() {
             </p>
           </div>
           <Button asChild variant="signal">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Start free
+            <Link to="/get-started">
+              Get started
             </Link>
           </Button>
         </div>
