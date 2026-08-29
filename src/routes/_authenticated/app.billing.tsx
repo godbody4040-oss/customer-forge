@@ -147,12 +147,17 @@ function BillingPage() {
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Current plan" value={currentPlanId ?? "No plan"} hint={subscription?.status ?? org?.subscription_status ?? ""} />
         <MetricCard
-          label="Plan price"
-          value={currentPrice != null ? money(currentPrice, "USD") : "—"}
-          hint={subscription ? `billed ${subscription.billing_interval}` : "no active subscription"}
+          label="Your system"
+          value={GROWTH_SYSTEM.name}
+          hint={subscription?.status ?? org?.subscription_status ?? ""}
         />
+        <MetricCard
+          label="Setup fee"
+          value={usdExact(GROWTH_SYSTEM.setupPrice)}
+          hint={setupPaid ? "Paid" : "Due at checkout"}
+        />
+
         <MetricCard label="Paid to date" value={money(paidTotal, "USD")} hint={`${paid.length} payment${paid.length === 1 ? "" : "s"}`} />
         <MetricCard
           label={subscription?.cancel_at_period_end ? "Access ends" : subscription?.status === "trialing" ? "Trial ends" : "Renews"}
