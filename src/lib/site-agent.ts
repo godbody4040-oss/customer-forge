@@ -467,3 +467,74 @@ export function describeActions(actions: AgentAction[], index: SiteIndex, curren
     }
   });
 }
+
+/* ------------------------------- attachments ------------------------------- */
+
+/**
+ * The assistant accepts photos, video and voice as well as text. Attachments are
+ * context only — the model reads them to understand what the owner is pointing
+ * at ("match this van wrap", "this is the finished job", "write it like this
+ * flyer") and never gains new abilities from them.
+ */
+export const MAX_ATTACHMENTS = 4;
+
+export const ATTACHMENT_LIMITS: Record<AgentAttachmentKind, number> = {
+  image: 6 * 1024 * 1024,
+  video: 16 * 1024 * 1024,
+  audio: 8 * 1024 * 1024,
+};
+
+export type AgentAttachmentKind = "image" | "video" | "audio";
+
+export type AgentAttachment = {
+  kind: AgentAttachmentKind;
+  /** e.g. image/jpeg, video/mp4, audio/webm */
+  mimeType: string;
+  name: string;
+  /** `data:<mime>;base64,<payload>` */
+  dataUrl: string;
+};
+
+export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
+export const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v"];
+export const AUDIO_MIME_TYPES = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg", "audio/m4a", "audio/x-m4a"];
+
+export const ATTACHMENT_ACCEPT = [...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES].join(",");
+
+export function attachmentKindOf(mimeType: string): AgentAttachmentKind | null {
+  const mime = mimeType.toLowerCase().split(";")[0]?.trim() ?? "";
+  if (IMAGE_MIME_TYPES.includes(mime)) return "image";
+  if (VIDEO_MIME_TYPES.includes(mime)) return "video";
+  if (AUDIO_MIME_TYPES.includes(mime)) return "audio";
+  return null;
+}
+
+/** Roughly how many bytes a base64 payload decodes to. */
+export function base64Bytes(dataUrl: string) {
+  const payload = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  return Math.floor((payload.length * 3) / 4);
+}
+
+/**
+ * Server-side gate: only well-formed data URLs of an allowed type and size get
+ * through, so a crafted request can't push arbitrary bytes at the model.
+ */
+export function readAttachments(value: unknown): AgentAttachment[] {
+  if (!Array.isArray(value)) return [];
+  const out: AgentAttachment[] = [];
+  for (const raw of value.slice(0, MAX_ATTACHMENTS)) {
+    if (!raw || typeof raw !== "object") continue;
+    const item = raw as Record<string, unknown>;
+    const dataUrl = typeof item["dataUrl"] === "string" ? item["dataUrl"] : "";
+    const match = /^data:([a-z0-9.+/-]+);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
+    if (!match) continue;
+    const mimeType = (match[1] ?? "").toLowerCase();
+    const kind = attachmentKindOf(mimeType);
+    if (!kind) continue;
+    const clean = `data:${mimeType};base64,${(match[2] ?? "").replace(/\s+/g, "")}`;
+    if (base64Bytes(clean) > ATTACHMENT_LIMITS[kind]) continue;
+    const name = typeof item["name"] === "string" ? item["name"].slice(0, 120) : `${kind} attachment`;
+    out.push({ kind, mimeType, name, dataUrl: clean });
+  }
+  return out;
+}
