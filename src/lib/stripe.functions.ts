@@ -218,7 +218,8 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { organizationId: string; productId: string; returnUrl: string; environment: StripeEnv }) => {
       const productId = String(input?.productId ?? "").slice(0, 80);
-      if (!/^[0-9a-f-]{36}$/i.test(productId)) throw new Error("Choose a service to pay for");
+      // Catalog rows use either a UUID or a readable slug id, so accept both.
+      if (!/^[0-9a-zA-Z_-]{3,80}$/.test(productId)) throw new Error("Choose a service to pay for");
       const returnUrl = String(input?.returnUrl ?? "").slice(0, 500);
       if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
       return {
@@ -326,7 +327,9 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
         return_url: data.returnUrl,
         customer: customerId,
         metadata,
-        payment_intent_data: { metadata },
+        // The description is what the payments dashboard shows as the product
+        // name on the charge, so send the service name rather than an id.
+        payment_intent_data: { description: product.name, metadata },
       };
 
       let session;
