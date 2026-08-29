@@ -228,6 +228,79 @@
   backdrop-filter: blur(10px);
 }
 
+/* Ambient gold light behind hero and closing sections. */
+@utility hero-aura {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 70%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        60% 60% at 22% 18%,
+        color-mix(in oklab, var(--color-gold) 12%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        50% 50% at 82% 8%,
+        color-mix(in oklab, var(--color-gold) 8%, transparent) 0%,
+        transparent 72%
+      );
+  }
+}
+
+/* Hairline technical grid, used sparingly on dark sections. */
+@utility grid-lines {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--color-border) 70%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--color-border) 70%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(70% 60% at 50% 0%, black 0%, transparent 78%);
+  }
+}
+
+/* Consistent card interaction across marketing and app surfaces. */
+@utility card-lift {
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    background-color 180ms ease;
+  &:hover {
+    border-color: color-mix(in oklab, var(--color-gold) 38%, var(--color-border));
+    transform: translateY(-2px);
+  }
+}
+
+/* Native select that matches the design system. */
+@utility select-field {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-muted-foreground) 50%),
+    linear-gradient(135deg, var(--color-muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 13px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.25rem;
+}
+
+[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+
 /* Hide Lovable preview/editor badges/watermarks when they are injected into the app body.
    The published application does not include these, but the editor preview may overlay them.
    This keeps the public UI clean for demos and recordings. */
