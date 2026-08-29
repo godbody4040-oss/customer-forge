@@ -229,6 +229,64 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       link: data.kind === "booking" ? "/app/calendar" : "/app/leads",
     });
 
+    // Owner alert + customer follow-ups. Delivery happens here (server side) so
+    // "sent" always means a provider accepted the message.
+    const { data: profile } = await supabase
+      .from("business_profiles")
+      .select("email, owner_email")
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const ownerEmail = profile?.email || profile?.owner_email || null;
+
+    const { deliverRun, sendLeadAlert } = await import("@/lib/messaging.server");
+
+    if (ownerEmail) {
+      const alert = await sendLeadAlert(
+        ownerEmail,
+        {
+          businessName: org.name,
+          kind: titles[data.kind]?.split(":")[0] ?? "New lead",
+          leadName: data.name,
+          leadEmail: data.email || undefined,
+          leadPhone: data.phone || undefined,
+          city: data.city || undefined,
+          service: data.serviceInterest || undefined,
+          estimate: data.quote
+            ? `$${data.quote.min}–$${data.quote.max}`
+            : data.estimatedValue
+              ? `$${data.estimatedValue}`
+              : undefined,
+          message: data.message || undefined,
+          when: data.booking ? new Date(data.booking.startsAt).toLocaleString() : undefined,
+        },
+        // One alert per lead, even if the submit is retried.
+        `lead-alert-${lead.id}`,
+      );
+      if (!alert.ok) console.warn("lead alert not delivered", alert.reason);
+    }
+
+    const { enqueueAutomations } = await import("@/lib/automation-engine");
+    await enqueueAutomations(
+      supabase,
+      {
+        organizationId: orgId,
+        trigger: data.kind === "booking" ? "booking_created" : "lead_created",
+        businessName: org.name,
+        lead: {
+          id: lead.id,
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          service_interest: data.serviceInterest || null,
+          estimated_value: data.estimatedValue,
+        },
+      },
+      {
+        businessName: org.name,
+        deliver: (run) => deliverRun(run, { businessName: org.name, replyTo: ownerEmail }),
+      },
+    );
+
     return { ok: true, leadId: lead.id, business: org.name };
   });
 
