@@ -204,17 +204,22 @@ function Landing() {
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <p className="eyebrow">The real problem</p>
-            <h2 className="mt-2 max-w-2xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
-              You're not short on skill. You're short on a system.
+            <h2 className="mt-2 max-w-3xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
+              Your business shouldn't lose customers because the process is broken.
             </h2>
-            <div className="mt-9 grid gap-3 md:grid-cols-3">
+            <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {PROBLEMS.map((p) => (
                 <Panel key={p.title} className="card-lift p-5">
-                  <h3 className="font-display text-[15px] font-semibold">{p.title}</h3>
+                  <h3 className="font-display text-[13px] font-bold tracking-[0.12em] uppercase">
+                    {p.title}
+                  </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
                 </Panel>
               ))}
             </div>
+            <p className="mt-6 text-[14px] text-foreground">
+              Revora connects the entire customer journey.
+            </p>
           </div>
         </section>
         {/* Customer journey */}
