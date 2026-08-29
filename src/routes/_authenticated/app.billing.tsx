@@ -238,7 +238,7 @@ function BillingPage() {
       </Panel>
 
 
-      {services.length > 0 ? <Panel className="p-5">
+      <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHeading eyebrow="Payment methods" title="Saved cards & wallets" />
           {subscription?.provider_customer_id ? (
@@ -281,7 +281,8 @@ function BillingPage() {
         />
       ) : null}
 
-      <Panel className="p-5">
+      {services.length > 0 ? (
+        <Panel className="p-5">
         <SectionHeading eyebrow="Services" title="Revora services" />
         {loadingProducts ? (
           <LoadingRows rows={3} />
@@ -327,7 +328,8 @@ function BillingPage() {
             ))}
           </ul>
         )}
-      </Panel>
+        </Panel>
+      ) : null}
 
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
@@ -387,7 +389,7 @@ function BillingPage() {
             </table>
           </div>
         )}
-      </Panel> : null}
+      </Panel>
     </div>
   );
 }
