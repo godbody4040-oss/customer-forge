@@ -129,13 +129,9 @@ function AdminClients() {
                   {client.custom_domain ?? `/s/${client.slug}`} · joined {dateShort(client.created_at)} ·{" "}
                   {number(client.leads)} leads · {number(client.appointments)} bookings
                 </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
                 <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                  {client.setup_paid_at
-                    ? `Setup paid ${dateShort(client.setup_paid_at)}`
-                    : "Setup unpaid"}{" "}
-                  · {currency(client.paid_total)} collected
+                  {client.setup_paid_at ? `Setup paid ${dateShort(client.setup_paid_at)}` : "Setup unpaid"} ·{" "}
+                  {currency(client.paid_total)} collected
                   {client.current_period_end ? ` · renews ${dateShort(client.current_period_end)}` : ""}
                 </p>
               </div>
@@ -155,6 +151,13 @@ function AdminClients() {
                       ? `Subscription ${client.subscription_state}`
                       : "Awaiting payment"}
                 </Pill>
+                <Pill tone={client.readinessScore >= 90 ? "signal" : "attention"}>
+                  {client.readinessScore}% ready
+                </Pill>
+                <Pill tone={PUBLISH_STATES[client.publish_state]?.tone ?? "neutral"}>
+                  {PUBLISH_STATES[client.publish_state]?.label ?? client.publish_state}
+                </Pill>
+
 
                 <Pill tone={DOMAIN_STATES[client.domain_status]?.tone ?? "neutral"}>
                   {DOMAIN_STATES[client.domain_status]?.label ?? client.domain_status}
