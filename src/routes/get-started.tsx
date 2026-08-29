@@ -14,6 +14,7 @@ import { isPaymentsConfigured } from "@/lib/stripe";
 import { REVORA, revoraMailto } from "@/lib/brand";
 import { trackConversion } from "@/lib/conversion";
 import { useStepScroll } from "@/lib/use-step-scroll";
+import { safeSlug } from "@/lib/website-plan";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -58,6 +59,8 @@ function GetStarted() {
   const [intake, setIntake] = useState<GrowthSystemIntake>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [payNow, setPayNow] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [provisioning, setProvisioning] = useState(false);
 
   const session = useQuery({
     queryKey: ["get-started", "session"],
@@ -97,6 +100,10 @@ function GetStarted() {
       /* storage unavailable */
     }
   }, [intake]);
+
+  useEffect(() => {
+    if (session.data?.organizationId) setOrganizationId(session.data.organizationId);
+  }, [session.data?.organizationId]);
 
   useEffect(() => {
     if (session.data?.email && !intake.email) {
@@ -399,10 +406,23 @@ function GetStarted() {
                   .
                 </p>
               ) : payNow ? null : (
-                <Button variant="signal" size="lg" className="mt-4 w-full sm:w-auto" onClick={() => setPayNow(true)}>
-                  <Lock className="size-4" /> Pay {usdExact(GROWTH_SYSTEM.setupPrice)} today
+                <Button
+                  variant="signal"
+                  size="lg"
+                  className="mt-4 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                  disabled={provisioning}
+                  onClick={startPayment}
+                >
+                  <Lock className="size-4" />{" "}
+                  {provisioning ? "Preparing your workspace…" : `Pay ${usdExact(GROWTH_SYSTEM.setupPrice)} today`}
                 </Button>
               )}
+
+              {step === 2 && error ? (
+                <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+                  {error}
+                </p>
+              ) : null}
 
               {!payNow ? (
                 <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
@@ -411,9 +431,9 @@ function GetStarted() {
               ) : null}
             </div>
 
-            {payNow && signedIn && cardsReady ? (
+            {payNow && signedIn && cardsReady && organizationId ? (
               <GrowthSystemCheckout
-                organizationId={session.data!.organizationId!}
+                organizationId={organizationId}
                 intake={intake}
                 onClose={() => setPayNow(false)}
               />
