@@ -150,13 +150,17 @@ function PrimaryCta({ className = "" }: { className?: string }) {
 function PriceLine({ className = "" }: { className?: string }) {
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
-      <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
-      <span className="font-medium text-primary">{GROWTH_SYSTEM.trialDays} days free</span> · then{" "}
+      <span className="font-medium text-primary">
+        {GROWTH_SYSTEM.fullAccessTrialDays} days free full access
+      </span>{" "}
+      · <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
+      <span className="font-medium text-primary">first month free</span> · then{" "}
       <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.monthlyPrice)}/month</span> ·
       Cancel anytime
     </p>
   );
 }
+
 
 function Landing() {
   return (
