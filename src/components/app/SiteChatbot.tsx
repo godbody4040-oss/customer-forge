@@ -148,6 +148,24 @@ export function SiteChatbot({
               {apply.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Apply {pending.length} change{pending.length === 1 ? "" : "s"}
             </Button>
+            {onPublishNow && publishState === "published" ? (
+              <Button
+                variant="outline"
+                disabled={apply.isPending || isPublishing || !canManage}
+                onClick={() =>
+                  apply.mutate(pending, {
+                    onSuccess: () => {
+                      setPending([]);
+                      setInstruction("");
+                      onPublishNow();
+                    },
+                  })
+                }
+              >
+                {isPublishing ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
+                Apply and push live
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={() => setPending([])}>
               <X className="size-4" /> Discard
             </Button>
