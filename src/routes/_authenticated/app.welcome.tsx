@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { trackConversion } from "@/lib/conversion";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2, CircleDashed, Clock, Headphones } from "lucide-react";
@@ -37,6 +38,7 @@ function WelcomePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") !== "complete") return;
+    trackConversion("checkout_completed");
     void queryClient.invalidateQueries({ queryKey: ["workspace"] });
     if (orgId) {
       void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
