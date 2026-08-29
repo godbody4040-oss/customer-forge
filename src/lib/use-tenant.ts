@@ -31,6 +31,8 @@ export type Workspace = {
     is_demo: boolean;
     is_suspended: boolean;
     conversion_goal: string | null;
+    setup_paid_at: string | null;
+
   };
 };
 
