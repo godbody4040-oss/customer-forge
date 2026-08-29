@@ -27,7 +27,7 @@ export const runDueAutomations = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabase
       .from("business_profiles")
-      .select("contact_email")
+      .select("email, owner_email")
       .eq("organization_id", data.organizationId)
       .maybeSingle();
 
@@ -35,6 +35,9 @@ export const runDueAutomations = createServerFn({ method: "POST" })
     return processDueRuns(supabase, data.organizationId, {
       businessName: org.name,
       deliver: (run) =>
-        deliverRun(run, { businessName: org.name, replyTo: profile?.contact_email ?? null }),
+        deliverRun(run, {
+          businessName: org.name,
+          replyTo: profile?.email ?? profile?.owner_email ?? null,
+        }),
     });
   });
