@@ -1,10 +1,11 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-import { X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createGrowthSystemCheckout, type GrowthSystemIntake } from "@/lib/stripe.functions";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { REVORA, revoraMailto } from "@/lib/brand";
 
 type Props = {
   organizationId: string;
@@ -15,22 +16,39 @@ type Props = {
 
 /** Secure embedded checkout for the single Revora offer: setup + monthly. */
 export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClose }: Props) {
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+
   const fetchClientSecret = useCallback(async (): Promise<string> => {
-    const result = await createGrowthSystemCheckout({
-      data: {
-        organizationId,
-        intake,
-        returnUrl:
-          returnUrl ?? `${window.location.origin}/app/welcome?checkout=complete&session_id={CHECKOUT_SESSION_ID}`,
-        environment: getStripeEnvironment(),
-      },
-    });
-    if ("error" in result) throw new Error(result.error);
-    if (!result.clientSecret) throw new Error("The payment provider did not return a checkout session.");
-    return result.clientSecret;
+    setError(null);
+    try {
+      const result = await createGrowthSystemCheckout({
+        data: {
+          organizationId,
+          intake,
+          returnUrl:
+            returnUrl ??
+            `${window.location.origin}/app/welcome?checkout=complete&session_id={CHECKOUT_SESSION_ID}`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in result) throw new Error(result.error);
+      if (!result.clientSecret)
+        throw new Error("The payment provider did not return a checkout session.");
+      return result.clientSecret;
+    } catch (cause) {
+      const message =
+        cause instanceof Error && cause.message
+          ? cause.message
+          : "Checkout could not be started. Check your connection and try again.";
+      setError(message);
+      // Re-throw so the Stripe provider knows the attempt failed instead of
+      // waiting on a secret that will never arrive.
+      throw cause;
+    }
   }, [organizationId, intake, returnUrl]);
 
-  const options = useMemo(() => ({ fetchClientSecret }), [fetchClientSecret]);
+  const options = useMemo(() => ({ fetchClientSecret }), [fetchClientSecret, attempt]);
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 sm:p-5">
@@ -47,8 +65,42 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
           <X className="size-4" />
         </Button>
       </div>
+      {error ? (
+        <div
+          role="alert"
+          className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-3"
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-destructive">
+                Checkout could not be started
+              </p>
+              <p className="mt-1 text-[12px] break-words text-destructive/90">{error}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setError(null);
+                    setAttempt((value) => value + 1);
+                  }}
+                >
+                  Try again
+                </Button>
+                <a
+                  className="text-[12px] text-primary hover:underline"
+                  href={revoraMailto("Revora checkout problem")}
+                >
+                  Contact {REVORA.email}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div id="checkout" className="mt-4">
-        <EmbeddedCheckoutProvider stripe={getStripe()} options={options}>
+        <EmbeddedCheckoutProvider key={attempt} stripe={getStripe()} options={options}>
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       </div>
