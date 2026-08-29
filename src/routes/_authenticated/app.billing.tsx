@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CreditCard, ExternalLink, Receipt } from "lucide-react";
+import { CreditCard, ExternalLink, Receipt, Wallet } from "lucide-react";
 import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { PayPalCheckout } from "@/components/app/PayPalCheckout";
 import { StripeCheckout } from "@/components/app/StripeCheckout";
+import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
 import { usePaymentConfig, usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
 import { useBillingState, usePlans } from "@/lib/stripe.hooks";
@@ -53,6 +54,7 @@ function BillingPage() {
   const { data: subscriptionPlans, isLoading: loadingPlans } = usePlans();
   const { data: billing } = useBillingState(orgId);
   const [selected, setSelected] = useState<PaymentProduct | null>(null);
+  const [cardService, setCardService] = useState<PaymentProduct | null>(null);
   const [interval, setInterval] = useState<"monthly" | "annual">("monthly");
   const [checkoutPlan, setCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
