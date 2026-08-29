@@ -549,7 +549,7 @@ function DemoDashboard() {
           <Panel className="mt-6">
             <SectionHeading eyebrow="Next step" title="Want this running for your business?" />
             <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
-              $750 one-time setup, 30 days free, then $100/month. We build it, connect it, launch
+              $750 one-time setup, first month free, then $100/month from month two. We build it, connect it, launch
               it and keep optimizing it.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
