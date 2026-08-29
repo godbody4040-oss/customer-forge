@@ -277,6 +277,7 @@ export function BookingForm({ site }: { site: Site }) {
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
   const [serviceId, setServiceId] = useState(bookable[0]?.id ?? "");
+  const doneRef = useStepScroll<HTMLDivElement>(done);
 
   if (done) {
     return (
