@@ -96,7 +96,7 @@ export type TrafficIssue = {
   detail: string;
   fix: string;
   /** Where in the app the client goes to fix it. */
-  href: string;
+  href: "/app/launch" | "/app/analytics" | "/app/domain" | "/app/website" | "/app/quotes" | "/app/services";
 };
 
 /** Problems worth telling a business owner about, with the place to fix each. */
@@ -130,7 +130,7 @@ export function detectTrafficIssues(input: {
       title: `No visits in the last ${s.days} ${s.days === 1 ? "day" : "days"}`,
       detail: "The site is live but nobody has landed on it.",
       fix: "Share your link on your Google profile and social pages, and print the QR code for jobs.",
-      href: "/app/growth",
+      href: "/app/analytics",
     });
 
   if (s.changePct !== null && s.changePct <= -40 && s.previousViews >= 20)
@@ -189,7 +189,7 @@ export function detectTrafficIssues(input: {
       title: "Not enough published reviews",
       detail: "Proof next to the button is the cheapest lift in enquiries you can get.",
       fix: "Request reviews from recent customers and publish them.",
-      href: "/app/reviews",
+      href: "/app/website",
     });
 
   if (input.hasCustomDomain && !input.domainLive)
