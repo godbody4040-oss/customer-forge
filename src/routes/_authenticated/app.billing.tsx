@@ -68,7 +68,7 @@ function BillingPage() {
     (p) => p.kind !== "subscription" && p.id !== GROWTH_SYSTEM.setupProductId,
   );
   const subscription = billing?.subscription ?? null;
-  const setupPaid = Boolean(org?.setup_paid_at);
+  const setupPaid = Boolean(billing?.setupPaid);
 
 
   // Stripe embedded checkout redirects here after a completed payment.
@@ -114,6 +114,7 @@ function BillingPage() {
             {subscription ? subscription.status.replace("_", " ") : "No subscription"}
           </Pill>
 
+          <Pill tone="neutral">Card payments {billing?.environment === "sandbox" ? "test" : "live"}</Pill>
           {config?.configured ? <Pill tone="neutral">PayPal {config.environment}</Pill> : null}
         </div>
       </div>
@@ -368,7 +369,14 @@ function BillingPage() {
                     </td>
                     <td className="py-2.5 pr-3 capitalize">{payment.payment_provider}</td>
                     <td className="py-2.5 font-mono text-[11px]">
-                      {payment.paypal_capture_id ?? payment.paypal_order_id ?? "—"}
+                      {payment.paypal_capture_id ??
+                        payment.paypal_order_id ??
+                        (typeof payment.metadata === "object" &&
+                        payment.metadata !== null &&
+                        !Array.isArray(payment.metadata) &&
+                        typeof payment.metadata.stripe_id === "string"
+                          ? payment.metadata.stripe_id
+                          : "—")}
                     </td>
                   </tr>
                 ))}

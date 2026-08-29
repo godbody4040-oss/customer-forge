@@ -23,6 +23,7 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
             .from("subscriptions")
             .select("plan_id, cancel_at_period_end, status")
             .eq("provider_subscription_id", String(object.id))
+            .eq("environment", env)
             .maybeSingle()
         : { data: null };
 

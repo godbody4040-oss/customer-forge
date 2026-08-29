@@ -435,6 +435,18 @@ export const getBillingState = createServerFn({ method: "POST" })
       .select("plan_id, feature_key, limit_value")
       .eq("plan_id", subscription?.plan_id ?? "");
 
+    const { data: setupPayment } = await context.supabase
+      .from("payments")
+      .select("id")
+      .eq("organization_id", data.organizationId)
+      .eq("payment_provider", "stripe")
+      .eq("environment", data.environment)
+      .eq("status", "completed")
+      .eq("description", "Revora Growth System setup fee")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
     const active =
       !!subscription &&
@@ -446,6 +458,8 @@ export const getBillingState = createServerFn({ method: "POST" })
       entitlements: entitlements ?? [],
       features: (entitlements ?? []).map((row) => row.feature_key),
       active,
+      setupPaid: Boolean(setupPayment),
+      environment: data.environment,
     };
   });
 
