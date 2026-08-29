@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Check, Loader2, Send, X } from "lucide-react";
+import { Bot, Check, Loader2, Rocket, Send, X } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,10 +23,16 @@ export function SiteChatbot({
   organizationId,
   canManage,
   hasSections,
+  publishState,
+  onPublishNow,
+  isPublishing = false,
 }: {
   organizationId: string | undefined;
   canManage: boolean;
   hasSections: boolean;
+  publishState?: string | null;
+  onPublishNow?: () => void;
+  isPublishing?: boolean;
 }) {
   const [instruction, setInstruction] = useState("");
   const [reply, setReply] = useState<string | null>(null);
@@ -47,8 +53,8 @@ export function SiteChatbot({
     <Panel className="p-5">
       <SectionHeading eyebrow="Website assistant" title="Ask Revora to change your site" />
       <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-        Describe the change in your own words. Revora shows you exactly what it wants to change and waits for
-        your approval — it never invents claims about your business.
+        Describe the change in your own words and Revora edits your website for you. You approve the change —
+        no request to support, no waiting on anyone. It never invents claims about your business.
       </p>
 
       {!hasSections ? (
@@ -142,6 +148,24 @@ export function SiteChatbot({
               {apply.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               Apply {pending.length} change{pending.length === 1 ? "" : "s"}
             </Button>
+            {onPublishNow && publishState === "published" ? (
+              <Button
+                variant="outline"
+                disabled={apply.isPending || isPublishing || !canManage}
+                onClick={() =>
+                  apply.mutate(pending, {
+                    onSuccess: () => {
+                      setPending([]);
+                      setInstruction("");
+                      onPublishNow();
+                    },
+                  })
+                }
+              >
+                {isPublishing ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
+                Apply and push live
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={() => setPending([])}>
               <X className="size-4" /> Discard
             </Button>
