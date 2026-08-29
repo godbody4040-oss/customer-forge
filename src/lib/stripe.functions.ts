@@ -187,6 +187,9 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         ui_mode: "embedded_page" as const,
         return_url: data.returnUrl,
         customer: customerId,
+        // Prices are quoted in USD everywhere in the product, so keep checkout
+        // in USD instead of letting the provider convert by visitor location.
+        adaptive_pricing: { enabled: false },
         metadata,
         subscription_data: { metadata },
       };
