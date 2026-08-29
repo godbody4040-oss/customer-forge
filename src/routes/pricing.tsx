@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ShieldCheck } from "lucide-react";
+import { FreeAccessBanner } from "@/components/marketing/FreeAccess";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ function Pricing() {
 
               <div className="mt-7 flex flex-wrap items-end gap-x-8 gap-y-5">
                 <div>
-                  <p className="tnum font-display text-[40px] leading-none font-semibold">
+                  <p className="tnum gold-text font-display text-[40px] leading-none font-semibold">
                     {usdExact(GROWTH_SYSTEM.setupPrice)}
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Setup</p>
@@ -81,7 +82,7 @@ function Pricing() {
                 </div>
                 <div>
                   <p className="tnum font-display text-[40px] leading-none font-semibold">
-                    {usdExact(GROWTH_SYSTEM.monthlyPrice)}
+                    <span className="gold-text">{usdExact(GROWTH_SYSTEM.monthlyPrice)}</span>
                     <span className="text-[14px] font-normal text-muted-foreground">/month</span>
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Ongoing</p>
@@ -97,6 +98,9 @@ function Pricing() {
               >
                 <Link to="/get-started">{GROWTH_SYSTEM.ctaPrimary}</Link>
               </Button>
+              <div className="mt-3">
+                <FreeAccessBanner />
+              </div>
               <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.ctaSecondary}</p>
               <p className="mt-4 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />

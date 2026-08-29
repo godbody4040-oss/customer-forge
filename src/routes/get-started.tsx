@@ -226,9 +226,15 @@ function GetStarted() {
           {GROWTH_SYSTEM.headline}
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
-          {usdExact(GROWTH_SYSTEM.setupPrice)} setup charged today. Platform is {usdExact(0)} for your first{" "}
-          {GROWTH_SYSTEM.trialDays} days, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month unless canceled.
-          One complete growth system — no packages to compare.
+          <span className="gold-hl">{usdExact(GROWTH_SYSTEM.setupPrice)} setup charged today</span>. Platform is{" "}
+          <span className="gold-hl">{usdExact(0)} for your first {GROWTH_SYSTEM.trialDays} days</span>, then{" "}
+          {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month unless canceled. One complete growth system — no
+          packages to compare.
+        </p>
+        <p className="mt-2 text-[12.5px] text-muted-foreground">
+          Just exploring? You get{" "}
+          <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days of free full access</span>{" "}
+          first — your answers below are saved as you type, so you can leave and come back anytime.
         </p>
 
         <ol className="mt-7 grid gap-2 sm:grid-cols-3" aria-label="Checkout steps">
@@ -238,7 +244,7 @@ function GetStarted() {
               aria-current={step === index ? "step" : undefined}
               className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[12px] ${
                 step === index
-                  ? "border-primary/50 bg-primary/10 text-foreground"
+                  ? "border-primary/50 bg-primary/10 font-semibold text-primary"
                   : step > index
                     ? "border-border bg-card text-muted-foreground"
                     : "border-border text-muted-foreground"

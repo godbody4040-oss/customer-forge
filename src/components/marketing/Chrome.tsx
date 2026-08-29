@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { Mail, Menu, Phone, X } from "lucide-react";
+import { Mail, Menu, Phone, Sparkles, X } from "lucide-react";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 
 const NAV = [
   { to: "/demo", label: "Product" },
@@ -41,11 +42,14 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           <Button asChild variant="ghost" size="sm">
-            <Link to="/auth">Sign in</Link>
+            <Link to="/auth" className="text-primary">
+              Sign in
+            </Link>
           </Button>
           <Button asChild variant="signal" size="sm">
-            <Link to="/get-started">
-              Get started
+            <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+              <Sparkles className="size-3.5" aria-hidden="true" />
+              Start free
             </Link>
           </Button>
         </div>
@@ -79,14 +83,19 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2">
-            <Button asChild variant="outline">
-              <Link to="/auth" onClick={() => setOpen(false)}>
-                Sign in
+            <Button asChild variant="signal">
+              <Link
+                to="/auth"
+                search={{ mode: "signup", redirect: "/get-started" }}
+                onClick={() => setOpen(false)}
+              >
+                <Sparkles className="size-3.5" aria-hidden="true" />
+                {`Start free — ${GROWTH_SYSTEM.fullAccessTrialDays} days full access`}
               </Link>
             </Button>
-            <Button asChild variant="signal">
-              <Link to="/get-started" onClick={() => setOpen(false)}>
-                Get started
+            <Button asChild variant="outline">
+              <Link to="/auth" onClick={() => setOpen(false)} className="text-primary">
+                Sign in
               </Link>
             </Button>
           </div>
