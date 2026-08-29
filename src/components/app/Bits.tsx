@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "@/lib/utils";
 import type { Tone } from "@/lib/domain";
 
