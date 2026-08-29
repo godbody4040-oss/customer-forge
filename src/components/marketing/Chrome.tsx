@@ -7,9 +7,10 @@ import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 
 const NAV = [
   { to: "/demo", label: "Product" },
-  { to: "/pricing", label: "Pricing" },
   { to: "/industries", label: "Solutions" },
-  { to: "/about", label: "About" },
+  { to: "/", hash: "how-it-works", label: "How it works" },
+  { to: "/pricing", label: "Pricing" },
+  { to: "/about", label: "Resources" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
