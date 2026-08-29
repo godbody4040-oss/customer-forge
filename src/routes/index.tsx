@@ -21,6 +21,7 @@ import { FounderNote } from "@/components/marketing/SalesCTA";
 import { ROICalculator } from "@/components/marketing/ROICalculator";
 import { AfterYouStart, ValueSplit } from "@/components/marketing/OfferSections";
 import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
+import { FreeAccessBanner, FreeAccessButton, FreeAccessSection } from "@/components/marketing/FreeAccess";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/domain";
@@ -135,12 +136,13 @@ const FEATURES = [
 function PrimaryCta({ className = "" }: { className?: string }) {
   return (
     <div className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center ${className}`}>
-      <Button asChild variant="signal" size="lg">
+      <FreeAccessButton />
+      <Button asChild variant="outline" size="lg">
         <Link to="/get-started">
           {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" />
         </Link>
       </Button>
-      <Button asChild variant="outline" size="lg">
+      <Button asChild variant="ghost" size="lg">
         <a href="#see-it">{GROWTH_SYSTEM.ctaDemo}</a>
       </Button>
     </div>
@@ -150,11 +152,9 @@ function PrimaryCta({ className = "" }: { className?: string }) {
 function PriceLine({ className = "" }: { className?: string }) {
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
-      <span className="font-medium text-primary">
-        {GROWTH_SYSTEM.fullAccessTrialDays} days free full access
-      </span>{" "}
+      <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days free full access</span>{" "}
       · <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
-      <span className="font-medium text-primary">first month free</span> · then{" "}
+      <span className="gold-hl">first month free</span> · then{" "}
       <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.monthlyPrice)}/month</span> ·
       Cancel anytime
     </p>
@@ -188,6 +188,7 @@ function Landing() {
 
               <PrimaryCta className="mt-8" />
               <PriceLine className="mt-4" />
+              <FreeAccessBanner className="mt-6 max-w-xl" />
 
               <ul className="mt-8 flex flex-wrap gap-1.5" aria-label="What Revora includes">
                 {STACK.map((item) => (
@@ -207,7 +208,7 @@ function Landing() {
                   ["1 inbox", "Calls, quotes and bookings"],
                 ].map(([value, label]) => (
                   <div key={label}>
-                    <dt className="tnum font-display text-[19px] leading-tight font-semibold">
+                    <dt className="tnum gold-hl font-display text-[19px] leading-tight font-semibold">
                       {value}
                     </dt>
                     <dd className="mt-1 text-[12px] leading-snug text-muted-foreground">{label}</dd>
@@ -293,6 +294,13 @@ function Landing() {
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <TrustSection />
+          </div>
+        </section>
+
+        {/* FREE ACCESS — guided first step */}
+        <section id="free-access" className="scroll-mt-20 border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <FreeAccessSection />
           </div>
         </section>
 
@@ -447,6 +455,9 @@ function Landing() {
             <div className="mt-8 flex flex-col items-center gap-4">
               <PrimaryCta className="justify-center" />
               <PriceLine />
+              <p className="text-[12.5px] text-muted-foreground">
+                Not ready to pay yet? <span className="gold-hl">Start with {GROWTH_SYSTEM.fullAccessTrialDays} free days of full access</span> and decide after you've used it.
+              </p>
             </div>
           </div>
         </section>
