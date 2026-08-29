@@ -9,7 +9,7 @@
  * does not.
  */
 
-import type { ContentPage } from "./website-content";
+import { safeLinkUrl, type ContentPage } from "./website-content";
 
 export type PlatformId =
   | "lovable"
@@ -537,7 +537,7 @@ export function portableSpec(input: PortableSpecInput): PortableSpec {
                 kind: c.kind,
                 label: c.label,
                 body: c.body,
-                link: c.link_url,
+                link: safeLinkUrl(c.link_url),
               })),
           })),
       })),
