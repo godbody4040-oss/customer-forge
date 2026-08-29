@@ -85,7 +85,11 @@ export const AUTOMATION_TOKENS = [
  * Queues every step of every active automation listening to `trigger`, honouring
  * each step's configured delay. Steps with no delay are delivered right away.
  */
-export async function enqueueAutomations(client: Client, ctx: AutomationContext) {
+export async function enqueueAutomations(
+  client: Client,
+  ctx: AutomationContext,
+  options: ProcessOptions = {},
+) {
   const { data: automations } = await client
     .from("automations")
     .select(
