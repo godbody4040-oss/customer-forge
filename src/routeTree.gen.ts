@@ -33,6 +33,7 @@ import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppAutomationsRouteImport } from './routes/_authenticated/app.automations'
 import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/app.calendar'
+import { Route as AuthenticatedAppDomainRouteImport } from './routes/_authenticated/app.domain'
 import { Route as AuthenticatedAppLaunchRouteImport } from './routes/_authenticated/app.launch'
 import { Route as AuthenticatedAppLeadsRouteImport } from './routes/_authenticated/app.leads'
 import { Route as AuthenticatedAppQuotesRouteImport } from './routes/_authenticated/app.quotes'
@@ -172,6 +173,11 @@ const AuthenticatedAppCalendarRoute =
     path: '/calendar',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppDomainRoute = AuthenticatedAppDomainRouteImport.update({
+  id: '/domain',
+  path: '/domain',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppLaunchRoute = AuthenticatedAppLaunchRouteImport.update({
   id: '/launch',
   path: '/launch',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/domain': typeof AuthenticatedAppDomainRoute
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/quotes': typeof AuthenticatedAppQuotesRoute
@@ -294,6 +301,7 @@ export interface FileRoutesByTo {
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/app/domain': typeof AuthenticatedAppDomainRoute
   '/app/launch': typeof AuthenticatedAppLaunchRoute
   '/app/leads': typeof AuthenticatedAppLeadsRoute
   '/app/quotes': typeof AuthenticatedAppQuotesRoute
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/_authenticated/app/automations': typeof AuthenticatedAppAutomationsRoute
   '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
   '/_authenticated/app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/_authenticated/app/domain': typeof AuthenticatedAppDomainRoute
   '/_authenticated/app/launch': typeof AuthenticatedAppLaunchRoute
   '/_authenticated/app/leads': typeof AuthenticatedAppLeadsRoute
   '/_authenticated/app/quotes': typeof AuthenticatedAppQuotesRoute
@@ -372,6 +381,7 @@ export interface FileRouteTypes {
     | '/app/automations'
     | '/app/billing'
     | '/app/calendar'
+    | '/app/domain'
     | '/app/launch'
     | '/app/leads'
     | '/app/quotes'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/app/automations'
     | '/app/billing'
     | '/app/calendar'
+    | '/app/domain'
     | '/app/launch'
     | '/app/leads'
     | '/app/quotes'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/automations'
     | '/_authenticated/app/billing'
     | '/_authenticated/app/calendar'
+    | '/_authenticated/app/domain'
     | '/_authenticated/app/launch'
     | '/_authenticated/app/leads'
     | '/_authenticated/app/quotes'
@@ -649,6 +661,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCalendarRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/domain': {
+      id: '/_authenticated/app/domain'
+      path: '/domain'
+      fullPath: '/app/domain'
+      preLoaderRoute: typeof AuthenticatedAppDomainRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/launch': {
       id: '/_authenticated/app/launch'
       path: '/launch'
@@ -776,6 +795,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppAutomationsRoute: typeof AuthenticatedAppAutomationsRoute
   AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
+  AuthenticatedAppDomainRoute: typeof AuthenticatedAppDomainRoute
   AuthenticatedAppLaunchRoute: typeof AuthenticatedAppLaunchRoute
   AuthenticatedAppLeadsRoute: typeof AuthenticatedAppLeadsRoute
   AuthenticatedAppQuotesRoute: typeof AuthenticatedAppQuotesRoute
@@ -790,6 +810,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppAutomationsRoute: AuthenticatedAppAutomationsRoute,
   AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
+  AuthenticatedAppDomainRoute: AuthenticatedAppDomainRoute,
   AuthenticatedAppLaunchRoute: AuthenticatedAppLaunchRoute,
   AuthenticatedAppLeadsRoute: AuthenticatedAppLeadsRoute,
   AuthenticatedAppQuotesRoute: AuthenticatedAppQuotesRoute,
