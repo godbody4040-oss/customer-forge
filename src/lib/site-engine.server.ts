@@ -58,7 +58,11 @@ export class AiGatewayError extends Error {
   }
 }
 
-async function chatJson(system: string, prompt: string): Promise<Record<string, unknown>> {
+async function chatJson(
+  system: string,
+  prompt: string,
+  model: string = COPY_MODEL,
+): Promise<Record<string, unknown>> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI copywriting isn't configured for this workspace.");
 
@@ -66,7 +70,7 @@ async function chatJson(system: string, prompt: string): Promise<Record<string, 
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: COPY_MODEL,
+      model,
       messages: [
         { role: "system", content: `${SAFETY}\n\n${system}` },
         { role: "user", content: prompt },
