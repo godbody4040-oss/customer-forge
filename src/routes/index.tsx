@@ -447,8 +447,8 @@ function Landing() {
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild variant="signal" size="lg">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Start my free trial <ArrowRight className="size-4" />
+                <Link to="/get-started">
+                  {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
@@ -456,8 +456,9 @@ function Landing() {
               </Button>
             </div>
             <p className="mt-5 text-[12px] text-muted-foreground">
-              No credit card required for the 1-day trial. Cancel anytime.
+              {usdExact(GROWTH_SYSTEM.setupPrice)} setup, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
             </p>
+
           </div>
         </section>
 
