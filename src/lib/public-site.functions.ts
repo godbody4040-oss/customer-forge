@@ -118,15 +118,10 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
-    const lookup = publicClient();
     // Inserts use the admin client: anonymous callers have INSERT but no SELECT
     // on leads, so a `.insert().select()` round-trip is blocked by RLS.
     const { supabaseAdmin: supabase } = await import("@/integrations/supabase/client.server");
-    const { data: org } = await lookup
-      .from("public_organizations")
-      .select("id, name")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const org = await publicOrganization({ slug: data.slug });
     if (!org?.id) throw new Error("We couldn't find that business.");
     const orgId: string = org.id;
 
@@ -319,11 +314,7 @@ export const trackPublicEvent = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const supabase = publicClient();
-    const { data: org } = await supabase
-      .from("public_organizations")
-      .select("id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const org = await publicOrganization({ slug: data.slug });
     if (!org?.id) return { ok: false };
     const orgId: string = org.id;
     await supabase.from("analytics_events").insert({
