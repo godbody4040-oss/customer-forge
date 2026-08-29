@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
-import { FounderNote, SalesCTA } from "@/components/marketing/SalesCTA";
+import { SalesCTA } from "@/components/marketing/SalesCTA";
 import { Panel } from "@/components/app/Bits";
 import { REVORA } from "@/lib/brand";
 
