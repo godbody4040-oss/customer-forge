@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ErrorNote } from "@/components/app/Bits";
 import { INDUSTRIES } from "@/lib/domain";
 import { useWorkspace } from "@/lib/use-tenant";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useStepScroll } from "@/lib/use-step-scroll";
 import {
@@ -76,6 +77,7 @@ const emptyService = (): ServiceDraft => ({ name: "", description: "", price: ""
 function Onboarding() {
   const navigate = useNavigate();
   const { data: ws } = useWorkspace();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const stepRef = useStepScroll<HTMLDivElement>(step);
   const [busy, setBusy] = useState(false);
@@ -140,7 +142,7 @@ function Onboarding() {
   }, []);
 
   useEffect(() => {
-    if (!restored || ws?.workspace) return;
+    if (!restored || ws?.workspace?.organization.onboarding_completed) return;
     const timer = setTimeout(async () => {
       const { data: auth } = await supabase.auth.getUser();
       const user = auth.user;
@@ -151,7 +153,7 @@ function Onboarding() {
       if (!saveError) setSavedAt(new Date().toISOString());
     }, 800);
     return () => clearTimeout(timer);
-  }, [draft, step, restored, ws?.workspace]);
+  }, [draft, step, restored, ws?.workspace?.organization.onboarding_completed]);
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
