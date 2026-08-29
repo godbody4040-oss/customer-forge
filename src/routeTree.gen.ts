@@ -17,6 +17,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -85,6 +86,11 @@ const IndustriesRoute = IndustriesRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
@@ -335,6 +343,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/industries'
     | '/pricing'
+    | '/sitemap.xml'
     | '/admin'
     | '/app'
     | '/onboarding'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/industries'
     | '/pricing'
+    | '/sitemap.xml'
     | '/onboarding'
     | '/p/$token'
     | '/s/$slug'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/industries'
     | '/pricing'
+    | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
@@ -494,6 +506,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   IndustriesRoute: typeof IndustriesRoute
   PricingRoute: typeof PricingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
@@ -559,6 +572,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -876,6 +896,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   IndustriesRoute: IndustriesRoute,
   PricingRoute: PricingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
