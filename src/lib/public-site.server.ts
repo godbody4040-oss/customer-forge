@@ -49,8 +49,12 @@ export type SiteSection = {
  * Reads everything a business website renders. `allowUnpublished` is only ever
  * true behind an authorised, unexpired preview token.
  */
-export async function loadSite(slug: string, options?: { allowUnpublished?: boolean }) {
+export async function loadSite(
+  slug: string,
+  options?: { allowUnpublished?: boolean; pageSlug?: string },
+) {
   const allowUnpublished = options?.allowUnpublished === true;
+
   // Anonymous reads are limited to published sites by policy, so an authorised
   // draft preview reads with the privileged client instead.
   const supabase = allowUnpublished
