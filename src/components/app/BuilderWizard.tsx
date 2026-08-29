@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MediaLibrary } from "@/components/app/MediaLibrary";
+import { GoogleListingImport } from "@/components/app/GoogleListingImport";
 import { useAutosaveOrganization, useAutosaveProfile } from "@/lib/website-content.hooks";
 import { WIZARD_STEPS, type WizardStepKey } from "@/lib/website-content";
 import { WEBSITE_GOALS, type GoalKey } from "@/lib/website-plan";
@@ -68,6 +69,10 @@ export function BuilderWizard({
     launch: true,
   };
 
+  const completion = Math.round(
+    (Object.values(done).filter(Boolean).length / Object.keys(done).length) * 100,
+  );
+
   const index = WIZARD_STEPS.findIndex((s) => s.key === step);
   const current = WIZARD_STEPS[index]!;
   const previous = index > 0 ? WIZARD_STEPS[index - 1] : null;
@@ -95,6 +100,15 @@ export function BuilderWizard({
               "Changes save automatically"
             )}
           </span>
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated" role="presentation">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${completion}%` }}
+            />
+          </div>
+          <span className="tnum text-[11px] text-muted-foreground">{completion}% ready</span>
         </div>
         <ol className="mt-3 flex flex-wrap gap-1.5">
           {WIZARD_STEPS.map((item, i) => (
@@ -131,6 +145,7 @@ export function BuilderWizard({
         <div className="mt-5 space-y-4">
           {step === "business" ? (
             <>
+              <GoogleListingImport organizationId={organizationId} canManage={canManage} />
               <AutoField
                 label="Business name"
                 value={org?.name ?? ""}
