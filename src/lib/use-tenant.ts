@@ -35,7 +35,8 @@ export type Workspace = {
 };
 
 const ORG_FIELDS =
-  "id, name, slug, industry, plan_id, subscription_status, trial_ends_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal";
+  "id, name, slug, industry, plan_id, subscription_status, trial_ends_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal, setup_paid_at";
+
 
 /** Current user's workspace (or the client workspace being supported) plus platform-admin flag. */
 export function useWorkspace() {
