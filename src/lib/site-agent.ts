@@ -1,3 +1,4 @@
+import { safeLinkUrl } from "@/lib/website-content";
 /**
  * Revora Site Agent — the shared vocabulary for "just tell it what you want".
  *
@@ -212,7 +213,10 @@ export function readActions(
         const patch: ComponentPatch = {};
         if (typeof patchRaw["label"] === "string") patch.label = text(patchRaw["label"], 200);
         if (typeof patchRaw["body"] === "string") patch.body = text(patchRaw["body"], 2000);
-        if (typeof patchRaw["link_url"] === "string") patch.link_url = text(patchRaw["link_url"], 400);
+        if (typeof patchRaw["link_url"] === "string") {
+          const safe = safeLinkUrl(text(patchRaw["link_url"], 400));
+          if (safe) patch.link_url = safe;
+        }
         if (typeof patchRaw["link_label"] === "string") patch.link_label = text(patchRaw["link_label"], 120);
         if ("is_visible" in patchRaw) patch.is_visible = bool(patchRaw["is_visible"]);
         if (!known.componentIds.has(componentId) || Object.keys(patch).length === 0) break;
@@ -228,7 +232,7 @@ export function readActions(
           kind,
           label: text(row["label"], 200) || undefined,
           body: text(row["body"], 2000) || undefined,
-          link_url: text(row["link_url"], 400) || undefined,
+          link_url: safeLinkUrl(text(row["link_url"], 400)) ?? undefined,
           link_label: text(row["link_label"], 120) || undefined,
         });
         break;

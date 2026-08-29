@@ -65,6 +65,31 @@ export type ContentComponent = {
   is_visible: boolean;
 };
 
+/**
+ * Only these link shapes ever reach a public page's href. Anything else
+ * (javascript:, data:, vbscript: …) becomes a harmless in-page anchor, so a
+ * builder/AI edit can never run script in a visitor's browser.
+ */
+export function safeLinkUrl(value: string | null | undefined): string | null {
+  const raw = (value ?? "").trim();
+  if (!raw) return null;
+  if (/^[#/]/.test(raw)) return raw.replace(/^\/\//, "/"); // relative path or anchor only
+  if (/^(https?:|mailto:|tel:|sms:)/i.test(raw)) {
+    if (/^https?:/i.test(raw)) {
+      try {
+        const url = new URL(raw);
+        return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+      } catch {
+        return null;
+      }
+    }
+    return raw;
+  }
+  return null;
+}
+
+
+
 export type ContentSection = {
   id: string;
   page_id: string;

@@ -22,6 +22,11 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<RunResult> => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
+    // Server-side paywall: the UI gate is cosmetic, this is authoritative.
+    {
+      const { assertOrgEntitled } = await import("@/lib/entitlement.server");
+      await assertOrgEntitled(supabase, orgId);
+    }
 
     // Generation is gated on real readiness: the blanks Revora asked about must
     // be filled, and the owner must have approved the brief the build reads from.
@@ -141,6 +146,11 @@ export const aiEditSiteCopy = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
+    // Server-side paywall: the UI gate is cosmetic, this is authoritative.
+    {
+      const { assertOrgEntitled } = await import("@/lib/entitlement.server");
+      await assertOrgEntitled(supabase, orgId);
+    }
     const { rewriteCopyFields, COPY_MODEL } = await import("@/lib/site-engine.server");
 
     const [org, profile, services] = await Promise.all([
@@ -201,6 +211,11 @@ export const aiEditSiteSections = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
+    // Server-side paywall: the UI gate is cosmetic, this is authoritative.
+    {
+      const { assertOrgEntitled } = await import("@/lib/entitlement.server");
+      await assertOrgEntitled(supabase, orgId);
+    }
     const { proposeSectionEdits, COPY_MODEL } = await import("@/lib/site-engine.server");
 
     const [org, profile, services, sections] = await Promise.all([

@@ -2,6 +2,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NewClientInput } from "@/lib/admin-types";
 import { seedQuoteCalculator } from "@/lib/quote-seed";
+import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server";
 
 /** Where clients point their domain. Both records are checked automatically. */
 export const DOMAIN_TARGET = "revoragrowthsystems.com";
@@ -41,7 +42,8 @@ export function normalizeDomain(value: string) {
 }
 
 export function isValidDomain(value: string) {
-  return /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) && value.length <= 253;
+  // Also rejects IP literals and internal/reserved names (see net-guard.server).
+  return isFetchableHostname(value) && /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) && value.length <= 253;
 }
 
 type DnsAnswer = { name: string; type: number; data: string };
@@ -101,6 +103,14 @@ export const requiredDnsRecords = (domain: string) => [
  * handshake and return a real response from that hostname.
  */
 export async function checkDomain(domain: string): Promise<DomainCheck> {
+  if (domain && !isFetchableHostname(normalizeDomain(domain)))
+    return {
+      status: "error",
+      detail: "That address isn't a valid public domain name, so it can't be checked.",
+      dnsOk: false,
+      sslOk: false,
+      records: emptyRecords(),
+    };
   if (!domain)
     return { status: "not_connected", detail: "No custom domain added.", dnsOk: false, sslOk: false, records: emptyRecords() };
 
@@ -130,7 +140,19 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
       return { status: records.txtVerified ? "verifying" : "dns_pending", detail, dnsOk: false, sslOk: false, records };
     }
 
-    // DNS resolves here. Now prove HTTPS actually works on that hostname.
+    // DNS resolves here. Never fetch a host that resolves into a private or
+    // reserved network range (SSRF guard).
+    if (records.a.length > 0 && !areAddressesPublic(records.a)) {
+      return {
+        status: "error",
+        detail: "That domain resolves to a private network address, so it can't be served publicly.",
+        dnsOk: false,
+        sslOk: false,
+        records,
+      };
+    }
+
+    // Now prove HTTPS actually works on that hostname.
     try {
       const res = await fetch(`https://${domain}/`, { method: "GET", redirect: "manual" });
       records.httpsStatus = res.status;
