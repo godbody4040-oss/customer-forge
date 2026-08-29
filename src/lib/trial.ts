@@ -16,19 +16,25 @@ export type TrialOrgFields = {
   created_at?: string | null;
 };
 
-/** Resolved trial end (ms epoch) or null when the org has no trial window. */
+/**
+ * Resolved trial end (ms epoch) or null when the org has no trial window.
+ * The window is never shorter than `created_at + TRIAL_DAYS`, so workspaces
+ * stamped under an older, shorter trial still get the promised free days.
+ */
 export function trialEndsAtMs(org: TrialOrgFields | null | undefined): number | null {
   if (!org) return null;
+  const candidates: number[] = [];
   if (org.trial_ends_at) {
     const explicit = new Date(org.trial_ends_at).getTime();
-    if (Number.isFinite(explicit)) return explicit;
+    if (Number.isFinite(explicit)) candidates.push(explicit);
   }
   if (org.created_at) {
     const created = new Date(org.created_at).getTime();
-    if (Number.isFinite(created)) return created + TRIAL_DAYS * DAY_MS;
+    if (Number.isFinite(created)) candidates.push(created + TRIAL_DAYS * DAY_MS);
   }
-  return null;
+  return candidates.length ? Math.max(...candidates) : null;
 }
+
 
 export function isTrialActive(org: TrialOrgFields | null | undefined): boolean {
   if (!org || org.subscription_status !== "trialing") return false;
