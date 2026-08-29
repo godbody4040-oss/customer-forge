@@ -1,4 +1,6 @@
 import type { ComponentType } from 'react'
+import { template as automationMessageTemplate } from './automation-message'
+import { template as leadAlertTemplate } from './lead-alert'
 
 export interface TemplateEntry {
   component: ComponentType<any>
