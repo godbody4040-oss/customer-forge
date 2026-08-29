@@ -1156,6 +1156,8 @@ export type Database = {
           onboarding_completed: boolean
           onboarding_step: number
           plan_id: string | null
+          setup_checkout_session_id: string | null
+          setup_paid_at: string | null
           slug: string
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at: string | null
@@ -1175,6 +1177,8 @@ export type Database = {
           onboarding_completed?: boolean
           onboarding_step?: number
           plan_id?: string | null
+          setup_checkout_session_id?: string | null
+          setup_paid_at?: string | null
           slug: string
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
@@ -1194,6 +1198,8 @@ export type Database = {
           onboarding_completed?: boolean
           onboarding_step?: number
           plan_id?: string | null
+          setup_checkout_session_id?: string | null
+          setup_paid_at?: string | null
           slug?: string
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
@@ -1502,9 +1508,11 @@ export type Database = {
           is_featured: boolean
           monthly_price: number
           name: string
+          setup_price: number
           sort_order: number
           stripe_annual_price_id: string | null
           stripe_monthly_price_id: string | null
+          stripe_setup_price_id: string | null
           tagline: string | null
           updated_at: string
         }
@@ -1517,9 +1525,11 @@ export type Database = {
           is_featured?: boolean
           monthly_price?: number
           name: string
+          setup_price?: number
           sort_order?: number
           stripe_annual_price_id?: string | null
           stripe_monthly_price_id?: string | null
+          stripe_setup_price_id?: string | null
           tagline?: string | null
           updated_at?: string
         }
@@ -1532,9 +1542,11 @@ export type Database = {
           is_featured?: boolean
           monthly_price?: number
           name?: string
+          setup_price?: number
           sort_order?: number
           stripe_annual_price_id?: string | null
           stripe_monthly_price_id?: string | null
+          stripe_setup_price_id?: string | null
           tagline?: string | null
           updated_at?: string
         }
