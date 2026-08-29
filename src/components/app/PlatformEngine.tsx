@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Check, Copy, Download, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, ClipboardCheck, Copy, Download, Radar, X } from "lucide-react";
 import { toast } from "sonner";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,17 @@ import {
   PLATFORMS,
   QUALITY_TARGETS,
   RESPONSIVE_BREAKPOINTS,
+  CONTENT_SCHEMA_VERSION,
   designTokens,
+  detectPlatformFromBrowser,
   limitationReport,
+  normalizedSpec,
   platformProfile,
   portableSpec,
   specBrief,
   stackStrategy,
   tokensCss,
+  type PlatformDetection,
   type PlatformId,
 } from "@/lib/platform-engine";
 import type { ContentPage } from "@/lib/website-content";
@@ -26,6 +30,11 @@ type Props = {
   services: { name: string; description?: string | null; price?: number | null; bookable?: boolean }[];
   seo: { title?: string | null; description?: string | null; headline?: string | null };
   pages: ContentPage[];
+  /** Publish flow hooks so a rebuild can be triggered from the builder. */
+  publishState?: string | null;
+  canManage?: boolean;
+  isPublishing?: boolean;
+  onPublish?: () => void;
 };
 
 const str = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
@@ -36,8 +45,27 @@ const str = (value: unknown) => (typeof value === "string" && value.trim() ? val
  * an honest limitation report, and a portable build spec for rebuilding the
  * same site elsewhere.
  */
-export function PlatformEngine({ businessName, slug, profile, services, seo, pages }: Props) {
-  const [platform, setPlatform] = useState<PlatformId>("lovable");
+export function PlatformEngine({
+  businessName,
+  slug,
+  profile,
+  services,
+  seo,
+  pages,
+  publishState,
+  canManage = false,
+  isPublishing = false,
+  onPublish,
+}: Props) {
+  const [detection, setDetection] = useState<PlatformDetection | null>(null);
+  const [override, setOverride] = useState<PlatformId | null>(null);
+  const [done, setDone] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setDetection(detectPlatformFromBrowser());
+  }, []);
+
+  const platform: PlatformId = override ?? detection?.platform ?? "lovable";
   const target = platformProfile(platform);
 
   const tokens = useMemo(
@@ -76,6 +104,10 @@ export function PlatformEngine({ businessName, slug, profile, services, seo, pag
     [platform, businessName, profile, services, seo, pages, tokens],
   );
 
+  const normalized = useMemo(() => normalizedSpec(spec), [spec]);
+  const checklist = normalized.auditChecklist;
+  const blockers = checklist.filter((item) => item.severity === "blocker");
+  const openBlockers = blockers.filter((item) => !done[item.id]);
   const limitations = limitationReport(target);
   const strategy = stackStrategy(target);
 
@@ -114,6 +146,23 @@ export function PlatformEngine({ businessName, slug, profile, services, seo, pag
 
       <div>
         <p className="eyebrow">Target platform</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+          <Radar className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          {detection ? (
+            <span>
+              Detected <span className="text-foreground">{platformProfile(detection.platform).label}</span>{" "}
+              ({detection.confidence} confidence) — {detection.signals[detection.signals.length - 1]}
+              {override ? " · manual override active" : ""}
+            </span>
+          ) : (
+            <span>Detecting environment…</span>
+          )}
+          {override ? (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setOverride(null)}>
+              Use detected
+            </Button>
+          ) : null}
+        </div>
         <div className="mt-2 flex flex-wrap gap-2">
           {PLATFORMS.map((p) => (
             <Button
@@ -121,7 +170,7 @@ export function PlatformEngine({ businessName, slug, profile, services, seo, pag
               type="button"
               size="sm"
               variant={p.id === platform ? "default" : "outline"}
-              onClick={() => setPlatform(p.id)}
+              onClick={() => setOverride(p.id)}
               aria-pressed={p.id === platform}
             >
               {p.label}
