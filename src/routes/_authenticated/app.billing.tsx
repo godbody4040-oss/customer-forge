@@ -189,6 +189,24 @@ function BillingPage() {
             {(subscriptionPlans ?? []).map((plan) => {
               const price = interval === "annual" ? plan.annual_price : plan.monthly_price;
               const isCurrent = currentPlanId === plan.id && billing?.active;
+              // Same plan on the same billing interval: a second checkout would
+              // create a duplicate subscription, so send them to the portal.
+              const isExactCurrent = isCurrent && subscription?.billing_interval === interval;
+              const isUpgrade =
+                !!currentPrice && !isCurrent && price > currentPrice && !!billing?.active;
+              const isDowngrade =
+                !!currentPrice && !isCurrent && price < currentPrice && !!billing?.active;
+              const label = isExactCurrent
+                ? "Manage plan"
+                : isUpgrade
+                  ? "Upgrade"
+                  : isDowngrade
+                    ? "Downgrade"
+                    : isCurrent
+                      ? "Switch billing period"
+                      : currentPlanId && billing?.active
+                        ? "Switch to this plan"
+                        : "Subscribe";
               return (
                 <li
                   key={plan.id}
