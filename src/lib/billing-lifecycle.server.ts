@@ -75,8 +75,7 @@ async function provisionWorkspace(admin: Admin, organizationId: string) {
     .eq("organization_id", organizationId)
     .maybeSingle();
   if (!profile) {
-    const name = await orgName(admin, organizationId);
-    await admin.from("business_profiles").insert({ organization_id: organizationId, name });
+    await admin.from("business_profiles").insert({ organization_id: organizationId });
   }
 
   const { data: request } = await admin
@@ -86,10 +85,14 @@ async function provisionWorkspace(admin: Admin, organizationId: string) {
     .limit(1)
     .maybeSingle();
   if (!request) {
+    const name = await orgName(admin, organizationId);
     await admin.from("website_requests").insert({
       organization_id: organizationId,
-      status: "draft",
-      business_name: await orgName(admin, organizationId),
+      title: `Build the ${name} website`,
+      details: "Created automatically when the subscription activated.",
+      kind: "new_site",
+      priority: "normal",
+      status: "requested",
     });
   }
 }
