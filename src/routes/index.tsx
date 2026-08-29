@@ -134,22 +134,27 @@ function Landing() {
             <div className="lg:pt-4">
               <Pill tone="signal">REVORA™ — The Business Growth Operating System</Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.5rem)] leading-[1.04] font-semibold tracking-tight">
-                Turn more <span className="gold-text">opportunities</span> into customers.
+                Turn more website visitors into{" "}
+                <span className="gold-text">paying customers</span>.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                The complete business growth operating system for getting found, capturing leads,
-                booking customers, following up and growing relationships.
+                Revora gives local businesses one system to capture leads, send quotes, book
+                customers, automate follow-up, collect reviews and understand what is driving
+                growth.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button asChild variant="signal" size="lg">
                   <Link to="/auth" search={{ mode: "signup" }}>
-                    Build my growth system <ArrowRight className="size-4" />
+                    Start free <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/demo">See Revora in action</Link>
+                  <a href="#how-it-works">See how it works</a>
                 </Button>
               </div>
+              <p className="mt-4 text-[12px] text-muted-foreground">
+                No credit card required • 1-day free trial • Cancel anytime
+              </p>
 
               <dl className="mt-10 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-border pt-6 sm:max-w-lg sm:grid-cols-3">
                 {[
