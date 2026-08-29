@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CrmForContractorsRouteImport } from './routes/crm-for-contractors'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as IndustriesRouteImport } from './routes/industries'
@@ -83,6 +84,11 @@ const AuthRoute = AuthRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmForContractorsRoute = CrmForContractorsRouteImport.update({
+  id: '/crm-for-contractors',
+  path: '/crm-for-contractors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/crm-for-contractors': typeof CrmForContractorsRoute
   '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRouteWithChildren
@@ -386,6 +393,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/crm-for-contractors': typeof CrmForContractorsRoute
   '/get-started': typeof GetStartedRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -436,6 +444,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/crm-for-contractors': typeof CrmForContractorsRoute
   '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRouteWithChildren
@@ -490,6 +499,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/crm-for-contractors'
     | '/demo'
     | '/get-started'
     | '/industries'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/crm-for-contractors'
     | '/get-started'
     | '/pricing'
     | '/reset-password'
@@ -591,6 +602,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/crm-for-contractors'
     | '/demo'
     | '/get-started'
     | '/industries'
@@ -645,6 +657,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  CrmForContractorsRoute: typeof CrmForContractorsRoute
   DemoRoute: typeof DemoRouteWithChildren
   GetStartedRoute: typeof GetStartedRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
@@ -697,6 +710,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm-for-contractors': {
+      id: '/crm-for-contractors'
+      path: '/crm-for-contractors'
+      fullPath: '/crm-for-contractors'
+      preLoaderRoute: typeof CrmForContractorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -1157,6 +1177,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  CrmForContractorsRoute: CrmForContractorsRoute,
   DemoRoute: DemoRouteWithChildren,
   GetStartedRoute: GetStartedRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
