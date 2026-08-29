@@ -130,6 +130,7 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
             sort_order: pageIndex,
             seo_title: page.seo_title ?? null,
             seo_description: page.seo_description ?? null,
+            noindex: page.noindex ?? false,
           })
           .select("id")
           .single();
@@ -146,8 +147,11 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
               heading: section.heading ?? null,
               subheading: section.subheading ?? null,
               body: section.body ?? null,
+              is_visible: section.is_visible ?? true,
+              settings: section.needs_input ? { needs_input: true } : {},
               sort_order: sectionIndex,
             })
+
             .select("id")
             .single();
           if (sectionError || !sectionRow) throw sectionError ?? new Error("Couldn't create a section.");
