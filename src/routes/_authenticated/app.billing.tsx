@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { CreditCard, ExternalLink, Receipt, Wallet } from "lucide-react";
 import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { PayPalCheckout } from "@/components/app/PayPalCheckout";
-import { StripeCheckout } from "@/components/app/StripeCheckout";
 import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
 import { usePaymentConfig, usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
-import { useBillingState, usePlans } from "@/lib/stripe.hooks";
+import { useBillingState } from "@/lib/stripe.hooks";
 import { createBillingPortalSession } from "@/lib/stripe.functions";
 import { getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/use-tenant";
 import { REVORA } from "@/lib/brand";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/app/billing")({
   head: () => ({
