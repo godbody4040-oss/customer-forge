@@ -16,7 +16,9 @@ import {
   Rocket,
   Settings,
   Shield,
+  Sparkles,
   Star,
+
 
   Users,
   Wrench,
@@ -42,7 +44,9 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 const NAV = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/app/command", label: "AI Command Center", icon: Sparkles, exact: false },
   { to: "/app/leads", label: "Leads", icon: Users, exact: false },
+
   { to: "/app/calendar", label: "Calendar", icon: CalendarDays, exact: false },
   { to: "/app/services", label: "Services", icon: Wrench, exact: false },
   { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false },
