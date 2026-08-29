@@ -174,7 +174,7 @@ function CampaignsPage() {
       ) : (campaigns.data ?? []).length === 0 ? (
         <EmptyState
           title="No campaigns yet"
-          body="Create one for each flyer, vehicle wrap, yard sign or paid ad so you can see exactly what brings in work."
+          description="Create one for each flyer, vehicle wrap, yard sign or paid ad so you can see exactly what brings in work."
           action={
             <Button variant="signal" size="sm" onClick={() => setEditing({ ...blank })}>
               <Plus className="size-4" /> New campaign
