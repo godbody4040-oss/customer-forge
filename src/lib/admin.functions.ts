@@ -56,7 +56,7 @@ export const listClients = createServerFn({ method: "GET" })
     const { data: orgs, error } = await supabaseAdmin
       .from("organizations")
       .select(
-        "id, name, slug, industry, plan_id, subscription_status, is_suspended, is_demo, created_at",
+        "id, name, slug, industry, plan_id, subscription_status, is_suspended, is_demo, created_at, setup_paid_at, setup_checkout_session_id",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -64,7 +64,7 @@ export const listClients = createServerFn({ method: "GET" })
     const ids = (orgs ?? []).map((o) => o.id);
     if (!ids.length) return [];
 
-    const [profiles, sites, services, media, forms, leads, appts, events] = await Promise.all([
+    const [profiles, sites, services, media, forms, leads, appts, events, subs, pays] = await Promise.all([
       supabaseAdmin.from("business_profiles").select("*").in("organization_id", ids),
       supabaseAdmin.from("website_settings").select("*").in("organization_id", ids),
       supabaseAdmin.from("services").select("organization_id, bookable, is_active").in("organization_id", ids),
@@ -73,7 +73,18 @@ export const listClients = createServerFn({ method: "GET" })
       supabaseAdmin.from("leads").select("organization_id").in("organization_id", ids),
       supabaseAdmin.from("appointments").select("organization_id").in("organization_id", ids),
       supabaseAdmin.from("analytics_events").select("organization_id").in("organization_id", ids).limit(20000),
+      supabaseAdmin
+        .from("subscriptions")
+        .select(
+          "organization_id, status, provider_customer_id, provider_subscription_id, current_period_end, cancel_at_period_end, price_id",
+        )
+        .in("organization_id", ids),
+      supabaseAdmin
+        .from("payments")
+        .select("organization_id, amount, status")
+        .in("organization_id", ids),
     ]);
+
 
     const countBy = (rows: { organization_id: string }[] | null, id: string) =>
       (rows ?? []).filter((r) => r.organization_id === id).length;
