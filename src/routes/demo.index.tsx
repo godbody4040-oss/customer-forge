@@ -113,9 +113,10 @@ function DemoPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/get-started">
-                  Build my growth system
-                </Link>
+                <Link to="/demo/dashboard">Open the demo dashboard</Link>
+              </Button>
+              <Button asChild variant="ghost" size="lg">
+                <Link to="/get-started">Build my growth system</Link>
               </Button>
             </div>
             <ol className="mt-10 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
