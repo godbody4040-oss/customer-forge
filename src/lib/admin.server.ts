@@ -41,7 +41,8 @@ export function normalizeDomain(value: string) {
 }
 
 export function isValidDomain(value: string) {
-  return /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) && value.length <= 253;
+  // Also rejects IP literals and internal/reserved names (see net-guard.server).
+  return isFetchableHostname(value) && /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) && value.length <= 253;
 }
 
 type DnsAnswer = { name: string; type: number; data: string };
