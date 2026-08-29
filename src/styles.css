@@ -224,6 +224,21 @@
     0 14px 40px -18px color-mix(in oklab, var(--color-gold) 45%, transparent);
 }
 
+/* Gold emphasis for key information in body copy (prices, offers, outcomes). */
+@utility gold-hl {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Gold emphasis with a soft gold wash — for the single most important fact in a block. */
+@utility gold-mark {
+  color: var(--color-primary);
+  font-weight: 600;
+  background-color: color-mix(in oklab, var(--color-gold) 12%, transparent);
+  border-radius: 0.25rem;
+  padding-inline: 0.25rem;
+}
+
 @utility panel-glass {
   background-color: color-mix(in oklab, var(--color-card) 82%, transparent);
   border: 1px solid var(--color-border);
