@@ -45,7 +45,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [busy, setBusy] = useState<"email" | "google" | null>(null);
+  const [busy, setBusy] = useState<"email" | "google" | "reset" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const destination = redirect ?? "/app";
@@ -77,15 +77,38 @@ function AuthPage() {
           setIsSignup(false);
           return;
         }
-        toast.success("Welcome to Revora.");
+        await ensureProfile();
+        toast.success("Welcome to Revora. You'll stay signed in on this device.");
         navigate({ to: "/onboarding", replace: true });
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+        await ensureProfile();
+        toast.success("Welcome back.");
         navigate({ to: destination, replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleForgotPassword() {
+    setError(null);
+    if (!email) {
+      setError("Enter your email above and we'll send a reset link.");
+      return;
+    }
+    setBusy("reset");
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (resetError) throw resetError;
+      toast.success("Reset link sent. Check your email.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the reset email.");
     } finally {
       setBusy(null);
     }
@@ -104,6 +127,7 @@ function AuthPage() {
         return;
       }
       if (result.redirected) return;
+      await ensureProfile();
       navigate({ to: destination, replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
@@ -111,6 +135,7 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
