@@ -637,9 +637,12 @@ export function readAttachments(value: unknown): AgentAttachment[] {
     if (!raw || typeof raw !== "object") continue;
     const item = raw as Record<string, unknown>;
     const dataUrl = typeof item["dataUrl"] === "string" ? item["dataUrl"] : "";
-    const match = /^data:([a-z0-9.+/-]+);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
+    // Browser recordings carry codec parameters (audio/webm;codecs=opus) — accept
+    // and drop them, since only the base media type decides what we allow.
+    const match = /^data:([a-z0-9.+/-]+)((?:;[a-z0-9.+=_-]+)*);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
     if (!match) continue;
     const mimeType = (match[1] ?? "").toLowerCase();
+
     const kind = attachmentKindOf(mimeType);
     if (!kind) continue;
     const clean = `data:${mimeType};base64,${(match[2] ?? "").replace(/\s+/g, "")}`;
