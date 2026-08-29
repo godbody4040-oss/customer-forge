@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LoadingRows } from "@/components/app/Bits";
 import { GrowthCommandCenter } from "@/components/app/GrowthCommandCenter";
+import { SiteAuditor } from "@/components/app/SiteAuditor";
+import { IntakeHub } from "@/components/app/IntakeHub";
 import {
   useBusinessProfile,
+  useSaveBusinessProfile,
   useSaveWebsiteSettings,
   useServices,
+  useUpdateOrganization,
   useWebsiteSettings,
 } from "@/lib/queries";
 import { useRunSiteEngine, useScoreFacts, useSnapshotWebsiteVersion } from "@/lib/site-engine.hooks";
@@ -15,6 +19,16 @@ import { canManage } from "@/lib/domain";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
 import type { AutoFixKey, GrowthAuditInput } from "@/lib/growth-command";
+import { auditStructure, type LivePageResult } from "@/lib/site-audit";
+import { conversionGaps, normalizeGoal, type ConversionContext } from "@/lib/conversion-engine";
+import { proposeUpgrades, type UpgradeProposal } from "@/lib/auto-upgrade";
+import {
+  useApplyUpgrade,
+  useUndoUpgrade,
+  useLiveAudit,
+  type AppliedUpgrade,
+} from "@/lib/auto-upgrade.hooks";
+import type { IntakeValues } from "@/lib/intake-map";
 
 export const Route = createFileRoute("/_authenticated/app/command")({
   head: () => ({
