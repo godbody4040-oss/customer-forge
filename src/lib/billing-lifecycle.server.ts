@@ -16,7 +16,8 @@ const APP_URL = "https://revoragrowthsystems.com";
 const PLAN_LABELS: Record<string, string> = { starter: "Starter", growth: "Growth", pro: "Pro" };
 
 const planLabel = (planId?: string | null) =>
-  (planId && PLAN_LABELS[planId]) || (planId ? planId[0].toUpperCase() + planId.slice(1) : "Revora");
+  (planId && PLAN_LABELS[planId]) ||
+  (planId ? planId.charAt(0).toUpperCase() + planId.slice(1) : "Revora");
 
 const money = (cents: number | null | undefined, currency = "usd") =>
   typeof cents === "number"
@@ -44,7 +45,7 @@ async function markRan(admin: Admin, organizationId: string, marker: string, met
     action: "billing.lifecycle",
     entity: "billing_lifecycle",
     entity_id: marker,
-    metadata,
+    metadata: metadata as Database["public"]["Tables"]["audit_logs"]["Insert"]["metadata"],
   });
 }
 
