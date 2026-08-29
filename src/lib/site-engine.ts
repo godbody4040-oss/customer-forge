@@ -14,9 +14,10 @@ export type GenerationStep = { key: string; label: string; progress: number };
 
 /** Real backend stages — each one is written to the job as it completes. */
 export const GENERATION_STEPS: GenerationStep[] = [
-  { key: "business", label: "Business information analysed", progress: 10 },
-  { key: "services", label: "Services organised", progress: 22 },
-  { key: "brand", label: "Brand identity prepared", progress: 34 },
+  { key: "business", label: "Business information analysed", progress: 8 },
+  { key: "services", label: "Services organised", progress: 18 },
+  { key: "brand", label: "Brand identity prepared", progress: 26 },
+  { key: "analysis", label: "Customers, intent and conversion strategy analysed", progress: 38 },
   { key: "structure", label: "Website structure generated", progress: 46 },
   { key: "copy", label: "Local SEO content generated", progress: 62 },
   { key: "conversion", label: "Conversion system configured", progress: 74 },
