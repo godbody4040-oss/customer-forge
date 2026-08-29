@@ -1,24 +1,34 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  Activity,
   ArrowRight,
   BadgeCheck,
+  CalendarCheck,
   CalendarDays,
+  CreditCard,
   Info,
   Mail,
   MessageSquare,
   Phone,
   Repeat,
   Star,
+  UserPlus,
   Zap,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import { FunnelChart, Sparkline, TrendChart } from "@/components/demo/DemoCharts";
 import { Button } from "@/components/ui/button";
 import { usd } from "@/lib/offer";
 import {
   buildDemoWorkspace,
+  demoActivity,
+  demoFunnel,
   demoMetrics,
+  demoPipeline,
+  demoSeries,
+  formatAgo,
   DEMO_DISCLOSURE,
   DEMO_RANGES,
   DEMO_STAGES,
@@ -28,6 +38,7 @@ import {
   type DemoRangeId,
   type DemoStage,
 } from "@/lib/demo-workspace";
+
 
 export const Route = createFileRoute("/demo/dashboard")({
   head: () => ({
