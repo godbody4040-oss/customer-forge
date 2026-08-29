@@ -21,10 +21,13 @@ export const GROWTH_SYSTEM = {
   /** Length of the free platform trial, in days. Mirrors the Stripe trial. */
   trialDays: 30,
   trialBadge: "30-DAY FREE PLATFORM TRIAL",
-  ctaPrimary: "GET STARTED — $1,500 SETUP",
+  ctaPrimary: "START MY REVORA SYSTEM — $1,500 SETUP",
   ctaSecondary:
     "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. Cancel anytime. No hidden fees.",
-  ctaShort: "BUILD MY GROWTH SYSTEM",
+  ctaShort: "START MY REVORA SYSTEM",
+  /** The single secondary CTA label used site-wide. */
+  ctaDemo: "SEE REVORA IN ACTION",
+
   /** The single canonical offer sentence. Use this verbatim wherever the offer is explained. */
   explainer:
     "$1,500 one-time setup. Your first 30 days of the $250/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $250/month unless canceled.",
