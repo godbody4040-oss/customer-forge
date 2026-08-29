@@ -232,6 +232,8 @@
 @utility hero-aura {
   position: relative;
   isolation: isolate;
+  overflow-x: clip;
+
   &::before {
     content: "";
     position: absolute;
