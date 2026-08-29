@@ -288,8 +288,8 @@ function DemoDashboard() {
                 <TrendChart points={series} />
               </Panel>
 
-              <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                <Panel>
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                <Panel className="min-w-0">
                   <SectionHeading
                     eyebrow="The full flow"
                     title="Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat"
@@ -307,7 +307,7 @@ function DemoDashboard() {
                   />
                 </Panel>
 
-                <div className="space-y-4">
+                <div className="min-w-0 space-y-4">
                   <Panel>
                     <SectionHeading
                       eyebrow="Revenue pipeline"
