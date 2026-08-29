@@ -303,6 +303,44 @@ export function PlatformEngine({
         </div>
       </div>
 
+      <div>
+        <p className="eyebrow">Build → test → audit checklist (before you finalize)</p>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          {openBlockers.length === 0
+            ? "No blockers left. Every item below is still worth re-testing on the rebuilt site."
+            : `${openBlockers.length} blocker(s) must be handled before this build is finalized.`}
+        </p>
+        <ul className="mt-2 space-y-2">
+          {checklist.map((item) => {
+            const checked = done[item.id] === true;
+            return (
+              <li key={item.id} className="rounded-md border border-border bg-elevated p-2.5">
+                <label className="flex cursor-pointer gap-2.5 text-[13px]">
+                  <input
+                    type="checkbox"
+                    className="mt-1 size-4 shrink-0 accent-[var(--color-primary)]"
+                    checked={checked}
+                    onChange={(event) =>
+                      setDone((prev) => ({ ...prev, [item.id]: event.target.checked }))
+                    }
+                  />
+                  <span className={checked ? "text-muted-foreground line-through" : ""}>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <Pill tone={item.severity === "blocker" ? "warning" : "info"}>{item.severity}</Pill>
+                      <span className="font-medium">{item.area}</span>
+                    </span>
+                    <span className="mt-1 block">{item.task}</span>
+                    <span className="mt-0.5 block text-[12px] text-muted-foreground">
+                      Test: {item.test}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={copyBrief}>
           <Copy className="size-4" /> Copy build brief
@@ -323,7 +361,38 @@ export function PlatformEngine({
         >
           <Download className="size-4" /> Download JSON spec
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            download(
+              `${base}-build-spec.json`,
+              JSON.stringify(normalized, null, 2),
+              "application/json",
+            );
+            toast.success(`Exported ${CONTENT_SCHEMA_VERSION} — import this into any builder.`);
+          }}
+        >
+          <ClipboardCheck className="size-4" /> Export normalized build spec
+        </Button>
+        {onPublish ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!canManage || isPublishing || openBlockers.length > 0}
+            onClick={onPublish}
+          >
+            {publishState === "published" ? "Republish this site" : "Finalize & publish"}
+          </Button>
+        ) : null}
       </div>
+      {onPublish && openBlockers.length > 0 ? (
+        <p className="text-[12px] text-muted-foreground">
+          Publishing from here stays disabled until the {openBlockers.length} blocker(s) above are
+          checked off — the checklist is generated from your real content and this platform's
+          limitations, not from a fixed template.
+        </p>
+      ) : null}
     </Panel>
   );
 }
