@@ -8,6 +8,7 @@ import {
   type ContentSection,
   type SectionKind,
 } from "@/lib/website-content";
+import { safeLinkUrl } from "@/lib/website-content";
 import { readCopy } from "@/lib/site-engine";
 
 const KEY = "website_content";
@@ -165,7 +166,7 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
                 kind: component.kind,
                 label: component.label ?? null,
                 body: component.body ?? null,
-                link_url: component.link_url ?? null,
+                link_url: safeLinkUrl(component.link_url),
                 link_label: component.link_label ?? null,
                 sort_order: index,
               })),

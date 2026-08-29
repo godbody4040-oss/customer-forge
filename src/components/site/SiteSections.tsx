@@ -12,6 +12,7 @@ import { Pill } from "@/components/app/Bits";
 import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
 import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
+import { safeLinkUrl } from "@/lib/website-content";
 
 type Site = NonNullable<PublicSite>;
 type Section = NonNullable<Site["content"]>["sections"][number];
@@ -54,7 +55,7 @@ function SectionButtons({ site, components }: { site: Site; components: Componen
   return (
     <div className="mt-7 flex flex-wrap gap-2.5">
       {buttons.map((button, index) => {
-        const href = button.link_url ?? "#quote";
+        const href = safeLinkUrl(button.link_url) ?? "#quote";
         const internal = href.startsWith("/") ;
         return (
           <Button
@@ -132,7 +133,7 @@ export function SiteSection({ site, section }: { site: Site; section: Section })
             id: card.id,
             name: card.label!,
             body: card.body,
-            href: card.link_url,
+            href: safeLinkUrl(card.link_url),
             price: services.find((s) => s.name === card.label)?.price ?? null,
             startingPrice: services.find((s) => s.name === card.label)?.starting_price ?? null,
           }))
@@ -341,10 +342,10 @@ export function SiteSection({ site, section }: { site: Site; section: Section })
           <ul className="mt-6 flex flex-wrap gap-2">
             {links.map((link) => (
               <li key={link.id}>
-                {link.link_url?.startsWith("/") ? (
+                {safeLinkUrl(link.link_url)?.startsWith("/") ? (
                   <Link
                     to="/s/$slug/$page"
-                    params={{ slug: org.slug, page: link.link_url.slice(1) }}
+                    params={{ slug: org.slug, page: safeLinkUrl(link.link_url)!.slice(1) }}
                     className="rounded-full border border-border px-3 py-1.5 text-[12px] hover:border-primary"
                   >
                     {link.label}
