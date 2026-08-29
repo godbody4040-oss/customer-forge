@@ -16,6 +16,8 @@ import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { LaunchChecks } from "@/components/app/LaunchChecks";
+import { PreviewLinks } from "@/components/app/PreviewLinks";
+import { VersionDiff } from "@/components/app/VersionDiff";
 import {
   AiCopyAssistant,
   RevoraScorePanel,
@@ -185,7 +187,9 @@ function WebsitePage() {
                 saveSettings.mutate({ publish_state: "unpublished", published: false })
               }
             />
+            <PreviewLinks organizationId={orgId} canManage={manage} />
             <VersionHistory organizationId={orgId} canManage={manage} />
+            <VersionDiff organizationId={orgId} />
           </div>
         }
       />
