@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NewClientDialog } from "@/components/admin/NewClientDialog";
 import { listClients } from "@/lib/admin.functions";
 import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
-import { dateShort, number } from "@/lib/format";
+import { currency, dateShort, number } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/clients")({
   component: AdminClients,
