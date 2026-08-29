@@ -11,7 +11,7 @@ type Admin = SupabaseClient<Database>;
 type SubStatus = Database["public"]["Enums"]["subscription_status"];
 type Interval = Database["public"]["Enums"]["billing_interval"];
 
-/** The single Revora offer: $1,500 setup + $250/month. */
+/** The single Revora offer: $750 setup + $100/month. */
 export const GROWTH_PLAN_ID = "revora_growth_system";
 export const MONTHLY_PRICE_KEY = "revora_system_monthly";
 export const SETUP_PRICE_KEY = "revora_system_setup";

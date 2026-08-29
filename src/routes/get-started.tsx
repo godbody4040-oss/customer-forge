@@ -19,16 +19,16 @@ import { safeSlug } from "@/lib/website-plan";
 export const Route = createFileRoute("/get-started")({
   head: () => ({
     meta: [
-      { title: "Start your Revora Growth System — $1,500 setup + $250/mo" },
+      { title: "Start your Revora Growth System — $750 setup + $100/mo" },
       {
         name: "description",
         content:
-          "Launch your Revora Growth System: $1,500 one-time setup, a 30-day free platform trial, then $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+          "Launch your Revora Growth System: $750 one-time setup, a 30-day free platform trial, then $100/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
       { property: "og:title", content: "Start your Revora Growth System" },
       {
         property: "og:description",
-        content: "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. One complete customer acquisition system.",
+        content: "$750 one-time setup + 30-day free platform trial + $100/month afterward. One complete customer acquisition system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

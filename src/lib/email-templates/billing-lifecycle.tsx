@@ -53,12 +53,12 @@ const WelcomeEmail = (p: BillingProps) => (
     heading={`Welcome aboard, ${p.businessName || 'there'} — ${p.planName || 'your plan'} is live`}
   >
     <Text style={text}>
-      <strong>$1,500 setup payment received.</strong> Your {p.planName || 'Revora Growth System'}{' '}
+      <strong>$750 setup payment received.</strong> Your {p.planName || 'Revora Growth System'}{' '}
       workspace is ready — website builder, CRM, booking calendar, quote engine and automations are
       unlocked right now.
     </Text>
     <Text style={text}>
-      <strong>30-day platform trial active.</strong> $250/month begins after the trial unless
+      <strong>30-day platform trial active.</strong> $100/month begins after the trial unless
       canceled{p.accessUntil ? ` — your trial ends ${p.accessUntil}` : ''}. Cancel anytime from
       billing. No hidden fees.
     </Text>
@@ -125,7 +125,7 @@ const data = {
   businessName: 'Elite Mobile Detailing',
   planName: 'Revora Growth System',
   interval: 'monthly',
-  amount: '$250.00',
+  amount: '$100.00',
   accessUntil: 'September 28, 2026',
   previousPlan: 'Revora Growth System',
   newPlan: 'Revora Growth System',

@@ -1,7 +1,7 @@
 /**
  * Revora's single commercial offer. Every price shown or charged anywhere in
  * the application derives from this module — there is exactly one offer:
- * $1,500 one-time setup + $250/month.
+ * $750 one-time setup + $100/month.
  */
 export const GROWTH_SYSTEM = {
   planId: "revora_growth_system",
@@ -21,16 +21,16 @@ export const GROWTH_SYSTEM = {
   /** Length of the free platform trial, in days. Mirrors the Stripe trial. */
   trialDays: 30,
   trialBadge: "30-DAY FREE PLATFORM TRIAL",
-  ctaPrimary: "START MY REVORA SYSTEM — $1,500 SETUP",
+  ctaPrimary: "START MY REVORA SYSTEM — $750 SETUP",
   ctaSecondary:
-    "$1,500 one-time setup + 30-day free platform trial + $250/month afterward. Cancel anytime. No hidden fees.",
+    "$750 one-time setup + 30-day free platform trial + $100/month afterward. Cancel anytime. No hidden fees.",
   ctaShort: "START MY REVORA SYSTEM",
   /** The single secondary CTA label used site-wide. */
   ctaDemo: "SEE REVORA IN ACTION",
 
   /** The single canonical offer sentence. Use this verbatim wherever the offer is explained. */
   explainer:
-    "$1,500 one-time setup. Your first 30 days of the $250/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $250/month unless canceled.",
+    "$750 one-time setup. Your first 30 days of the $100/month platform fee are FREE. After the 30-day trial, your subscription automatically continues at $100/month unless canceled.",
   setupIncludes: [
     "Custom website",
     "Domain setup",
