@@ -62,3 +62,35 @@ export async function ensureProfile(user?: User | null): Promise<void> {
     { onConflict: "id" },
   );
 }
+
+/**
+ * Resolves where a signed-in client belongs based on their tenant/workspace
+ * access, so login always lands on the right dashboard:
+ *  - no workspace yet -> onboarding
+ *  - workspace with incomplete onboarding -> onboarding
+ *  - workspace ready -> /app
+ *  - platform staff with no client workspace -> /admin
+ */
+export async function resolvePostLoginPath(): Promise<string> {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) return "/auth";
+
+  const [{ data: memberships }, { data: roles }] = await Promise.all([
+    supabase
+      .from("memberships")
+      .select("organization_id, organizations(onboarding_completed)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true }),
+    supabase.from("user_roles").select("role").eq("user_id", user.id),
+  ]);
+
+  const first = (memberships ?? []).find((m) => m.organizations);
+  if (first?.organizations) {
+    const org = first.organizations as { onboarding_completed: boolean | null };
+    return org.onboarding_completed ? "/app" : "/onboarding";
+  }
+
+  const isSuperAdmin = (roles ?? []).some((r) => r.role === "super_admin");
+  return isSuperAdmin ? "/admin" : "/onboarding";
+}

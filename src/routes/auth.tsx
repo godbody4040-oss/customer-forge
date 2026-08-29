@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorNote, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import { ensureProfile } from "@/lib/auth-session";
+import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
@@ -43,19 +43,37 @@ function AuthPage() {
   const { mode, redirect } = Route.useSearch();
   const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(mode === "signup");
+  const [magicMode, setMagicMode] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [busy, setBusy] = useState<"email" | "google" | "reset" | null>(null);
+  const [busy, setBusy] = useState<"email" | "google" | "reset" | "magic" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const destination = redirect ?? "/app";
+  const goToWorkspace = useCallback(
+    async (fallback?: string) => {
+      if (redirect) {
+        navigate({ to: redirect, replace: true });
+        return;
+      }
+      const target = fallback ?? (await resolvePostLoginPath());
+      navigate({ to: target, replace: true });
+    },
+    [navigate, redirect],
+  );
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: destination, replace: true });
+    let active = true;
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!active || !data.session) return;
+      await ensureProfile(data.session.user);
+      if (active) void goToWorkspace();
     });
-  }, [destination, navigate]);
+    return () => {
+      active = false;
+    };
+  }, [goToWorkspace]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +86,7 @@ function AuthPage() {
           password,
           options: {
             data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}${destination}`,
+            emailRedirectTo: `${window.location.origin}${redirect ?? "/app"}`,
           },
         });
         if (signUpError) throw signUpError;
@@ -86,7 +104,7 @@ function AuthPage() {
         if (signInError) throw signInError;
         await ensureProfile();
         toast.success("Welcome back.");
-        navigate({ to: destination, replace: true });
+        await goToWorkspace();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
@@ -94,6 +112,33 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!email) {
+      setError("Enter your email and we'll send a one-tap sign-in link.");
+      return;
+    }
+    setBusy("magic");
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/auth${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`,
+        },
+      });
+      if (otpError) throw otpError;
+      setMagicSent(true);
+      toast.success("Sign-in link sent. Check your email.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the sign-in link.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   async function handleForgotPassword() {
     setError(null);
@@ -119,7 +164,7 @@ function AuthPage() {
     setError(null);
     setBusy("google");
     try {
-      sessionStorage.setItem("lle:redirect", destination);
+      sessionStorage.setItem("lle:redirect", redirect ?? "/app");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
@@ -129,7 +174,7 @@ function AuthPage() {
       }
       if (result.redirected) return;
       await ensureProfile();
-      navigate({ to: destination, replace: true });
+      await goToWorkspace();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     } finally {
@@ -220,7 +265,10 @@ function AuthPage() {
               <span className="h-px flex-1 bg-border" />
             </div>
 
-            <form className="space-y-4" onSubmit={handleEmail}>
+            <form
+              className="space-y-4"
+              onSubmit={magicMode && !isSignup ? handleMagicLink : handleEmail}
+            >
               {isSignup ? (
                 <div className="space-y-1.5">
                   <Label htmlFor="a-name">Your name</Label>
@@ -239,43 +287,81 @@ function AuthPage() {
                   id="a-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setMagicSent(false);
+                  }}
                   autoComplete="email"
                   required
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="a-password">Password</Label>
-                <Input
-                  id="a-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={isSignup ? "new-password" : "current-password"}
-                  minLength={8}
-                  required
-                />
-              </div>
+              {magicMode && !isSignup ? null : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="a-password">Password</Label>
+                  <Input
+                    id="a-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={isSignup ? "new-password" : "current-password"}
+                    minLength={8}
+                    required
+                  />
+                </div>
+              )}
               {error ? <ErrorNote message={error} /> : null}
+              {magicSent && magicMode && !isSignup ? (
+                <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
+                  Link sent to <span className="gold-hl">{email}</span>. Open it on this device and
+                  you'll land straight in your dashboard.
+                </p>
+              ) : null}
               <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
-                {busy === "email" ? <Loader2 className="size-4 animate-spin" /> : null}
-                {isSignup ? "CREATE ACCOUNT — START FREE" : "Sign in"}
+                {busy === "email" || busy === "magic" ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : null}
+                {isSignup
+                  ? "CREATE ACCOUNT — START FREE"
+                  : magicMode
+                    ? magicSent
+                      ? "Resend sign-in link"
+                      : "Email me a sign-in link"
+                    : "Sign in"}
               </Button>
               {!isSignup ? (
-                <button
-                  type="button"
-                  className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
-                  onClick={handleForgotPassword}
-                  disabled={busy !== null}
-                >
-                  Forgot your password?
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="w-full cursor-pointer text-center text-[12.5px] text-primary transition-colors hover:underline"
+                    onClick={() => {
+                      setError(null);
+                      setMagicSent(false);
+                      setMagicMode((v) => !v);
+                    }}
+                    disabled={busy !== null}
+                  >
+                    {magicMode
+                      ? "Use my password instead"
+                      : "Sign in without a password — email me a magic link"}
+                  </button>
+                  {magicMode ? null : (
+                    <button
+                      type="button"
+                      className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                      onClick={handleForgotPassword}
+                      disabled={busy !== null}
+                    >
+                      Forgot your password?
+                    </button>
+                  )}
+                </>
               ) : null}
               <p className="text-center text-[11.5px] text-muted-foreground">
                 We keep you signed in on this device, so next time you land straight in your
                 dashboard.
               </p>
             </form>
+
           </div>
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
