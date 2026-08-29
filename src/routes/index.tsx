@@ -24,7 +24,7 @@ import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/domain";
-import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { GROWTH_SYSTEM, usd, usdExact } from "@/lib/offer";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -150,9 +150,9 @@ function PrimaryCta({ className = "" }: { className?: string }) {
 function PriceLine({ className = "" }: { className?: string }) {
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
-      <span className="font-medium text-foreground">{usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
+      <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
       <span className="font-medium text-primary">{GROWTH_SYSTEM.trialDays} days free</span> · then{" "}
-      <span className="font-medium text-foreground">{usdExact(GROWTH_SYSTEM.monthlyPrice)}/month</span> ·
+      <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.monthlyPrice)}/month</span> ·
       Cancel anytime
     </p>
   );
@@ -305,14 +305,14 @@ function Landing() {
                 <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-5">
                   <div>
                     <p className="tnum font-display text-[34px] leading-none font-semibold">
-                      {usdExact(GROWTH_SYSTEM.setupPrice)}
+                      {usd(GROWTH_SYSTEM.setupPrice)}
                     </p>
                     <p className="mt-1.5 text-[13px] font-medium">Setup — paid today</p>
                     <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
                   </div>
                   <div>
                     <p className="tnum font-display text-[34px] leading-none font-semibold">
-                      {usdExact(GROWTH_SYSTEM.monthlyPrice)}
+                      {usd(GROWTH_SYSTEM.monthlyPrice)}
                       <span className="text-[13px] font-normal text-muted-foreground">/month</span>
                     </p>
                     <p className="mt-1.5 text-[13px] font-medium">
