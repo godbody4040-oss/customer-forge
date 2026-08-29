@@ -346,7 +346,7 @@ export function LiveSystemDemo() {
           </p>
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
             <Button asChild variant="signal">
-              <Link to="/demo">
+              <Link to="/demo/dashboard">
                 SEE REVORA IN ACTION <ArrowRight className="size-4" />
               </Link>
             </Button>
