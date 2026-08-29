@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorNote, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
+import { ensureProfile } from "@/lib/auth-session";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
@@ -45,7 +46,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [busy, setBusy] = useState<"email" | "google" | null>(null);
+  const [busy, setBusy] = useState<"email" | "google" | "reset" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const destination = redirect ?? "/app";
@@ -77,15 +78,38 @@ function AuthPage() {
           setIsSignup(false);
           return;
         }
-        toast.success("Welcome to Revora.");
+        await ensureProfile();
+        toast.success("Welcome to Revora. You'll stay signed in on this device.");
         navigate({ to: "/onboarding", replace: true });
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+        await ensureProfile();
+        toast.success("Welcome back.");
         navigate({ to: destination, replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleForgotPassword() {
+    setError(null);
+    if (!email) {
+      setError("Enter your email above and we'll send a reset link.");
+      return;
+    }
+    setBusy("reset");
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (resetError) throw resetError;
+      toast.success("Reset link sent. Check your email.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the reset email.");
     } finally {
       setBusy(null);
     }
@@ -104,6 +128,7 @@ function AuthPage() {
         return;
       }
       if (result.redirected) return;
+      await ensureProfile();
       navigate({ to: destination, replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
@@ -111,6 +136,7 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -235,6 +261,20 @@ function AuthPage() {
                 {busy === "email" ? <Loader2 className="size-4 animate-spin" /> : null}
                 {isSignup ? "CREATE ACCOUNT — START FREE" : "Sign in"}
               </Button>
+              {!isSignup ? (
+                <button
+                  type="button"
+                  className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                  onClick={handleForgotPassword}
+                  disabled={busy !== null}
+                >
+                  Forgot your password?
+                </button>
+              ) : null}
+              <p className="text-center text-[11.5px] text-muted-foreground">
+                We keep you signed in on this device, so next time you land straight in your
+                dashboard.
+              </p>
             </form>
           </div>
 
