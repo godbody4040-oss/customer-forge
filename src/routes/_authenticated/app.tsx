@@ -77,6 +77,9 @@ function AppShell() {
       org.trial_ends_at &&
       new Date(org.trial_ends_at).getTime() >= Date.now(),
   );
+  const trialHoursLeft = trialStillActive && org?.trial_ends_at
+    ? Math.max(1, Math.ceil((new Date(org.trial_ends_at).getTime() - Date.now()) / 3_600_000))
+    : 0;
   const paymentRequired = Boolean(
     org && !org.is_demo && !billing?.active && !trialStillActive && !data?.isSuperAdmin && !supporting,
   );
