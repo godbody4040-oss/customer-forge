@@ -230,6 +230,16 @@ function WebsitePage() {
                 headline: seo.headline ?? copy?.heroHeadline ?? null,
               }}
               pages={pages ?? []}
+              publishState={settings?.publish_state ?? "draft"}
+              canManage={manage}
+              isPublishing={saveSettings.isPending}
+              onPublish={() =>
+                saveSettings.mutate({
+                  publish_state: "published",
+                  published: true,
+                  last_published_at: new Date().toISOString(),
+                })
+              }
             />
           </div>
         }
