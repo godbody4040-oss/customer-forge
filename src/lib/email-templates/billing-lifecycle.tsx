@@ -58,7 +58,7 @@ const WelcomeEmail = (p: BillingProps) => (
       unlocked right now.
     </Text>
     <Text style={text}>
-      <strong>30-day platform trial active.</strong> $100/month begins after the trial unless
+      <strong>First month free.</strong> Your first $100 monthly payment is charged after 30 days unless
       canceled{p.accessUntil ? ` — your trial ends ${p.accessUntil}` : ''}. Cancel anytime from
       billing. No hidden fees.
     </Text>
