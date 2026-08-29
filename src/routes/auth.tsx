@@ -43,19 +43,37 @@ function AuthPage() {
   const { mode, redirect } = Route.useSearch();
   const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(mode === "signup");
+  const [magicMode, setMagicMode] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [busy, setBusy] = useState<"email" | "google" | "reset" | null>(null);
+  const [busy, setBusy] = useState<"email" | "google" | "reset" | "magic" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const destination = redirect ?? "/app";
+  const goToWorkspace = useCallback(
+    async (fallback?: string) => {
+      if (redirect) {
+        navigate({ to: redirect, replace: true });
+        return;
+      }
+      const target = fallback ?? (await resolvePostLoginPath());
+      navigate({ to: target, replace: true });
+    },
+    [navigate, redirect],
+  );
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: destination, replace: true });
+    let active = true;
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!active || !data.session) return;
+      await ensureProfile(data.session.user);
+      if (active) void goToWorkspace();
     });
-  }, [destination, navigate]);
+    return () => {
+      active = false;
+    };
+  }, [goToWorkspace]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +86,7 @@ function AuthPage() {
           password,
           options: {
             data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}${destination}`,
+            emailRedirectTo: `${window.location.origin}${redirect ?? "/app"}`,
           },
         });
         if (signUpError) throw signUpError;
@@ -86,7 +104,7 @@ function AuthPage() {
         if (signInError) throw signInError;
         await ensureProfile();
         toast.success("Welcome back.");
-        navigate({ to: destination, replace: true });
+        await goToWorkspace();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Try again.");
@@ -94,6 +112,33 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!email) {
+      setError("Enter your email and we'll send a one-tap sign-in link.");
+      return;
+    }
+    setBusy("magic");
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/auth${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`,
+        },
+      });
+      if (otpError) throw otpError;
+      setMagicSent(true);
+      toast.success("Sign-in link sent. Check your email.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the sign-in link.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   async function handleForgotPassword() {
     setError(null);
