@@ -48,10 +48,17 @@ function WelcomePage() {
   }, [orgId, queryClient]);
 
   const setupPaid = Boolean(billing?.setupPaid);
+  const trialing = subscription?.status === "trialing";
+  const trialEnd = subscription?.trial_ends_at ?? null;
   const subActive = Boolean(billing?.active);
   const steps = [
     { label: "Setup payment received", done: setupPaid },
-    { label: "Monthly subscription active", done: subActive },
+    {
+      label: trialing
+        ? `${GROWTH_SYSTEM.trialDays}-day platform trial active`
+        : "Monthly subscription active",
+      done: subActive,
+    },
     { label: "Business details completed", done: Boolean(org?.onboarding_completed) },
     { label: "Website generated and reviewed", done: false, link: "/app/website" as const },
   ];
@@ -62,12 +69,12 @@ function WelcomePage() {
         <p className="eyebrow">Welcome</p>
         <h1 className="mt-1 font-display text-[24px] font-semibold">
           {setupPaid && subActive
-            ? `Your ${GROWTH_SYSTEM.name} is live`
+            ? "You're officially onboard with Revora."
             : "We're confirming your payment"}
         </h1>
         <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
           {setupPaid && subActive
-            ? "Setup is paid and your subscription is active. Finish the steps below and your system starts capturing customers."
+            ? `Your ${usdExact(GROWTH_SYSTEM.setupPrice)} setup payment was received. Your ${GROWTH_SYSTEM.trialDays}-day ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month platform trial is active. ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month begins after the trial unless canceled.`
             : "Payment confirmation comes directly from our payment provider. If you just paid, this page updates within a few seconds — nothing is activated until the payment is verified."}
         </p>
       </div>
@@ -83,7 +90,11 @@ function WelcomePage() {
           value={subscription ? subscription.status.replace("_", " ") : "Not active"}
           hint={`${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month`}
         />
-        <MetricCard label="Next billing date" value={date(subscription?.current_period_end)} hint="Renews automatically" />
+        <MetricCard
+          label={trialing ? "Trial ends" : "Next billing date"}
+          value={date(trialEnd ?? subscription?.current_period_end)}
+          hint={`Then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month`}
+        />
         <MetricCard label="Workspace" value={org?.name ?? "—"} hint={org?.slug ? `${org.slug}.revora.app` : ""} />
       </div>
 
