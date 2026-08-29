@@ -288,20 +288,8 @@ function BillingPage() {
         </p>
       </Panel>
 
-      {checkoutPlan && orgId ? (
-        <StripeCheckout
-          organizationId={orgId}
-          planId={checkoutPlan.id}
-          planName={checkoutPlan.name}
-          interval={interval}
-          onClose={() => {
-            setCheckoutPlan(null);
-            void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });
-            void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
-            void queryClient.invalidateQueries({ queryKey: ["workspace"] });
-          }}
-        />
-      ) : null}
+
+
 
       {cardService && orgId ? (
         <StripeServiceCheckout
