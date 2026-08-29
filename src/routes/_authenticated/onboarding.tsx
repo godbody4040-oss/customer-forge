@@ -215,11 +215,12 @@ function Onboarding() {
         .single();
       if (orgError) throw orgError;
 
-      await supabase
+      const { error: membershipError } = await supabase
         .from("memberships")
         .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
+      assertNoError(membershipError, "Could not link your account to the new workspace");
 
-      await supabase.from("business_profiles").insert({
+      const { error: profileError } = await supabase.from("business_profiles").insert({
         organization_id: org.id,
         phone: draft.phone || null,
         email: draft.email || null,
@@ -229,7 +230,8 @@ function Onboarding() {
         service_area: draft.serviceArea || draft.city || null,
         description: draft.about || null,
         tagline: `${draft.industry}${draft.city ? ` in ${draft.city}` : ""}`,
-        hours: draft.hours ? ({ summary: draft.hours } as never) : null,
+        // hours is NOT NULL in the database — always send an object.
+        hours: (draft.hours ? { summary: draft.hours } : {}) as never,
         website: draft.website || null,
         logo_url: draft.logoUrl || null,
         hero_image_url: draft.heroImageUrl || null,
@@ -241,6 +243,7 @@ function Onboarding() {
         testimonials: testimonials as never,
         website_goals: goals,
       } as never);
+      assertNoError(profileError, "Could not save your business details");
 
       const socialRow = {
         organization_id: org.id,
@@ -252,12 +255,12 @@ function Onboarding() {
         const { error: socialError } = await supabase
           .from("social_profiles")
           .insert(socialRow as never);
-        if (socialError) throw socialError;
+        assertNoError(socialError, "Could not save your social links");
       }
 
 
       if (services.length) {
-        await supabase.from("services").insert(
+        const { error: servicesError } = await supabase.from("services").insert(
           services.map((s, index) => ({
             organization_id: org.id,
             name: s.name.trim(),
@@ -269,11 +272,18 @@ function Onboarding() {
             sort_order: index,
           })) as never,
         );
+        assertNoError(servicesError, "Could not save your services");
       }
 
       // Give the workspace a working quote calculator so the public site's
       // primary "Get my quote" CTA has a real destination from day one.
-      await seedQuoteCalculator(supabase, org.id, services.map((s) => s.name.trim()));
+      // A calculator hiccup must never block the build — log and continue.
+      try {
+        await seedQuoteCalculator(supabase, org.id, services.map((s) => s.name.trim()));
+      } catch (seedError) {
+        console.error("[onboarding] quote calculator seed failed", supabaseErrorMessage(seedError));
+      }
+
 
       const plan = generateWebsitePlan({
         businessName: draft.businessName,
