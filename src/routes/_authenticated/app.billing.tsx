@@ -230,11 +230,19 @@ function BillingPage() {
                     variant={isCurrent ? "outline" : "signal"}
                     size="sm"
                     className="mt-3 w-full"
-                    disabled={!manage || !orgId}
-                    onClick={() => setCheckoutPlan({ id: plan.id, name: plan.name })}
+                    disabled={!manage || !orgId || portalBusy}
+                    onClick={() =>
+                      isExactCurrent || (billing?.active && subscription?.provider_subscription_id)
+                        ? void openPortal()
+                        : setCheckoutPlan({ id: plan.id, name: plan.name })
+                    }
                   >
-                    <CreditCard className="size-4" />
-                    {isCurrent ? "Change billing" : currentPlanId ? "Switch to this plan" : "Subscribe"}
+                    {isExactCurrent || (billing?.active && subscription?.provider_subscription_id) ? (
+                      <ExternalLink className="size-4" />
+                    ) : (
+                      <CreditCard className="size-4" />
+                    )}
+                    {label}
                   </Button>
                 </li>
               );
