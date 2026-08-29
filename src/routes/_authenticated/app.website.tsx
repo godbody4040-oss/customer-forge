@@ -131,6 +131,21 @@ function WebsitePage() {
         ) : null}
       </div>
 
+      <SiteChatbot
+        organizationId={orgId}
+        canManage={manage}
+        hasSections={visibleSections > 0}
+        publishState={settings?.publish_state ?? "draft"}
+        isPublishing={saveSettings.isPending}
+        onPublishNow={() =>
+          saveSettings.mutate({
+            publish_state: "published",
+            published: true,
+            last_published_at: new Date().toISOString(),
+          })
+        }
+      />
+
       <BuilderWizard
         organizationId={orgId}
         org={org}
