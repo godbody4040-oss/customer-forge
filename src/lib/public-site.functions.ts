@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+// Type-only import: erased at build time, so nothing server-only ships to the client.
+import type { loadSite } from "@/lib/public-site.server";
 
 function publicClient() {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -27,189 +29,44 @@ export const getPublicSite = createServerFn({ method: "GET" })
     return { slug };
   })
   .handler(async ({ data }) => {
-    const supabase = publicClient();
-
-    const { data: org } = await supabase
-      .from("public_organizations")
-      .select("id, name, slug, industry, is_demo")
-      .eq("slug", data.slug)
-      .maybeSingle();
-
-    if (!org?.id) return null;
-    const orgId: string = org.id;
-
-    const { data: gate } = await supabase
-      .from("website_settings")
-      .select("publish_state, published")
-      .eq("organization_id", orgId)
-      .maybeSingle();
-
-    // A client site is only served publicly once it is published (or explicitly in preview).
-    if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview")) return null;
-
-    const [profile, services, settings, social, reviews, galleryRows, quoteForm] = await Promise.all([
-
-      supabase.from("public_business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-      supabase
-        .from("services")
-        .select(
-          "id, name, description, category, price, starting_price, duration_minutes, image_url, bookable, featured, sort_order",
-        )
-        .eq("organization_id", orgId)
-        .eq("is_active", true)
-        .order("sort_order"),
-      supabase.from("website_settings").select("*").eq("organization_id", orgId).maybeSingle(),
-      supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-      supabase
-        .from("public_reviews")
-        .select("id, author_name, rating, comment, created_at")
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: false })
-        .limit(12),
-      supabase
-        .from("media")
-        .select("id, url, alt_text, category")
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: false })
-        .limit(24),
-      supabase
-        .from("quote_forms")
-        .select("id, name, base_price, min_price, max_price")
-        .eq("organization_id", orgId)
-        .eq("is_active", true)
-        .order("created_at")
-        .limit(1)
-        .maybeSingle(),
-    ]);
-
-    let questions: {
-      id: string;
-      label: string;
-      helper_text: string | null;
-      sort_order: number;
-      options: { id: string; label: string; price_modifier: number; modifier_type: string }[];
-    }[] = [];
-    let addons: { id: string; label: string; description: string | null; price: number }[] = [];
-
-    if (quoteForm.data) {
-      const { data: qs } = await supabase
-        .from("quote_questions")
-        .select("id, label, helper_text, sort_order")
-        .eq("form_id", quoteForm.data.id)
-        .order("sort_order");
-      const ids = (qs ?? []).map((q) => q.id);
-      const { data: opts } = ids.length
-        ? await supabase
-            .from("quote_options")
-            .select("id, question_id, label, price_modifier, modifier_type, sort_order")
-            .in("question_id", ids)
-            .order("sort_order")
-        : { data: [] };
-      questions = (qs ?? []).map((q) => ({
-        ...q,
-        options: (opts ?? [])
-          .filter((o) => o.question_id === q.id)
-          .map((o) => ({
-            id: o.id,
-            label: o.label,
-            price_modifier: Number(o.price_modifier),
-            modifier_type: o.modifier_type,
-          })),
-      }));
-
-      const { data: adds } = await supabase
-        .from("quote_addons")
-        .select("id, label, description, price, sort_order")
-        .eq("form_id", quoteForm.data.id)
-        .order("sort_order");
-      addons = (adds ?? []).map((a) => ({
-        id: a.id,
-        label: a.label,
-        description: a.description,
-        price: Number(a.price),
-      }));
-    }
-
-    // Photos live in a private bucket, so published pages get signed URLs.
-    // Only reachable here after the publish gate above.
-    const { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, isStoragePath } = await import("@/lib/media");
-    const gallery = galleryRows.data ?? [];
-    const profileRow = profile.data;
-    const toSign = [
-      ...gallery.map((g) => g.url),
-      profileRow?.logo_url ?? null,
-      profileRow?.hero_image_url ?? null,
-    ].filter((value): value is string => typeof value === "string" && isStoragePath(value));
-
-    const signed = new Map<string, string>();
-    if (toSign.length) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: urls } = await supabaseAdmin.storage
-        .from(MEDIA_BUCKET)
-        .createSignedUrls([...new Set(toSign)], SIGNED_URL_TTL_SECONDS);
-      for (const entry of urls ?? []) {
-        if (entry.path && entry.signedUrl) signed.set(entry.path, entry.signedUrl);
-      }
-    }
-    const resolve = (value: string | null): string | null =>
-      value ? (signed.get(value) ?? value) : value;
-
-    // Structured content: the builder's page/section tree for the home page.
-    const { data: homePage } = await supabase
-      .from("website_pages")
-      .select("id, slug, title, seo_title, seo_description")
-      .eq("organization_id", orgId)
-      .eq("kind", "home")
-      .eq("is_visible", true)
-      .maybeSingle();
-
-    let sections: {
-      id: string;
-      kind: string;
-      variant: string;
-      heading: string | null;
-      subheading: string | null;
-      body: string | null;
-      sort_order: number;
-    }[] = [];
-    if (homePage?.id) {
-      const { data: rows } = await supabase
-        .from("website_sections")
-        .select("id, kind, variant, heading, subheading, body, sort_order")
-        .eq("page_id", homePage.id)
-        .eq("is_visible", true)
-        .order("sort_order");
-      sections = rows ?? [];
-    }
-
-    return {
-
-      org: { ...org, id: orgId, name: org.name ?? "", slug: org.slug ?? "" },
-      profile: profileRow
-        ? {
-            ...profileRow,
-            logo_url: resolve(profileRow.logo_url),
-            hero_image_url: resolve(profileRow.hero_image_url),
-          }
-        : null,
-      services: services.data ?? [],
-      settings: settings.data,
-      social: social.data,
-      reviews: (reviews.data ?? []).map((r) => ({
-        id: r.id as string,
-        author_name: r.author_name ?? "",
-        rating: r.rating ?? 5,
-        comment: r.comment,
-        created_at: r.created_at as string,
-      })),
-      gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
-      quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
-      content: homePage ? { page: homePage, sections } : null,
-
-    };
+    const { loadSite } = await import("@/lib/public-site.server");
+    return loadSite(data.slug);
   });
 
-export type PublicSite = Awaited<ReturnType<typeof getPublicSite>>;
+export type PublicSite = Awaited<ReturnType<typeof loadSite>>;
+
+/**
+ * Draft preview behind a shareable, time-limited token. Returns a reason when
+ * the link is unknown, revoked or expired so the page can say so plainly.
+ */
+export const getPreviewSite = createServerFn({ method: "GET" })
+  .inputValidator((input: { token: string }) => {
+    const token = String(input?.token ?? "").trim().slice(0, 120);
+    if (!/^[A-Za-z0-9_-]{16,}$/.test(token)) throw new Error("Invalid preview link");
+    return { token };
+  })
+  .handler(async ({ data }) => {
+    const { loadSite, resolvePreviewToken } = await import("@/lib/public-site.server");
+    const link = await resolvePreviewToken(data.token);
+    if (!link.ok)
+      return { ok: false as const, reason: link.reason, site: null, expiresAt: null as string | null, label: null as string | null };
+    const site = await loadSite(link.slug, { allowUnpublished: true });
+    if (!site)
+      return {
+        ok: false as const,
+        reason: "unknown" as const,
+        site: null,
+        expiresAt: null as string | null,
+        label: null as string | null,
+      };
+    return {
+      ok: true as const,
+      reason: null as "expired" | "revoked" | "unknown" | null,
+      site,
+      expiresAt: link.expiresAt as string | null,
+      label: link.label as string | null,
+    };
+  });
 
 /** Anonymous lead / quote / booking submission from a public business site. */
 export const submitPublicLead = createServerFn({ method: "POST" })

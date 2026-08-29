@@ -59,8 +59,45 @@ export type ContentPage = {
   is_visible: boolean;
   seo_title: string | null;
   seo_description: string | null;
+  seo_canonical: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image_url: string | null;
+  noindex: boolean;
   sections: ContentSection[];
 };
+
+/** Search and social fields a client can edit per page. */
+export const PAGE_SEO_FIELDS = [
+  { key: "seo_title", label: "Search title", help: "Shown as the clickable headline in Google. Keep it under 60 characters.", max: 70 },
+  { key: "seo_description", label: "Search description", help: "The summary under the title. Aim for 120-155 characters.", max: 170 },
+  { key: "seo_canonical", label: "Canonical URL", help: "The one true address for this page. Leave blank to use the page's own URL.", max: 300 },
+  { key: "og_title", label: "Share title", help: "Used when the page is shared on Facebook, LinkedIn or in a text message.", max: 90 },
+  { key: "og_description", label: "Share description", help: "The preview text shown with the share title.", max: 200 },
+  { key: "og_image_url", label: "Share image URL", help: "The image shown in link previews. 1200x630 works best.", max: 500 },
+] as const;
+
+export type PageSeoField = (typeof PAGE_SEO_FIELDS)[number]["key"];
+
+/** Per-section search settings, stored inside the section's settings JSON. */
+export type SectionSeo = {
+  anchor?: string | undefined;
+  seo_heading_level?: "h2" | "h3" | undefined;
+  include_in_schema?: boolean | undefined;
+  image_alt?: string | undefined;
+};
+
+export function readSectionSeo(settings: unknown): SectionSeo {
+  if (!settings || typeof settings !== "object") return {};
+  const seo = (settings as { seo?: unknown }).seo;
+  return seo && typeof seo === "object" ? (seo as SectionSeo) : {};
+}
+
+export function writeSectionSeo(settings: unknown, patch: SectionSeo): Record<string, unknown> {
+  const base = settings && typeof settings === "object" ? { ...(settings as Record<string, unknown>) } : {};
+  base.seo = { ...readSectionSeo(settings), ...patch };
+  return base;
+}
 
 /** Section types a business owner can add, in plain language. */
 export const SECTION_LIBRARY: { kind: SectionKind; label: string; help: string }[] = [
@@ -389,3 +426,182 @@ export const WIZARD_STEPS: { key: WizardStepKey; title: string; help: string }[]
   { key: "structure", title: "Pages & sections", help: "Revora lays out your website." },
   { key: "launch", title: "Review & launch", help: "Checks, approval and publishing." },
 ];
+
+/* ---------------------------------------------------------------------------
+ * Version comparison
+ * ------------------------------------------------------------------------- */
+
+export type SnapshotSection = {
+  id: string;
+  kind: string;
+  heading: string | null;
+  subheading: string | null;
+  body: string | null;
+  sort_order: number;
+  is_visible: boolean;
+};
+
+export type SnapshotPage = {
+  id: string;
+  slug: string;
+  title: string;
+  kind: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  sections: SnapshotSection[];
+};
+
+export type ContentSnapshot = { pages: SnapshotPage[] };
+
+/** Compact copy of the structure, small enough to store with every version. */
+export function snapshotContent(pages: ContentPage[]): ContentSnapshot {
+  return {
+    pages: pages.map((page) => ({
+      id: page.id,
+      slug: page.slug,
+      title: page.title,
+      kind: page.kind,
+      seo_title: page.seo_title,
+      seo_description: page.seo_description,
+      sections: page.sections.map((section) => ({
+        id: section.id,
+        kind: section.kind,
+        heading: section.heading,
+        subheading: section.subheading,
+        body: section.body,
+        sort_order: section.sort_order,
+        is_visible: section.is_visible,
+      })),
+    })),
+  };
+}
+
+export function readContentSnapshot(value: unknown): ContentSnapshot | null {
+  if (!value || typeof value !== "object") return null;
+  const pages = (value as { pages?: unknown }).pages;
+  if (!Array.isArray(pages)) return null;
+  return { pages: pages as SnapshotPage[] };
+}
+
+export type ContentDiffRow = {
+  page: string;
+  section: string;
+  field: string;
+  before: string;
+  after: string;
+  change: "added" | "removed" | "changed";
+};
+
+const text = (value: string | null | undefined) => (value ?? "").trim();
+
+/** Section-by-section comparison between two saved structures. */
+export function diffContent(before: ContentSnapshot | null, after: ContentSnapshot | null): ContentDiffRow[] {
+  const rows: ContentDiffRow[] = [];
+  const beforePages = before?.pages ?? [];
+  const afterPages = after?.pages ?? [];
+  const keyOf = (page: SnapshotPage) => page.slug || page.id;
+  const beforeMap = new Map(beforePages.map((page) => [keyOf(page), page]));
+  const afterMap = new Map(afterPages.map((page) => [keyOf(page), page]));
+
+  for (const [key, afterPage] of afterMap) {
+    const beforePage = beforeMap.get(key);
+    const pageName = afterPage.title || afterPage.slug;
+
+    if (!beforePage) {
+      rows.push({ page: pageName, section: "Page", field: "page", before: "", after: pageName, change: "added" });
+    } else {
+      for (const field of ["title", "seo_title", "seo_description"] as const) {
+        if (text(beforePage[field]) !== text(afterPage[field])) {
+          rows.push({
+            page: pageName,
+            section: "Page settings",
+            field: field === "title" ? "Page name" : field === "seo_title" ? "Search title" : "Search description",
+            before: text(beforePage[field]),
+            after: text(afterPage[field]),
+            change: "changed",
+          });
+        }
+      }
+    }
+
+    const beforeSections = new Map((beforePage?.sections ?? []).map((section) => [section.id, section]));
+    const afterSections = new Map(afterPage.sections.map((section) => [section.id, section]));
+
+    for (const [id, afterSection] of afterSections) {
+      const label = sectionLabel(afterSection.kind);
+      const beforeSection = beforeSections.get(id);
+      if (!beforeSection) {
+        rows.push({
+          page: pageName,
+          section: label,
+          field: "section",
+          before: "",
+          after: text(afterSection.heading) || label,
+          change: "added",
+        });
+        continue;
+      }
+      for (const field of SECTION_TEXT_FIELDS) {
+        if (text(beforeSection[field]) !== text(afterSection[field])) {
+          rows.push({
+            page: pageName,
+            section: label,
+            field,
+            before: text(beforeSection[field]),
+            after: text(afterSection[field]),
+            change: "changed",
+          });
+        }
+      }
+      if (beforeSection.sort_order !== afterSection.sort_order) {
+        rows.push({
+          page: pageName,
+          section: label,
+          field: "order",
+          before: `position ${beforeSection.sort_order + 1}`,
+          after: `position ${afterSection.sort_order + 1}`,
+          change: "changed",
+        });
+      }
+      if (beforeSection.is_visible !== afterSection.is_visible) {
+        rows.push({
+          page: pageName,
+          section: label,
+          field: "visibility",
+          before: beforeSection.is_visible ? "shown" : "hidden",
+          after: afterSection.is_visible ? "shown" : "hidden",
+          change: "changed",
+        });
+      }
+    }
+
+    for (const [id, beforeSection] of beforeSections) {
+      if (!afterSections.has(id)) {
+        rows.push({
+          page: pageName,
+          section: sectionLabel(beforeSection.kind),
+          field: "section",
+          before: text(beforeSection.heading) || sectionLabel(beforeSection.kind),
+          after: "",
+          change: "removed",
+        });
+      }
+    }
+  }
+
+  for (const [key, beforePage] of beforeMap) {
+    if (!afterMap.has(key)) {
+      const pageName = beforePage.title || beforePage.slug;
+      rows.push({ page: pageName, section: "Page", field: "page", before: pageName, after: "", change: "removed" });
+    }
+  }
+
+  return rows;
+}
+
+/** Pulls the structure snapshot out of a stored version row. */
+export function readVersionContent(pagesValue: unknown): ContentSnapshot | null {
+  if (!pagesValue || typeof pagesValue !== "object") return null;
+  const content = (pagesValue as { content?: unknown }).content;
+  return readContentSnapshot(content);
+}

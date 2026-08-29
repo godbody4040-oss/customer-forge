@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Tone } from "@/lib/domain";
 
@@ -47,12 +47,17 @@ export function Panel({
   children,
   className,
   as: As = "section",
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
   as?: "section" | "div" | "article";
-}) {
-  return <As className={cn("panel p-4", className)}>{children}</As>;
+} & Omit<HTMLAttributes<HTMLElement>, "className" | "children">) {
+  return (
+    <As className={cn("panel p-4", className)} {...rest}>
+      {children}
+    </As>
+  );
 }
 
 export function SectionHeading({
