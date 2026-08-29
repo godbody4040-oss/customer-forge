@@ -15,6 +15,7 @@ import {
   PLAN_INSTRUCTION_LIMIT,
   describeActions,
   readActions,
+  readAttachments,
   type AgentAction,
   type AgentTurn,
   type SiteIndex,
@@ -238,8 +239,9 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
         pageKinds: PAGE_LIBRARY.map((p2) => p2.kind),
         componentKinds: ["feature", "faq", "step", "stat", "card", "link", "button", "quote", "list_item", "image"],
       },
-      data.instruction,
+      data.instruction || "(see the attached file(s) — follow what they show or say)",
       data.history,
+      data.attachments,
     );
 
     const actions = readActions(raw["actions"], {
@@ -265,7 +267,11 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
       organization_id: orgId,
       kind: "agent_plan",
       model: AGENT_MODEL,
-      instruction: data.instruction.slice(0, 4000),
+      instruction:
+        data.instruction.slice(0, 4000) +
+        (data.attachments.length
+          ? `\n[attached: ${data.attachments.map((a) => `${a.kind} ${a.name}`).join(", ")}]`
+          : ""),
       result: plan as unknown as never,
       created_by: userId,
     });
