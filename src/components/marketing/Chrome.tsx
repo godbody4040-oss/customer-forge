@@ -60,8 +60,9 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <div className="border-t border-border bg-card px-4 py-3 md:hidden">
-          <nav aria-label="Mobile" className="flex flex-col">
+        <div className="border-t border-border bg-card px-4 py-2 md:hidden">
+          <nav aria-label="Mobile" className="flex flex-col divide-y divide-border">
+
             {NAV.map((item) => (
               <Link
                 key={item.to}
