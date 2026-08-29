@@ -338,25 +338,29 @@ function Onboarding() {
           .length,
       });
 
-      const { error: settingsError } = await supabase.from("website_settings").insert({
-        organization_id: org.id,
-        template: plan.template,
-        subdomain: org.slug,
-        publish_state: "preview",
-        review_state: "ready_for_review",
-        generation: plan as never,
-        generated_at: plan.generatedAt,
-        seo: {
-          headline: plan.headline,
-          subheadline: plan.subheadline,
-          meta_description: plan.metaDescription,
-          primary_cta_label: plan.primaryCtaLabel,
-          title: plan.seoTitle,
+      const { error: settingsError } = await supabase.from("website_settings").upsert(
+        {
+          organization_id: org.id,
+          template: plan.template,
+          subdomain: org.slug,
+          publish_state: "preview",
+          review_state: "ready_for_review",
+          generation: plan as never,
+          generated_at: plan.generatedAt,
+          seo: {
+            headline: plan.headline,
+            subheadline: plan.subheadline,
+            meta_description: plan.metaDescription,
+            primary_cta_label: plan.primaryCtaLabel,
+            title: plan.seoTitle,
+          } as never,
         } as never,
-      } as never);
+        { onConflict: "organization_id" },
+      );
       assertNoError(settingsError, "Could not create your website draft");
 
       await supabase.from("onboarding_drafts").delete().eq("user_id", user.id);
+      await queryClient.invalidateQueries();
 
       toast.success("Your website draft is ready to review.");
       navigate({ to: "/app/website", replace: true });
@@ -369,7 +373,7 @@ function Onboarding() {
     }
   }
 
-  if (ws?.workspace) {
+  if (ws?.workspace?.organization.onboarding_completed) {
     return (
       <div className="mx-auto max-w-md px-4 py-20 text-center">
         <h1 className="font-display text-[20px] font-semibold">You're already set up</h1>
@@ -379,6 +383,8 @@ function Onboarding() {
       </div>
     );
   }
+
+
 
   const canContinue =
     step === 0
