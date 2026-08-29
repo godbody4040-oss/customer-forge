@@ -5,6 +5,7 @@ import { ArrowUpRight, Building2 } from "lucide-react";
 import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlatformMetrics, listClients } from "@/lib/admin.functions";
+import { getConversionReport } from "@/lib/conversion.functions";
 import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
 import { currency, dateShort, number } from "@/lib/format";
 import { REVORA } from "@/lib/brand";
@@ -15,9 +16,14 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function AdminOverview() {
   const metricsFn = useServerFn(getPlatformMetrics);
+  const conversionsFn = useServerFn(getConversionReport);
   const clientsFn = useServerFn(listClients);
   const metrics = useQuery({ queryKey: ["admin", "metrics"], queryFn: () => metricsFn({}) });
   const clients = useQuery({ queryKey: ["admin", "clients"], queryFn: () => clientsFn({}) });
+  const conversions = useQuery({
+    queryKey: ["admin", "conversions", 30],
+    queryFn: () => conversionsFn({ data: { days: 30 } }),
+  });
 
   return (
     <div className="space-y-6">
@@ -141,6 +147,41 @@ function AdminOverview() {
             <p className="text-[11px] text-muted-foreground">Founder profile · platform owner</p>
           </div>
         </div>
+      </Panel>
+
+      <Panel title="Marketing funnel — last 30 days" description="Landing views through paid checkout, grouped by industry page or entry path.">
+        {conversions.isLoading ? (
+          <LoadingRows rows={3} />
+        ) : (conversions.data?.report.length ?? 0) === 0 ? (
+          <EmptyState title="No tracked visits yet" description="Publish the industry landing pages and share the links to start collecting funnel data." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="text-left text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+                  <th className="px-4 py-2">Source</th>
+                  <th className="px-4 py-2">Views</th>
+                  <th className="px-4 py-2">Signups started</th>
+                  <th className="px-4 py-2">Signups completed</th>
+                  <th className="px-4 py-2">Checkouts started</th>
+                  <th className="px-4 py-2">Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conversions.data?.report.map((row) => (
+                  <tr key={row.key} className="border-t border-border">
+                    <td className="px-4 py-2 capitalize">{row.label}</td>
+                    <td className="px-4 py-2">{number(row.landingViews)}</td>
+                    <td className="px-4 py-2">{number(row.signupsStarted)}</td>
+                    <td className="px-4 py-2">{number(row.signupsCompleted)}</td>
+                    <td className="px-4 py-2">{number(row.checkoutsStarted)}</td>
+                    <td className="px-4 py-2 font-semibold text-primary">{number(row.checkoutsCompleted)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
 
     </div>
