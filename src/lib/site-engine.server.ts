@@ -10,6 +10,13 @@ import type { SiteCopy } from "@/lib/site-engine";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 export const COPY_MODEL = "google/gemini-3-flash-preview";
+/**
+ * Analysis is a reasoning job, not a writing job, so it runs on a stronger
+ * model. If that model isn't available to the workspace the call falls back to
+ * the copy model, and if the whole pass fails the build still completes using
+ * the deterministic brief in `fallbackBrief`.
+ */
+export const ANALYSIS_MODEL = "google/gemini-3-pro-preview";
 
 const SAFETY = `You write marketing copy for local business websites.
 ABSOLUTE RULES:
