@@ -293,8 +293,6 @@ function Landing() {
             </ol>
           </div>
         </section>
-
-
         {/* Industries */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
@@ -319,6 +317,11 @@ function Landing() {
                 </li>
               ))}
             </ul>
+            <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-muted-foreground">
+              <span className="text-foreground">Also built for:</span>{" "}
+              {TRUST_INDUSTRIES.join(" · ")}. Customer stories are published here only once they're
+              real and verified with the business owner.
+            </p>
           </div>
         </section>
 
@@ -326,13 +329,15 @@ function Landing() {
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="Pricing" title="Priced like one extra job a month" />
-            <div className="mt-8 grid gap-3 md:grid-cols-3">
+            <div className="mt-8 grid items-stretch gap-3 md:grid-cols-3">
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`panel p-5 ${plan.is_featured ? "border-primary/40" : ""}`}
+                  className={`panel card-lift flex h-full flex-col p-5 ${
+                    plan.is_featured ? "border-primary/40" : ""
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <h3 className="font-display text-[15px] font-semibold">{plan.name}</h3>
                     {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
                   </div>
@@ -341,7 +346,7 @@ function Landing() {
                     <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
                   </p>
                   <p className="mt-2 text-[13px] text-muted-foreground">{plan.tagline}</p>
-                  <ul className="mt-4 space-y-2 border-t border-border pt-4">
+                  <ul className="mt-4 flex-1 space-y-2 border-t border-border pt-4">
                     {((plan.features as string[] | null) ?? []).map((f) => (
                       <li key={f} className="flex gap-2 text-[13px] text-muted-foreground">
                         <span aria-hidden="true" className="text-primary">
@@ -373,62 +378,36 @@ function Landing() {
           </div>
         </section>
 
-        {/* Trust */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading
-              eyebrow="Who it's for"
-              title="Built for businesses that depend on local customers"
-            />
-            <ul className="mt-8 flex flex-wrap gap-2">
-              {TRUST_INDUSTRIES.map((name) => (
-                <li
-                  key={name}
-                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] text-muted-foreground"
-                >
-                  {name}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-5 text-[12px] text-muted-foreground">
-              Customer stories are published here only once they're real and verified with the
-              business owner.
-            </p>
-          </div>
-        </section>
-
         {/* Founder mission */}
-        <section className="border-b border-border bg-card">
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <FounderNote />
           </div>
         </section>
 
-        {/* Sales CTA */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <SalesCTA />
-          </div>
-        </section>
-
         {/* Final CTA */}
-        <section>
+        <section className="hero-aura bg-card">
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-            <h2 className="font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
+            <h2 className="mx-auto max-w-2xl font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
               Your next customer is searching right now.
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] text-muted-foreground">
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
               Get the site, the quotes and the calendar working together — and stop losing jobs to
               whoever answered first.
             </p>
-            <Button asChild variant="signal" size="lg" className="mt-8">
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Build my growth system <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
+              <Button asChild variant="signal" size="lg">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Build my growth system <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/contact">Talk to Revora</Link>
+              </Button>
+            </div>
           </div>
         </section>
+
       </main>
 
       <SiteFooter />
