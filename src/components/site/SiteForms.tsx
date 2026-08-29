@@ -54,10 +54,12 @@ export function QuoteCalculator({ site }: { site: Site }) {
   if (!quote) return null;
   if (done) {
     return (
-      <Success
-        title="Your estimate is on its way"
-        body={`${site.org.name} has your details and price range, and will confirm the exact quote shortly.`}
-      />
+      <div ref={stepRef}>
+        <Success
+          title="Your estimate is on its way"
+          body={`${site.org.name} has your details and price range, and will confirm the exact quote shortly.`}
+        />
+      </div>
     );
   }
 
@@ -281,10 +283,12 @@ export function BookingForm({ site }: { site: Site }) {
 
   if (done) {
     return (
-      <Success
-        title="Booking request received"
-        body={`${site.org.name} will confirm your time slot by phone or email shortly.`}
-      />
+      <div ref={doneRef}>
+        <Success
+          title="Booking request received"
+          body={`${site.org.name} will confirm your time slot by phone or email shortly.`}
+        />
+      </div>
     );
   }
 
