@@ -6,8 +6,21 @@ import { generateWebsitePlan, type GoalKey } from "@/lib/website-plan";
 import {
   AUTOMATION_RECIPES,
   enqueueAutomations,
-  processDueRuns,
 } from "@/lib/automation-engine";
+import { runDueAutomations } from "@/lib/automations.functions";
+
+/**
+ * Client code can only queue automation steps — actual email/SMS delivery runs
+ * on the server. This hands the queue to the server pass right away.
+ */
+async function flushAutomations(organizationId: string) {
+  try {
+    return await runDueAutomations({ data: { organizationId } });
+  } catch (error) {
+    console.error("automation delivery pass failed", error);
+    return null;
+  }
+}
 
 const DAY = 86_400_000;
 
@@ -463,6 +476,7 @@ export function useLeadAction(organizationId: string | undefined, businessName?:
           businessName: businessName ?? null,
           lead,
         });
+        await flushAutomations(organizationId!);
       }
     },
     onSuccess: () => {
@@ -613,6 +627,7 @@ export function useCreateAppointment(
         },
         appointment: appt,
       });
+      await flushAutomations(organizationId!);
 
       return appt.id;
     },
@@ -693,6 +708,7 @@ export function useSaveAppointment(
             : null,
           appointment,
         });
+        await flushAutomations(organizationId!);
       }
     },
     onSuccess: () => {
@@ -884,9 +900,9 @@ export function useInstallRecipe(organizationId: string | undefined) {
 export function useProcessDueRuns(organizationId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => processDueRuns(supabase, organizationId!),
+    mutationFn: async () => flushAutomations(organizationId!),
     onSuccess: (result) => {
-      if (result.sent) {
+      if (result?.sent) {
         void queryClient.invalidateQueries({ queryKey: ["automation_runs", organizationId] });
         void queryClient.invalidateQueries({ queryKey: ["notifications", organizationId] });
       }
