@@ -9,7 +9,7 @@
  * does not.
  */
 
-import type { ContentPage } from "./website-content";
+import { safeLinkUrl, type ContentPage } from "./website-content";
 
 export type PlatformId =
   | "lovable"
