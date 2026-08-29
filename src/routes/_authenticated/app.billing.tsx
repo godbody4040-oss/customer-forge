@@ -328,15 +328,31 @@ function BillingPage() {
                   </div>
                   <p className="tnum text-[15px] font-semibold">{money(product.amount, product.currency)}</p>
                 </div>
-                <Button
-                  variant="signal"
-                  size="sm"
-                  className="mt-3"
-                  disabled={!manage}
-                  onClick={() => setSelected(product)}
-                >
-                  <CreditCard className="size-4" /> Pay with PayPal
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    variant="signal"
+                    size="sm"
+                    disabled={!manage || !cardsReady}
+                    onClick={() => setCardService(product)}
+                  >
+                    <CreditCard className="size-4" /> Pay by card
+                  </Button>
+                  {config?.configured ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!manage}
+                      onClick={() => setSelected(product)}
+                    >
+                      Pay with PayPal
+                    </Button>
+                  ) : null}
+                </div>
+                {!cardsReady ? (
+                  <p className="mt-2 text-[11px] text-destructive">
+                    Card checkout is not configured for this build yet.
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -346,8 +362,9 @@ function BillingPage() {
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
         <p className="mt-3 text-[13px] text-muted-foreground">
-          One-off services above are charged once via PayPal. Software plans are billed as a subscription and can be
-          changed or cancelled at any time. Questions: {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
+          One-off services above are charged once by card (or PayPal where available). Software plans are billed as a
+          subscription and can be changed or cancelled at any time. Questions: {REVORA.email} ·{" "}
+          {REVORA.phoneDisplay ?? REVORA.phone}
         </p>
       </Panel>
 
