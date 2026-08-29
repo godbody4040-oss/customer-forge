@@ -15,7 +15,7 @@ export async function seedQuoteCalculator(
     .select("id")
     .eq("organization_id", organizationId)
     .limit(1);
-  if (existing?.length) return existing[0].id as string;
+  if (existing?.[0]) return existing[0].id as string;
 
   const { data: form, error } = await admin
     .from("quote_forms")
