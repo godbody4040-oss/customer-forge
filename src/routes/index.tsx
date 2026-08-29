@@ -318,7 +318,7 @@ function Landing() {
                 </div>
                 <div className="mt-6 flex flex-wrap items-end gap-x-8 gap-y-5">
                   <div>
-                    <p className="tnum font-display text-[34px] leading-none font-semibold">
+                    <p className="tnum gold-text font-display text-[34px] leading-none font-semibold">
                       {usd(GROWTH_SYSTEM.setupPrice)}
                     </p>
                     <p className="mt-1.5 text-[13px] font-medium">Setup — paid today</p>
@@ -326,12 +326,10 @@ function Landing() {
                   </div>
                   <div>
                     <p className="tnum font-display text-[34px] leading-none font-semibold">
-                      {usd(GROWTH_SYSTEM.monthlyPrice)}
+                      <span className="gold-text">{usd(GROWTH_SYSTEM.monthlyPrice)}</span>
                       <span className="text-[13px] font-normal text-muted-foreground">/month</span>
                     </p>
-                    <p className="mt-1.5 text-[13px] font-medium">
-                      First month free
-                    </p>
+                    <p className="mt-1.5 text-[13px] font-medium text-primary">First month free</p>
                     <p className="max-w-xs text-[12px] text-muted-foreground">
                       {GROWTH_SYSTEM.monthlyLabel}
                     </p>
