@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -313,6 +313,8 @@ function Onboarding() {
         } as never,
       } as never);
 
+      await supabase.from("onboarding_drafts").delete().eq("user_id", user.id);
+
       toast.success("Your website draft is ready to review.");
       navigate({ to: "/app/website", replace: true });
     } catch (err) {
@@ -353,6 +355,11 @@ function Onboarding() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-12">
+        {savedAt ? (
+          <p className="mb-4 text-[12px] text-muted-foreground">
+            Progress saved to your account — sign out any time and pick up where you left off.
+          </p>
+        ) : null}
         <ol className="flex flex-wrap items-center gap-2" aria-label="Progress">
           {STEPS.map((label, index) => (
             <li key={label} className="flex items-center gap-2">
