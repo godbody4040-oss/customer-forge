@@ -116,10 +116,9 @@ function BillingPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={subscription?.status === "active" ? "signal" : "neutral"}>
-            {subscription
-              ? `${subscription.status.replace("_", " ")} · ${subscription.billing_interval}`
-              : "No subscription"}
+            {subscription ? subscription.status.replace("_", " ") : "No subscription"}
           </Pill>
+
           {config?.configured ? <Pill tone="neutral">PayPal {config.environment}</Pill> : null}
         </div>
       </div>
