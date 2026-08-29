@@ -12,6 +12,7 @@ import type { GrowthSystemIntake } from "@/lib/stripe.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { REVORA, revoraMailto } from "@/lib/brand";
+import { trackConversion } from "@/lib/conversion";
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
@@ -78,6 +79,7 @@ function GetStarted() {
 
   // Restore anything typed before signing in, so nothing is re-entered.
   useEffect(() => {
+    trackConversion("signup_started");
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
       if (saved) setIntake({ ...EMPTY, ...(JSON.parse(saved) as GrowthSystemIntake) });
@@ -122,6 +124,7 @@ function GetStarted() {
       return;
     }
     setError(null);
+    trackConversion("signup_completed", { email: intake.email.trim() });
     setStep(1);
   };
 

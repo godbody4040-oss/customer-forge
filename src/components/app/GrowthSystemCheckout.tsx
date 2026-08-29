@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createGrowthSystemCheckout, type GrowthSystemIntake } from "@/lib/stripe.functions";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { trackConversion } from "@/lib/conversion";
 import { REVORA, revoraMailto } from "@/lib/brand";
 
 type Props = {
@@ -21,6 +22,7 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
+    trackConversion("checkout_started", { email: intake.email, amountCents: GROWTH_SYSTEM.setupPrice * 100 });
     try {
       const result = await createGrowthSystemCheckout({
         data: {

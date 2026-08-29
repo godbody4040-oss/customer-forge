@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { trackConversion } from "@/lib/conversion";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CalendarCheck, Calculator, LineChart, Search, Star, Users } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
@@ -63,6 +65,9 @@ export const Route = createFileRoute("/industries/$slug")({
 });
 
 function IndustryPage() {
+  useEffect(() => {
+    trackConversion("landing_view");
+  }, []);
   const { industry } = Route.useRouteContext() as { industry: (typeof INDUSTRIES)[number] };
   const others = INDUSTRIES.filter((i) => i.name !== industry.name).slice(0, 6);
 
