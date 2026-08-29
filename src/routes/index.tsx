@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   CalendarCheck,
@@ -21,22 +20,19 @@ import { ROICalculator } from "@/components/marketing/ROICalculator";
 import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { getPlans } from "@/lib/plans.functions";
 import { INDUSTRIES } from "@/lib/domain";
-import { currency } from "@/lib/format";
-
-const plansQuery = queryOptions({ queryKey: ["plans"], queryFn: () => getPlans() });
+import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(plansQuery),
   head: () => ({
     meta: [
       { title: "Revora — Turn Website Visitors Into Paying Customers" },
       {
         name: "description",
         content:
-          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. 1-day free trial.",
+          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. $1,500 setup, then $250/month.",
       },
+
       { property: "og:title", content: "Revora — Turn website visitors into paying customers" },
       {
         property: "og:description",
