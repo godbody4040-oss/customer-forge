@@ -1060,7 +1060,28 @@ export function auditChecklist(spec: NormalizedSpec): AuditItem[] {
     id: "journey",
     area: "Customer journey",
     task: "Confirm every stage is present: attract → convince → convert → confirm.",
-    test `= ` as never,
-  } as never);
+    test: `Walk the rebuilt site as a visitor: ${(["attract", "convince", "convert", "confirm"] as JourneyStage[])
+      .map((stage) => `${stage} (${spec.journey[stage].sections.length})`)
+      .join(" → ")}.`,
+    severity: "required",
+    source: "quality",
+  });
+  push({
+    id: "accessibility",
+    area: "Accessibility",
+    task: "Semantic headings, labelled inputs, visible focus, alt text, reduced-motion support.",
+    test: "Keyboard-only pass through every CTA and form; run an automated a11y check with zero critical issues.",
+    severity: "required",
+    source: "quality",
+  });
+  push({
+    id: "no-fake",
+    area: "Honesty",
+    task: "Remove any control that does not perform a real action on the target platform.",
+    test: "Click every button and link: each one calls, texts, submits, navigates or is removed.",
+    severity: "blocker",
+    source: "quality",
+  });
+
   return items;
 }
