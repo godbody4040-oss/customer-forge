@@ -27,8 +27,9 @@ export function SiteHeader() {
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {NAV.map((item) => (
             <Link
-              key={item.to}
+              key={item.label}
               to={item.to}
+              hash={"hash" in item ? item.hash : undefined}
               className="rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
               activeProps={{ className: "bg-elevated text-foreground" }}
             >
@@ -44,7 +45,7 @@ export function SiteHeader() {
           </Button>
           <Button asChild variant="signal" size="sm">
             <Link to="/auth" search={{ mode: "signup" }}>
-              Get started
+              Start free
             </Link>
           </Button>
         </div>
@@ -66,8 +67,9 @@ export function SiteHeader() {
 
             {NAV.map((item) => (
               <Link
-                key={item.to}
+                key={item.label}
                 to={item.to}
+                hash={"hash" in item ? item.hash : undefined}
                 onClick={() => setOpen(false)}
                 className="py-2.5 text-sm text-muted-foreground"
                 activeProps={{ className: "text-foreground" }}
@@ -84,7 +86,7 @@ export function SiteHeader() {
             </Button>
             <Button asChild variant="signal">
               <Link to="/auth" search={{ mode: "signup" }} onClick={() => setOpen(false)}>
-                Get started
+                Start free
               </Link>
             </Button>
           </div>
@@ -166,8 +168,8 @@ export function SiteFooter() {
                 </ul>
               </nav>
             ))}
-            <nav aria-label="Get started">
-              <p className="eyebrow">Get started</p>
+            <nav aria-label="Start free">
+              <p className="eyebrow">Start free</p>
               <ul className="mt-3 space-y-2.5 text-[13px]">
                 <li>
                   <Link
