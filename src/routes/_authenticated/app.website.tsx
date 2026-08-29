@@ -214,6 +214,23 @@ function WebsitePage() {
             <PreviewLinks organizationId={orgId} canManage={manage} />
             <VersionHistory organizationId={orgId} canManage={manage} />
             <VersionDiff organizationId={orgId} />
+            <PlatformEngine
+              businessName={org?.name ?? null}
+              slug={org?.slug ?? null}
+              profile={profile}
+              services={(services ?? []).map((s) => ({
+                name: s.name,
+                description: s.description,
+                price: s.base_price,
+                bookable: s.bookable,
+              }))}
+              seo={{
+                title: seo.meta_title ?? null,
+                description: seo.meta_description ?? null,
+                headline: seo.headline ?? copy?.heroHeadline ?? null,
+              }}
+              pages={pages ?? []}
+            />
           </div>
         }
       />
