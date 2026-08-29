@@ -45,6 +45,7 @@ import { Route as AuthenticatedAppReviewsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/app.services'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
+import { Route as AuthenticatedAppWelcomeRouteImport } from './routes/_authenticated/app.welcome'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsSiteEngineRouteImport } from './routes/api/public/jobs/site-engine'
@@ -243,6 +244,11 @@ const AuthenticatedAppWebsiteRoute = AuthenticatedAppWebsiteRouteImport.update({
   path: '/website',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppWelcomeRoute = AuthenticatedAppWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const SSlugPageRoute = SSlugPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/app/welcome': typeof AuthenticatedAppWelcomeRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/app/services': typeof AuthenticatedAppServicesRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/app/welcome': typeof AuthenticatedAppWelcomeRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/_authenticated/app/services': typeof AuthenticatedAppServicesRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
+  '/_authenticated/app/welcome': typeof AuthenticatedAppWelcomeRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -458,6 +467,7 @@ export interface FileRouteTypes {
     | '/app/services'
     | '/app/settings'
     | '/app/website'
+    | '/app/welcome'
     | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | '/app/services'
     | '/app/settings'
     | '/app/website'
+    | '/app/welcome'
     | '/s/$slug/$page'
     | '/admin'
     | '/app'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/services'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/website'
+    | '/_authenticated/app/welcome'
     | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
@@ -835,6 +847,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppWebsiteRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/welcome': {
+      id: '/_authenticated/app/welcome'
+      path: '/welcome'
+      fullPath: '/app/welcome'
+      preLoaderRoute: typeof AuthenticatedAppWelcomeRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/s/$slug/$page': {
       id: '/s/$slug/$page'
       path: '/$page'
@@ -943,6 +962,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppServicesRoute: typeof AuthenticatedAppServicesRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppWebsiteRoute: typeof AuthenticatedAppWebsiteRoute
+  AuthenticatedAppWelcomeRoute: typeof AuthenticatedAppWelcomeRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
 
@@ -960,6 +980,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppServicesRoute: AuthenticatedAppServicesRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppWebsiteRoute: AuthenticatedAppWebsiteRoute,
+  AuthenticatedAppWelcomeRoute: AuthenticatedAppWelcomeRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
 
