@@ -292,10 +292,11 @@ function DemoDashboard() {
                 <Panel className="min-w-0">
                   <SectionHeading
                     eyebrow="The full flow"
-                    title="Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat"
+                    title="Visitor to repeat customer"
                   />
-                  <p className="mt-2 text-[12px] text-muted-foreground">
-                    Tap any step to open those demo records in the pipeline.
+                  <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+                    Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat. Tap any
+                    step to open those demo records in the pipeline.
                   </p>
                   <FunnelChart
                     rows={funnel}
