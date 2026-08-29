@@ -53,8 +53,8 @@ export function SiteChatbot({
     <Panel className="p-5">
       <SectionHeading eyebrow="Website assistant" title="Ask Revora to change your site" />
       <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-        Describe the change in your own words. Revora shows you exactly what it wants to change and waits for
-        your approval — it never invents claims about your business.
+        Describe the change in your own words and Revora edits your website for you. You approve the change —
+        no request to support, no waiting on anyone. It never invents claims about your business.
       </p>
 
       {!hasSections ? (
