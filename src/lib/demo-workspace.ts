@@ -328,3 +328,105 @@ export const STAGE_TONE: Record<DemoStage, "signal" | "attention" | "info" | "ne
 
 export const stageLabel = (stage: DemoStage) =>
   DEMO_STAGES.find((s) => s.id === stage)?.label ?? stage;
+
+/* ---------------------------------------------------------------------------
+ * Chart, funnel, pipeline and activity-feed series for the product demo.
+ * All values below are invented for demonstration purposes only.
+ * ------------------------------------------------------------------------- */
+
+export type DemoPoint = { label: string; leads: number; booked: number; revenue: number };
+
+/** Deterministic pseudo-random so SSR and client render identically. */
+function seeded(i: number, salt = 1) {
+  const x = Math.sin((i + 1) * 12.9898 * salt) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/** Daily demo series for the selected range (fictional). */
+export function demoSeries(range: DemoRangeId): DemoPoint[] {
+  const days = range === "7" ? 7 : range === "30" ? 30 : 90;
+  const step = days === 90 ? 3 : 1;
+  const points: DemoPoint[] = [];
+  for (let i = days - 1; i >= 0; i -= step) {
+    const idx = days - i;
+    const weekend = i % 7 === 0 || i % 7 === 6;
+    const base = 3.4 + seeded(idx, 1.7) * 3.2 + (weekend ? 1.5 : 0) + idx * (0.045 * (days / 30));
+    const leads = Math.max(1, Math.round(base));
+    const booked = Math.max(0, Math.round(leads * (0.3 + seeded(idx, 2.3) * 0.2)));
+    const revenue = booked * Math.round(240 + seeded(idx, 3.1) * 260);
+    const d = new Date(Date.now() - i * 86_400_000);
+    points.push({
+      label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      leads,
+      booked,
+      revenue,
+    });
+  }
+  return points;
+}
+
+/** Funnel counts for Visitor → … → Repeat (fictional). */
+export function demoFunnel(range: DemoRangeId) {
+  const factor = DEMO_RANGES.find((r) => r.id === range)?.factor ?? 1;
+  const n = (v: number) => Math.max(1, Math.round(v * factor));
+  const rows = [
+    { id: "visitor" as DemoStage, count: n(1_551) },
+    { id: "lead" as DemoStage, count: n(129) },
+    { id: "quoted" as DemoStage, count: n(103) },
+    { id: "follow_up" as DemoStage, count: n(87) },
+    { id: "booked" as DemoStage, count: n(46) },
+    { id: "customer" as DemoStage, count: n(41) },
+    { id: "review" as DemoStage, count: n(24) },
+    { id: "repeat" as DemoStage, count: n(13) },
+  ];
+  const top = rows[0]!.count;
+  return rows.map((r, i) => ({
+    ...r,
+    label: stageLabel(r.id),
+    share: Math.round((r.count / top) * 1000) / 10,
+    stepRate:
+      i === 0 ? 100 : Math.round((r.count / rows[i - 1]!.count) * 1000) / 10,
+  }));
+}
+
+/** Revenue pipeline by stage (fictional dollars). */
+export function demoPipeline(range: DemoRangeId) {
+  const factor = DEMO_RANGES.find((r) => r.id === range)?.factor ?? 1;
+  const n = (v: number) => Math.round(v * factor);
+  return [
+    { stage: "Quotes open", value: n(16_580), tone: "attention" as const, count: n(57) },
+    { stage: "In follow-up", value: n(9_240), tone: "info" as const, count: n(31) },
+    { stage: "Booked (upcoming)", value: n(7_410), tone: "signal" as const, count: n(18) },
+    { stage: "Completed", value: n(14_820), tone: "signal" as const, count: n(41) },
+  ];
+}
+
+export type DemoActivity = {
+  id: string;
+  minutesAgo: number;
+  kind: "lead" | "quote" | "message" | "booking" | "payment" | "review";
+  title: string;
+  detail: string;
+};
+
+const ACTIVITY: Omit<DemoActivity, "id">[] = [
+  { minutesAgo: 2, kind: "lead", title: "New lead captured", detail: "Owen H. · Exterior wash + wax · flyer link" },
+  { minutesAgo: 3, kind: "message", title: "Instant reply sent", detail: "Email delivered in 41 seconds" },
+  { minutesAgo: 26, kind: "quote", title: "Estimate sent", detail: "Terrance M. · $95 – $140" },
+  { minutesAgo: 58, kind: "message", title: "SMS follow-up replied", detail: "Devon A. · “Tuesday works”" },
+  { minutesAgo: 96, kind: "booking", title: "Booking confirmed", detail: "Fleet detail — 6 vans · Tue 7:30am" },
+  { minutesAgo: 180, kind: "payment", title: "Deposit recorded", detail: "Ceramic coating · $250 deposit" },
+  { minutesAgo: 265, kind: "review", title: "Review request sent", detail: "Automatic, 2 hours after job" },
+  { minutesAgo: 420, kind: "lead", title: "Repeat customer rebooked", detail: "Marcus W. · quarterly reminder" },
+];
+
+export function demoActivity(): DemoActivity[] {
+  return ACTIVITY.map((a, i) => ({ ...a, id: `demo-activity-${i + 1}` }));
+}
+
+export const formatAgo = (minutesAgo: number) =>
+  minutesAgo < 60
+    ? `${minutesAgo} min ago`
+    : minutesAgo < 1_440
+      ? `${Math.round(minutesAgo / 60)}h ago`
+      : `${Math.round(minutesAgo / 1_440)}d ago`;
