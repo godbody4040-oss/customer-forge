@@ -6,7 +6,7 @@
  * client their domain is working when it isn't.
  */
 import { canonicalHost, type EmailForwardProvider, type HostPreference } from "@/lib/domain-ops";
-import { isFetchableHostname } from "@/lib/net-guard.server";
+import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server";
 
 type DnsAnswer = { name: string; type: number; data: string };
 
@@ -103,7 +103,7 @@ export async function checkCrawlSignals(origin: string) {
 
   try {
     if (robots.ok) {
-      const text = await (await fetch(`${origin}/robots.txt`)).text();
+      const text = await (await guardedFetch(`${origin}/robots.txt`)).text();
       robotsBlocksAll = /^\s*disallow:\s*\/\s*$/im.test(text) && !/allow:\s*\//i.test(text);
     }
   } catch {
@@ -111,7 +111,7 @@ export async function checkCrawlSignals(origin: string) {
   }
   try {
     if (sitemap.ok) {
-      const text = await (await fetch(`${origin}/sitemap.xml`)).text();
+      const text = await (await guardedFetch(`${origin}/sitemap.xml`)).text();
       sitemapUrls = (text.match(/<loc>/g) ?? []).length;
     }
   } catch {
@@ -119,7 +119,7 @@ export async function checkCrawlSignals(origin: string) {
   }
   try {
     if (home.ok) {
-      const html = await (await fetch(`${origin}/`)).text();
+      const html = await (await guardedFetch(`${origin}/`)).text();
       canonicalTag = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1] ?? null;
     }
   } catch {
