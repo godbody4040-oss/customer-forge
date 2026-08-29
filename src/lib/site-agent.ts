@@ -73,10 +73,10 @@ export type AgentAction =
       type: "add_component";
       sectionId: string;
       kind: string;
-      label?: string;
-      body?: string;
-      link_url?: string;
-      link_label?: string;
+      label?: string | undefined;
+      body?: string | undefined;
+      link_url?: string | undefined;
+      link_label?: string | undefined;
     }
   | { type: "delete_component"; componentId: string }
   | { type: "add_page"; kind: string; title: string; slug: string }
