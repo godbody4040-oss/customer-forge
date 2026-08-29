@@ -2466,10 +2466,15 @@ export type Database = {
           dns_ok: boolean
           domain_checked_at: string | null
           domain_error: string | null
+          domain_force_https: boolean
+          domain_primary_host: string
           domain_records: Json
+          domain_seo_report: Json
           domain_status: Database["public"]["Enums"]["domain_status"]
           domain_target: string | null
+          domain_transfer: Json
           domain_verified: boolean
+          email_forwarding: Json
           generated_at: string | null
           generation: Json
           id: string
@@ -2481,9 +2486,15 @@ export type Database = {
           review_state: string
           seo: Json
           ssl_active: boolean
+          ssl_checked_at: string | null
+          ssl_detail: string | null
+          ssl_issued_at: string | null
+          ssl_last_ok_at: string | null
           ssl_ok: boolean
           subdomain: string | null
           template: string
+          traffic_alerts_enabled: boolean
+          traffic_checked_at: string | null
           updated_at: string
         }
         Insert: {
@@ -2494,10 +2505,15 @@ export type Database = {
           dns_ok?: boolean
           domain_checked_at?: string | null
           domain_error?: string | null
+          domain_force_https?: boolean
+          domain_primary_host?: string
           domain_records?: Json
+          domain_seo_report?: Json
           domain_status?: Database["public"]["Enums"]["domain_status"]
           domain_target?: string | null
+          domain_transfer?: Json
           domain_verified?: boolean
+          email_forwarding?: Json
           generated_at?: string | null
           generation?: Json
           id?: string
@@ -2509,9 +2525,15 @@ export type Database = {
           review_state?: string
           seo?: Json
           ssl_active?: boolean
+          ssl_checked_at?: string | null
+          ssl_detail?: string | null
+          ssl_issued_at?: string | null
+          ssl_last_ok_at?: string | null
           ssl_ok?: boolean
           subdomain?: string | null
           template?: string
+          traffic_alerts_enabled?: boolean
+          traffic_checked_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -2522,10 +2544,15 @@ export type Database = {
           dns_ok?: boolean
           domain_checked_at?: string | null
           domain_error?: string | null
+          domain_force_https?: boolean
+          domain_primary_host?: string
           domain_records?: Json
+          domain_seo_report?: Json
           domain_status?: Database["public"]["Enums"]["domain_status"]
           domain_target?: string | null
+          domain_transfer?: Json
           domain_verified?: boolean
+          email_forwarding?: Json
           generated_at?: string | null
           generation?: Json
           id?: string
@@ -2537,9 +2564,15 @@ export type Database = {
           review_state?: string
           seo?: Json
           ssl_active?: boolean
+          ssl_checked_at?: string | null
+          ssl_detail?: string | null
+          ssl_issued_at?: string | null
+          ssl_last_ok_at?: string | null
           ssl_ok?: boolean
           subdomain?: string | null
           template?: string
+          traffic_alerts_enabled?: boolean
+          traffic_checked_at?: string | null
           updated_at?: string
         }
         Relationships: [
