@@ -76,15 +76,9 @@ function AppShell() {
   const supporting = Boolean(data?.supporting && supportMode);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: billing, isLoading: billingLoading } = useBillingState(org?.id);
-  const trialStillActive = Boolean(
-    org &&
-      org.subscription_status === "trialing" &&
-      org.trial_ends_at &&
-      new Date(org.trial_ends_at).getTime() >= Date.now(),
-  );
-  const trialHoursLeft = trialStillActive && org?.trial_ends_at
-    ? Math.max(1, Math.ceil((new Date(org.trial_ends_at).getTime() - Date.now()) / 3_600_000))
-    : 0;
+  const trialStillActive = isTrialActive(org);
+  const hoursLeft = trialHoursLeft(org);
+
   const paymentRequired = Boolean(
     org && !org.is_demo && !billing?.active && !trialStillActive && !data?.isSuperAdmin && !supporting,
   );
