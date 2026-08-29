@@ -282,7 +282,7 @@ function Landing() {
         </section>
 
         {/* How it works */}
-        <section className="border-b border-border bg-card">
+        <section id="how-it-works" className="scroll-mt-20 border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="How it works" title="Live this week, not next quarter" />
             <ol className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
