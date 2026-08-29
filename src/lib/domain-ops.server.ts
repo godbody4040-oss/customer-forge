@@ -27,13 +27,24 @@ export type HopResult = {
   error: string | null;
 };
 
+/**
+ * SSRF guard for every outbound probe: only public DNS names, resolving to
+ * globally routable addresses, over http(s), are ever fetched. Redirects are
+ * never followed automatically, so a public host can't bounce us inward.
+ */
+async function guardedFetch(url: string): Promise<Response> {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("Unsupported address");
+  if (!isFetchableHostname(parsed.hostname)) throw new Error("Not a public domain");
+  const a = await dnsQuery(parsed.hostname, "A").catch(() => [] as DnsAnswer[]);
+  const addresses = a.filter((r) => r.type === 1).map((r) => r.data);
+  if (!addresses.length || !areAddressesPublic(addresses)) throw new Error("Not a public address");
+  return fetch(url, { method: "GET", redirect: "manual" });
+}
+
 async function probe(url: string): Promise<HopResult> {
   try {
-    // SSRF guard: only public DNS names are ever fetched server-side.
-    if (!isFetchableHostname(new URL(url).hostname)) {
-      return { url, status: null, location: null, ok: false, error: "Not a public domain" };
-    }
-    const res = await fetch(url, { method: "GET", redirect: "manual" });
+    const res = await guardedFetch(url);
     return {
       url,
       status: res.status,
