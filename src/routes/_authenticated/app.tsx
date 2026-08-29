@@ -12,9 +12,12 @@ import {
   LifeBuoy,
   LogOut,
   Menu,
+  QrCode,
   Rocket,
   Settings,
   Shield,
+  Star,
+
   Users,
   Wrench,
   X,
