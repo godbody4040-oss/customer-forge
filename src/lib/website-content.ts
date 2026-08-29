@@ -211,6 +211,10 @@ export type BlueprintSection = {
   heading?: string | null;
   subheading?: string | null;
   body?: string | null;
+  /** Hidden sections are laid out but not shown until the client fills them in. */
+  is_visible?: boolean;
+  /** Marks a section that needs the client's own words before it can go live. */
+  needs_input?: boolean;
   components?: {
     kind: string;
     label?: string | null;
@@ -226,64 +230,166 @@ export type BlueprintPage = {
   kind: PageKind;
   seo_title?: string | null;
   seo_description?: string | null;
+  noindex?: boolean;
   sections: BlueprintSection[];
 };
 
 const place = (input: BlueprintInput) =>
   input.serviceArea || [input.city, input.state].filter(Boolean).join(", ") || null;
 
+export const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+
+/** Splits "Raleigh, Durham & Cary" into individual places for area pages. */
+export function splitAreas(serviceArea: string | null, city: string | null): string[] {
+  const source = serviceArea || city || "";
+  const parts = source
+    .split(/[,/•|]|\band\b|&/i)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 1 && part.length < 60);
+  const unique: string[] = [];
+  for (const part of parts) if (!unique.some((p) => p.toLowerCase() === part.toLowerCase())) unique.push(part);
+  return unique.slice(0, 8);
+}
+
 /**
- * Turns supplied business information into a page/section/component structure.
- * Sections without supporting data are omitted rather than filled with
- * placeholder claims.
+ * Turns supplied business information into a complete, lead-generating site:
+ * every page a local business needs, each with a way to get in touch.
+ * Sections without supporting data are left out or hidden rather than filled
+ * with placeholder claims.
  */
 export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
   const area = place(input);
   const name = input.businessName || "Your business";
   const trade = input.industry || "local services";
+  const cta = input.ctaLabel || "Get my price";
+  const areas = splitAreas(input.serviceArea, input.city);
+  const services = input.services.slice(0, 12);
 
-  const serviceComponents = input.services.slice(0, 12).map((s) => ({
+  const quoteButton = { kind: "button", label: cta, link_url: "#quote" };
+  const bookButton = { kind: "button", label: "Book online", link_url: "#book" };
+  const callButton = input.phone
+    ? { kind: "button", label: `Call ${input.phone}`, link_url: `tel:${input.phone}` }
+    : null;
+  const captureButtons = [quoteButton, bookButton, ...(callButton ? [callButton] : [])];
+
+  const serviceComponents = services.map((s) => ({
     kind: "service_card",
     label: s.name,
     body: s.description ?? null,
+    link_url: `/${slugify(s.name)}`,
+    link_label: "See details",
   }));
+
+  const priceComponents = services
+    .filter((s) => s.price !== null && s.price !== undefined)
+    .map((s) => ({
+      kind: "price_row",
+      label: s.name,
+      body: `${s.starting_price ? "From " : ""}$${Number(s.starting_price ?? s.price)}`,
+    }));
+
+  const processSteps: BlueprintSection = {
+    kind: "process",
+    heading: "How it works",
+    subheading: "Three steps, no phone tag.",
+    components: [
+      { kind: "step", label: "1. Tell us what you need", body: "Answer a few questions and get an instant price range." },
+      { kind: "step", label: "2. We confirm the details", body: "We check the job, confirm the price and hold your slot." },
+      { kind: "step", label: "3. We get it done", body: "You get a confirmation, a reminder and the work on the day." },
+    ],
+  };
+
+  const stickyCta: BlueprintSection = {
+    kind: "sticky_cta",
+    heading: cta,
+    subheading: input.phone ?? null,
+    components: captureButtons,
+  };
+
+  const trustBits = [
+    area ? `Serving ${area}` : null,
+    input.reviewCount > 0 ? `${input.reviewCount} customer reviews` : null,
+    input.hasHours ? "Published opening hours" : null,
+    input.phone ? "Talk to a real person" : null,
+  ].filter((bit): bit is string => !!bit);
+
+  /* ------------------------------- Home page ------------------------------- */
 
   const home: BlueprintSection[] = [
     {
       kind: "hero",
       heading: area ? `${trade} in ${area}` : `${trade} from ${name}`,
-      subheading: input.description
-        ? input.description.split(/(?<=\.)\s/)[0] ?? null
-        : null,
-      components: [{ kind: "button", label: input.ctaLabel, link_url: "#quote" }],
+      subheading: input.description ? (input.description.split(/(?<=\.)\s/)[0] ?? null) : null,
+      components: captureButtons,
     },
   ];
+
+  if (trustBits.length)
+    home.push({
+      kind: "trust_bar",
+      heading: null,
+      components: trustBits.map((bit) => ({ kind: "trust_item", label: bit })),
+    });
+
+  home.push({
+    kind: "offer",
+    heading: "Current offer",
+    body: "Write the offer you actually want to run — for example a seasonal discount or a free inspection. This block stays hidden until you fill it in.",
+    is_visible: false,
+    needs_input: true,
+    components: [quoteButton],
+  });
 
   if (input.description) home.push({ kind: "intro", heading: `About ${name}`, body: input.description });
   if (serviceComponents.length)
     home.push({ kind: "services", heading: "What we do", components: serviceComponents });
+  home.push(processSteps);
   if (input.benefits.length)
     home.push({
       kind: "benefits",
       heading: "Why customers choose us",
       components: input.benefits.slice(0, 6).map((b) => ({ kind: "benefit", label: b })),
     });
+  if (priceComponents.length)
+    home.push({
+      kind: "pricing",
+      heading: "Starting prices",
+      subheading: "Every job is quoted on the details you give us.",
+      components: priceComponents,
+    });
   if (input.photoCount > 0) home.push({ kind: "gallery", heading: "Recent work" });
   if (input.reviewCount > 0) home.push({ kind: "reviews", heading: "What customers say" });
-  if (area) home.push({ kind: "area", heading: `Serving ${area}` });
+  home.push({
+    kind: "guarantee",
+    heading: "Our promise",
+    body: "Write the guarantee you genuinely stand behind — for example a satisfaction promise or a workmanship warranty. Hidden until you fill it in.",
+    is_visible: false,
+    needs_input: true,
+  });
+  if (areas.length > 1)
+    home.push({
+      kind: "areas",
+      heading: "Areas we cover",
+      components: areas.map((a) => ({ kind: "area_link", label: a, link_url: `/${slugify(a)}` })),
+    });
+  else if (area) home.push({ kind: "area", heading: `Serving ${area}` });
   if (input.faqs.length)
     home.push({
       kind: "faq",
       heading: "Questions we get asked",
       components: input.faqs.slice(0, 8).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
     });
-  home.push({
-    kind: "cta",
-    heading: "Ready to get started?",
-    components: [{ kind: "button", label: input.ctaLabel, link_url: "#quote" }],
-  });
-  if (input.phone || input.email || input.hasHours)
-    home.push({ kind: "contact", heading: "Get in touch" });
+  home.push({ kind: "quote", heading: "Get your price now", components: [] });
+  home.push({ kind: "booking", heading: "Or book a time", components: [] });
+  home.push({ kind: "cta", heading: "Ready to get started?", components: captureButtons });
+  if (input.phone || input.email || input.hasHours) home.push({ kind: "contact", heading: "Get in touch" });
+  home.push(stickyCta);
 
   const pages: BlueprintPage[] = [
     {
@@ -296,22 +402,165 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     },
   ];
 
-  if (serviceComponents.length)
+  /* ------------------------------- Services -------------------------------- */
+
+  if (serviceComponents.length) {
     pages.push({
       slug: "services",
       title: "Services",
       kind: "services",
       seo_title: area ? `Services — ${name}, ${area}` : `Services — ${name}`,
+      seo_description: `Everything ${name} offers${area ? ` across ${area}` : ""}, with starting prices and instant quotes.`,
       sections: [
-        { kind: "hero", heading: "Our services", subheading: area ? `Available across ${area}` : null },
+        { kind: "hero", heading: "Our services", subheading: area ? `Available across ${area}` : null, components: captureButtons },
         { kind: "services", heading: "Choose what you need", components: serviceComponents },
-        {
-          kind: "cta",
-          heading: "Get your price",
-          components: [{ kind: "button", label: input.ctaLabel, link_url: "#quote" }],
-        },
+        ...(priceComponents.length
+          ? [{ kind: "pricing" as SectionKind, heading: "Starting prices", components: priceComponents }]
+          : []),
+        processSteps,
+        { kind: "quote", heading: "Get your price", components: [] },
+        { kind: "cta", heading: "Not sure which one you need?", components: captureButtons },
+        stickyCta,
       ],
     });
+
+    for (const service of services.slice(0, 10)) {
+      pages.push({
+        slug: slugify(service.name),
+        title: service.name,
+        kind: "service",
+        seo_title: area ? `${service.name} in ${area} — ${name}` : `${service.name} — ${name}`,
+        seo_description:
+          service.description?.slice(0, 155) ??
+          `${service.name} from ${name}${area ? ` in ${area}` : ""}. Get an instant price range.`,
+        sections: [
+          {
+            kind: "hero",
+            heading: area ? `${service.name} in ${area}` : service.name,
+            subheading: service.description ?? null,
+            components: captureButtons,
+          },
+          ...(trustBits.length
+            ? [
+                {
+                  kind: "trust_bar" as SectionKind,
+                  components: trustBits.map((bit) => ({ kind: "trust_item", label: bit })),
+                },
+              ]
+            : []),
+          {
+            kind: "service_detail",
+            heading: `What's included`,
+            body: service.description ?? null,
+            needs_input: !service.description,
+            components: [
+              ...(service.price !== null && service.price !== undefined
+                ? [
+                    {
+                      kind: "price_row",
+                      label: "Starting price",
+                      body: `${service.starting_price ? "From " : ""}$${Number(service.starting_price ?? service.price)}`,
+                    },
+                  ]
+                : []),
+              quoteButton,
+            ],
+          },
+          processSteps,
+          ...(input.photoCount > 0 ? [{ kind: "gallery" as SectionKind, heading: "Recent work" }] : []),
+          ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "What customers say" }] : []),
+          ...(input.faqs.length
+            ? [
+                {
+                  kind: "faq" as SectionKind,
+                  heading: "Common questions",
+                  components: input.faqs.slice(0, 5).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+                },
+              ]
+            : []),
+          { kind: "quote", heading: `Price up your ${service.name.toLowerCase()}`, components: [] },
+          { kind: "booking", heading: "Book it in", components: [] },
+          stickyCta,
+        ],
+      });
+    }
+  }
+
+  /* ----------------------------- Area pages -------------------------------- */
+
+  if (areas.length > 1) {
+    for (const town of areas) {
+      pages.push({
+        slug: slugify(town),
+        title: town,
+        kind: "area",
+        seo_title: `${trade} in ${town} — ${name}`,
+        seo_description: `${name} covers ${town}. See services, starting prices and get an instant quote.`,
+        sections: [
+          {
+            kind: "hero",
+            heading: `${trade} in ${town}`,
+            subheading: input.description ? (input.description.split(/(?<=\.)\s/)[0] ?? null) : null,
+            components: captureButtons,
+          },
+          ...(serviceComponents.length
+            ? [{ kind: "services" as SectionKind, heading: `What we do in ${town}`, components: serviceComponents }]
+            : []),
+          ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "Local reviews" }] : []),
+          {
+            kind: "area",
+            heading: `Serving ${town}`,
+            body: `${name} works across ${town}${area && area !== town ? ` and the wider ${area} area` : ""}.`,
+          },
+          { kind: "quote", heading: `Get a ${town} price`, components: [] },
+          { kind: "cta", heading: `Book ${name} in ${town}`, components: captureButtons },
+          stickyCta,
+        ],
+      });
+    }
+  }
+
+  /* ------------------------- Pricing, booking, proof ----------------------- */
+
+  pages.push({
+    slug: "pricing",
+    title: "Pricing",
+    kind: "pricing",
+    seo_title: area ? `Pricing — ${name}, ${area}` : `Pricing — ${name}`,
+    seo_description: `What ${name} charges and how to get an exact price in a couple of minutes.`,
+    sections: [
+      { kind: "hero", heading: "What it costs", subheading: "Straight answers, no sales calls.", components: [quoteButton] },
+      ...(priceComponents.length
+        ? [{ kind: "pricing" as SectionKind, heading: "Starting prices", components: priceComponents }]
+        : []),
+      { kind: "quote", heading: "Get your instant price range", components: [] },
+      ...(input.faqs.length
+        ? [
+            {
+              kind: "faq" as SectionKind,
+              heading: "Pricing questions",
+              components: input.faqs.slice(0, 6).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+            },
+          ]
+        : []),
+      stickyCta,
+    ],
+  });
+
+  pages.push({
+    slug: "book",
+    title: "Book online",
+    kind: "book",
+    seo_title: `Book ${name}${area ? ` — ${area}` : ""}`,
+    seo_description: `Pick a service and a time that suits you. ${name} confirms quickly.`,
+    sections: [
+      { kind: "hero", heading: `Book ${name}`, subheading: "Pick a service and a time — we confirm quickly.", components: [bookButton] },
+      { kind: "booking", heading: "Choose your slot", components: [] },
+      processSteps,
+      ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "What customers say" }] : []),
+      stickyCta,
+    ],
+  });
 
   if (input.description)
     pages.push({
@@ -319,31 +568,240 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
       title: "About",
       kind: "about",
       seo_title: `About ${name}`,
+      seo_description: input.description.slice(0, 155),
       sections: [
-        { kind: "hero", heading: `About ${name}` },
+        { kind: "hero", heading: `About ${name}`, components: captureButtons },
         { kind: "intro", body: input.description },
+        ...(input.benefits.length
+          ? [
+              {
+                kind: "benefits" as SectionKind,
+                heading: "What we stand for",
+                components: input.benefits.slice(0, 6).map((b) => ({ kind: "benefit", label: b })),
+              },
+            ]
+          : []),
         ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "Customer reviews" }] : []),
+        { kind: "cta", heading: "Work with us", components: captureButtons },
+        stickyCta,
       ],
     });
+
+  if (input.reviewCount > 0)
+    pages.push({
+      slug: "reviews",
+      title: "Reviews",
+      kind: "reviews",
+      seo_title: `Reviews — ${name}`,
+      seo_description: `Read what customers say about ${name}${area ? ` in ${area}` : ""}.`,
+      sections: [
+        { kind: "hero", heading: "Customer reviews", components: captureButtons },
+        { kind: "reviews", heading: "In their words" },
+        { kind: "cta", heading: "Join them", components: captureButtons },
+        stickyCta,
+      ],
+    });
+
+  if (input.photoCount > 0)
+    pages.push({
+      slug: "gallery",
+      title: "Our work",
+      kind: "gallery",
+      seo_title: `Our work — ${name}`,
+      seo_description: `Photos of recent jobs completed by ${name}${area ? ` around ${area}` : ""}.`,
+      sections: [
+        { kind: "hero", heading: "Recent work", components: captureButtons },
+        { kind: "gallery", heading: "Photos from real jobs" },
+        { kind: "cta", heading: "Want the same result?", components: captureButtons },
+        stickyCta,
+      ],
+    });
+
+  if (input.faqs.length)
+    pages.push({
+      slug: "faq",
+      title: "FAQ",
+      kind: "faq",
+      seo_title: `FAQ — ${name}`,
+      seo_description: `Answers to the questions ${name} gets asked most.`,
+      sections: [
+        { kind: "hero", heading: "Questions & answers", components: captureButtons },
+        {
+          kind: "faq",
+          heading: "Frequently asked",
+          components: input.faqs.map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+        },
+        { kind: "cta", heading: "Still not sure?", components: captureButtons },
+        stickyCta,
+      ],
+    });
+
+  /* ------------------------- Offers, contact, tracking --------------------- */
+
+  pages.push({
+    slug: "offers",
+    title: "Offers",
+    kind: "offers",
+    seo_title: `Current offers — ${name}`,
+    seo_description: `Live offers from ${name}. Written by the business, never invented.`,
+    sections: [
+      { kind: "hero", heading: "Current offers", subheading: "Write your own — this page stays hidden until you do.", components: [quoteButton] },
+      {
+        kind: "offer",
+        heading: "Your offer headline",
+        body: "Describe the offer, who it applies to and when it ends.",
+        needs_input: true,
+      },
+      { kind: "quote", heading: "Claim it", components: [] },
+      stickyCta,
+    ],
+  });
 
   pages.push({
     slug: "contact",
     title: "Contact",
     kind: "contact",
     seo_title: `Contact ${name}`,
+    seo_description: `Phone, email and hours for ${name}${area ? ` in ${area}` : ""}.`,
     sections: [
-      { kind: "hero", heading: "Contact us", subheading: area ? `Serving ${area}` : null },
+      { kind: "hero", heading: "Contact us", subheading: area ? `Serving ${area}` : null, components: captureButtons },
       { kind: "contact", heading: "How to reach us" },
+      { kind: "quote", heading: "Prefer a written price?", components: [] },
+      stickyCta,
+    ],
+  });
+
+  pages.push({
+    slug: "thanks",
+    title: "Thank you",
+    kind: "thanks",
+    noindex: true,
+    seo_title: `Thank you — ${name}`,
+    seo_description: `Your request reached ${name}.`,
+    sections: [
       {
-        kind: "cta",
-        heading: "Prefer a written price?",
-        components: [{ kind: "button", label: input.ctaLabel, link_url: "#quote" }],
+        kind: "hero",
+        heading: "Thanks — we've got it",
+        subheading: input.phone ? `Need us sooner? Call ${input.phone}.` : "We'll be in touch shortly.",
+        components: callButton ? [callButton] : [],
+      },
+      ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "While you wait" }] : []),
+    ],
+  });
+
+  pages.push({
+    slug: "privacy",
+    title: "Privacy",
+    kind: "privacy",
+    noindex: false,
+    seo_title: `Privacy notice — ${name}`,
+    seo_description: `How ${name} handles the details you submit through this website.`,
+    sections: [
+      { kind: "hero", heading: "Privacy notice" },
+      {
+        kind: "policy",
+        heading: "What we collect and why",
+        body: [
+          `When you request a quote or book a job, ${name} collects the details you enter — such as your name, contact details and job description — so we can reply and carry out the work.`,
+          "We do not sell your details. We share them only with the tools we use to run the business, such as our booking and messaging systems.",
+          input.email || input.phone
+            ? `To ask what we hold about you, or to have it deleted, contact us${input.email ? ` at ${input.email}` : ""}${input.phone ? `${input.email ? " or" : " on"} ${input.phone}` : ""}.`
+            : "To ask what we hold about you, or to have it deleted, use the contact details on this website.",
+          "Review this wording with your own advisor before relying on it.",
+        ].join("\n\n"),
+        needs_input: true,
       },
     ],
   });
 
   return pages;
 }
+
+/* ---------------------------- Lead engine audit --------------------------- */
+
+export type LeadEngineItem = {
+  key: string;
+  label: string;
+  why: string;
+  ok: boolean;
+  weight: number;
+  fix: string;
+};
+
+const CORE_PAGE_KINDS: { kind: PageKind; label: string; why: string; fix: string; weight: number }[] = [
+  { kind: "home", label: "Home page", why: "Your strongest offer, above the fold.", fix: "Run the builder to lay out your home page.", weight: 3 },
+  { kind: "services", label: "Services hub", why: "Lets visitors self-select what they need.", fix: "Add your services, then rebuild the structure.", weight: 2 },
+  { kind: "service", label: "A page per service", why: "Single-service pages are what rank for local searches.", fix: "Add each service separately so it gets its own page.", weight: 3 },
+  { kind: "area", label: "Service area pages", why: "One page per town captures 'near me' searches.", fix: "List the towns you cover, separated by commas.", weight: 2 },
+  { kind: "pricing", label: "Pricing page", why: "Price transparency filters out tyre-kickers.", fix: "Rebuild the structure to add the pricing page.", weight: 2 },
+  { kind: "book", label: "Booking page", why: "Gives ads and Google a place to send ready buyers.", fix: "Rebuild the structure to add the booking page.", weight: 2 },
+  { kind: "reviews", label: "Reviews page", why: "Proof is the cheapest conversion lift you have.", fix: "Collect and publish reviews.", weight: 2 },
+  { kind: "gallery", label: "Work gallery", why: "Photos of real jobs beat stock imagery every time.", fix: "Upload photos in the media library.", weight: 1 },
+  { kind: "faq", label: "FAQ page", why: "Answers objections before someone leaves.", fix: "Add questions and answers in the proof step.", weight: 1 },
+  { kind: "about", label: "About page", why: "Local buyers check who they're letting in the door.", fix: "Write a description of the business.", weight: 1 },
+  { kind: "contact", label: "Contact page", why: "Phone, email and hours in one obvious place.", fix: "Rebuild the structure to add the contact page.", weight: 2 },
+  { kind: "thanks", label: "Thank-you page", why: "Needed to track ad conversions properly.", fix: "Rebuild the structure to add the thank-you page.", weight: 1 },
+  { kind: "privacy", label: "Privacy notice", why: "Google and Meta ads require one.", fix: "Rebuild the structure to add the privacy notice.", weight: 1 },
+];
+
+const CORE_SECTION_KINDS: { kind: SectionKind; label: string; why: string; fix: string; weight: number }[] = [
+  { kind: "quote", label: "Instant quote form", why: "Turns browsers into leads without a phone call.", fix: "Turn on your quote calculator.", weight: 3 },
+  { kind: "booking", label: "Booking form", why: "Captures people who already decided.", fix: "Make at least one service bookable.", weight: 3 },
+  { kind: "sticky_cta", label: "Sticky call bar", why: "Most local visitors are on a phone and want to tap once.", fix: "Rebuild the structure to add the sticky call bar.", weight: 2 },
+  { kind: "trust_bar", label: "Trust strip", why: "Reassurance in the first screen lifts enquiries.", fix: "Add your area, hours and phone number.", weight: 1 },
+  { kind: "process", label: "How it works", why: "Removes the fear of an unknown process.", fix: "Rebuild the structure to add the steps.", weight: 1 },
+  { kind: "reviews", label: "Reviews on key pages", why: "Proof next to the button converts best.", fix: "Publish a few reviews.", weight: 2 },
+  { kind: "pricing", label: "Starting prices", why: "Self-qualifies visitors before they enquire.", fix: "Add prices to your services.", weight: 1 },
+  { kind: "offer", label: "A live offer", why: "A reason to act today, not next month.", fix: "Write your offer in the offers block and show it.", weight: 2 },
+  { kind: "guarantee", label: "A guarantee", why: "Lowers the risk of choosing you.", fix: "Write the promise you stand behind and show it.", weight: 1 },
+  { kind: "gallery", label: "Photos of work", why: "Real work photos are the strongest visual proof.", fix: "Upload job photos.", weight: 1 },
+  { kind: "faq", label: "Questions answered", why: "Handles objections at the point of doubt.", fix: "Add FAQs.", weight: 1 },
+  { kind: "cta", label: "Repeated call to action", why: "Every page should end with the next step.", fix: "Rebuild the structure so each page ends with a CTA.", weight: 2 },
+];
+
+/**
+ * Scores how well the current structure works as a lead-generating asset.
+ * Only visible sections count — a hidden block cannot convert anyone.
+ */
+export function leadEngineAudit(pages: ContentPage[]): {
+  items: LeadEngineItem[];
+  score: number;
+  missing: LeadEngineItem[];
+} {
+  const visiblePages = pages.filter((page) => page.is_visible);
+  const pageKinds = new Set(visiblePages.map((page) => page.kind));
+  const sectionKinds = new Set(
+    visiblePages.flatMap((page) => page.sections.filter((s) => s.is_visible).map((s) => s.kind)),
+  );
+
+  const items: LeadEngineItem[] = [
+    ...CORE_PAGE_KINDS.map((entry) => ({
+      key: `page:${entry.kind}`,
+      label: entry.label,
+      why: entry.why,
+      ok: pageKinds.has(entry.kind),
+      weight: entry.weight,
+      fix: entry.fix,
+    })),
+    ...CORE_SECTION_KINDS.map((entry) => ({
+      key: `section:${entry.kind}`,
+      label: entry.label,
+      why: entry.why,
+      ok: sectionKinds.has(entry.kind),
+      weight: entry.weight,
+      fix: entry.fix,
+    })),
+  ];
+
+  const total = items.reduce((sum, item) => sum + item.weight, 0);
+  const earned = items.reduce((sum, item) => sum + (item.ok ? item.weight : 0), 0);
+  return {
+    items,
+    score: total ? Math.round((earned / total) * 100) : 0,
+    missing: items.filter((item) => !item.ok),
+  };
+}
+
 
 /* ---------------------------------- QA ------------------------------------ */
 
