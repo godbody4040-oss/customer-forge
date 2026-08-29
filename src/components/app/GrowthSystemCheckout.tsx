@@ -57,7 +57,7 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
           <p className="eyebrow">Secure checkout</p>
           <h2 className="mt-1 font-display text-[18px] font-semibold">{GROWTH_SYSTEM.name}</h2>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            {usdExact(GROWTH_SYSTEM.setupPrice)} setup today, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
+            {usdExact(GROWTH_SYSTEM.setupPrice)} setup today. First month free, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
             Cards, Apple Pay, Google Pay and Cash App Pay appear where supported.
           </p>
         </div>

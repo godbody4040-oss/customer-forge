@@ -20,12 +20,12 @@ export const Route = createFileRoute("/get-started")({
       {
         name: "description",
         content:
-          "Launch your Revora Growth System: $1,500 one-time setup and $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+          "Launch your Revora Growth System: $1,500 one-time setup, first month free, then $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
       { property: "og:title", content: "Start your Revora Growth System" },
       {
         property: "og:description",
-        content: "$1,500 one-time setup, then $250/month. One complete customer acquisition system.",
+        content: "$1,500 one-time setup, first month free, then $250/month. One complete customer acquisition system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -137,7 +137,7 @@ function GetStarted() {
           {GROWTH_SYSTEM.headline}
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
-          {usdExact(GROWTH_SYSTEM.setupPrice)} setup today, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
+          {usdExact(GROWTH_SYSTEM.setupPrice)} setup today. First month free, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
           One complete growth system — no packages to compare.
         </p>
 
@@ -286,8 +286,8 @@ function GetStarted() {
                 <h2 className="font-display text-[17px] font-semibold">Payment</h2>
               </div>
               <p className="mt-2 text-[13px] text-muted-foreground">
-                {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup plus your first{" "}
-                {usdExact(GROWTH_SYSTEM.monthlyPrice)} month today, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.
+                {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup today — your first month is free, then{" "}
+                {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month starting one month from now.
                 Payments are processed securely by our payment provider — Revora never sees your card details.
               </p>
 
@@ -323,7 +323,7 @@ function GetStarted() {
                 </p>
               ) : payNow ? null : (
                 <Button variant="signal" size="lg" className="mt-4 w-full sm:w-auto" onClick={() => setPayNow(true)}>
-                  <Lock className="size-4" /> Pay {usdExact(GROWTH_SYSTEM.setupPrice + GROWTH_SYSTEM.monthlyPrice)} today
+                  <Lock className="size-4" /> Pay {usdExact(GROWTH_SYSTEM.setupPrice)} today
                 </Button>
               )}
 

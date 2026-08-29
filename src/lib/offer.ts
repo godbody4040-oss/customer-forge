@@ -19,10 +19,11 @@ export const GROWTH_SYSTEM = {
   monthlyLabel:
     "Ongoing platform, automation, support, hosting/system management, and growth services.",
   ctaPrimary: "GET STARTED — $1,500 SETUP",
-  ctaSecondary: "Then $250/month. No confusing packages. One complete growth system.",
+  ctaSecondary:
+    "First month free, then $250/month. No confusing packages. One complete growth system.",
   ctaShort: "START MY REVORA SYSTEM",
   explainer:
-    "The $1,500 setup fee covers the initial build, customization, configuration, and launch of your Revora Growth System. After launch, your system continues at $250/month for ongoing platform access, automation, support, maintenance, and growth services.",
+    "The $1,500 setup fee covers the initial build, customization, configuration, and launch of your Revora Growth System. Your first month is free — the $250/month for ongoing platform access, automation, support, maintenance, and growth services starts one month after signup.",
   includes: [
     "Professional business website",
     "Custom domain connection/setup",

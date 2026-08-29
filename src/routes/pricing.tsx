@@ -13,12 +13,12 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "One complete growth system for local businesses: $1,500 one-time setup and $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+          "One complete growth system for local businesses: $1,500 one-time setup with the first month free, then $250/month for website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
       },
       { property: "og:title", content: "Pricing — Revora Growth System" },
       {
         property: "og:description",
-        content: "$1,500 one-time setup, then $250/month. No confusing packages. One complete growth system.",
+        content: "$1,500 one-time setup, first month free, then $250/month. No confusing packages. One complete growth system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
