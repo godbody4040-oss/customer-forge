@@ -162,8 +162,8 @@ function Landing() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button asChild variant="signal" size="lg">
-                  <Link to="/auth" search={{ mode: "signup" }}>
-                    Start free <ArrowRight className="size-4" />
+                  <Link to="/get-started">
+                    {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
@@ -171,13 +171,14 @@ function Landing() {
                 </Button>
               </div>
               <p className="mt-4 text-[12px] text-muted-foreground">
-                No credit card required • 1-day free trial • Cancel anytime
+                {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup • {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month •
+                Cancel anytime
               </p>
 
               <dl className="mt-10 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-border pt-6 sm:max-w-lg sm:grid-cols-3">
                 {[
-                  ["1 day", "Free trial, no card"],
-                  ["1 day", "From signup to live site"],
+                  ["1 system", "Instead of five subscriptions"],
+                  ["Done for you", "Built, launched and managed"],
                   ["1 inbox", "Calls, quotes and bookings"],
                 ].map(([value, label]) => (
                   <div key={label}>
@@ -188,6 +189,7 @@ function Landing() {
                   </div>
                 ))}
               </dl>
+
             </div>
             <DashboardPreview />
           </div>
