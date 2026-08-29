@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
@@ -80,6 +81,11 @@ const ContactRoute = ContactRouteImport.update({
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetStartedRoute = GetStartedRouteImport.update({
+  id: '/get-started',
+  path: '/get-started',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndustriesRoute = IndustriesRouteImport.update({
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
+  '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -331,6 +338,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
+  '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
+  '/get-started': typeof GetStartedRoute
   '/industries': typeof IndustriesRoute
   '/pricing': typeof PricingRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -421,6 +430,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/demo'
+    | '/get-started'
     | '/industries'
     | '/pricing'
     | '/robots.txt'
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/demo'
+    | '/get-started'
     | '/industries'
     | '/pricing'
     | '/robots.txt'
@@ -508,6 +519,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/demo'
+    | '/get-started'
     | '/industries'
     | '/pricing'
     | '/robots.txt'
@@ -554,6 +566,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRoute
+  GetStartedRoute: typeof GetStartedRoute
   IndustriesRoute: typeof IndustriesRoute
   PricingRoute: typeof PricingRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
@@ -610,6 +623,13 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-started': {
+      id: '/get-started'
+      path: '/get-started'
+      fullPath: '/get-started'
+      preLoaderRoute: typeof GetStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/industries': {
@@ -978,6 +998,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DemoRoute: DemoRoute,
+  GetStartedRoute: GetStartedRoute,
   IndustriesRoute: IndustriesRoute,
   PricingRoute: PricingRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
