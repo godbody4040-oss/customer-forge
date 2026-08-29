@@ -29,7 +29,7 @@ export function SiteHeader() {
             <Link
               key={item.label}
               to={item.to}
-              hash={"hash" in item ? item.hash : undefined}
+              {...("hash" in item ? { hash: item.hash } : {})}
               className="rounded-md px-3 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
               activeProps={{ className: "bg-elevated text-foreground" }}
             >
@@ -69,7 +69,7 @@ export function SiteHeader() {
               <Link
                 key={item.label}
                 to={item.to}
-                hash={"hash" in item ? item.hash : undefined}
+                {...("hash" in item ? { hash: item.hash } : {})}
                 onClick={() => setOpen(false)}
                 className="py-2.5 text-sm text-muted-foreground"
                 activeProps={{ className: "text-foreground" }}
