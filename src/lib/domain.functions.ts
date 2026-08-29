@@ -59,3 +59,39 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
       live: check.dnsOk && check.sslOk,
     };
   });
+
+/**
+ * Registration lookup for a candidate name, so an owner can tell whether it is
+ * worth clicking through to a registrar. RDAP is the registries' own public
+ * directory: a 404 means nobody holds the name. Availability is reported as a
+ * strong hint, never as a guarantee — the registrar's checkout is the truth.
+ */
+export const checkDomainAvailability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { domains: string[] }) => ({
+    domains: (Array.isArray(input?.domains) ? input.domains : []).slice(0, 12).map((d) => String(d)),
+  }))
+  .handler(async ({ data }) => {
+    const { normalizeDomain, isValidDomain } = await import("@/lib/admin.server");
+
+    const lookup = async (raw: string) => {
+      const domain = normalizeDomain(raw);
+      if (!domain || !isValidDomain(domain)) {
+        return { domain, state: "invalid" as const };
+      }
+      try {
+        const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
+          headers: { Accept: "application/rdap+json" },
+          redirect: "follow",
+        });
+        if (res.status === 404) return { domain, state: "available" as const };
+        if (res.ok) return { domain, state: "taken" as const };
+        return { domain, state: "unknown" as const };
+      } catch {
+        return { domain, state: "unknown" as const };
+      }
+    };
+
+    const results = await Promise.all(data.domains.map(lookup));
+    return { results, checkedAt: new Date().toISOString() };
+  });
