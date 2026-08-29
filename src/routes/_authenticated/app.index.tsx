@@ -235,29 +235,38 @@ function Dashboard() {
       ) : null}
 
       <div className="panel-inset panel p-5">
-        <div className="flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className="eyebrow">New leads · {window.label.toLowerCase()}</p>
-            <p className="tnum mt-1.5 font-display text-[42px] leading-none font-semibold">
+        <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+          <div className="min-w-0">
+            <p className="eyebrow flex flex-wrap items-center gap-2">
+              <span aria-hidden="true" className="h-3 w-0.5 rounded-full bg-primary" />
+              <span className="text-primary/90">New leads · {window.label.toLowerCase()}</span>
+              <KeyLabel>Key number</KeyLabel>
+            </p>
+            <p className="tnum mt-2 font-display text-[42px] leading-none font-semibold text-primary">
               {stats.leads}
             </p>
             <p className={`mt-2 text-xs ${stats.delta >= 0 ? "text-primary" : "text-destructive"}`}>
               {stats.delta >= 0 ? "▲" : "▼"} {Math.abs(stats.delta)}% vs previous {window.days}{" "}
               day{window.days === 1 ? "" : "s"} ({stats.prevLeads})
             </p>
+            <p className="mt-2 text-[12px] text-muted-foreground">
+              Every lead here came from your Revora website, quote calculator or booking form.
+            </p>
           </div>
-          <div className="grid gap-4 text-right sm:grid-cols-2">
+          <div className="grid gap-4 sm:text-right md:grid-cols-2">
             <div>
               <p className="eyebrow">Revenue won</p>
-              <p className="tnum mt-1.5 font-display text-[22px] font-semibold text-primary">
-                {currency(stats.revenueWon)}
+              <p className="tnum mt-1.5 font-display text-[22px] font-semibold">
+                <span className="gold-mark">{currency(stats.revenueWon)}</span>
               </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">completed jobs in range</p>
             </div>
             <div>
               <p className="eyebrow">Open pipeline</p>
               <p className="tnum mt-1.5 font-display text-[22px] font-semibold">
                 {currency(stats.pipeline)}
               </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">still winnable right now</p>
             </div>
           </div>
         </div>
@@ -269,6 +278,7 @@ function Dashboard() {
           value={String(stats.bookings)}
           hint={`${stats.completed} completed in range`}
           tone="signal"
+          badge="Key"
         />
         <MetricCard
           label="Visitor → lead"
@@ -285,9 +295,9 @@ function Dashboard() {
           progress={stats.leadToBooking}
         />
         <MetricCard
-          label="Average job"
+          label="Average job value"
           value={currency(stats.avgJob)}
-          hint={`${stats.calls} call clicks`}
+          hint={`${stats.calls} call button clicks`}
         />
       </div>
 
@@ -298,7 +308,11 @@ function Dashboard() {
           hint={stats.needsAttention.length ? "nobody has replied yet" : "all caught up"}
           tone={stats.needsAttention.length ? "attention" : "signal"}
         />
-        <MetricCard label="Customers" value={String((customersQuery.data ?? []).length)} hint="lifetime" />
+        <MetricCard
+          label="Customers"
+          value={String((customersQuery.data ?? []).length)}
+          hint="lifetime, all sources"
+        />
         <MetricCard
           label="Upcoming jobs"
           value={String(stats.upcoming.length)}
@@ -310,6 +324,38 @@ function Dashboard() {
           hint="all time in your pipeline"
         />
       </div>
+
+      <Panel className="p-5">
+        <SectionHeading
+          eyebrow="Your growth system"
+          title="Everything running for your business"
+          description="Each part of Revora is live and connected — gold labels mark the sections that win you the most work."
+        />
+        <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {SYSTEM_SECTIONS.map((section) => (
+            <li key={section.to}>
+              <Link
+                to={section.to}
+                className="panel card-lift block h-full p-3.5 transition-colors hover:border-primary/40"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 truncate font-display text-[13.5px] font-semibold">
+                    {section.title}
+                  </p>
+                  {section.key ? <KeyLabel className="shrink-0">Key</KeyLabel> : null}
+                </div>
+                <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                  {section.description}
+                </p>
+                <p className="mt-2 inline-flex items-center gap-1 text-[11.5px] font-semibold tracking-[0.08em] text-primary uppercase">
+                  Open <ArrowRight className="size-3.5" aria-hidden="true" />
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+
 
       {remaining.length ? (
         <Panel className="p-5">
