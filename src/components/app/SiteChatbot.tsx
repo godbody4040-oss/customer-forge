@@ -7,7 +7,8 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyWebsiteChanges, planWebsiteChanges } from "@/lib/site-agent.functions";
-import { PLAN_INSTRUCTION_LIMIT, type AgentStep, type AgentTurn } from "@/lib/site-agent";
+import { AssistantMedia } from "@/components/app/AssistantMedia";
+import { PLAN_INSTRUCTION_LIMIT, type AgentAttachment, type AgentStep, type AgentTurn } from "@/lib/site-agent";
 
 const EXAMPLES = [
   "Rewrite the whole home page to lead with same-day service and a clear price promise",
@@ -17,7 +18,7 @@ const EXAMPLES = [
 ];
 
 type Message =
-  | { role: "user"; content: string }
+  | { role: "user"; content: string; attached?: string[] }
   | { role: "assistant"; content: string; plan?: Plan };
 
 type Plan = {
@@ -51,6 +52,7 @@ export function SiteChatbot({
   isPublishing?: boolean;
 }) {
   const [instruction, setInstruction] = useState("");
+  const [attachments, setAttachments] = useState<AgentAttachment[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
@@ -67,8 +69,15 @@ export function SiteChatbot({
   const chosen = useMemo(() => (plan?.steps ?? []).filter((step) => !skipped.has(step.key)), [plan, skipped]);
 
   const propose = useMutation({
-    mutationFn: (text: string) =>
-      ask({ data: { organizationId: organizationId!, instruction: text, history } }),
+    mutationFn: (input: { text: string; attachments: AgentAttachment[] }) =>
+      ask({
+        data: {
+          organizationId: organizationId!,
+          instruction: input.text,
+          history,
+          attachments: input.attachments,
+        },
+      }),
     onSuccess: (result) => {
       setMessages((prior) => [
         ...prior,
@@ -120,12 +129,21 @@ export function SiteChatbot({
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     const text = instruction.trim();
-    if (text.length < 3) return;
-    setMessages((prior) => [...prior, { role: "user", content: text }]);
+    if (text.length < 3 && !attachments.length) return;
+    const sent = attachments;
+    setMessages((prior) => [
+      ...prior,
+      {
+        role: "user",
+        content: text || "(see the attached file)",
+        attached: sent.map((attachment) => `${attachment.kind === "image" ? "Photo" : "Video"}: ${attachment.name}`),
+      },
+    ]);
     setPlan(null);
     setSkipped(new Set());
     setInstruction("");
-    propose.mutate(text);
+    setAttachments([]);
+    propose.mutate({ text, attachments: sent });
   };
 
   const destructive = chosen.filter((step) => step.destructive).length;
@@ -153,7 +171,8 @@ export function SiteChatbot({
       <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
         Write as little or as much as you like — a single tweak or a full brief. Revora can rewrite copy, add and
         remove sections and pages, reorder the layout, edit items and buttons, write your search and social text, and
-        change colours and fonts. You review the plan, then it's applied for you. No support request, no waiting.
+        change colours and fonts. Add photos or a short video, or just speak your request — Revora reads and listens too. You
+        review the plan, then it's applied for you. No support request, no waiting.
       </p>
 
       {!hasSections ? (
@@ -176,7 +195,12 @@ export function SiteChatbot({
               ) : (
                 <Bot className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
               )}
-              <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{message.content}</p>
+              <div className="min-w-0">
+                <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{message.content}</p>
+                {message.role === "user" && message.attached?.length ? (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">{message.attached.join(" · ")}</p>
+                ) : null}
+              </div>
             </div>
           ))}
           {propose.isPending ? (
@@ -200,8 +224,17 @@ export function SiteChatbot({
           aria-label="Tell Revora what to change"
           className="min-h-[96px]"
         />
+        <AssistantMedia
+          organizationId={organizationId}
+          attachments={attachments}
+          onChange={setAttachments}
+          onTranscript={(text) =>
+            setInstruction((prior) => (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT))
+          }
+          disabled={!canManage || !hasSections}
+        />
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" variant="signal" disabled={!canManage || !hasSections || propose.isPending}>
+          <Button type="submit" variant="signal" disabled={!canManage || !hasSections || propose.isPending || (instruction.trim().length < 3 && !attachments.length)}>
             {propose.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             {messages.length ? "Send" : "Ask Revora"}
           </Button>

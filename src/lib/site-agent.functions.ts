@@ -15,6 +15,7 @@ import {
   PLAN_INSTRUCTION_LIMIT,
   describeActions,
   readActions,
+  readAttachments,
   type AgentAction,
   type AgentTurn,
   type SiteIndex,
@@ -121,10 +122,17 @@ function indexOf(site: LoadedSite): { index: SiteIndex; currentText: Map<string,
 export const planWebsiteChanges = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { organizationId: string; instruction: string; history?: { role: string; content: string }[] }) => {
+    (input: {
+      organizationId: string;
+      instruction: string;
+      history?: { role: string; content: string }[];
+      attachments?: unknown;
+    }) => {
       const organizationId = orgIdOf(input);
       const instruction = str(input?.instruction, PLAN_INSTRUCTION_LIMIT);
-      if (instruction.length < 3) throw new Error("Tell Revora what you'd like changed.");
+      const attachments = readAttachments(input?.attachments);
+      if (instruction.length < 3 && !attachments.length)
+        throw new Error("Tell Revora what you'd like changed — type it, say it, or attach a photo or clip.");
       const history: AgentTurn[] = Array.isArray(input?.history)
         ? input.history
             .slice(-8)
@@ -134,9 +142,10 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
             }))
             .filter((turn) => turn.content.length > 0)
         : [];
-      return { organizationId, instruction, history };
+      return { organizationId, instruction, history, attachments };
     },
   )
+
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
@@ -230,8 +239,9 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
         pageKinds: PAGE_LIBRARY.map((p2) => p2.kind),
         componentKinds: ["feature", "faq", "step", "stat", "card", "link", "button", "quote", "list_item", "image"],
       },
-      data.instruction,
+      data.instruction || "(see the attached file(s) — follow what they show or say)",
       data.history,
+      data.attachments,
     );
 
     const actions = readActions(raw["actions"], {
@@ -257,7 +267,11 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
       organization_id: orgId,
       kind: "agent_plan",
       model: AGENT_MODEL,
-      instruction: data.instruction.slice(0, 4000),
+      instruction:
+        data.instruction.slice(0, 4000) +
+        (data.attachments.length
+          ? `\n[attached: ${data.attachments.map((a) => `${a.kind} ${a.name}`).join(", ")}]`
+          : ""),
       result: plan as unknown as never,
       created_by: userId,
     });
@@ -483,4 +497,45 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
     });
 
     return { applied: applied.length, failed: failed.length, snapshotLabel };
+  });
+
+/* ------------------------------ voice commands ----------------------------- */
+
+/**
+ * Transcribes a recorded voice command so the owner can talk to the assistant
+ * instead of typing. Returns editable text only — nothing is changed here.
+ */
+export const transcribeVoiceCommand = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string; audio?: unknown }) => {
+    const organizationId = orgIdOf(input);
+    const [attachment] = readAttachments([input?.audio]);
+    if (!attachment || attachment.kind !== "audio")
+      throw new Error("That recording couldn't be read. Try recording again.");
+    return { organizationId, attachment };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    // RLS: a member can only read their own workspace, so this is the tenant gate.
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("id", data.organizationId)
+      .maybeSingle();
+    if (!org) throw new Error("Workspace not found.");
+
+    const { transcribeVoice, TRANSCRIBE_MODEL } = await import("@/lib/site-agent.server");
+    const text = await transcribeVoice(data.attachment);
+    if (!text) return { text: "", message: "I couldn't hear anything in that recording." };
+
+    await supabase.from("ai_generations").insert({
+      organization_id: data.organizationId,
+      kind: "voice_command",
+      model: TRANSCRIBE_MODEL,
+      instruction: "(voice note)",
+      result: { text: text.slice(0, 4000) } as unknown as never,
+      created_by: userId,
+    });
+
+    return { text: text.slice(0, PLAN_INSTRUCTION_LIMIT), message: null as string | null };
   });
