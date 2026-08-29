@@ -17,6 +17,8 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
 import { FounderNote } from "@/components/marketing/SalesCTA";
+import { ROICalculator } from "@/components/marketing/ROICalculator";
+import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
