@@ -12,7 +12,7 @@
  */
 
 import { AiGatewayError } from "@/lib/site-engine.server";
-import { MAX_ACTIONS, type AgentAttachment, type AgentTurn } from "@/lib/site-agent";
+import { MAX_ACTIONS, readChapters, type AgentAttachment, type AgentChapter, type AgentTurn } from "@/lib/site-agent";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -213,7 +213,17 @@ export async function planChanges(
           .join("; ")}. ` +
         `Use them as context for the request: read any words shown or spoken, describe what is pictured only when it helps the copy, ` +
         `and follow spoken instructions exactly as if they had been typed. Never state a fact (price, award, rating, guarantee) that ` +
-        `only appears to be true from a photo — if it matters, ask for it in "questions".`,
+        `only appears to be true from a photo — if it matters, ask for it in "questions".` +
+        attachments
+          .filter((attachment) => attachment.chapters?.length)
+          .map(
+            (attachment) =>
+              `\nMoments already noted in "${attachment.name}": ` +
+              attachment.chapters!.map((chapter) => `${chapter.at} ${chapter.label} — ${chapter.detail}`).join(" | ") +
+              `. When the owner mentions a timestamp, use the moment at that time.`,
+          )
+          .join(""),
+
     });
     for (const attachment of attachments) parts.push(attachmentPart(attachment));
   }
@@ -276,3 +286,38 @@ export async function transcribeVoice(attachment: AgentAttachment): Promise<stri
   return (payload.text ?? "").trim();
 }
 
+
+/* ---------------------------- video chapters ------------------------------- */
+
+export const CHAPTER_MODEL = "google/gemini-3.7-flash";
+
+/**
+ * Writes short "chapters" for an attached clip so the owner can reference a
+ * moment ("use the shot at 0:12") instead of describing it. Descriptive only —
+ * no prices, ratings or claims are inferred from footage.
+ */
+export async function summarizeChapters(
+  attachment: AgentAttachment,
+): Promise<{ summary: string; chapters: AgentChapter[] }> {
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content:
+        'You index short business videos for a website editor. Reply as JSON only: ' +
+        '{"summary":"one sentence about the clip","chapters":[{"at":"0:12","label":"short title","detail":"what is visible or said"}]}. ' +
+        "Write between 2 and 8 chapters in time order, using m:ss timestamps that exist in the clip. " +
+        "Describe only what is actually visible or spoken. Never infer prices, ratings, awards, guarantees or business claims.",
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: `Index this clip ("${attachment.name}") into chapters.` },
+        attachmentPart(attachment),
+      ],
+    },
+  ];
+
+  const raw = await call(CHAPTER_MODEL, messages);
+  const summary = typeof raw["summary"] === "string" ? raw["summary"].slice(0, 400) : "";
+  return { summary, chapters: readChapters(raw["chapters"]) };
+}

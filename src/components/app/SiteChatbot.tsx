@@ -2,13 +2,20 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, Bot, Check, History, Loader2, Rocket, Send, Sparkles, Trash2, User } from "lucide-react";
+import { AlertTriangle, Bot, Check, Clapperboard, History, Loader2, Rocket, Send, Sparkles, Trash2, User } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyWebsiteChanges, planWebsiteChanges } from "@/lib/site-agent.functions";
 import { AssistantMedia } from "@/components/app/AssistantMedia";
-import { PLAN_INSTRUCTION_LIMIT, type AgentAttachment, type AgentStep, type AgentTurn } from "@/lib/site-agent";
+import {
+  MULTIMODAL_TEMPLATES,
+  PLAN_INSTRUCTION_LIMIT,
+  QUICK_COMMANDS,
+  type AgentAttachment,
+  type AgentStep,
+  type AgentTurn,
+} from "@/lib/site-agent";
 
 const EXAMPLES = [
   "Rewrite the whole home page to lead with same-day service and a clear price promise",
@@ -16,6 +23,9 @@ const EXAMPLES = [
   "Make every headline shorter, then move the reviews above the services",
   "Write page titles and meta descriptions for every page",
 ];
+
+const CHIP =
+  "cursor-pointer rounded-full border border-border px-2.5 py-1 text-left text-[11px] text-muted-foreground transition-colors hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 type Message =
   | { role: "user"; content: string; attached?: string[] }
@@ -52,6 +62,7 @@ export function SiteChatbot({
   isPublishing?: boolean;
 }) {
   const [instruction, setInstruction] = useState("");
+  const [transcripts, setTranscripts] = useState<{ at: string; text: string }[]>([]);
   const [attachments, setAttachments] = useState<AgentAttachment[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -136,7 +147,11 @@ export function SiteChatbot({
       {
         role: "user",
         content: text || "(see the attached file)",
-        attached: sent.map((attachment) => `${attachment.kind === "image" ? "Photo" : "Video"}: ${attachment.name}`),
+        attached: sent.map(
+          (attachment) =>
+            `${attachment.kind === "image" ? "Photo" : attachment.kind === "video" ? "Video" : "Voice"}: ${attachment.name}` +
+            (attachment.chapters?.length ? ` (${attachment.chapters.length} moments indexed)` : ""),
+        ),
       },
     ]);
     setPlan(null);
@@ -228,7 +243,14 @@ export function SiteChatbot({
           organizationId={organizationId}
           attachments={attachments}
           onChange={setAttachments}
-          onTranscript={(text) =>
+          onTranscript={(text) => {
+            setTranscripts((prior) => [
+              ...prior,
+              { at: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), text },
+            ]);
+            setInstruction((prior) => (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT));
+          }}
+          onInsert={(text) =>
             setInstruction((prior) => (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT))
           }
           disabled={!canManage || !hasSections}
@@ -242,19 +264,86 @@ export function SiteChatbot({
             {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()} characters
           </span>
         </div>
+        <div className="space-y-2">
+          <p className="text-[11px] font-medium text-muted-foreground" id="quick-commands-label">
+            Quick commands — tap one, or say it out loud
+          </p>
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="quick-commands-label">
+            {QUICK_COMMANDS.map((command) => (
+              <button
+                key={command.label}
+                type="button"
+                disabled={!canManage || !hasSections}
+                className={`${CHIP} disabled:cursor-not-allowed disabled:opacity-50`}
+                onClick={() => setInstruction(command.instruction.slice(0, PLAN_INSTRUCTION_LIMIT))}
+              >
+                {command.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[11px] font-medium text-muted-foreground" id="media-templates-label">
+            Guided photo &amp; video briefs — attach the files, then send
+          </p>
+          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="media-templates-label">
+            {MULTIMODAL_TEMPLATES.map((template) => (
+              <button
+                key={template.key}
+                type="button"
+                disabled={!canManage || !hasSections}
+                title={`Attach: ${template.attach}`}
+                className={`${CHIP} disabled:cursor-not-allowed disabled:opacity-50`}
+                onClick={() => setInstruction(template.instruction.slice(0, PLAN_INSTRUCTION_LIMIT))}
+              >
+                <Clapperboard className="mr-1 inline size-3" aria-hidden="true" />
+                {template.label}
+                <span className="sr-only"> — attach {template.attach}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {MULTIMODAL_TEMPLATES.map((template) => `${template.label}: ${template.attach}`).join(" · ")}
+          </p>
+        </div>
+
         {!messages.length ? (
           <div className="flex flex-wrap gap-2">
             {EXAMPLES.map((example) => (
               <button
                 key={example}
                 type="button"
-                className="cursor-pointer rounded-full border border-border px-2.5 py-1 text-left text-[11px] text-muted-foreground transition-colors hover:bg-elevated"
+                className={CHIP}
                 onClick={() => setInstruction(example)}
               >
                 {example}
               </button>
             ))}
           </div>
+        ) : null}
+
+        {transcripts.length ? (
+          <section aria-label="Voice request transcripts" className="rounded-md border border-border p-3">
+            <p className="text-[11px] font-medium text-muted-foreground">
+              Voice transcripts — what Revora heard, in your words
+            </p>
+            <ul className="mt-1.5 space-y-1.5" aria-live="polite">
+              {transcripts.map((entry, index) => (
+                <li key={`${entry.at}-${index}`} className="text-[12px] leading-relaxed">
+                  <span className="font-mono text-muted-foreground">{entry.at}</span>{" "}
+                  <span className="whitespace-pre-wrap">“{entry.text}”</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className={`${CHIP} mt-2`}
+              onClick={() => setTranscripts([])}
+            >
+              Clear transcripts
+            </button>
+          </section>
         ) : null}
       </form>
 

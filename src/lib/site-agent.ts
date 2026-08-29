@@ -486,6 +486,17 @@ export const ATTACHMENT_LIMITS: Record<AgentAttachmentKind, number> = {
 
 export type AgentAttachmentKind = "image" | "video" | "audio";
 
+/**
+ * One moment in an attached clip. Revora writes these automatically so the
+ * owner can say "use the shot at 0:12" instead of describing it.
+ */
+export type AgentChapter = {
+  /** Display timestamp, e.g. "0:12". */
+  at: string;
+  label: string;
+  detail: string;
+};
+
 export type AgentAttachment = {
   kind: AgentAttachmentKind;
   /** e.g. image/jpeg, video/mp4, audio/webm */
@@ -493,7 +504,107 @@ export type AgentAttachment = {
   name: string;
   /** `data:<mime>;base64,<payload>` */
   dataUrl: string;
+  /** Auto-written moments for a video clip, so the owner can reference them. */
+  chapters?: AgentChapter[];
 };
+
+export const MAX_CHAPTERS = 10;
+
+/** Sanitises model- or client-supplied chapter lists. */
+export function readChapters(value: unknown): AgentChapter[] {
+  if (!Array.isArray(value)) return [];
+  const out: AgentChapter[] = [];
+  for (const raw of value.slice(0, MAX_CHAPTERS)) {
+    if (!raw || typeof raw !== "object") continue;
+    const item = raw as Record<string, unknown>;
+    const at = typeof item["at"] === "string" ? item["at"].slice(0, 12) : "";
+    const label = typeof item["label"] === "string" ? item["label"].slice(0, 120) : "";
+    const detail = typeof item["detail"] === "string" ? item["detail"].slice(0, 400) : "";
+    if (!label && !detail) continue;
+    out.push({ at: at || "0:00", label: label || "Moment", detail });
+  }
+  return out;
+}
+
+/**
+ * One-tap starting points for the most common edits. Used for the quick voice
+ * and click commands next to the assistant box — each one is a full, safe
+ * instruction the owner can still edit before sending.
+ */
+export const QUICK_COMMANDS: { label: string; instruction: string }[] = [
+  {
+    label: "Change hero text",
+    instruction:
+      "Rewrite the hero heading and subheading on the home page so the main benefit and service area are obvious in the first line, and make the main button copy action-led.",
+  },
+  {
+    label: "Add gallery",
+    instruction:
+      "Add a photo gallery section to the home page showing recent work, with a short introduction line, and link it from the menu if a gallery page makes more sense.",
+  },
+  {
+    label: "Update pricing section",
+    instruction:
+      "Update the pricing section so each package has a clear name, what's included and a starting price, and make the most popular option stand out. Ask me for any prices you don't already have.",
+  },
+  {
+    label: "Sharpen the call to action",
+    instruction:
+      "Make every call to action on the site consistent and specific — same wording, same promise, and a booking or quote button visible on every page.",
+  },
+  {
+    label: "Add customer reviews",
+    instruction:
+      "Add a reviews section high on the home page using the reviews already in my workspace, and move it above the services section.",
+  },
+  {
+    label: "Write my search text",
+    instruction:
+      "Write a page title and meta description for every page, plus social share text for the home page, using my real services and city.",
+  },
+];
+
+/**
+ * Guided multimodal templates. Each one tells the owner exactly what to attach
+ * and gives the assistant a consistent brief, so a before/after clip or a set
+ * of job photos produces the same quality of update every time.
+ */
+export const MULTIMODAL_TEMPLATES: {
+  key: string;
+  label: string;
+  attach: string;
+  instruction: string;
+}[] = [
+  {
+    key: "before-after",
+    label: "Before / after job",
+    attach: "A short before/after clip, or one before photo and one after photo",
+    instruction:
+      "I've attached a before/after of a recent job. Write a short case-study block for the home page: a headline about the transformation, two or three sentences describing what was done (only what you can actually see), and a button to book the same service. Add the photos to the gallery section, and tell me any detail you need from me instead of guessing prices or timings.",
+  },
+  {
+    key: "walkthrough",
+    label: "Walkthrough clip",
+    attach: "A 30–60 second clip talking through your business or a job",
+    instruction:
+      "I've attached a walkthrough clip. Use the chapters you wrote for it to update my website: pull the services mentioned into the services section, use my own words for the about section, and list anything I said that you can't verify as a question for me instead of publishing it.",
+  },
+  {
+    key: "photo-refresh",
+    label: "Photo refresh",
+    attach: "Two to four recent job photos",
+    instruction:
+      "I've attached recent job photos. Refresh the gallery section with them, write one short caption per photo describing only what's visible, and update the hero image guidance to match the style of these photos.",
+  },
+  {
+    key: "competitor-flyer",
+    label: "Match a flyer or design",
+    attach: "A photo or screenshot of the flyer, van wrap or page you like",
+    instruction:
+      "I've attached a design I like. Match its tone and structure on my home page — section order, heading style and colour feel — but keep every fact, price and service my own. Don't copy any wording or claims from the image.",
+  },
+];
+
 
 export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
 export const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v"];
@@ -526,15 +637,20 @@ export function readAttachments(value: unknown): AgentAttachment[] {
     if (!raw || typeof raw !== "object") continue;
     const item = raw as Record<string, unknown>;
     const dataUrl = typeof item["dataUrl"] === "string" ? item["dataUrl"] : "";
-    const match = /^data:([a-z0-9.+/-]+);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
+    // Browser recordings carry codec parameters (audio/webm;codecs=opus) — accept
+    // and drop them, since only the base media type decides what we allow.
+    const match = /^data:([a-z0-9.+/-]+)((?:;[a-z0-9.+=_-]+)*);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
     if (!match) continue;
     const mimeType = (match[1] ?? "").toLowerCase();
+
     const kind = attachmentKindOf(mimeType);
     if (!kind) continue;
-    const clean = `data:${mimeType};base64,${(match[2] ?? "").replace(/\s+/g, "")}`;
+    const clean = `data:${mimeType};base64,${(match[3] ?? "").replace(/\s+/g, "")}`;
     if (base64Bytes(clean) > ATTACHMENT_LIMITS[kind]) continue;
     const name = typeof item["name"] === "string" ? item["name"].slice(0, 120) : `${kind} attachment`;
-    out.push({ kind, mimeType, name, dataUrl: clean });
+    const chapters = kind === "video" ? readChapters(item["chapters"]) : [];
+    out.push({ kind, mimeType, name, dataUrl: clean, ...(chapters.length ? { chapters } : {}) });
+
   }
   return out;
 }
