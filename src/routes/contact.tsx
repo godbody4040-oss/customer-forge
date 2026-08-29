@@ -49,10 +49,10 @@ function Contact() {
   const [interest, setInterest] = useState<string>("Complete Revora System");
 
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-0">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-16">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1fr]">
+      <main className="hero-aura mx-auto max-w-6xl px-4 py-16">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start lg:gap-12">
           <div>
             <p className="eyebrow">Contact Revora</p>
             <h1 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
@@ -63,28 +63,24 @@ function Contact() {
               customer acquisition system for your business? Get in touch with the Revora team.
             </p>
 
-            <ul className="mt-8 space-y-3">
-              <li className="panel flex items-center gap-3.5 p-4">
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              <li className="panel card-lift flex items-center gap-3.5 p-4">
                 <Mail className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                <div>
-                  <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-                    Email
-                  </p>
+                <div className="min-w-0">
+                  <p className="eyebrow">Email</p>
                   <a
                     href={revoraMailto(MAIL_SUBJECTS.inquiry)}
-                    className="text-[14px] font-medium hover:text-primary"
+                    className="block truncate text-[13px] font-medium hover:text-primary"
                   >
                     {REVORA.email}
                   </a>
                 </div>
               </li>
-              <li className="panel flex items-center gap-3.5 p-4">
+              <li className="panel card-lift flex items-center gap-3.5 p-4">
                 <Phone className="size-4 shrink-0 text-primary" aria-hidden="true" />
-                <div>
-                  <p className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-                    Phone
-                  </p>
-                  <a href={revoraTel} className="text-[14px] font-medium hover:text-primary">
+                <div className="min-w-0">
+                  <p className="eyebrow">Phone</p>
+                  <a href={revoraTel} className="block text-[13px] font-medium hover:text-primary">
                     {REVORA.phoneDisplay}
                   </a>
                 </div>
@@ -99,11 +95,6 @@ function Contact() {
                 <a href={revoraTel}>Call Revora</a>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Get started
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
                 <Link to="/demo">Request a demo</Link>
               </Button>
             </div>
@@ -113,7 +104,15 @@ function Contact() {
             </div>
           </div>
 
-          <div className="panel p-6">
+          <div className="panel p-6 lg:sticky lg:top-24">
+            <div className="mb-5 border-b border-border pb-4">
+              <h2 className="font-display text-[17px] font-semibold">Send a message</h2>
+              <p className="mt-1.5 text-[12px] text-muted-foreground">
+                Tell us about your business and what you want the system to do. Replies come from{" "}
+                {REVORA.email}.
+              </p>
+            </div>
+
             {sent ? (
               <div className="py-10 text-center">
                 <h2 className="font-display text-[17px] font-semibold">Message received</h2>
@@ -159,7 +158,7 @@ function Contact() {
                     name="interest"
                     value={interest}
                     onChange={(e) => setInterest(e.target.value)}
-                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground"
+                    className="select-field h-10 w-full rounded-md border border-input bg-background px-3 text-[13px] text-foreground"
                   >
                     {INTERESTS.map((i) => (
                       <option key={i} value={i}>
@@ -175,7 +174,11 @@ function Contact() {
                 <Button type="submit" variant="signal" className="w-full">
                   Send message
                 </Button>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Prefer to talk it through? Call {REVORA.phoneDisplay} — no automated queue.
+                </p>
               </form>
+
             )}
           </div>
         </div>

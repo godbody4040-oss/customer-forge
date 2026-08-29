@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
-import { FounderNote, SalesCTA } from "@/components/marketing/SalesCTA";
+import { SalesCTA } from "@/components/marketing/SalesCTA";
 import { Panel } from "@/components/app/Bits";
 import { REVORA } from "@/lib/brand";
 
@@ -25,15 +25,34 @@ export const Route = createFileRoute("/about")({
   component: About,
 });
 
+const PILLARS = [
+  {
+    title: "Get discovered",
+    body: "A fast, conversion-first website with local service and city pages, structured data and a health score that says what to fix next.",
+  },
+  {
+    title: "Capture every opportunity",
+    body: "Quote calculators, booking forms and call buttons on every screen, with each submission landing in one pipeline.",
+  },
+  {
+    title: "Follow up automatically",
+    body: "Automations chase quiet leads, request reviews after completed jobs and keep the calendar full without manual reminders.",
+  },
+  {
+    title: "Know what's working",
+    body: "Traffic, leads, bookings and conversion rate by source — reported in plain language, not vanity charts.",
+  },
+];
+
 function About() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-4xl px-4 py-16">
+        <section className="hero-aura border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 lg:py-20">
             <p className="eyebrow">About Revora</p>
-            <h1 className="mt-2 font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
+            <h1 className="mt-2 max-w-3xl font-display text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold">
               Built to help businesses <span className="gold-text">grow</span>.
             </h1>
             <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
@@ -41,32 +60,59 @@ function About() {
               capture opportunities, convert leads, manage customers, automate follow-up, and
               understand what's driving their growth.
             </p>
+            <dl className="mt-10 grid gap-6 border-t border-border pt-6 sm:grid-cols-3">
+              {[
+                ["One system", "Site, quotes, bookings, CRM and analytics together"],
+                ["1 day", "From signup to a live website address"],
+                ["Every trade", "Templates tuned to how each business sells"],
+              ].map(([value, label]) => (
+                <div key={label}>
+                  <dt className="font-display text-[17px] leading-tight font-semibold">{value}</dt>
+                  <dd className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                    {label}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
 
         <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-4xl px-4 py-16">
-            <p className="eyebrow">Founder</p>
-            <Panel className="mt-4 flex items-center gap-4 p-5">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/15 font-display text-[15px] font-semibold text-primary">
-                A
-              </span>
-              <div>
-                <p className="font-display text-[15px] font-semibold">{REVORA.founder.name}</p>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">{REVORA.founder.role}</p>
-              </div>
-            </Panel>
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <p className="eyebrow">What Revora does</p>
+            <h2 className="mt-2 max-w-2xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
+              Four jobs, one operating system.
+            </h2>
+            <div className="mt-8 grid gap-3 md:grid-cols-2">
+              {PILLARS.map((p) => (
+                <Panel key={p.title} className="card-lift p-5">
+                  <h3 className="font-display text-[15px] font-semibold">{p.title}</h3>
+                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
+                </Panel>
+              ))}
+            </div>
           </div>
         </section>
 
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <FounderNote />
+            <p className="eyebrow text-center">Founder</p>
+            <Panel className="mx-auto mt-5 max-w-2xl p-6 text-center">
+              <span className="mx-auto grid size-12 place-items-center rounded-full bg-primary/15 font-display text-[17px] font-semibold text-primary">
+                A
+              </span>
+              <p className="mt-4 font-display text-[17px] font-semibold">{REVORA.founder.name}</p>
+              <p className="mt-1 text-[12px] text-muted-foreground">{REVORA.founder.role}</p>
+              <p className="mt-4 text-[14px] leading-relaxed text-muted-foreground">
+                Revora was created with a simple goal: give businesses a better system for turning
+                online attention into real customers — without stitching five subscriptions together.
+              </p>
+            </Panel>
           </div>
         </section>
 
-        <section>
-          <div className="mx-auto max-w-6xl px-4 py-16">
+        <section className="hero-aura bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-20">
             <SalesCTA />
           </div>
         </section>
@@ -75,3 +121,4 @@ function About() {
     </div>
   );
 }
+

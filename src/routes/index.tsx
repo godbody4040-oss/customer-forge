@@ -16,7 +16,7 @@ import {
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
-import { FounderNote, SalesCTA } from "@/components/marketing/SalesCTA";
+import { FounderNote } from "@/components/marketing/SalesCTA";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlans } from "@/lib/plans.functions";
@@ -129,9 +129,9 @@ function Landing() {
 
       <main>
         {/* Hero */}
-        <section className="border-b border-border">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
-            <div>
+        <section className="hero-aura border-b border-border">
+          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-start lg:gap-10 lg:py-20">
+            <div className="lg:pt-4">
               <Pill tone="signal">REVORA™ — The Business Growth Operating System</Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.5rem)] leading-[1.04] font-semibold tracking-tight">
                 Turn more <span className="gold-text">opportunities</span> into customers.
@@ -140,7 +140,7 @@ function Landing() {
                 The complete business growth operating system for getting found, capturing leads,
                 booking customers, following up and growing relationships.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button asChild variant="signal" size="lg">
                   <Link to="/auth" search={{ mode: "signup" }}>
                     Build my growth system <ArrowRight className="size-4" />
@@ -151,15 +151,17 @@ function Landing() {
                 </Button>
               </div>
 
-              <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-border pt-6">
+              <dl className="mt-10 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-border pt-6 sm:max-w-lg sm:grid-cols-3">
                 {[
                   ["1 day", "Free trial, no card"],
                   ["1 day", "From signup to live site"],
                   ["1 inbox", "Calls, quotes and bookings"],
                 ].map(([value, label]) => (
                   <div key={label}>
-                    <dt className="tnum font-display text-[19px] font-semibold">{value}</dt>
-                    <dd className="mt-1 text-[11px] leading-snug text-muted-foreground">{label}</dd>
+                    <dt className="tnum font-display text-[19px] leading-tight font-semibold">
+                      {value}
+                    </dt>
+                    <dd className="mt-1 text-[12px] leading-snug text-muted-foreground">{label}</dd>
                   </div>
                 ))}
               </dl>
@@ -177,7 +179,7 @@ function Landing() {
             />
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {ECOSYSTEM.map(({ icon: Icon, name, body }) => (
-                <Panel key={name} className="group relative overflow-hidden p-5 transition-colors hover:border-primary/40">
+                <Panel key={name} className="card-lift group relative overflow-hidden p-5">
                   <span
                     aria-hidden="true"
                     className="absolute inset-x-0 top-0 h-px bg-primary/0 transition-colors group-hover:bg-primary/50"
@@ -194,7 +196,7 @@ function Landing() {
         </section>
 
         {/* Problem */}
-        <section className="border-b border-border bg-card">
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <p className="eyebrow">The real problem</p>
             <h2 className="mt-2 max-w-2xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
@@ -202,7 +204,7 @@ function Landing() {
             </h2>
             <div className="mt-9 grid gap-3 md:grid-cols-3">
               {PROBLEMS.map((p) => (
-                <Panel key={p.title} className="p-5">
+                <Panel key={p.title} className="card-lift p-5">
                   <h3 className="font-display text-[15px] font-semibold">{p.title}</h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
                 </Panel>
@@ -210,9 +212,8 @@ function Landing() {
             </div>
           </div>
         </section>
-
         {/* Customer journey */}
-        <section className="border-b border-border">
+        <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
               eyebrow="From search to customer"
@@ -223,7 +224,8 @@ function Landing() {
         </section>
 
         {/* Without vs with */}
-        <section className="border-b border-border bg-card">
+        <section className="border-b border-border">
+
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
               eyebrow="The difference"
@@ -234,8 +236,8 @@ function Landing() {
         </section>
 
         {/* See it for your business */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+        <section className="hero-aura border-b border-border bg-card">
+          <div className="mx-auto max-w-4xl px-4 py-20 text-center">
             <h2 className="font-display text-[clamp(1.5rem,3vw,2.2rem)] leading-tight font-semibold">
               See what your business could look like.
             </h2>
@@ -243,7 +245,7 @@ function Landing() {
               Enter a few details and see how Revora can turn your online presence into a
               customer-acquisition system.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild variant="signal" size="lg">
                 <Link to="/demo">
                   See it for my business <ArrowRight className="size-4" />
@@ -258,15 +260,13 @@ function Landing() {
           </div>
         </section>
 
-
-
         {/* Features */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="What you get" title="One engine, from first search to paid invoice" />
             <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map(({ icon: Icon, title, body }) => (
-                <Panel key={title} className="p-5">
+                <Panel key={title} className="card-lift p-5">
                   <Icon className="size-5 text-primary" aria-hidden="true" />
                   <h3 className="mt-3.5 font-display text-[15px] font-semibold">{title}</h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
@@ -282,7 +282,7 @@ function Landing() {
             <SectionHeading eyebrow="How it works" title="Live this week, not next quarter" />
             <ol className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {STEPS.map((s) => (
-                <li key={s.n} className="panel p-5">
+                <li key={s.n} className="panel card-lift flex flex-col p-5">
                   <span className="tnum font-display text-[13px] font-semibold text-primary">
                     {s.n}
                   </span>
@@ -293,7 +293,6 @@ function Landing() {
             </ol>
           </div>
         </section>
-
         {/* Industries */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
@@ -318,6 +317,11 @@ function Landing() {
                 </li>
               ))}
             </ul>
+            <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-muted-foreground">
+              <span className="text-foreground">Also built for:</span>{" "}
+              {TRUST_INDUSTRIES.join(" · ")}. Customer stories are published here only once they're
+              real and verified with the business owner.
+            </p>
           </div>
         </section>
 
@@ -325,13 +329,15 @@ function Landing() {
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading eyebrow="Pricing" title="Priced like one extra job a month" />
-            <div className="mt-8 grid gap-3 md:grid-cols-3">
+            <div className="mt-8 grid items-stretch gap-3 md:grid-cols-3">
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`panel p-5 ${plan.is_featured ? "border-primary/40" : ""}`}
+                  className={`panel card-lift flex h-full flex-col p-5 ${
+                    plan.is_featured ? "border-primary/40" : ""
+                  }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <h3 className="font-display text-[15px] font-semibold">{plan.name}</h3>
                     {plan.is_featured ? <Pill tone="signal">Most popular</Pill> : null}
                   </div>
@@ -340,7 +346,7 @@ function Landing() {
                     <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
                   </p>
                   <p className="mt-2 text-[13px] text-muted-foreground">{plan.tagline}</p>
-                  <ul className="mt-4 space-y-2 border-t border-border pt-4">
+                  <ul className="mt-4 flex-1 space-y-2 border-t border-border pt-4">
                     {((plan.features as string[] | null) ?? []).map((f) => (
                       <li key={f} className="flex gap-2 text-[13px] text-muted-foreground">
                         <span aria-hidden="true" className="text-primary">
@@ -372,62 +378,36 @@ function Landing() {
           </div>
         </section>
 
-        {/* Trust */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading
-              eyebrow="Who it's for"
-              title="Built for businesses that depend on local customers"
-            />
-            <ul className="mt-8 flex flex-wrap gap-2">
-              {TRUST_INDUSTRIES.map((name) => (
-                <li
-                  key={name}
-                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] text-muted-foreground"
-                >
-                  {name}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-5 text-[12px] text-muted-foreground">
-              Customer stories are published here only once they're real and verified with the
-              business owner.
-            </p>
-          </div>
-        </section>
-
         {/* Founder mission */}
-        <section className="border-b border-border bg-card">
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <FounderNote />
           </div>
         </section>
 
-        {/* Sales CTA */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <SalesCTA />
-          </div>
-        </section>
-
         {/* Final CTA */}
-        <section>
+        <section className="hero-aura bg-card">
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-            <h2 className="font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
+            <h2 className="mx-auto max-w-2xl font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
               Your next customer is searching right now.
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] text-muted-foreground">
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
               Get the site, the quotes and the calendar working together — and stop losing jobs to
               whoever answered first.
             </p>
-            <Button asChild variant="signal" size="lg" className="mt-8">
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Build my growth system <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
+              <Button asChild variant="signal" size="lg">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Build my growth system <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/contact">Talk to Revora</Link>
+              </Button>
+            </div>
           </div>
         </section>
+
       </main>
 
       <SiteFooter />
