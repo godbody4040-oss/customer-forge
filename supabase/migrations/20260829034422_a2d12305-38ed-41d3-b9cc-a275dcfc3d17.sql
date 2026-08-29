@@ -1,0 +1,1 @@
+GRANT SELECT (is_published) ON public.reviews TO anon;
