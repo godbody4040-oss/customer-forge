@@ -7,6 +7,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { safeLinkUrl } from "@/lib/website-content";
 
 export function publicClient() {
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -266,7 +267,12 @@ export async function loadSite(
     const { data: rows } = await (allowUnpublished
       ? componentQuery.order("sort_order")
       : componentQuery.eq("is_visible", true).order("sort_order"));
-    components = (rows ?? []).map((row) => ({ ...row, url: resolve(row.media_url) })) as SiteComponent[];
+    // Links are scheme-allowlisted here so no consumer can render a javascript:/data: href.
+    components = (rows ?? []).map((row) => ({
+      ...row,
+      link_url: safeLinkUrl(row.link_url),
+      url: resolve(row.media_url),
+    })) as SiteComponent[];
   }
 
   const sectionsWithComponents = sections.map((section) => ({
