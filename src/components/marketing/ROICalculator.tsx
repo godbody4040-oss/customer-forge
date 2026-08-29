@@ -145,13 +145,13 @@ export function ROICalculator() {
         </div>
 
         <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
-          These figures come only from the numbers you entered. Revora does not guarantee leads,
-          bookings, rankings or revenue.
+          Illustrative estimate only. Results vary by business, market, offer and execution. Revora
+          does not guarantee specific results. These figures come only from the numbers you entered.
         </p>
 
         <Button asChild variant="signal" size="lg" className="mt-5 w-full">
           <Link to="/get-started">
-            Start my Revora system <ArrowRight className="size-4" aria-hidden="true" />
+            Build My Growth System <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </Button>
       </Panel>

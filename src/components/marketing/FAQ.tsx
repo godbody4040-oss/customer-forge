@@ -29,7 +29,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "How does pricing work?",
-    a: `One offer: ${usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup to build, customize and launch your system, then — after a free first month — ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month for the platform, automation, hosting, updates, growth services and support.`,
+    a: `${GROWTH_SYSTEM.explainer} The setup fee covers the build, customization, configuration and launch; the monthly fee covers platform access, automation, hosting/system management, maintenance, website updates, reporting, optimization and support.`,
   },
   {
     q: "Can I cancel?",

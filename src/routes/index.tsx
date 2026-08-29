@@ -17,6 +17,7 @@ import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { CustomerJourney, TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
 import { FounderNote } from "@/components/marketing/SalesCTA";
 import { ROICalculator } from "@/components/marketing/ROICalculator";
+import { AfterYouStart, ValueSplit, WhyRevora } from "@/components/marketing/OfferSections";
 import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. $1,500 setup, first month free, then $250/month.",
+          "Revora gives local businesses one system to capture leads, send quotes, book customers, automate follow-up, collect reviews and see what drives growth. $1,500 one-time setup + 30-day free platform trial + $250/month afterward.",
       },
 
       { property: "og:title", content: "Revora — Turn website visitors into paying customers" },
@@ -421,6 +422,15 @@ function Landing() {
           </div>
         </section>
 
+        {/* Offer breakdown, why Revora, and process */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 pt-4 pb-16">
+            <ValueSplit />
+            <WhyRevora />
+            <AfterYouStart />
+          </div>
+        </section>
+
         {/* FAQ */}
         <section id="faq" className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
@@ -458,7 +468,7 @@ function Landing() {
               </Button>
             </div>
             <p className="mt-5 text-[12px] text-muted-foreground">
-              {usdExact(GROWTH_SYSTEM.setupPrice)} setup, first month free, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
+              {GROWTH_SYSTEM.explainer} Cancel anytime. No hidden fees.
             </p>
 
           </div>

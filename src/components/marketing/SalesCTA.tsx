@@ -63,10 +63,12 @@ export function SupportCard() {
 export function FounderNote() {
   return (
     <div className="mx-auto max-w-2xl text-center">
-      <p className="eyebrow">Built with a simple mission.</p>
+      <p className="eyebrow">From the founder</p>
       <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-        Revora was created with a simple goal: give businesses a better system for turning online
-        attention into real customers.
+        Revora exists because most local businesses are handed software and left to figure it out.
+        We build, configure and manage the whole system instead — website, lead capture, CRM,
+        booking, quotes, follow-up, reviews and reporting — so owners can focus on doing the work
+        and serving customers.
       </p>
       <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-primary/30 bg-card px-4 py-2">
         <span className="grid size-7 place-items-center rounded-full bg-primary/15 font-display text-[12px] font-semibold text-primary">
