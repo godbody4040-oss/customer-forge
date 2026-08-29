@@ -179,7 +179,7 @@ function BillingPage() {
         />
       </div>
 
-      {services.length > 0 ? <Panel className="p-5">
+      <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHeading eyebrow="Your system" title={GROWTH_SYSTEM.name} />
           {subscription?.provider_subscription_id ? (
@@ -238,7 +238,7 @@ function BillingPage() {
       </Panel>
 
 
-      <Panel className="p-5">
+      {services.length > 0 ? <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHeading eyebrow="Payment methods" title="Saved cards & wallets" />
           {subscription?.provider_customer_id ? (

@@ -318,7 +318,7 @@ function GetStarted() {
                 </p>
               ) : payNow ? null : (
                 <Button variant="signal" size="lg" className="mt-4 w-full sm:w-auto" onClick={() => setPayNow(true)}>
-                  <Lock className="size-4" /> Pay {usdExact(GROWTH_SYSTEM.setupPrice)} setup &amp; start subscription
+                  <Lock className="size-4" /> Pay {usdExact(GROWTH_SYSTEM.setupPrice + GROWTH_SYSTEM.monthlyPrice)} today
                 </Button>
               )}
 
