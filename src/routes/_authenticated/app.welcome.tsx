@@ -93,8 +93,13 @@ function WelcomePage() {
         <MetricCard
           label={trialing ? "Trial ends" : "Next billing date"}
           value={date(trialEnd ?? subscription?.current_period_end)}
-          hint={`Then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month`}
+          hint={
+            trialing
+              ? `First ${usdExact(GROWTH_SYSTEM.monthlyPrice)} charge on this date`
+              : `Then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month`
+          }
         />
+
         <MetricCard label="Workspace" value={org?.name ?? "—"} hint={org?.slug ? `${org.slug}.revora.app` : ""} />
       </div>
 
