@@ -180,7 +180,7 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
       impact: issue.max,
       changes: [{ label: `${issue.scope} — search visibility`, before: "hidden (noindex)", after: "listed" }],
       applyable: true,
-      pageId: issue.pageId,
+      pageId,
       pageTitle: issue.scope,
       seoPatch: { noindex: false },
     });
