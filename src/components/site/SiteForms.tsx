@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { submitPublicLead, trackPublicEvent, type PublicSite } from "@/lib/public-site.functions";
+import { readAttribution } from "@/lib/attribution";
 import { currency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -197,7 +198,10 @@ export function QuoteCalculator({ site }: { site: Site }) {
                 message: String(form.get("message") ?? ""),
                 serviceInterest: quote.form.name,
                 estimatedValue: Math.round((min + max) / 2),
-                source: "website",
+                ...(() => {
+                  const attribution = readAttribution();
+                  return { source: attribution.source, campaign: attribution.campaign };
+                })(),
                 quote: {
                   formId: quote.form.id,
                   answers: [
@@ -306,7 +310,10 @@ export function BookingForm({ site }: { site: Site }) {
             serviceId: serviceId || null,
             serviceInterest: service?.name ?? null,
             estimatedValue: Number(service?.price ?? 0),
-            source: "website",
+            ...(() => {
+              const attribution = readAttribution();
+              return { source: attribution.source, campaign: attribution.campaign };
+            })(),
             booking:
               bookable.length && date && time
                 ? {
