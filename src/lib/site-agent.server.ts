@@ -1,0 +1,200 @@
+/**
+ * Server-only planner for the Revora Site Agent.
+ *
+ * The client can type anything — one line or a two-page brief — and the agent
+ * answers with a concrete plan of edits across pages, sections, items, page
+ * settings, SEO fields, look-and-feel and business details.
+ *
+ * Two rules are non-negotiable and enforced in the prompt and in validation:
+ * it may only touch the workspace it was given, and it may never invent facts
+ * about the business (no reviews, awards, licences, guarantees or prices that
+ * were not supplied).
+ */
+
+import { AiGatewayError } from "@/lib/site-engine.server";
+import { MAX_ACTIONS, type AgentTurn } from "@/lib/site-agent";
+
+const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+/** Planning is a reasoning job: a strong model first, a fast one as fallback. */
+export const AGENT_MODEL = "google/gemini-3.1-pro-preview";
+export const AGENT_FALLBACK_MODEL = "google/gemini-3.7-flash";
+
+export type SiteMapPage = {
+  id: string;
+  slug: string;
+  title: string;
+  kind: string;
+  is_visible: boolean;
+  noindex: boolean;
+  seo_title: string | null;
+  seo_description: string | null;
+  sections: {
+    id: string;
+    kind: string;
+    variant: string;
+    is_visible: boolean;
+    heading: string | null;
+    subheading: string | null;
+    body: string | null;
+    components: { id: string; kind: string; label: string | null; body: string | null; link_label: string | null; link_url: string | null }[];
+  }[];
+};
+
+export type AgentContext = {
+  business: {
+    name: string;
+    industry: string | null;
+    tagline: string | null;
+    description: string | null;
+    city: string | null;
+    state: string | null;
+    serviceArea: string | null;
+    phone: string | null;
+    email: string | null;
+    yearsInBusiness: number | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
+    accentColor: string | null;
+    fontPreference: string | null;
+    services: { name: string; price: number | null; startingPrice: number | null }[];
+    publishedReviewCount: number;
+    photoCount: number;
+  };
+  pages: SiteMapPage[];
+  sectionKinds: string[];
+  pageKinds: string[];
+  componentKinds: string[];
+};
+
+const SYSTEM = `You are Revora's website agent. You edit a local business's live website
+on the owner's behalf. You are competent, calm and specific — like a senior web
+producer who reads a brief and returns a precise change list.
+
+WHAT YOU CAN DO
+You return a JSON plan of actions. You can do all of the following, in one plan,
+in any combination, and in any quantity up to ${MAX_ACTIONS} actions:
+- rewrite any headline, sub-headline or body text
+- add, remove, hide, show, restyle and reorder sections
+- add, edit or remove items inside a section (features, FAQs, cards, buttons, links)
+- add new pages, rename pages, change their web address, hide them, noindex them
+- write page titles, meta descriptions, canonical and social (OpenGraph) text
+- change brand colours and font preference
+- correct business details (tagline, description, phone, email, city, service area, review link)
+
+HARD RULES
+- Only use the ids present in the SITE MAP. Never invent an id. Never touch anything else.
+- Never invent facts: no reviews, ratings, awards, certifications, licences, insurance,
+  guarantees, years in business, staff counts, addresses or prices unless supplied.
+  If a claim needs a fact you do not have, put the request in "questions" instead.
+- Do not use placeholder brackets, lorem ipsum, emoji or ALL CAPS shouting.
+- Local-business copy: plain, confident, specific, benefit-first, with a clear next step
+  (call, book, get a price). Keep headlines under ~70 characters.
+- Big requests are welcome: break them into as many small actions as needed and do the
+  whole job. Do not stop after one edit when the brief asks for more.
+- If part of the request is impossible with the actions available, do it partially and
+  say what you skipped in "notes". Never pretend something was done.
+
+ACTION SHAPES (use exactly these)
+{"type":"set_section_text","sectionId":"<id>","field":"heading|subheading|body","value":"..."}
+{"type":"set_section_visibility","sectionId":"<id>","visible":true|false}
+{"type":"set_section_variant","sectionId":"<id>","variant":"default|split|centered|compact"}
+{"type":"add_section","pageId":"<id>","kind":"<section kind>","heading":"...","subheading":"...","body":"...","position":2}
+{"type":"delete_section","sectionId":"<id>"}
+{"type":"reorder_sections","pageId":"<id>","sectionIds":["<id>","<id>", "..."]}
+{"type":"set_component","componentId":"<id>","patch":{"label":"...","body":"...","link_label":"...","link_url":"...","is_visible":true}}
+{"type":"add_component","sectionId":"<id>","kind":"<component kind>","label":"...","body":"...","link_label":"...","link_url":"/contact"}
+{"type":"delete_component","componentId":"<id>"}
+{"type":"add_page","kind":"<page kind>","title":"...","slug":"..."}
+{"type":"set_page","pageId":"<id>","patch":{"title":"...","slug":"...","is_visible":true,"noindex":false,"seo_title":"...","seo_description":"...","og_title":"...","og_description":"..."}}
+{"type":"delete_page","pageId":"<id>"}
+{"type":"set_theme","patch":{"primary_color":"#RRGGBB","secondary_color":"#RRGGBB","accent_color":"#RRGGBB","font_preference":"..."}}
+{"type":"set_business_fact","field":"tagline|description|phone|email|city|state|service_area|address|review_link|website","value":"..."}
+
+RESPONSE FORMAT — a single JSON object, no markdown:
+{
+  "reply": "1-4 sentences to the owner, in their language, saying what you're about to change and why it helps them get more customers.",
+  "summary": "One line describing the whole plan.",
+  "actions": [ ...actions... ],
+  "questions": ["only genuine blockers — facts you need from the owner"],
+  "notes": ["anything you deliberately did not do"]
+}
+When the request is a question rather than a change, answer it in "reply" and return an empty "actions" array.`;
+
+function siteMap(context: AgentContext) {
+  return JSON.stringify(
+    {
+      business: context.business,
+      allowedSectionKinds: context.sectionKinds,
+      allowedPageKinds: context.pageKinds,
+      allowedComponentKinds: context.componentKinds,
+      pages: context.pages,
+    },
+    null,
+    1,
+  );
+}
+
+async function call(model: string, messages: { role: string; content: string }[]) {
+  const key = process.env["LOVABLE_API_KEY"];
+  if (!key) throw new Error("The website assistant isn't configured for this workspace.");
+
+  const response = await fetch(GATEWAY, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model, messages, response_format: { type: "json_object" } }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    if (response.status === 429) {
+      const retryAfter = Number(response.headers.get("retry-after")) || null;
+      throw new AiGatewayError(429, "The assistant is busy right now. Try again in a moment.", retryAfter);
+    }
+    if (response.status === 402)
+      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to keep editing with the assistant.");
+    if (response.status === 403)
+      throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+    console.error("[site-agent] gateway error", response.status, body.slice(0, 500));
+    throw new AiGatewayError(response.status, "The assistant couldn't be reached. Try again.");
+  }
+
+  const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  const raw = payload.choices?.[0]?.message?.content ?? "";
+  const cleaned = raw
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
+  try {
+    const parsed = JSON.parse(cleaned) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("bad shape");
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error("The assistant returned an unexpected response. Try rewording the request.");
+  }
+}
+
+/**
+ * Runs one planning turn. `history` carries the conversation so follow-ups like
+ * "now do the same on the pricing page" work without repeating the brief.
+ */
+export async function planChanges(
+  context: AgentContext,
+  instruction: string,
+  history: AgentTurn[],
+): Promise<Record<string, unknown>> {
+  const messages = [
+    { role: "system", content: SYSTEM },
+    { role: "user", content: `SITE MAP AND BUSINESS FACTS:\n${siteMap(context)}` },
+    ...history.slice(-8).map((turn) => ({ role: turn.role, content: turn.content })),
+    { role: "user", content: `REQUEST FROM THE OWNER:\n${instruction}` },
+  ];
+
+  try {
+    return await call(AGENT_MODEL, messages);
+  } catch (error) {
+    // Quota, policy and rate limits are not fixed by a different model.
+    if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
+    return await call(AGENT_FALLBACK_MODEL, messages);
+  }
+}
