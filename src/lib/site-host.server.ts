@@ -7,11 +7,7 @@
  * both are resolved from the incoming Host header.
  */
 import { publicClient } from "@/lib/public-site.server";
-import { INDUSTRIES } from "@/lib/domain";
-
-function industrySlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
+import { INDUSTRIES, industrySlug } from "@/lib/domain";
 
 export const REVORA_HOSTS = [
   "revoragrowthsystems.com",
