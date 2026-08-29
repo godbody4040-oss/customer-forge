@@ -221,11 +221,11 @@ function WebsitePage() {
               services={(services ?? []).map((s) => ({
                 name: s.name,
                 description: s.description,
-                price: s.base_price,
+                price: s.starting_price,
                 bookable: s.bookable,
               }))}
               seo={{
-                title: seo.meta_title ?? null,
+                title: seo.headline ?? null,
                 description: seo.meta_description ?? null,
                 headline: seo.headline ?? copy?.heroHeadline ?? null,
               }}
