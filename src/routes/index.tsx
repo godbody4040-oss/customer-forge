@@ -71,12 +71,38 @@ export const Route = createFileRoute("/")({
 });
 
 const PROBLEMS = [
-  { title: "Missed leads", body: "Customers call while you're on a job — and call someone else next." },
-  { title: "Slow follow-up", body: "Interest dies within the hour when nobody replies." },
-  { title: "Lost quotes", body: "Estimates get sent, then forgotten by both sides." },
-  { title: "Booking friction", body: "People have to call during work hours just to pick a time." },
-  { title: "No visibility", body: "You can't tell which traffic actually turns into money." },
+  {
+    title: "Missed calls",
+    body: "Customers ring while you're on a job — 8 in 10 never call back, they call the next name on the list.",
+    cost: "Every missed call is a job someone else invoices.",
+    fix: "Revora answers instantly on your site, texts the lead back and books them in — while your hands are full.",
+  },
+  {
+    title: "Slow follow-up",
+    body: "Interest dies within the hour. By the evening the same person has already said yes to someone faster.",
+    cost: "Leads you already paid for go cold in silence.",
+    fix: "Automatic first reply in seconds, then a follow-up sequence that nudges the quiet ones until they answer.",
+  },
+  {
+    title: "Lost quotes",
+    body: "Estimates get sent from your phone at 9pm, then forgotten by both sides.",
+    cost: "Your biggest tickets vanish with no record of why.",
+    fix: "Instant on-site quote calculator plus a pipeline that never lets a quote sit unchased.",
+  },
+  {
+    title: "Booking friction",
+    body: "People must call during your working hours just to pick a time — so they don't.",
+    cost: "You lose the customers who only shop after 8pm.",
+    fix: "Real-time booking on your actual availability, with confirmations and reminders sent for you.",
+  },
+  {
+    title: "No visibility",
+    body: "You can't tell which ads, searches or referrals actually turned into paid work.",
+    cost: "You keep spending on the channel that doesn't pay.",
+    fix: "Every lead tracked from first click to invoice, so you double down on what makes money.",
+  },
 ];
+
 
 /** Every capability stated as the outcome it produces for the owner. */
 const OUTCOMES = [
