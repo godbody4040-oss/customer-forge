@@ -198,14 +198,21 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const priorGeneration = (priorSettings.data?.generation ?? {}) as Record<string, unknown>;
   const approvedBrief = readBrief(priorGeneration["brief"]);
 
+  // When AI is unavailable (credits/policy) the build degrades to the
+  // deterministic, fact-only writer instead of failing — the client always ends
+  // up with a real publishable site. Rate limits still bubble up so the queue
+  // can back off and retry with AI.
+  let aiDenied = false;
   let brief = approvedBrief?.approved ? approvedBrief : fallbackBrief(copyFacts);
   if (!approvedBrief?.approved) {
     try {
       brief = { ...(await analyzeBusiness(copyFacts)), factAnswers: approvedBrief?.factAnswers ?? {}, approved: false };
     } catch (error) {
-      if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
+      if (error instanceof AiGatewayError && error.status === 429) throw error;
+      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
       console.error("[site-engine] analysis fell back to rules", error);
     }
+
     await db.from("ai_generations").insert({
       organization_id: orgId,
       job_id: job.id,
