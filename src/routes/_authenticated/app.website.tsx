@@ -196,13 +196,15 @@ function WebsitePage() {
         hasSections={visibleSections > 0}
         publishState={settings?.publish_state ?? "draft"}
         isPublishing={saveSettings.isPending}
-        onPublishNow={() =>
+        onPublishNow={() => {
+          trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
           saveSettings.mutate({
             publish_state: "published",
             published: true,
             last_published_at: new Date().toISOString(),
-          })
-        }
+          });
+        }}
+
       />
 
       <RevoraGenius
