@@ -106,12 +106,14 @@ export function SiteChatbot({
         },
       }),
     onSuccess: (result) => {
-      setMessages((prior) => [
-        ...prior,
-        { role: "assistant", content: result.reply, plan: { summary: result.summary, steps: result.steps as AgentStep[], questions: result.questions, notes: result.notes } },
-      ]);
-      setPlan({ summary: result.summary, steps: result.steps as AgentStep[], questions: result.questions, notes: result.notes });
+      const steps = result.steps as AgentStep[];
+      const next = { summary: result.summary, steps, questions: result.questions, notes: result.notes };
+      setMessages((prior) => [...prior, { role: "assistant", content: result.reply, plan: next }]);
+      setPlan(next);
       setSkipped(new Set());
+      // Auto-apply: safe plans (nothing removed, nothing missing) go straight onto the site.
+      const safe = steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
+      if (autoApply && canManage && safe) apply.mutate(steps);
     },
     onError: (error: Error) =>
       setMessages((prior) => [
@@ -121,14 +123,15 @@ export function SiteChatbot({
   });
 
   const apply = useMutation({
-    mutationFn: () =>
+    mutationFn: (steps?: AgentStep[]) =>
       applyFn({
         data: {
           organizationId: organizationId!,
-          actions: chosen.map((step) => step.action),
+          actions: (steps ?? chosen).map((step) => step.action),
           label: plan?.summary?.slice(0, 110) || "Before assistant changes",
         },
       }),
+
     onSuccess: (result) => {
       toast.success(
         `${result.applied} change${result.applied === 1 ? "" : "s"} applied to your website.` +
