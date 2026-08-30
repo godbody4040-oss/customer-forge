@@ -300,6 +300,24 @@ export function SiteChatbot({
             {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()} characters
           </span>
         </div>
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-primary/30 bg-primary/5 p-3">
+          <input
+            type="checkbox"
+            checked={autoApply}
+            onChange={(event) => setAutoApply(event.target.checked)}
+            disabled={!canManage}
+            className="mt-0.5 size-4 accent-[hsl(var(--primary))]"
+          />
+          <span className="min-w-0">
+            <span className="block text-[12.5px] font-medium text-primary">
+              Auto-install safe changes the moment they're ready
+            </span>
+            <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+              Revora writes every change straight onto your site when nothing is being removed and nothing is missing.
+              A rollback point is still saved first. Anything that removes content always waits for your approval.
+            </span>
+          </span>
+        </label>
         <div className="space-y-2">
           <p className="text-[11px] font-medium text-muted-foreground" id="quick-commands-label">
             Quick commands — tap one, or say it out loud
@@ -455,7 +473,7 @@ export function SiteChatbot({
                 <Button
                   variant="signal"
                   disabled={!canManage || !chosen.length || apply.isPending}
-                  onClick={() => apply.mutate()}
+                  onClick={() => apply.mutate(undefined)}
                 >
                   {apply.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                   Apply {chosen.length} change{chosen.length === 1 ? "" : "s"}
