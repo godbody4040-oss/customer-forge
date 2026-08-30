@@ -43,12 +43,38 @@ export function isFetchableHostname(host: string): boolean {
   return /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(h);
 }
 
-/** Every resolved A record must be publicly routable before we fetch the host. */
+/** True only for globally routable IPv6 addresses. */
+export function isPublicIpv6(ip: string): boolean {
+  const raw = ip.trim().toLowerCase().replace(/^\[/, "").replace(/\]$/, "").split("%")[0] ?? "";
+  if (!raw.includes(":")) return false;
+  // IPv4-mapped / IPv4-compatible forms inherit the IPv4 rules.
+  const mapped = raw.match(/(\d{1,3}(?:\.\d{1,3}){3})$/)?.[1];
+  if (mapped) return isPublicIpv4(mapped);
+  if (raw === "::" || raw === "::1") return false; // unspecified + loopback
+  if (/^f[cd][0-9a-f]{0,2}:/.test(raw)) return false; // fc00::/7 unique-local
+  if (/^fe[89ab][0-9a-f]?:/.test(raw)) return false; // fe80::/10 link-local
+  if (/^ff[0-9a-f]{0,2}:/.test(raw)) return false; // multicast
+  if (/^(2001:db8|64:ff9b|100::|2002:)/.test(raw)) return false; // documentation / translation / discard
+  return true;
+}
+
+/** True only for globally routable IPv4 or IPv6 addresses. */
+export function isPublicAddress(ip: string): boolean {
+  const value = ip.trim();
+  return value.includes(":") ? isPublicIpv6(value) : isPublicIpv4(value);
+}
+
+/**
+ * Every resolved address must be publicly routable before we fetch the host,
+ * and there must be at least one — an unresolvable host is never fetched.
+ */
 export function areAddressesPublic(addresses: string[]): boolean {
-  return addresses.every((ip) => isPublicIpv4(ip.trim()));
+  const list = addresses.map((ip) => ip.trim()).filter(Boolean);
+  return list.length > 0 && list.every(isPublicAddress);
 }
 
 /** Throws when a hostname must not be fetched from the server. */
 export function assertFetchableHostname(host: string): void {
   if (!isFetchableHostname(host)) throw new Error("That address can't be checked.");
 }
+
