@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureProfile } from "@/lib/auth-session";
+import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
 
 function NotFoundComponent() {
   return (
@@ -127,14 +127,45 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    // Entry pages a returning client can land on after signing back in
+    // (email/password, magic link, or an OAuth round-trip back to the origin).
+    const entryPaths = new Set(["/", "/auth"]);
+
+    async function sendToDashboard() {
+      if (!entryPaths.has(window.location.pathname)) return;
+      let target: string | null = null;
+      try {
+        const stored = sessionStorage.getItem("lle:redirect");
+        if (stored && stored.startsWith("/")) {
+          sessionStorage.removeItem("lle:redirect");
+          target = stored;
+        }
+      } catch {
+        /* storage unavailable */
+      }
+      target = target ?? (await resolvePostLoginPath());
+      if (target === "/auth") return;
+      if (window.location.pathname === target) return;
+      void router.navigate({ to: target, replace: true });
+    }
+
+    // Returning client with a persisted session landing on a public entry page.
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) void sendToDashboard();
+    });
+
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       if (event !== "SIGNED_OUT") void ensureProfile();
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event !== "SIGNED_OUT") {
+        queryClient.invalidateQueries();
+        if (event === "SIGNED_IN") void sendToDashboard();
+      }
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
