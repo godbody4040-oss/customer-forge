@@ -147,10 +147,11 @@ function AuthPage() {
   }
 
 
-  async function handleForgotPassword() {
+  async function handleForgotPassword(e?: React.FormEvent) {
+    e?.preventDefault();
     setError(null);
     if (!email) {
-      setError("Enter your email above and we'll send a reset link.");
+      setError("Enter the email on your account and we'll send a secure reset link.");
       return;
     }
     setBusy("reset");
@@ -159,6 +160,7 @@ function AuthPage() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (resetError) throw resetError;
+      setResetSent(true);
       toast.success("Reset link sent. Check your email.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the reset email.");
@@ -171,10 +173,12 @@ function AuthPage() {
     setError(null);
     setBusy("google");
     try {
+      setRememberPreference(remember);
       sessionStorage.setItem("lle:redirect", redirect ?? "/app");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
+
       if (result.error) {
         setError(result.error.message ?? "Google sign-in failed.");
         return;
