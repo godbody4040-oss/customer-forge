@@ -19,6 +19,8 @@ import { AssistantShowcase } from "@/components/app/AssistantShowcase";
 import { EffectStudio } from "@/components/app/EffectStudio";
 import { readBackdrop, writeBackdrop } from "@/lib/site-effects";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
+import { UpgradeStudio } from "@/components/app/UpgradeStudio";
+
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
@@ -201,6 +203,28 @@ function WebsitePage() {
           })
         }
       />
+
+      <UpgradeStudio
+        organizationId={orgId}
+        canManage={manage}
+        pages={pages ?? []}
+        facts={{
+          businessName: org?.name ?? null,
+          city: (profile?.["city"] as string) ?? null,
+          state: (profile?.["state"] as string) ?? null,
+          serviceArea: (profile?.["service_area"] as string) ?? null,
+          phone: (profile?.["phone"] as string) ?? null,
+          email: (profile?.["email"] as string) ?? null,
+          guarantee: (profile?.["guarantee"] as string) ?? null,
+          services: (services ?? []).map((s) => ({ name: s.name, price: s.starting_price ?? null })),
+          reviewCount: facts.data?.reviewCount ?? 0,
+          mediaCount: facts.data?.mediaCount ?? 0,
+          headline: seo.headline ?? copy?.heroHeadline ?? null,
+          metaDescription: seo.meta_description ?? null,
+          backdrop: readBackdrop(generation ?? null),
+        }}
+      />
+
 
       {requiredCount > 0 && manage ? (
         <section className="panel border-accent/40 bg-accent/5 p-4">

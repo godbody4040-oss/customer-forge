@@ -68,7 +68,10 @@ export function SiteChatbot({
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
+  /** When on, safe plans (nothing removed, nothing missing) are written the moment they're ready. */
+  const [autoApply, setAutoApply] = useState(true);
   const queryClient = useQueryClient();
+
 
   // A section panel below can hand its request up to this box.
   useEffect(
@@ -103,12 +106,14 @@ export function SiteChatbot({
         },
       }),
     onSuccess: (result) => {
-      setMessages((prior) => [
-        ...prior,
-        { role: "assistant", content: result.reply, plan: { summary: result.summary, steps: result.steps as AgentStep[], questions: result.questions, notes: result.notes } },
-      ]);
-      setPlan({ summary: result.summary, steps: result.steps as AgentStep[], questions: result.questions, notes: result.notes });
+      const steps = result.steps as AgentStep[];
+      const next = { summary: result.summary, steps, questions: result.questions, notes: result.notes };
+      setMessages((prior) => [...prior, { role: "assistant", content: result.reply, plan: next }]);
+      setPlan(next);
       setSkipped(new Set());
+      // Auto-apply: safe plans (nothing removed, nothing missing) go straight onto the site.
+      const safe = steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
+      if (autoApply && canManage && safe) apply.mutate(steps);
     },
     onError: (error: Error) =>
       setMessages((prior) => [
@@ -118,14 +123,15 @@ export function SiteChatbot({
   });
 
   const apply = useMutation({
-    mutationFn: () =>
+    mutationFn: (steps?: AgentStep[]) =>
       applyFn({
         data: {
           organizationId: organizationId!,
-          actions: chosen.map((step) => step.action),
+          actions: (steps ?? chosen).map((step) => step.action),
           label: plan?.summary?.slice(0, 110) || "Before assistant changes",
         },
       }),
+
     onSuccess: (result) => {
       toast.success(
         `${result.applied} change${result.applied === 1 ? "" : "s"} applied to your website.` +
@@ -294,6 +300,24 @@ export function SiteChatbot({
             {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()} characters
           </span>
         </div>
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-primary/30 bg-primary/5 p-3">
+          <input
+            type="checkbox"
+            checked={autoApply}
+            onChange={(event) => setAutoApply(event.target.checked)}
+            disabled={!canManage}
+            className="mt-0.5 size-4 accent-primary"
+          />
+          <span className="min-w-0">
+            <span className="block text-[12.5px] font-medium text-primary">
+              Auto-install safe changes the moment they're ready
+            </span>
+            <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+              Revora writes every change straight onto your site when nothing is being removed and nothing is missing.
+              A rollback point is still saved first. Anything that removes content always waits for your approval.
+            </span>
+          </span>
+        </label>
         <div className="space-y-2">
           <p className="text-[11px] font-medium text-muted-foreground" id="quick-commands-label">
             Quick commands — tap one, or say it out loud
@@ -449,7 +473,7 @@ export function SiteChatbot({
                 <Button
                   variant="signal"
                   disabled={!canManage || !chosen.length || apply.isPending}
-                  onClick={() => apply.mutate()}
+                  onClick={() => apply.mutate(undefined)}
                 >
                   {apply.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                   Apply {chosen.length} change{chosen.length === 1 ? "" : "s"}
