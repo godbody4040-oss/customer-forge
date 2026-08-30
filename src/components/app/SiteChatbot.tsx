@@ -211,8 +211,11 @@ export function SiteChatbot({
       <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">
         Write as little or as much as you like — a single tweak or a full brief. Revora can rewrite copy, add and
         remove sections and pages, reorder the layout, edit items and buttons, write your search and social text, and
-        change colours and fonts. Add photos or a short video, or just speak your request — Revora reads and listens too. You
-        review the plan, then it's applied for you. No support request, no waiting.
+        change colours and fonts. It can also install premium visuals on request —{" "}
+        <span className="text-gold">starfield, aurora, nebula, tech grid or spotlight backgrounds</span> and{" "}
+        <span className="text-gold">3D floating, tilted, frosted-glass, gold-glow or shine sections</span>. Add photos
+        or a short video, or just speak your request — Revora reads and listens too. You review the plan, then it's
+        applied for you. No support request, no waiting.
       </p>
 
       {!hasSections ? (
