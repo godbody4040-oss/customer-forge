@@ -39,7 +39,7 @@ import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useBillingState } from "@/lib/stripe.hooks";
 import { trialEndsAtMs } from "@/lib/trial";
-import { useCountdown } from "@/lib/use-countdown";
+import { useTrialCountdown } from "@/lib/trial-clock";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -107,7 +107,7 @@ function AppShell() {
   // Per-client countdown: derived from this workspace's own trial_ends_at, so
   // two clients signing up minutes apart each see their own real deadline.
   const trialEnd = trialEndsAtMs(org);
-  const countdown = useCountdown(trialEnd);
+  const countdown = useTrialCountdown(trialEnd);
   const trialStillActive = Boolean(countdown && !countdown.expired);
 
   const paidAccess = Boolean(
