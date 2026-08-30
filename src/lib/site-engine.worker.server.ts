@@ -113,9 +113,9 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const { readBrief } = await import("@/lib/site-brief");
   const { captureQa } = await import("@/lib/launch-qa");
   const { gatherBriefFacts } = await import("@/lib/site-brief.server");
-  const { generateSiteCopy, analyzeBusiness, fallbackBrief, AiGatewayError, COPY_MODEL } = await import(
-    "@/lib/site-engine.server"
-  );
+  const { generateSiteCopy, analyzeBusiness, fallbackBrief, fallbackCopy, AiGatewayError, COPY_MODEL } =
+    await import("@/lib/site-engine.server");
+
 
   const done: string[] = [];
   const step = async (key: string) => {
