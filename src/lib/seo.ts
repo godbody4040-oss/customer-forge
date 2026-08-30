@@ -6,7 +6,7 @@
  * and preview to the right address.
  */
 
-import { GROWTH_SYSTEM } from "@/lib/pricing";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 import { REVORA } from "@/lib/brand";
 
 export const SITE_URL = "https://revoragrowthsystems.com";
