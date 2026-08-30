@@ -201,11 +201,13 @@ export function factGaps(input: FactInput): FactGap[] {
   const gaps: FactGap[] = [];
   const blank = (v: string | null | undefined) => !v || !v.trim();
 
-  if (blank(input.description) || (input.description ?? "").trim().length < 60)
+  // Whatever the owner writes is accepted as-is. Revora never rejects an answer
+  // for being short — a blank is the only thing that blocks a build.
+  if (blank(input.description))
     gaps.push({
       key: "description",
       label: "What your business does",
-      prompt: "Describe your business in a few sentences — what you do and who you do it for.",
+      prompt: "Describe your business in your own words — any detail is accepted.",
       required: true,
       field: "description",
       multiline: true,
@@ -229,10 +231,13 @@ export function factGaps(input: FactInput): FactGap[] {
   if (input.servicesCount < 1)
     gaps.push({
       key: "services",
-      label: "At least one service",
-      prompt: "Add the services you offer so Revora can build your service pages.",
+      label: "Services you offer",
+      prompt: "List your services, one per line — Revora builds a page for each one.",
       required: true,
+      field: "services_list",
+      multiline: true,
     });
+
   if (blank(input.email))
     gaps.push({
       key: "email",
