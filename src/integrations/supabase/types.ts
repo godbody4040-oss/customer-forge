@@ -2994,7 +2994,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_safe_link_url: { Args: { value: string }; Returns: boolean }
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"
