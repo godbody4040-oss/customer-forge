@@ -10,6 +10,8 @@ import {
   EmptyState,
   KeyLabel,
 } from "@/components/app/Bits";
+import { OnboardingJourney } from "@/components/app/OnboardingJourney";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -268,6 +270,10 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
+      <OnboardingJourney />
+
+
 
       {range === "custom" ? (
         <Panel className="p-4">

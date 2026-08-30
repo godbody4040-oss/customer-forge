@@ -54,10 +54,25 @@ export function getAttribution(): Attribution | null {
 /** Fire-and-forget conversion event with first-touch attribution attached. */
 export function trackConversion(
   event: ConversionEvent,
-  extra?: { email?: string | null; amountCents?: number | null },
+  extra?: {
+    email?: string | null;
+    amountCents?: number | null;
+    metadata?: Record<string, unknown> | null;
+  },
 ) {
   if (!isBrowser()) return;
   const attribution = getAttribution();
+  // Variants ride along on every event so each funnel stage can be split by test.
+  let variants: Record<string, string> = {};
+  try {
+    const raw = window.localStorage.getItem("revora.experiments.v1");
+    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      variants = parsed as Record<string, string>;
+    }
+  } catch {
+    /* storage unavailable */
+  }
   void recordConversion({
     data: {
       event,
@@ -70,6 +85,8 @@ export function trackConversion(
       sessionId: attribution?.sessionId ?? null,
       email: extra?.email ?? null,
       amountCents: extra?.amountCents ?? null,
+      metadata: { ...variants, ...(extra?.metadata ?? {}) },
     },
   }).catch(() => undefined);
 }
+

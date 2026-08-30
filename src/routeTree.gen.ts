@@ -55,6 +55,7 @@ import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppWelcomeRouteImport } from './routes/_authenticated/app.welcome'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
+import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
 import { Route as ApiPublicJobsSiteEngineRouteImport } from './routes/api/public/jobs/site-engine'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicPaypalWebhookRouteImport } from './routes/api/public/paypal/webhook'
@@ -302,6 +303,12 @@ const AuthenticatedAdminClientsOrgIdRoute =
     path: '/$orgId',
     getParentRoute: () => AuthenticatedAdminClientsRoute,
   } as any)
+const ApiPublicJobsLifecycleEmailRoute =
+  ApiPublicJobsLifecycleEmailRouteImport.update({
+    id: '/api/public/jobs/lifecycle-email',
+    path: '/api/public/jobs/lifecycle-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicJobsSiteEngineRoute = ApiPublicJobsSiteEngineRouteImport.update({
   id: '/api/public/jobs/site-engine',
   path: '/api/public/jobs/site-engine',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
@@ -430,6 +438,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
@@ -485,6 +494,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/paypal/webhook': typeof ApiPublicPaypalWebhookRoute
@@ -540,6 +550,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/admin/clients/$orgId'
+    | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
     | '/api/public/payments/webhook'
     | '/api/public/paypal/webhook'
@@ -589,6 +600,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/admin/clients/$orgId'
+    | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
     | '/api/public/payments/webhook'
     | '/api/public/paypal/webhook'
@@ -643,6 +655,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/admin/clients/$orgId'
+    | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
     | '/api/public/payments/webhook'
     | '/api/public/paypal/webhook'
@@ -667,6 +680,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
+  ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicPaypalWebhookRoute: typeof ApiPublicPaypalWebhookRoute
@@ -999,6 +1013,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClientsOrgIdRouteImport
       parentRoute: typeof AuthenticatedAdminClientsRoute
     }
+    '/api/public/jobs/lifecycle-email': {
+      id: '/api/public/jobs/lifecycle-email'
+      path: '/api/public/jobs/lifecycle-email'
+      fullPath: '/api/public/jobs/lifecycle-email'
+      preLoaderRoute: typeof ApiPublicJobsLifecycleEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/site-engine': {
       id: '/api/public/jobs/site-engine'
       path: '/api/public/jobs/site-engine'
@@ -1187,6 +1208,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
+  ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicPaypalWebhookRoute: ApiPublicPaypalWebhookRoute,
