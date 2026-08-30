@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { useBillingState } from "@/lib/stripe.hooks";
 import { trialEndsAtMs } from "@/lib/trial";
 import { useCountdown } from "@/lib/use-countdown";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
@@ -134,7 +135,7 @@ function AppShell() {
     // The clock just ran out: re-read billing/workspace state so the paywall
     // reflects the server's own entitlement decision.
     void queryClient.invalidateQueries({ queryKey: ["workspace"] });
-    void queryClient.invalidateQueries({ queryKey: ["billing-state", org.id] });
+    void queryClient.invalidateQueries({ queryKey: ["billing_state", org.id] });
   }, [trialExpired, org?.id, queryClient]);
 
 
