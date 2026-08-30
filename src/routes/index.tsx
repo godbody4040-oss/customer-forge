@@ -71,12 +71,38 @@ export const Route = createFileRoute("/")({
 });
 
 const PROBLEMS = [
-  { title: "Missed leads", body: "Customers call while you're on a job — and call someone else next." },
-  { title: "Slow follow-up", body: "Interest dies within the hour when nobody replies." },
-  { title: "Lost quotes", body: "Estimates get sent, then forgotten by both sides." },
-  { title: "Booking friction", body: "People have to call during work hours just to pick a time." },
-  { title: "No visibility", body: "You can't tell which traffic actually turns into money." },
+  {
+    title: "Missed calls",
+    body: "Customers ring while you're on a job — 8 in 10 never call back, they call the next name on the list.",
+    cost: "Every missed call is a job someone else invoices.",
+    fix: "Revora answers instantly on your site, texts the lead back and books them in — while your hands are full.",
+  },
+  {
+    title: "Slow follow-up",
+    body: "Interest dies within the hour. By the evening the same person has already said yes to someone faster.",
+    cost: "Leads you already paid for go cold in silence.",
+    fix: "Automatic first reply in seconds, then a follow-up sequence that nudges the quiet ones until they answer.",
+  },
+  {
+    title: "Lost quotes",
+    body: "Estimates get sent from your phone at 9pm, then forgotten by both sides.",
+    cost: "Your biggest tickets vanish with no record of why.",
+    fix: "Instant on-site quote calculator plus a pipeline that never lets a quote sit unchased.",
+  },
+  {
+    title: "Booking friction",
+    body: "People must call during your working hours just to pick a time — so they don't.",
+    cost: "You lose the customers who only shop after 8pm.",
+    fix: "Real-time booking on your actual availability, with confirmations and reminders sent for you.",
+  },
+  {
+    title: "No visibility",
+    body: "You can't tell which ads, searches or referrals actually turned into paid work.",
+    cost: "You keep spending on the channel that doesn't pay.",
+    fix: "Every lead tracked from first click to invoice, so you double down on what makes money.",
+  },
 ];
+
 
 /** Every capability stated as the outcome it produces for the owner. */
 const OUTCOMES = [
@@ -208,18 +234,35 @@ function Landing() {
           <div className="mx-auto max-w-6xl px-4 py-14">
             <p className="eyebrow">The real problem</p>
             <h2 className="mt-2 max-w-3xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
-              You're not short on interest. You're losing it between the click and the booking.
+              You're not short on interest. You're{" "}
+              <span className="gold-text">losing it between the click and the booking</span>.
             </h2>
+            <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
+              Here are the five leaks that quietly cost local businesses the most work every month —
+              and exactly what Revora does about each one, starting on day one of your free access.
+            </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {PROBLEMS.map((p) => (
-                <Panel key={p.title} className="card-lift p-5">
+                <Panel key={p.title} className="card-lift flex flex-col p-5">
                   <h3 className="font-display text-[13px] font-bold tracking-[0.12em] uppercase">
                     {p.title}
                   </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
+                  <p className="mt-3 text-[12px] leading-relaxed font-medium text-destructive">
+                    {p.cost}
+                  </p>
+                  <div className="mt-4 border-t border-primary/25 pt-3">
+                    <p className="eyebrow text-primary/90">What Revora does</p>
+                    <p className="mt-1.5 text-[12.5px] leading-relaxed text-foreground">{p.fix}</p>
+                  </div>
                 </Panel>
               ))}
             </div>
+            <div className="mt-8">
+              <PrimaryCta />
+              <PriceLine className="mt-4" />
+            </div>
+
             <div className="mt-10">
               <WithoutWith />
             </div>
