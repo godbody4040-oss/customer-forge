@@ -52,10 +52,32 @@ const groupCount = (rows: { organization_id: string }[] | null | undefined) => {
   return map;
 };
 
-const byOrg = (rows: { organization_id: string }[] | null | undefined) => {
-  const map = new Map<string, Record<string, any>>();
-  for (const row of rows ?? [])
-    if (!map.has(row.organization_id)) map.set(row.organization_id, row as Record<string, any>);
+type ProfileRow = {
+  organization_id: string;
+  email: string | null;
+  owner_email: string | null;
+  owner_name: string | null;
+  phone: string | null;
+  city: string | null;
+  service_area: string | null;
+  description: string | null;
+  hours: Record<string, unknown> | null;
+  logo_url: string | null;
+  primary_color: string | null;
+};
+
+type SettingRow = {
+  organization_id: string;
+  publish_state: string | null;
+  domain_status: string | null;
+  generated_at: string | null;
+  updated_at: string | null;
+};
+
+const byOrg = <T extends { organization_id: string }>(rows: unknown) => {
+  const list = (rows ?? []) as T[];
+  const map = new Map<string, T>();
+  for (const row of list) if (!map.has(row.organization_id)) map.set(row.organization_id, row);
   return map;
 };
 
@@ -107,8 +129,8 @@ export async function planLifecycleEmails(db: Db, limit = 40): Promise<Lifecycle
       db.from("lifecycle_email_log").select("organization_id, kind, window_key").in("organization_id", ids),
     ]);
 
-  const profileMap = byOrg(profiles?.data);
-  const settingsMap = byOrg(settings?.data);
+  const profileMap = byOrg<ProfileRow>(profiles?.data);
+  const settingsMap = byOrg<SettingRow>(settings?.data);
   const serviceRows = (services?.data ?? []) as { organization_id: string; bookable: boolean | null }[];
   const mediaCount = groupCount(media?.data);
   const formRows = (forms?.data ?? []) as { organization_id: string; is_active: boolean | null }[];
