@@ -45,6 +45,9 @@ function AuthPage() {
   const [isSignup, setIsSignup] = useState(mode === "signup");
   const [magicMode, setMagicMode] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [remember, setRemember] = useState(rememberPreference());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -80,6 +83,7 @@ function AuthPage() {
     setError(null);
     setBusy("email");
     try {
+      setRememberPreference(remember);
       if (isSignup) {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
@@ -96,9 +100,11 @@ function AuthPage() {
           setIsSignup(false);
           return;
         }
+        // Save the account details, then send the new client to the exact next
+        // step for their workspace (onboarding first, dashboard once ready).
         await ensureProfile();
-        toast.success("Welcome to Revora. You'll stay signed in on this device.");
-        navigate({ to: "/onboarding", replace: true });
+        toast.success("Welcome to Revora. Let's set up your workspace.");
+        await goToWorkspace();
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
@@ -112,6 +118,7 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
