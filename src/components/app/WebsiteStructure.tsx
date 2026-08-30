@@ -267,8 +267,10 @@ function PageSections({
                   id={`h-${section.id}`}
                   name="heading"
                   defaultValue={section.heading ?? ""}
+                  placeholder={sectionGuide(section.kind).headingHint}
                   disabled={!canManage}
                 />
+                <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).headingHint}</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={`s-${section.id}`}>Supporting line</Label>
@@ -276,8 +278,10 @@ function PageSections({
                   id={`s-${section.id}`}
                   name="subheading"
                   defaultValue={section.subheading ?? ""}
+                  placeholder={sectionGuide(section.kind).subHint}
                   disabled={!canManage}
                 />
+                <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).subHint}</p>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -287,13 +291,26 @@ function PageSections({
                 name="body"
                 rows={3}
                 defaultValue={section.body ?? ""}
+                placeholder={sectionGuide(section.kind).bodyHint}
                 disabled={!canManage}
               />
+              <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).bodyHint}</p>
             </div>
             {canManage ? (
-              <div>
+              <div className="flex flex-wrap gap-2">
                 <Button type="submit" variant="outline" disabled={saveSection.isPending}>
                   Save section
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    askAssistant(
+                      `${sectionGuide(section.kind).ask} (the ${sectionLabel(section.kind)} section on ${page.title}).`,
+                    )
+                  }
+                >
+                  <Sparkle className="size-4" /> Let the assistant write this
                 </Button>
               </div>
             ) : null}
