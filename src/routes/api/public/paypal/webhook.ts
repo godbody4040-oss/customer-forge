@@ -14,7 +14,14 @@ export const Route = createFileRoute("/api/public/paypal/webhook")({
         );
 
         const config = paypalConfig();
-        if (!config) return new Response("Not configured", { status: 503 });
+        // PayPal isn't connected on this environment. Acknowledge and drop the
+        // event: a 5xx here makes PayPal retry forever and shows up as an app
+        // error, when in fact there is simply nothing to process.
+        if (!config)
+          return new Response(JSON.stringify({ ignored: "paypal_not_configured" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
 
         const raw = await request.text();
         const verification = await verifyPayPalWebhook(config, request.headers, raw);
