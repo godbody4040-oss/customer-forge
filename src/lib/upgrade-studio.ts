@@ -16,6 +16,7 @@
  *   with the site instead of running out.
  */
 
+import { currency } from "@/lib/format";
 import type { AgentAction, BackdropId, SectionEffectId } from "@/lib/site-agent";
 import type { ContentPage, ContentSection } from "@/lib/website-content";
 
@@ -347,7 +348,7 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
         pageId: page.id,
         kind: "pricing",
         heading: `${name} pricing guide`,
-        subheading: `Typical jobs start from £${Math.min(...priced.map((service) => service.price!))}. Your exact price is confirmed in writing before any work starts.`,
+        subheading: `Typical jobs start from ${currency(Math.min(...priced.map((service) => service.price!)))}. Your exact price is confirmed in writing before any work starts.`,
       })),
     });
   }
