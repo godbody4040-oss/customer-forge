@@ -8,9 +8,15 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ErrorNote, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
+import {
+  ensureProfile,
+  rememberPreference,
+  resolvePostLoginPath,
+  setRememberPreference,
+} from "@/lib/auth-session";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
