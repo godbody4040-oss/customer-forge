@@ -36,6 +36,7 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'automation-message': automationMessageTemplate,
   'lead-alert': leadAlertTemplate,
+  'growth-assessment': growthAssessmentTemplate,
   'billing-welcome': welcomeTemplate,
   'billing-sale-alert': saleAlertTemplate,
   'billing-canceled': canceledTemplate,
