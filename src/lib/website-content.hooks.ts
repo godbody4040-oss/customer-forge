@@ -392,13 +392,21 @@ export function useSaveComponent(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      // Link targets end up as hrefs on the public site: only safe schemes save.
+      const clean = { ...patch };
+      if ("link_url" in clean) {
+        const safe = safeLinkUrl(clean["link_url"] as string | null);
+        if (clean["link_url"] && !safe) throw new Error("That link isn't allowed. Use a web address, /page, tel: or mailto: link.");
+        clean["link_url"] = safe;
+      }
       const { error } = await supabase
         .from("website_components")
-        .update(patch as never)
+        .update(clean as never)
         .eq("id", id)
         .eq("organization_id", organizationId!);
       if (error) throw error;
     },
+
     onSuccess: () => void invalidate(),
     onError: (error: Error) => toast.error(error.message || "Couldn't save that item."),
   });
