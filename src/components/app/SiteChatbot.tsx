@@ -26,7 +26,11 @@ const EXAMPLES = [
 ];
 
 const CHIP =
-  "cursor-pointer rounded-full border border-border px-2.5 py-1 text-left text-[11px] text-muted-foreground transition-colors hover:bg-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  "cursor-pointer rounded-full border border-border/80 px-3 py-1.5 text-left text-[12px] text-muted-foreground transition-all hover:border-muted-foreground/40 hover:bg-elevated hover:text-foreground active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+/** Picked option — gold, raised, glowing, with a check, so the choice is unmistakable. */
+const CHIP_PICKED =
+  "cursor-pointer rounded-full border border-primary bg-primary/10 px-3 py-1.5 text-left text-[12px] font-medium text-primary gold-glow -translate-y-0.5 transition-all hover:bg-primary/15 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 type Message =
   | { role: "user"; content: string; attached?: string[] }
@@ -69,8 +73,19 @@ export function SiteChatbot({
   const [plan, setPlan] = useState<Plan | null>(null);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   /** When on, safe plans (nothing removed, nothing missing) are written the moment they're ready. */
-  const [autoApply, setAutoApply] = useState(true);
+const [autoApply, setAutoApply] = useState(true);
+  /** Instruction chips the client has picked — they glow gold so the choice is obvious. */
+  const [picked, setPicked] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
+
+  const togglePick = (instruction: string) => {
+    const text = instruction.slice(0, PLAN_INSTRUCTION_LIMIT);
+    const next = new Set(picked);
+    if (next.has(text)) next.delete(text);
+    else next.add(text);
+    setPicked(next);
+    setInstruction([...next].join("\n"));
+  };
 
 
   // A section panel below can hand its request up to this box.
@@ -318,62 +333,82 @@ export function SiteChatbot({
             </span>
           </span>
         </label>
-        <div className="space-y-2">
+<div className="space-y-2">
           <p className="text-[11px] font-medium text-muted-foreground" id="quick-commands-label">
-            Quick commands — tap one, or say it out loud
+            Quick commands — tap to pick, gold means picked · or say it out loud
           </p>
           <div className="flex flex-wrap gap-2" role="group" aria-labelledby="quick-commands-label">
-            {QUICK_COMMANDS.map((command) => (
-              <button
-                key={command.label}
-                type="button"
-                disabled={!canManage || !hasSections}
-                className={`${CHIP} disabled:cursor-not-allowed disabled:opacity-50`}
-                onClick={() => setInstruction(command.instruction.slice(0, PLAN_INSTRUCTION_LIMIT))}
-              >
-                {command.label}
-              </button>
-            ))}
+            {QUICK_COMMANDS.map((command) => {
+              const text = command.instruction.slice(0, PLAN_INSTRUCTION_LIMIT);
+              const active = picked.has(text);
+              return (
+                <button
+                  key={command.label}
+                  type="button"
+                  disabled={!canManage || !hasSections}
+                  aria-pressed={active}
+                  className={`${active ? CHIP_PICKED : CHIP} disabled:cursor-not-allowed disabled:opacity-50`}
+                  onClick={() => togglePick(text)}
+                >
+                  {active ? <Check className="mr-1 inline size-3" aria-hidden="true" /> : null}
+                  {command.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-2">
+<div className="space-y-2">
           <p className="text-[11px] font-medium text-muted-foreground" id="media-templates-label">
-            Guided photo &amp; video briefs — attach the files, then send
+            Guided photo &amp; video briefs — tap to pick, attach the files, then send
           </p>
           <div className="flex flex-wrap gap-2" role="group" aria-labelledby="media-templates-label">
-            {MULTIMODAL_TEMPLATES.map((template) => (
-              <button
-                key={template.key}
-                type="button"
-                disabled={!canManage || !hasSections}
-                title={`Attach: ${template.attach}`}
-                className={`${CHIP} disabled:cursor-not-allowed disabled:opacity-50`}
-                onClick={() => setInstruction(template.instruction.slice(0, PLAN_INSTRUCTION_LIMIT))}
-              >
-                <Clapperboard className="mr-1 inline size-3" aria-hidden="true" />
-                {template.label}
-                <span className="sr-only"> — attach {template.attach}</span>
-              </button>
-            ))}
+            {MULTIMODAL_TEMPLATES.map((template) => {
+              const text = template.instruction.slice(0, PLAN_INSTRUCTION_LIMIT);
+              const active = picked.has(text);
+              return (
+                <button
+                  key={template.key}
+                  type="button"
+                  disabled={!canManage || !hasSections}
+                  title={`Attach: ${template.attach}`}
+                  aria-pressed={active}
+                  className={`${active ? CHIP_PICKED : CHIP} disabled:cursor-not-allowed disabled:opacity-50`}
+                  onClick={() => togglePick(text)}
+                >
+                  {active ? (
+                    <Check className="mr-1 inline size-3" aria-hidden="true" />
+                  ) : (
+                    <Clapperboard className="mr-1 inline size-3" aria-hidden="true" />
+                  )}
+                  {template.label}
+                  <span className="sr-only"> — attach {template.attach}</span>
+                </button>
+              );
+            })}
           </div>
           <p className="text-[11px] text-muted-foreground">
             {MULTIMODAL_TEMPLATES.map((template) => `${template.label}: ${template.attach}`).join(" · ")}
           </p>
         </div>
 
-        {!messages.length ? (
+{!messages.length ? (
           <div className="flex flex-wrap gap-2">
-            {EXAMPLES.map((example) => (
-              <button
-                key={example}
-                type="button"
-                className={CHIP}
-                onClick={() => setInstruction(example)}
-              >
-                {example}
-              </button>
-            ))}
+            {EXAMPLES.map((example) => {
+              const active = picked.has(example);
+              return (
+                <button
+                  key={example}
+                  type="button"
+                  aria-pressed={active}
+                  className={active ? CHIP_PICKED : CHIP}
+                  onClick={() => togglePick(example)}
+                >
+                  {active ? <Check className="mr-1 inline size-3" aria-hidden="true" /> : null}
+                  {example}
+                </button>
+              );
+            })}
           </div>
         ) : null}
 
@@ -417,9 +452,9 @@ export function SiteChatbot({
           {plan.steps.length ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[12px] font-medium text-muted-foreground">
-                  {plan.steps.length} proposed change{plan.steps.length === 1 ? "" : "s"} — untick anything you don't
-                  want
+<p className="text-[12px] font-medium text-muted-foreground">
+                  {plan.steps.length} proposed change{plan.steps.length === 1 ? "" : "s"} — gold means included; untick
+                  anything you don't want
                 </p>
                 <Pill tone="info">
                   <Sparkles className="size-3" aria-hidden="true" /> {chosen.length} selected
@@ -431,13 +466,14 @@ export function SiteChatbot({
                 return (
                   <div
                     key={step.key}
-                    className={`rounded-md border p-3.5 transition-opacity ${
-                      off ? "border-border opacity-50" : "border-border"
+                    className={`rounded-md border p-3.5 transition-all ${
+                      off ? "border-border/60 bg-transparent opacity-55" : "border-primary/40 bg-primary/5 gold-glow"
                     }`}
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <Pill tone={step.destructive ? "danger" : "info"}>{step.where}</Pill>
                       <p className="text-[13px] font-medium">{step.title}</p>
+                      {!off ? <Check className="ml-auto size-4 shrink-0 text-primary" aria-hidden="true" /> : null}
                     </div>
                     {step.before ? (
                       <p className="mt-2 text-[12px] text-muted-foreground line-through">{step.before}</p>
