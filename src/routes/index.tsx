@@ -26,6 +26,7 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES } from "@/lib/domain";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
+import { GROWTH_SYSTEM_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,8 +45,11 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/"),
     ],
+    links: [canonicalLink("/")],
     scripts: [
+      { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
       {
         type: "application/ld+json",
         children: JSON.stringify({

@@ -3,6 +3,7 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
 import { Panel } from "@/components/app/Bits";
 import { REVORA } from "@/lib/brand";
+import { canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -20,7 +21,9 @@ content: `Revora is a business growth platform founded by ${REVORA.founder.name}
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/about"),
     ],
+    links: [canonicalLink("/about")],
   }),
   component: About,
 });

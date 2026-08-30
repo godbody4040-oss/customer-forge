@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
+import { canonicalLink, ogUrl } from "@/lib/seo";
 
 const INTERESTS = [
   "Website",
@@ -39,7 +40,9 @@ export const Route = createFileRoute("/contact")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/contact"),
     ],
+    links: [canonicalLink("/contact")],
   }),
   component: Contact,
 });

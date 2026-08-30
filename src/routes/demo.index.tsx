@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { submitPublicLead } from "@/lib/public-site.functions";
 import { INDUSTRIES } from "@/lib/domain";
+import { canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/demo/")({
   head: () => ({
@@ -28,7 +29,9 @@ export const Route = createFileRoute("/demo/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/demo"),
     ],
+    links: [canonicalLink("/demo")],
   }),
   component: DemoPage,
 });

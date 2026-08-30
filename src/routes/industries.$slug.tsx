@@ -7,6 +7,7 @@ import { SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
 
 
 const BENEFITS = [
@@ -37,8 +38,20 @@ export const Route = createFileRoute("/industries/$slug")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
+        ogUrl(`/industries/${match.params.slug}`),
       ],
+      links: [canonicalLink(`/industries/${match.params.slug}`)],
       scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Revora", path: "/" },
+              { name: "Industries", path: "/industries" },
+              { name, path: `/industries/${match.params.slug}` },
+            ]),
+          ),
+        },
         {
           type: "application/ld+json",
           children: JSON.stringify({
