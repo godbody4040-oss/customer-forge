@@ -8,6 +8,9 @@ import { SalesCTA } from "@/components/marketing/SalesCTA";
 import { AfterYouStart, TrialBadge, ValueSplit, WhyRevora } from "@/components/marketing/OfferSections";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 import { GROWTH_SYSTEM_SCHEMA, breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
+import { useExperiment } from "@/lib/experiments.hooks";
+import { trackConversion } from "@/lib/conversion";
+
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -64,6 +67,10 @@ const FAQ = [
 ];
 
 function Pricing() {
+  // A/B test: which pricing arrangement converts better.
+  const layout = useExperiment("pricing_layout");
+  const split = layout === "split";
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -80,8 +87,13 @@ function Pricing() {
         </div>
 
         <section className="panel card-lift mt-10 overflow-hidden p-0">
-          <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
-            <div className="min-w-0 border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
+          <div className={`grid gap-0 ${split ? "md:grid-cols-[1.1fr_1fr]" : ""}`}>
+            <div
+              className={`min-w-0 border-b border-border p-6 sm:p-7 ${
+                split ? "md:border-r md:border-b-0" : ""
+              }`}
+            >
+
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-display text-[20px] font-semibold">{GROWTH_SYSTEM.name}</h2>
                 <Pill tone="signal">Complete system</Pill>
@@ -111,7 +123,15 @@ function Pricing() {
                 size="lg"
                 className="mt-8 h-auto w-full py-3 text-center leading-snug whitespace-normal"
               >
-                <Link to="/get-started">{GROWTH_SYSTEM.ctaPrimary}</Link>
+                <Link
+                  to="/get-started"
+                  onClick={() =>
+                    trackConversion("cta_click", { metadata: { location: "pricing_primary" } })
+                  }
+                >
+                  {GROWTH_SYSTEM.ctaPrimary}
+                </Link>
+
               </Button>
               <div className="mt-3">
                 <FreeAccessBanner />

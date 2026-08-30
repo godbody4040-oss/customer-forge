@@ -3,6 +3,10 @@ import { ArrowRight, CheckCircle2, KeyRound, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Panel, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
+import { useExperiment } from "@/lib/experiments.hooks";
+import { START_FREE_COPY } from "@/lib/experiments";
+import { trackConversion } from "@/lib/conversion";
+
 
 /** The single destination for "try it free": create an account, then continue to setup. */
 export const FREE_ACCESS_TO = "/auth" as const;
@@ -12,13 +16,18 @@ export const FREE_ACCESS_LABEL = `TRY ${GROWTH_SYSTEM.fullAccessTrialDays} DAYS 
 /** Primary "try the free access" button. Used in the hero, pricing and closing CTA. */
 export function FreeAccessButton({
   className = "",
-  label = FREE_ACCESS_LABEL,
+  label,
   size = "lg",
 }: {
   className?: string;
   label?: string;
   size?: "sm" | "lg" | "default";
 }) {
+  // A/B test the primary button copy. An explicit label always wins.
+  const variant = useExperiment("start_free_copy");
+  const tested = variant === "trial_days" ? FREE_ACCESS_LABEL : (START_FREE_COPY[variant] ?? FREE_ACCESS_LABEL);
+  const text = label ?? tested;
+
   return (
     <Button
       asChild
@@ -26,14 +35,21 @@ export function FreeAccessButton({
       size={size}
       className={`h-auto py-3 text-center leading-snug whitespace-normal ${className}`}
     >
-      <Link to={FREE_ACCESS_TO} search={FREE_ACCESS_SEARCH}>
+      <Link
+        to={FREE_ACCESS_TO}
+        search={FREE_ACCESS_SEARCH}
+        onClick={() =>
+          trackConversion("cta_click", { metadata: { location: "free_access_button", copy: variant } })
+        }
+      >
         <Sparkles className="size-4" aria-hidden="true" />
-        {label}
+        {text}
         <ArrowRight className="size-4" aria-hidden="true" />
       </Link>
     </Button>
   );
 }
+
 
 /** Compact gold banner that tells visitors the free access exists and how to get it. */
 export function FreeAccessBanner({ className = "" }: { className?: string }) {

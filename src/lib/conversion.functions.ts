@@ -4,11 +4,17 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const EVENTS = [
   "landing_view",
   "cta_click",
+  "experiment_exposure",
   "signup_started",
   "signup_completed",
+  "workspace_provisioned",
+  "site_published",
+  "first_quote_request",
+  "first_booking",
   "checkout_started",
   "checkout_completed",
 ] as const;
+
 
 export type ConversionEvent = (typeof EVENTS)[number];
 
@@ -23,11 +29,27 @@ export interface ConversionInput {
   sessionId?: string | null;
   email?: string | null;
   amountCents?: number | null;
+  /** Small flat bag: experiment variants, workspace id, milestone details. */
+  metadata?: Record<string, unknown> | null;
 }
 
 const clean = (value: unknown, max: number) => {
   const text = typeof value === "string" ? value.trim() : "";
   return text ? text.slice(0, max) : null;
+};
+
+/** Keeps metadata small, flat and free of anything sensitive. */
+const cleanMetadata = (value: unknown): Record<string, string | number | boolean> | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const out: Record<string, string | number | boolean> = {};
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>).slice(0, 12)) {
+    const safeKey = key.replace(/[^a-z0-9_]/gi, "").slice(0, 40);
+    if (!safeKey) continue;
+    if (typeof raw === "string") out[safeKey] = raw.slice(0, 120);
+    else if (typeof raw === "number" && Number.isFinite(raw)) out[safeKey] = raw;
+    else if (typeof raw === "boolean") out[safeKey] = raw;
+  }
+  return Object.keys(out).length > 0 ? out : null;
 };
 
 /** Records a Revora marketing funnel event (landing page -> signup -> paid checkout). */
@@ -52,6 +74,7 @@ export const recordConversion = createServerFn({ method: "POST" })
       sessionId: clean(input?.sessionId, 60),
       email: clean(input?.email, 160),
       amountCents: amount,
+      metadata: cleanMetadata(input?.metadata),
     };
   })
   .handler(async ({ data }) => {
@@ -67,11 +90,13 @@ export const recordConversion = createServerFn({ method: "POST" })
       session_id: data.sessionId,
       email: data.email,
       amount_cents: data.amountCents,
+      metadata: (data.metadata ?? null) as never,
     });
     if (error) {
       console.error("recordConversion failed", error.message);
       return { ok: false };
     }
+
     return { ok: true };
   });
 
@@ -81,11 +106,42 @@ export interface FunnelRow {
   landingViews: number;
   signupsStarted: number;
   signupsCompleted: number;
+  workspacesProvisioned: number;
+  firstQuotes: number;
+  firstBookings: number;
   checkoutsStarted: number;
   checkoutsCompleted: number;
 }
 
-/** Super-admin funnel report: conversions grouped by landing page / industry. */
+export interface VariantRow {
+  experiment: string;
+  variant: string;
+  exposures: number;
+  signupsStarted: number;
+  signupsCompleted: number;
+  checkoutsCompleted: number;
+  /** Signups completed per 100 exposures. */
+  signupRate: number;
+}
+
+const emptyRow = (key: string, label: string): FunnelRow => ({
+  key,
+  label,
+  landingViews: 0,
+  signupsStarted: 0,
+  signupsCompleted: 0,
+  workspacesProvisioned: 0,
+  firstQuotes: 0,
+  firstBookings: 0,
+  checkoutsStarted: 0,
+  checkoutsCompleted: 0,
+});
+
+/**
+ * Super-admin funnel report.
+ * Grouped by landing page / industry, plus an A/B breakdown per variant so the
+ * pricing layout and Start-free copy tests can be compared directly.
+ */
 export const getConversionReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input?: { days?: number }) => ({
@@ -99,36 +155,66 @@ export const getConversionReport = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabaseAdmin
       .from("marketing_conversions")
-      .select("event_name, industry_slug, landing_path, created_at")
+      .select("event_name, industry_slug, landing_path, metadata, created_at")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(5000);
     if (error) throw new Error(error.message);
 
     const grouped = new Map<string, FunnelRow>();
+    const variants = new Map<string, VariantRow>();
+
     for (const row of rows ?? []) {
       const key = row.industry_slug ?? row.landing_path ?? "direct";
       const entry =
         grouped.get(key) ??
-        {
-          key,
-          label: row.industry_slug ? row.industry_slug.replace(/-/g, " ") : (row.landing_path ?? "Direct"),
-          landingViews: 0,
-          signupsStarted: 0,
-          signupsCompleted: 0,
-          checkoutsStarted: 0,
-          checkoutsCompleted: 0,
-        };
+        emptyRow(key, row.industry_slug ? row.industry_slug.replace(/-/g, " ") : (row.landing_path ?? "Direct"));
       if (row.event_name === "landing_view") entry.landingViews += 1;
       if (row.event_name === "signup_started") entry.signupsStarted += 1;
       if (row.event_name === "signup_completed") entry.signupsCompleted += 1;
+      if (row.event_name === "workspace_provisioned") entry.workspacesProvisioned += 1;
+      if (row.event_name === "first_quote_request") entry.firstQuotes += 1;
+      if (row.event_name === "first_booking") entry.firstBookings += 1;
       if (row.event_name === "checkout_started") entry.checkoutsStarted += 1;
       if (row.event_name === "checkout_completed") entry.checkoutsCompleted += 1;
       grouped.set(key, entry);
+
+      const meta =
+        row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+          ? (row.metadata as Record<string, unknown>)
+          : {};
+      for (const [experiment, value] of Object.entries(meta)) {
+        if (experiment === "experiment" || experiment === "variant" || typeof value !== "string") continue;
+        const vkey = `${experiment}:${value}`;
+        const vrow =
+          variants.get(vkey) ??
+          {
+            experiment,
+            variant: value,
+            exposures: 0,
+            signupsStarted: 0,
+            signupsCompleted: 0,
+            checkoutsCompleted: 0,
+            signupRate: 0,
+          };
+        if (row.event_name === "experiment_exposure") vrow.exposures += 1;
+        if (row.event_name === "signup_started") vrow.signupsStarted += 1;
+        if (row.event_name === "signup_completed") vrow.signupsCompleted += 1;
+        if (row.event_name === "checkout_completed") vrow.checkoutsCompleted += 1;
+        variants.set(vkey, vrow);
+      }
     }
 
     const report = [...grouped.values()].sort(
       (a, b) => b.checkoutsCompleted - a.checkoutsCompleted || b.landingViews - a.landingViews,
     );
-    return { days: data.days, total: rows?.length ?? 0, report };
+    const variantReport = [...variants.values()]
+      .map((v) => ({
+        ...v,
+        signupRate: v.exposures > 0 ? Math.round((v.signupsCompleted / v.exposures) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => a.experiment.localeCompare(b.experiment) || b.signupRate - a.signupRate);
+
+    return { days: data.days, total: rows?.length ?? 0, report, variantReport };
   });
+

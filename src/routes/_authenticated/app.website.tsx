@@ -11,6 +11,8 @@ import {
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/domain";
 import { readSeo } from "@/lib/site-seo";
+import { trackConversion } from "@/lib/conversion";
+
 import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
@@ -196,13 +198,15 @@ function WebsitePage() {
         hasSections={visibleSections > 0}
         publishState={settings?.publish_state ?? "draft"}
         isPublishing={saveSettings.isPending}
-        onPublishNow={() =>
+        onPublishNow={() => {
+          trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
           saveSettings.mutate({
             publish_state: "published",
             published: true,
             last_published_at: new Date().toISOString(),
-          })
-        }
+          });
+        }}
+
       />
 
       <RevoraGenius

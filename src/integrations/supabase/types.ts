@@ -1008,6 +1008,54 @@ export type Database = {
           },
         ]
       }
+      lifecycle_email_log: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          kind: string
+          organization_id: string
+          recipient: string | null
+          status: string
+          window_key: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind: string
+          organization_id: string
+          recipient?: string | null
+          status?: string
+          window_key: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind?: string
+          organization_id?: string
+          recipient?: string | null
+          status?: string
+          window_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_email_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lifecycle_email_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_conversions: {
         Row: {
           amount_cents: number | null
