@@ -264,7 +264,7 @@ export function SiteChatbot({
           }
           disabled={!canManage || !hasSections}
           aria-label="Tell Revora what to change"
-          className="min-h-[96px]"
+          className="min-h-[96px] scroll-mt-28"
         />
         <AssistantMedia
           organizationId={organizationId}
