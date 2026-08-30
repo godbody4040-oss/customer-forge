@@ -109,6 +109,8 @@ ACTION SHAPES (use exactly these)
 {"type":"set_page","pageId":"<id>","patch":{"title":"...","slug":"...","is_visible":true,"noindex":false,"seo_title":"...","seo_description":"...","og_title":"...","og_description":"..."}}
 {"type":"delete_page","pageId":"<id>"}
 {"type":"set_theme","patch":{"primary_color":"#RRGGBB","secondary_color":"#RRGGBB","accent_color":"#RRGGBB","font_preference":"..."}}
+{"type":"set_backdrop","backdrop":"none|stars|aurora|nebula|grid|spotlight|gradient_mesh"}
+{"type":"set_section_effect","sectionId":"<id>","effect":"none|float_3d|tilt_3d|glass|gold_glow|rise|parallax_slow|shine"}
 {"type":"set_business_fact","field":"tagline|description|phone|email|city|state|service_area|address|review_link|website","value":"..."}
 
 RESPONSE FORMAT — a single JSON object, no markdown:
