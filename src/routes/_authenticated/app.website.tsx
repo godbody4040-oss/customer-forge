@@ -20,6 +20,7 @@ import { EffectStudio } from "@/components/app/EffectStudio";
 import { readBackdrop, writeBackdrop } from "@/lib/site-effects";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { UpgradeStudio } from "@/components/app/UpgradeStudio";
+import { RevoraGenius } from "@/components/app/RevoraGenius";
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
