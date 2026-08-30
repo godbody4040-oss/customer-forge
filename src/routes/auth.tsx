@@ -258,6 +258,11 @@ function AuthPage() {
               {busy === "google" ? <Loader2 className="size-4 animate-spin" /> : null}
               Continue with Google
             </Button>
+            <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">
+              Google shows our secure sign-in provider on the consent screen — you're signing into{" "}
+              <span className="gold-hl">Revora</span>.
+            </p>
+
 
             <div className="my-5 flex items-center gap-3">
               <span className="h-px flex-1 bg-border" />
