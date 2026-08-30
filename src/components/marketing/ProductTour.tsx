@@ -270,7 +270,7 @@ function Screen({ view }: { view: ScreenKey }) {
 /** Tabbed, clickable tour of the Revora modules. */
 export function ProductTour() {
   const [view, setView] = useState<ScreenKey>("site");
-  const active = TABS.find((t) => t.key === view) ?? TABS[0];
+  const active = TABS.find((t) => t.key === view) ?? TABS[0]!;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:gap-8">

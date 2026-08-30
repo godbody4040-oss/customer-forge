@@ -96,7 +96,7 @@ const footer = { color: '#8a8a94', fontSize: '11px', lineHeight: '1.6', margin: 
 
 export const template: TemplateEntry = {
   component: AssessmentEmail,
-  subject: (data) => `Your Revora Growth Score: ${data.score ?? 0}/100`,
+  subject: (data) => `Your Revora Growth Score: ${data['score'] ?? 0}/100`,
   displayName: 'Growth assessment results',
   previewData: {
     businessName: 'Northside Plumbing',
