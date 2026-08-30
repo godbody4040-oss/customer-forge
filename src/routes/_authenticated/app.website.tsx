@@ -11,6 +11,8 @@ import {
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/domain";
 import { readSeo } from "@/lib/site-seo";
+import { trackConversion } from "@/lib/conversion";
+
 import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
