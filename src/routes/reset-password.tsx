@@ -29,12 +29,22 @@ function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Supabase puts recovery failures (expired / already-used links) in the URL
+    // hash, so surface them instead of showing an unusable form.
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const hashError = hash.get("error_description") ?? hash.get("error");
+    if (hashError) setLinkError(hashError.replace(/\+/g, " "));
+
     supabase.auth.getSession().then(({ data }) => setReady(Boolean(data.session)));
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) setReady(true);
+      if (session) {
+        setReady(true);
+        setLinkError(null);
+      }
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -50,8 +60,9 @@ function ResetPasswordPage() {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
+      setRememberPreference(true);
       toast.success("Password updated. You're signed in.");
-      navigate({ to: "/app", replace: true });
+      navigate({ to: await resolvePostLoginPath(), replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update your password.");
     } finally {
@@ -81,10 +92,25 @@ function ResetPasswordPage() {
             Set a <span className="gold-text">new password</span>
           </h1>
           <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-            {ready
-              ? "Choose a password you'll remember — we'll keep you signed in on this device."
-              : "Open the reset link from your email on this device to continue."}
+            {linkError
+              ? "That reset link is no longer valid — links are single-use and expire quickly."
+              : ready
+                ? "Choose a password of at least 8 characters. We'll keep you signed in on this device."
+                : "Open the reset link from your email on this device to continue."}
           </p>
+
+          {linkError ? (
+            <div className="panel mt-6 space-y-3 p-5">
+              <ErrorNote message={linkError} />
+              <Link
+                to="/auth"
+                className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Request a new reset link
+              </Link>
+            </div>
+          ) : (
+
 
           <form className="panel mt-6 space-y-4 p-5" onSubmit={handleSubmit}>
             <div className="space-y-1.5">
