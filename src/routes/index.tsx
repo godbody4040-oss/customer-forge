@@ -3,46 +3,48 @@ import {
   ArrowRight,
   CalendarCheck,
   Calculator,
+  ClipboardCheck,
   Globe,
   LineChart,
   MessageSquare,
   Search,
   Sparkles,
-  Star,
+  TrendingDown,
   Users,
-  Zap,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
-import { LiveSystemDemo } from "@/components/marketing/LiveSystemDemo";
 import { TrustSection } from "@/components/marketing/TrustSection";
 import { FounderNote } from "@/components/marketing/SalesCTA";
 import { ROICalculator } from "@/components/marketing/ROICalculator";
-import { AfterYouStart, ValueSplit } from "@/components/marketing/OfferSections";
+import { AfterYouStart } from "@/components/marketing/OfferSections";
 import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
 import { LongTermValue } from "@/components/marketing/ConversionKit";
+import { AiClarity, AutomationFlow, SleepEngine } from "@/components/marketing/AiClarity";
+import { ProductTour } from "@/components/marketing/ProductTour";
+import { ValueStack } from "@/components/marketing/ValueStack";
 import { FreeAccessBanner, FreeAccessButton, FreeAccessSection } from "@/components/marketing/FreeAccess";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { INDUSTRIES } from "@/lib/domain";
+import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import { GROWTH_SYSTEM_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Revora — Turn More Visitors Into Paying Customers" },
+      { title: "Revora — The AI Growth System That Books Local Jobs 24/7" },
       {
         name: "description",
         content:
-          "Revora is a done-for-you growth system for local businesses: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO and AI automation. 3 days free full access, $750 setup, first month free, then $100/month.",
+          "Revora builds local businesses a complete AI growth system: website, instant quotes, booking, CRM, automated follow-up, reviews, local SEO and analytics — working while you sleep. 3 days free full access, $750 setup, first month free, then $100/month.",
       },
-      { property: "og:title", content: "Revora — Turn more visitors into paying customers" },
+      { property: "og:title", content: "Revora — the AI growth system that books local jobs 24/7" },
       {
         property: "og:description",
         content:
-          "One system for local businesses: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO, analytics and AI automation. Built, launched and managed for you.",
+          "Website, instant quotes, booking, CRM, follow-up, reviews, local SEO and analytics in one AI-run system. Built, launched and managed for you. Try it free for 3 days.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -68,74 +70,62 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const STACK = [
-  "Website",
-  "Lead capture",
-  "CRM",
-  "Quotes",
-  "Booking",
-  "Follow-up",
-  "Reviews",
-  "Local SEO",
-  "Analytics",
-  "AI automation",
-];
-
 const PROBLEMS = [
-  { title: "Missed leads", body: "Customers reach out while you're on a job." },
-  { title: "Slow follow-up", body: "Interest fades when nobody replies fast." },
+  { title: "Missed leads", body: "Customers call while you're on a job — and call someone else next." },
+  { title: "Slow follow-up", body: "Interest dies within the hour when nobody replies." },
   { title: "Lost quotes", body: "Estimates get sent, then forgotten by both sides." },
-  { title: "Booking friction", body: "Customers have to call just to pick a time." },
-  { title: "No visibility", body: "You can't tell which traffic actually pays." },
+  { title: "Booking friction", body: "People have to call during work hours just to pick a time." },
+  { title: "No visibility", body: "You can't tell which traffic actually turns into money." },
 ];
 
-const ECOSYSTEM = [
-  { icon: Globe, name: "Revora Sites", body: "Get discovered." },
-  { icon: Users, name: "Revora CRM", body: "Never lose a lead." },
-  { icon: Calculator, name: "Revora Quotes", body: "Price jobs instantly." },
-  { icon: CalendarCheck, name: "Revora Bookings", body: "Scheduling without calls." },
-  { icon: Sparkles, name: "Revora AI", body: "Handle the repetitive work." },
-  { icon: Zap, name: "Revora Automations", body: "Follow up every time." },
-  { icon: Star, name: "Revora Reviews", body: "Build public trust." },
-  { icon: LineChart, name: "Revora Analytics", body: "Know what's working." },
-] as const;
-
-const FEATURES = [
+/** Every capability stated as the outcome it produces for the owner. */
+const OUTCOMES = [
   {
     icon: Globe,
-    title: "Conversion-first website",
-    body: "Industry template, your services and photos. Call, quote and book on every screen.",
+    outcome: "Get chosen instead of scrolled past",
+    how: "A fast, industry-specific site with call, quote and book actions on every screen.",
   },
   {
     icon: Calculator,
-    title: "Instant quote calculator",
-    body: "Visitors get a real price range. You get a qualified lead with their answers attached.",
+    outcome: "Win the price-shopper before your competitor calls back",
+    how: "An instant quote calculator that returns a real range and captures the lead's answers.",
   },
   {
     icon: CalendarCheck,
-    title: "Booking calendar",
-    body: "Publish availability, take appointments while you work, confirm in two taps.",
+    outcome: "Fill your calendar without answering the phone",
+    how: "Online booking on your real availability, with confirmations and reminders sent for you.",
   },
   {
     icon: Users,
-    title: "Lead pipeline & CRM",
-    body: "Every lead in one board from new to booked, with owed follow-ups surfaced first.",
+    outcome: "Stop losing jobs you already paid to attract",
+    how: "One pipeline from new to booked, with the follow-ups you owe surfaced first.",
+  },
+  {
+    icon: ClipboardCheck,
+    outcome: "Reply in seconds, even mid-job",
+    how: "Instant lead alerts plus automatic first replies and nudge sequences.",
   },
   {
     icon: Search,
-    title: "Local SEO engine",
-    body: "Service and city pages, structured data and a health score that says what to fix next.",
-  },
-  {
-    icon: LineChart,
-    title: "Analytics that answer 'is it working'",
-    body: "Traffic, leads, bookings and conversion rate by source. No course required.",
+    outcome: "Show up for more 'service + city' searches every month",
+    how: "Service and city pages, schema, sitemap and a health score that says what's next.",
   },
   {
     icon: MessageSquare,
-    title: "Reviews & automated follow-up",
-    body: "Ask for reviews after completed jobs and let automations nudge quiet leads.",
+    outcome: "Build the review count that wins the click",
+    how: "Automatic review requests after completed jobs, with proof published to your site.",
   },
+  {
+    icon: LineChart,
+    outcome: "Know exactly what the system returned this month",
+    how: "Traffic, leads, quotes, bookings and conversion rate by source — no course required.",
+  },
+];
+
+const HERO_PROOF = [
+  ["24/7", "Quoting and booking, even at 2am"],
+  ["1 system", "Instead of five subscriptions"],
+  ["Done for you", "Built, launched and managed"],
 ];
 
 function PrimaryCta({ className = "" }: { className?: string }) {
@@ -143,8 +133,8 @@ function PrimaryCta({ className = "" }: { className?: string }) {
     <div className={`flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center ${className}`}>
       <FreeAccessButton />
       <Button asChild variant="outline" size="lg">
-        <Link to="/get-started">
-          {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" />
+        <Link to="/growth-assessment">
+          Get my free growth score <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
       </Button>
       <Button asChild variant="ghost" size="lg">
@@ -157,8 +147,8 @@ function PrimaryCta({ className = "" }: { className?: string }) {
 function PriceLine({ className = "" }: { className?: string }) {
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
-      <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days free full access</span>{" "}
-      · <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
+      <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days free full access</span> ·{" "}
+      <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
       <span className="gold-hl">first month free</span> · then{" "}
       <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.monthlyPrice)}/month</span> ·
       Cancel anytime
@@ -166,52 +156,40 @@ function PriceLine({ className = "" }: { className?: string }) {
   );
 }
 
-
 function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
       <main>
-        {/* HOOK */}
+        {/* HERO */}
         <section className="hero-aura border-b border-border">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-start lg:gap-10 lg:py-20">
             <div className="reveal lg:pt-4">
-              <Pill tone="signal">REVORA™ — Growth system for local businesses</Pill>
+              <Pill tone="signal">
+                <Sparkles className="size-3.5" aria-hidden="true" /> REVORA™ — AI growth system for
+                local businesses
+              </Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.5rem)] leading-[1.04] font-semibold tracking-tight">
-                Turn More Visitors Into{" "}
-                <span className="gold-text">Paying Customers</span>.
+                Your business books jobs{" "}
+                <span className="gold-text">while you're working — and while you sleep</span>.
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                One done-for-you system that combines{" "}
+                Revora's AI builds your website, prices jobs, answers leads in seconds, books them on
+                your calendar, chases the quiet ones and collects reviews —{" "}
                 <span className="text-foreground">
-                  website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO,
-                  analytics and AI automation
+                  one system that replaces the website guy, the CRM, the booking tool, the follow-up
+                  app and the SEO retainer
                 </span>
-                . We build it, connect it, launch it and keep optimizing it.
+                . We build it, launch it and keep improving it for you.
               </p>
 
               <PrimaryCta className="mt-8" />
               <PriceLine className="mt-4" />
               <FreeAccessBanner className="mt-6 max-w-xl" />
 
-              <ul className="mt-8 flex flex-wrap gap-1.5" aria-label="What Revora includes">
-                {STACK.map((item) => (
-                  <li
-                    key={item}
-                    className="rounded-full border border-border bg-card px-3 py-1 text-[12px] text-muted-foreground"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
               <dl className="mt-9 grid grid-cols-1 gap-x-6 gap-y-5 border-t border-border pt-6 sm:max-w-lg sm:grid-cols-3">
-                {[
-                  ["1 system", "Instead of five subscriptions"],
-                  ["Done for you", "Built, launched and managed"],
-                  ["1 inbox", "Calls, quotes and bookings"],
-                ].map(([value, label]) => (
+                {HERO_PROOF.map(([value, label]) => (
                   <div key={label}>
                     <dt className="tnum gold-hl font-display text-[19px] leading-tight font-semibold">
                       {value}
@@ -227,12 +205,12 @@ function Landing() {
 
         {/* PROBLEM */}
         <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="mx-auto max-w-6xl px-4 py-14">
             <p className="eyebrow">The real problem</p>
             <h2 className="mt-2 max-w-3xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
-              You shouldn't lose customers because the process is broken.
+              You're not short on interest. You're losing it between the click and the booking.
             </h2>
-            <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {PROBLEMS.map((p) => (
                 <Panel key={p.title} className="card-lift p-5">
                   <h3 className="font-display text-[13px] font-bold tracking-[0.12em] uppercase">
@@ -242,78 +220,116 @@ function Landing() {
                 </Panel>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* REVORA SOLUTION */}
-        <section className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading
-              eyebrow="The Revora solution"
-              title="One platform. Every customer touchpoint."
-            />
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {ECOSYSTEM.map(({ icon: Icon, name, body }) => (
-                <Panel key={name} className="card-lift p-5">
-                  <Icon className="size-5 text-primary" aria-hidden="true" />
-                  <h3 className="mt-3.5 font-display text-[13px] font-bold tracking-[0.12em] uppercase">
-                    {name}
-                  </h3>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
-                </Panel>
-              ))}
-            </div>
             <div className="mt-10">
               <WithoutWith />
             </div>
           </div>
         </section>
 
-        {/* LIVE DEMO — the wow moment */}
-        <section id="see-it" className="hero-aura scroll-mt-20 border-b border-border bg-card">
-          <div className="mx-auto max-w-6xl px-4 py-20">
-            <LiveSystemDemo />
+        {/* INTERACTIVE PRODUCT TOUR */}
+        <section id="see-it" className="hero-aura scroll-mt-20 border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <ProductTour />
           </div>
         </section>
 
-        {/* WHAT YOU GET */}
+        {/* WHAT THE AI ACTUALLY DOES */}
+        <section id="ai" className="scroll-mt-20 border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="Revora AI"
+              title="Exactly what the AI does for you — in plain English"
+            />
+            <div className="mt-8">
+              <AiClarity />
+            </div>
+          </div>
+        </section>
+
+        {/* AUTOMATION VISUAL */}
         <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
-              eyebrow="What you get"
-              title="One engine, from first search to repeat customer"
+              eyebrow="The automation engine"
+              title="Every lead gets the same perfect follow-up, automatically"
             />
-            <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, body }) => (
-                <Panel key={title} className="card-lift p-5">
+            <div className="mt-8">
+              <AutomationFlow />
+            </div>
+          </div>
+        </section>
+
+        {/* FREE ASSESSMENT FUNNEL */}
+        <section className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-14">
+            <Panel className="gold-glow grid gap-6 border-primary/35 p-6 sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+              <div>
+                <Pill tone="signal">
+                  <TrendingDown className="size-3.5" aria-hidden="true" /> Free growth assessment
+                </Pill>
+                <h2 className="mt-4 font-display text-[clamp(1.35rem,2.8vw,2rem)] leading-tight font-semibold">
+                  See how many customers you're losing — <span className="gold-text">free</span>, in
+                  2 minutes.
+                </h2>
+                <p className="mt-3 max-w-xl text-[13.5px] leading-relaxed text-muted-foreground">
+                  Answer a few questions about how leads reach you today. Get your Revora Growth
+                  Score, the specific gaps costing you jobs, and an estimate of the revenue slipping
+                  past you each month — emailed instantly. No card, no call required.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <Button asChild variant="signal" size="lg" className="h-auto py-3 leading-snug whitespace-normal">
+                  <Link to="/growth-assessment">
+                    GET MY FREE GROWTH SCORE <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/website-audit">Or get a free website audit</Link>
+                </Button>
+              </div>
+            </Panel>
+          </div>
+        </section>
+
+        {/* OUTCOMES */}
+        <section className="border-b border-border">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="What it does for your business"
+              title="Not a feature list — the outcomes you actually want"
+            />
+            <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              {OUTCOMES.map(({ icon: Icon, outcome, how }) => (
+                <Panel key={outcome} className="card-lift p-5">
                   <Icon className="size-5 text-primary" aria-hidden="true" />
-                  <h3 className="mt-3.5 font-display text-[15px] font-semibold">{title}</h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{body}</p>
+                  <h3 className="mt-3.5 font-display text-[14.5px] leading-snug font-semibold">
+                    {outcome}
+                  </h3>
+                  <p className="mt-2 text-[12.5px] leading-relaxed text-muted-foreground">{how}</p>
                 </Panel>
               ))}
             </div>
           </div>
         </section>
 
-        {/* TRUST */}
+        {/* GROWS WHILE YOU SLEEP */}
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <TrustSection />
+            <SleepEngine />
           </div>
         </section>
 
-        {/* FREE ACCESS — guided first step */}
-        <section id="free-access" className="scroll-mt-20 border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-16">
-            <FreeAccessSection />
-          </div>
-        </section>
-
-        {/* PRICING */}
+        {/* VALUE + PRICING */}
         <section id="pricing" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading eyebrow="Pricing" title={GROWTH_SYSTEM.headline} />
-            <div className="panel mt-8 grid gap-0 overflow-hidden p-0 md:grid-cols-[1.1fr_1fr]">
+            <SectionHeading
+              eyebrow="Pricing"
+              title={`Why ${usd(GROWTH_SYSTEM.setupPrice)} is the easiest decision on this page`}
+            />
+            <div className="mt-8">
+              <ValueStack />
+            </div>
+            <div className="panel mt-10 grid gap-0 overflow-hidden p-0 md:grid-cols-[1.1fr_1fr]">
               <div className="min-w-0 border-b border-border p-6 sm:p-7 md:border-r md:border-b-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-display text-[18px] font-semibold">{GROWTH_SYSTEM.name}</h3>
@@ -348,9 +364,7 @@ function Landing() {
                 >
                   <Link to="/get-started">{GROWTH_SYSTEM.ctaShort}</Link>
                 </Button>
-                <p className="mt-2.5 text-[12px] text-muted-foreground">
-                  {GROWTH_SYSTEM.explainer}
-                </p>
+                <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.explainer}</p>
               </div>
               <div className="min-w-0 bg-background/40 p-6 sm:p-7">
                 <p className="eyebrow">Everything included</p>
@@ -372,9 +386,6 @@ function Landing() {
                 </Link>
               </div>
             </div>
-            <div className="mt-10">
-              <ValueSplit />
-            </div>
           </div>
         </section>
 
@@ -385,12 +396,19 @@ function Landing() {
           </div>
         </section>
 
-        {/* Opportunity estimator */}
+        {/* OPPORTUNITY / LOST REVENUE */}
         <section id="roi" className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
-              eyebrow="Opportunity estimator"
-              title="See what a few more customers could mean"
+              eyebrow="Revenue calculator"
+              title="What the leaks cost you — and what closing them is worth"
+              action={
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/growth-assessment">
+                    Full assessment <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              }
             />
             <div className="mt-8">
               <ROICalculator />
@@ -398,62 +416,75 @@ function Landing() {
           </div>
         </section>
 
-        {/* Industries */}
+        {/* INDUSTRIES / NICHE PAGES */}
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <SectionHeading
-              eyebrow="Industries"
-              title="Templates tuned to how your trade sells"
+              eyebrow="Built for your trade"
+              title="Pick your industry and see the exact system"
               action={
                 <Button asChild variant="ghost" size="sm">
                   <Link to="/industries">
-                    All industries <ArrowRight className="size-4" />
+                    All industries <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                 </Button>
               }
             />
-            <ul className="mt-8 flex flex-wrap gap-2">
-              {INDUSTRIES.map((i) => (
-                <li
-                  key={i.name}
-                  className="rounded-full border border-border bg-background px-3.5 py-1.5 text-[13px] text-muted-foreground"
-                >
-                  {i.name}
+            <ul className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {INDUSTRIES.map((industry) => (
+                <li key={industry.name}>
+                  <Link
+                    to="/industries/$slug"
+                    params={{ slug: industrySlug(industry.name) }}
+                    className="card-lift flex min-h-12 items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 text-[13px] transition-colors hover:border-primary/40"
+                  >
+                    <span className="min-w-0 truncate">{industry.name}</span>
+                    <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                  </Link>
                 </li>
               ))}
             </ul>
             <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-muted-foreground">
-              <span className="text-foreground">Also built for:</span>{" "}
-              {TRUST_INDUSTRIES.join(" · ")}.
+              <span className="text-foreground">Also built for:</span> {TRUST_INDUSTRIES.join(" · ")}.
             </p>
           </div>
         </section>
 
-        {/* WHY CLIENTS STAY */}
-        <section id="why-stay" className="scroll-mt-20 border-b border-border bg-card">
+        {/* TRUST + WHY CLIENTS STAY */}
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading
-              eyebrow="Why businesses stay"
-              title="It keeps working for your business every month"
-            />
-            <div className="mt-8">
-              <LongTermValue />
+            <TrustSection />
+            <div className="mt-12">
+              <SectionHeading
+                eyebrow="Why businesses stay"
+                title="It keeps compounding every month you run it"
+              />
+              <div className="mt-8">
+                <LongTermValue />
+              </div>
             </div>
           </div>
         </section>
 
-        {/* FAQ */}
-        <section id="faq" className="border-b border-border">
+        {/* FREE ACCESS */}
+        <section id="free-access" className="scroll-mt-20 border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <SectionHeading eyebrow="FAQ" title="Straight answers before you start" />
-            <FAQ />
+            <FreeAccessSection />
           </div>
         </section>
 
-        {/* Founder */}
-        <section className="border-b border-border bg-card">
+        {/* FOUNDER */}
+        <section className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <FounderNote />
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section id="faq" className="border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading eyebrow="FAQ" title="Straight answers before you start" />
+            <FAQ />
           </div>
         </section>
 
@@ -461,18 +492,22 @@ function Landing() {
         <section className="hero-aura">
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
             <h2 className="mx-auto max-w-2xl font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
-              Turn your website into a growth system.
+              Turn your website into a system that sells for you.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-              Stop losing customers between the first click and the final booking. Revora brings your
-              website, leads, quotes, bookings, follow-up, reviews and analytics together in one
-              place.
+              Stop losing customers between the first click and the final booking. Website, leads,
+              quotes, bookings, follow-up, reviews and analytics — one system, running around the
+              clock.
             </p>
             <div className="mt-8 flex flex-col items-center gap-4">
               <PrimaryCta className="justify-center" />
               <PriceLine />
               <p className="text-[12.5px] text-muted-foreground">
-                Not ready to pay yet? <span className="gold-hl">Start with {GROWTH_SYSTEM.fullAccessTrialDays} free days of full access</span> and decide after you've used it.
+                Not ready to pay yet?{" "}
+                <span className="gold-hl">
+                  Start with {GROWTH_SYSTEM.fullAccessTrialDays} free days of full access
+                </span>{" "}
+                and decide after you've used it.
               </p>
             </div>
           </div>
