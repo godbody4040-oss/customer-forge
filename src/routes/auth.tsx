@@ -8,9 +8,15 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ErrorNote, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
+import {
+  ensureProfile,
+  rememberPreference,
+  resolvePostLoginPath,
+  setRememberPreference,
+} from "@/lib/auth-session";
 
 type Search = { mode?: "signup" | "signin"; redirect?: string };
 
@@ -45,6 +51,9 @@ function AuthPage() {
   const [isSignup, setIsSignup] = useState(mode === "signup");
   const [magicMode, setMagicMode] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [remember, setRemember] = useState(rememberPreference());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -80,6 +89,7 @@ function AuthPage() {
     setError(null);
     setBusy("email");
     try {
+      setRememberPreference(remember);
       if (isSignup) {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
@@ -96,9 +106,11 @@ function AuthPage() {
           setIsSignup(false);
           return;
         }
+        // Save the account details, then send the new client to the exact next
+        // step for their workspace (onboarding first, dashboard once ready).
         await ensureProfile();
-        toast.success("Welcome to Revora. You'll stay signed in on this device.");
-        navigate({ to: "/onboarding", replace: true });
+        toast.success("Welcome to Revora. Let's set up your workspace.");
+        await goToWorkspace();
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
@@ -112,6 +124,7 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -140,10 +153,11 @@ function AuthPage() {
   }
 
 
-  async function handleForgotPassword() {
+  async function handleForgotPassword(e?: React.FormEvent) {
+    e?.preventDefault();
     setError(null);
     if (!email) {
-      setError("Enter your email above and we'll send a reset link.");
+      setError("Enter the email on your account and we'll send a secure reset link.");
       return;
     }
     setBusy("reset");
@@ -152,6 +166,7 @@ function AuthPage() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (resetError) throw resetError;
+      setResetSent(true);
       toast.success("Reset link sent. Check your email.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the reset email.");
@@ -164,10 +179,12 @@ function AuthPage() {
     setError(null);
     setBusy("google");
     try {
+      setRememberPreference(remember);
       sessionStorage.setItem("lle:redirect", redirect ?? "/app");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
       });
+
       if (result.error) {
         setError(result.error.message ?? "Google sign-in failed.");
         return;
@@ -247,6 +264,57 @@ function AuthPage() {
             </ol>
           ) : null}
 
+          {forgotMode ? (
+            <div className="panel mt-6 p-5">
+              <h2 className="font-display text-[17px] font-semibold text-foreground">
+                Reset your password
+              </h2>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
+                Enter your account email. We'll send a secure, single-use link that expires shortly
+                — open it on this device to choose a new password.
+              </p>
+              <form className="mt-4 space-y-4" onSubmit={handleForgotPassword}>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fp-email">Email</Label>
+                  <Input
+                    id="fp-email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setResetSent(false);
+                    }}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                {error ? <ErrorNote message={error} /> : null}
+                {resetSent ? (
+                  <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
+                    Reset link sent to <span className="gold-hl">{email}</span>. It works once and
+                    expires — if it's gone stale, request a fresh one.
+                  </p>
+                ) : null}
+                <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
+                  {busy === "reset" ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {resetSent ? "Send another link" : "Email me a reset link"}
+                </Button>
+                <button
+                  type="button"
+                  className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                  onClick={() => {
+                    setForgotMode(false);
+                    setResetSent(false);
+                    setError(null);
+                  }}
+                  disabled={busy !== null}
+                >
+                  Back to sign in
+                </button>
+              </form>
+            </div>
+          ) : (
           <div className="panel mt-6 p-5">
             <Button
               type="button"
@@ -317,6 +385,31 @@ function AuthPage() {
                   />
                 </div>
               )}
+              {magicMode && !isSignup ? null : (
+                <label
+                  htmlFor="a-remember"
+                  className="flex cursor-pointer items-start gap-2.5 rounded-md border border-border bg-elevated/60 px-3 py-2.5"
+                >
+                  <Checkbox
+                    id="a-remember"
+                    checked={remember}
+                    onCheckedChange={(v) => {
+                      const next = v === true;
+                      setRemember(next);
+                      setRememberPreference(next);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <span className="text-[12.5px] leading-snug">
+                    <span className="font-medium text-foreground">Remember me</span>
+                    <span className="block text-muted-foreground">
+                      {remember
+                        ? "Stay signed in on this device across refreshes — sign out any time."
+                        : "You'll be signed out when you close this browser."}
+                    </span>
+                  </span>
+                </label>
+              )}
               {error ? <ErrorNote message={error} /> : null}
               {magicSent && magicMode && !isSignup ? (
                 <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
@@ -356,7 +449,11 @@ function AuthPage() {
                     <button
                       type="button"
                       className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
-                      onClick={handleForgotPassword}
+                      onClick={() => {
+                        setError(null);
+                        setResetSent(false);
+                        setForgotMode(true);
+                      }}
                       disabled={busy !== null}
                     >
                       Forgot your password?
@@ -365,12 +462,15 @@ function AuthPage() {
                 </>
               ) : null}
               <p className="text-center text-[11.5px] text-muted-foreground">
-                We keep you signed in on this device, so next time you land straight in your
-                dashboard.
+                {remember
+                  ? "We keep you signed in on this device, so next time you land straight in your dashboard."
+                  : "This session ends when you close your browser."}
               </p>
             </form>
 
           </div>
+          )}
+
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
             {isSignup ? "Already have an account?" : "New here?"}{" "}

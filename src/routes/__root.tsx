@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
+import { ensureProfile, enforceSessionPolicy, resolvePostLoginPath } from "@/lib/auth-session";
 import { ORGANIZATION_SCHEMA, WEBSITE_SCHEMA } from "@/lib/seo";
 
 function NotFoundComponent() {
@@ -158,9 +158,13 @@ function RootComponent() {
     }
 
     // Returning client with a persisted session landing on a public entry page.
-    void supabase.auth.getSession().then(({ data }) => {
+    // Session-only ("remember me" off) logins are ended first.
+    void enforceSessionPolicy().then(async (cleared) => {
+      if (cleared) return;
+      const { data } = await supabase.auth.getSession();
       if (data.session) void sendToDashboard();
     });
+
 
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
