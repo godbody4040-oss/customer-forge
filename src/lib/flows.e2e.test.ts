@@ -119,8 +119,15 @@ describe("payment and webhook endpoints", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "checkout.session.completed" }),
       });
-      // 401/400 when configured, 503 when that provider isn't set up — never accepted.
-      expect(response.status).toBeGreaterThanOrEqual(400);
+      // 401/400 when configured. When a provider isn't configured the event is
+      // acknowledged but explicitly ignored — never processed.
+      if (response.status < 400) {
+        const text = await response.text();
+        expect(text).toMatch(/ignored/i);
+      } else {
+        expect(response.status).toBeGreaterThanOrEqual(400);
+      }
+
     }
   });
 
