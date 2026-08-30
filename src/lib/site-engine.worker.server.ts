@@ -113,9 +113,9 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const { readBrief } = await import("@/lib/site-brief");
   const { captureQa } = await import("@/lib/launch-qa");
   const { gatherBriefFacts } = await import("@/lib/site-brief.server");
-  const { generateSiteCopy, analyzeBusiness, fallbackBrief, AiGatewayError, COPY_MODEL } = await import(
-    "@/lib/site-engine.server"
-  );
+  const { generateSiteCopy, analyzeBusiness, fallbackBrief, fallbackCopy, AiGatewayError, COPY_MODEL } =
+    await import("@/lib/site-engine.server");
+
 
   const done: string[] = [];
   const step = async (key: string) => {
@@ -198,14 +198,21 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   const priorGeneration = (priorSettings.data?.generation ?? {}) as Record<string, unknown>;
   const approvedBrief = readBrief(priorGeneration["brief"]);
 
+  // When AI is unavailable (credits/policy) the build degrades to the
+  // deterministic, fact-only writer instead of failing — the client always ends
+  // up with a real publishable site. Rate limits still bubble up so the queue
+  // can back off and retry with AI.
+  let aiDenied = false;
   let brief = approvedBrief?.approved ? approvedBrief : fallbackBrief(copyFacts);
   if (!approvedBrief?.approved) {
     try {
       brief = { ...(await analyzeBusiness(copyFacts)), factAnswers: approvedBrief?.factAnswers ?? {}, approved: false };
     } catch (error) {
-      if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
+      if (error instanceof AiGatewayError && error.status === 429) throw error;
+      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
       console.error("[site-engine] analysis fell back to rules", error);
     }
+
     await db.from("ai_generations").insert({
       organization_id: orgId,
       job_id: job.id,
@@ -237,14 +244,27 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   });
   await step("structure");
 
-  const copy = await generateSiteCopy({ ...copyFacts, ctaLabel: plan.primaryCtaLabel }, brief);
+  const copyFactsForWrite = { ...copyFacts, ctaLabel: plan.primaryCtaLabel };
+  let copy = fallbackCopy(copyFactsForWrite, brief);
+  let copyModel = "revora-rules";
+  if (!aiDenied) {
+    try {
+      copy = await generateSiteCopy(copyFactsForWrite, brief);
+      copyModel = COPY_MODEL;
+    } catch (error) {
+      if (error instanceof AiGatewayError && error.status === 429) throw error;
+      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
+      console.error("[site-engine] copy fell back to rules", error);
+    }
+  }
   await step("copy");
+
 
   await db.from("ai_generations").insert({
     organization_id: orgId,
     job_id: job.id,
     kind: "website_copy",
-    model: COPY_MODEL,
+    model: copyModel,
     instruction: null,
     result: copy as unknown as never,
     created_by: job.created_by,
@@ -324,12 +344,15 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   await db.from("notifications").insert({
     organization_id: orgId,
     title: "Your website draft is ready to review",
-    body: leadCapture
-      ? "Revora built your site from your information and connected lead capture."
-      : "Revora built your site. Turn on the quote calculator or online booking to capture leads.",
+    body: aiDenied
+      ? "Revora built your site from your business information. AI writing was unavailable for this build, so the copy is fact-based — run the assistant later to polish it."
+      : leadCapture
+        ? "Revora built your site from your information and connected lead capture."
+        : "Revora built your site. Turn on the quote calculator or online booking to capture leads.",
     kind: "website",
     link: "/app/website",
   } as never);
+
 }
 
 export type DrainResult = {
