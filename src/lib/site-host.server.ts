@@ -93,6 +93,7 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/about",
       "/contact",
       "/demo",
+      "/demo/dashboard",
     ].map(
       (path) => ({
         loc: `${origin}${path}`,
