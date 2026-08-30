@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { template as automationMessageTemplate } from './automation-message'
 import { template as leadAlertTemplate } from './lead-alert'
+import { template as growthAssessmentTemplate } from './growth-assessment'
 import {
   lifecycleBookingFollowUpTemplate,
   lifecycleSetupReminderTemplate,
