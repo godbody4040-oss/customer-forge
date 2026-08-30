@@ -327,9 +327,12 @@ export const analyzeSiteBrief = createServerFn({ method: "POST" })
     try {
       brief = await analyzeBusiness(facts.copyFacts);
     } catch (error) {
-      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) throw error;
+      // Credit/policy denials never block analysis — the deterministic brief
+      // built from the owner's own answers is used instead.
+      if (error instanceof AiGatewayError && error.status === 429) throw error;
       aiError = error instanceof Error ? error.message : "Analysis unavailable";
     }
+
     // A new analysis always needs re-approval, but the owner's answers stay.
     brief = { ...brief, approved: false, factAnswers: previous?.factAnswers ?? {} };
 

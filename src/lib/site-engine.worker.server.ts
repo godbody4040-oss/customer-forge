@@ -401,23 +401,26 @@ export async function drainSiteEngineQueue(
       processed += 1;
       if (state.paused || state.consecutive_rate_limits > 0) await resumeQueue(db);
     } catch (error) {
-      failed += 1;
+
       const { AiGatewayError } = await import("@/lib/site-engine.server");
       const isGateway = error instanceof AiGatewayError;
       const status = isGateway ? (error as InstanceType<typeof AiGatewayError>).status : 0;
       const message = error instanceof Error ? error.message : "Generation failed.";
 
-      // Circuit breaker: stop the whole queue on credit/policy denials.
+      // Credit/policy denials must never stop the builder. Every generation
+      // stage has a deterministic Revora fallback, so a denial is retried
+      // immediately in rules-only mode instead of pausing the queue.
       if (status === 402 || status === 403) {
-        await pauseQueue(db, status === 402 ? "credits" : "blocked", message);
         await db
           .from("generation_jobs")
-          .update({ status: "failed", error_message: message, completed_at: new Date().toISOString(), lease_expires_at: null } as never)
+          .update({ status: "queued", error_message: null, lease_expires_at: null } as never)
           .eq("id", job.id);
-        return { processed, failed, paused: true, pauseReason: message, idle: false };
+        continue;
       }
 
+
       if (status === 429) {
+        failed += 1;
         const rl = state.consecutive_rate_limits + 1;
         await writeQueueState(db, { consecutive_rate_limits: rl, last_error: message });
         if (rl >= RATE_LIMIT_TRIP) await pauseQueue(db, "rate_limit", message);
@@ -430,6 +433,7 @@ export async function drainSiteEngineQueue(
       }
 
       // Ordinary failure: retry until MAX_ATTEMPTS, then mark it failed for good.
+      failed += 1;
       const { data: current } = await db
         .from("generation_jobs")
         .select("attempts")
