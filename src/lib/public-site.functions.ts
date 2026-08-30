@@ -164,6 +164,23 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       throw new Error("We couldn't save your request. Please try again.");
     }
 
+    // Funnel milestones: recorded only the first time a workspace reaches them,
+    // so attribution shows sign-up -> first quote -> first booking per client.
+    const recordMilestone = async (event: string, amountCents?: number | null) => {
+      const { data: seen } = await supabase
+        .from("marketing_conversions")
+        .select("id")
+        .eq("event_name", event)
+        .contains("metadata", { organization_id: orgId } as never)
+        .limit(1);
+      if (seen && seen.length > 0) return;
+      await supabase.from("marketing_conversions").insert({
+        event_name: event,
+        amount_cents: amountCents ?? null,
+        metadata: { organization_id: orgId, source: data.source || "website" } as never,
+      });
+    };
+
     if (data.quote) {
       await supabase.from("quote_requests").insert({
         organization_id: orgId,
@@ -173,6 +190,7 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         estimate_min: data.quote.min,
         estimate_max: data.quote.max,
       });
+      await recordMilestone("first_quote_request", Math.round((data.quote.min ?? 0) * 100));
     }
 
     let appointmentId: string | null = null;
@@ -195,7 +213,9 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         .select("id")
         .single();
       appointmentId = appointment?.id ?? null;
+      await recordMilestone("first_booking");
     }
+
 
     // Origin event for the CRM timeline: every public submission is visible as
     // the first activity on the lead, with the channel it came from.
