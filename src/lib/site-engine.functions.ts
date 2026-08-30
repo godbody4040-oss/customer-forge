@@ -412,9 +412,14 @@ export const saveMissingFacts = createServerFn({ method: "POST" })
 
     const profilePatch: Record<string, string> = {};
     const context_answers: Record<string, string> = {};
-    for (const [key, value] of Object.entries(data.answers)) {
+    const serviceNames: string[] = [];
+    for (const [key, raw] of Object.entries(data.answers)) {
+      const value = typeof raw === "string" ? raw.trim() : "";
+      if (!value) continue; // an untouched box is not an answer, and never overwrites saved data
       const field = fieldByKey.get(key);
-      if (field) profilePatch[field] = value;
+      if (field === "services_list") {
+        for (const line of value.split(/[\n,]/).map((l) => l.trim()).filter(Boolean)) serviceNames.push(line);
+      } else if (field) profilePatch[field] = value;
       else context_answers[key] = value;
     }
 
@@ -424,6 +429,19 @@ export const saveMissingFacts = createServerFn({ method: "POST" })
         .upsert({ organization_id: orgId, ...profilePatch } as never, { onConflict: "organization_id" });
       if (error) throw new Error(error.message);
     }
+
+    if (serviceNames.length) {
+      const { error } = await supabase.from("services").insert(
+        serviceNames.slice(0, 20).map((name, index) => ({
+          organization_id: orgId,
+          name: name.slice(0, 120),
+          is_active: true,
+          sort_order: index,
+        })) as never,
+      );
+      if (error) throw new Error(error.message);
+    }
+
 
     const settings = await supabase
       .from("website_settings")
