@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { LoadingRows } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ import { readBrief, readReport } from "@/lib/site-brief";
 import { EDITABLE_COPY_FIELDS, growthRecommendations, readCopy, revoraScore } from "@/lib/site-engine";
 import { useBuildReadiness, useScoreFacts } from "@/lib/site-engine.hooks";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
-import { websiteQa } from "@/lib/website-content";
+import { websiteQa, type WizardStepKey } from "@/lib/website-content";
 
 export const Route = createFileRoute("/_authenticated/app/website")({
   head: () => ({
@@ -64,6 +65,8 @@ function WebsitePage() {
   const brief = readBrief(generation?.["brief"]);
   const buildReport = readReport(generation?.["report"]);
   const manage = canManage(ws?.workspace?.role ?? "viewer");
+  const [jump, setJump] = useState<{ step: WizardStepKey; anchor?: string; nonce: number } | null>(null);
+  const requiredCount = (readiness?.requiredGaps ?? []).length;
 
   const servicesCount = facts.data?.servicesCount ?? (services ?? []).length;
   const pricedCount = facts.data?.pricedServicesCount ?? 0;
