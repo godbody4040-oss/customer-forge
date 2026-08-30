@@ -344,12 +344,15 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   await db.from("notifications").insert({
     organization_id: orgId,
     title: "Your website draft is ready to review",
-    body: leadCapture
-      ? "Revora built your site from your information and connected lead capture."
-      : "Revora built your site. Turn on the quote calculator or online booking to capture leads.",
+    body: aiDenied
+      ? "Revora built your site from your business information. AI writing was unavailable for this build, so the copy is fact-based — run the assistant later to polish it."
+      : leadCapture
+        ? "Revora built your site from your information and connected lead capture."
+        : "Revora built your site. Turn on the quote calculator or online booking to capture leads.",
     kind: "website",
     link: "/app/website",
   } as never);
+
 }
 
 export type DrainResult = {
