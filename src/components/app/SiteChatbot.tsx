@@ -306,7 +306,7 @@ export function SiteChatbot({
             checked={autoApply}
             onChange={(event) => setAutoApply(event.target.checked)}
             disabled={!canManage}
-            className="mt-0.5 size-4 accent-[hsl(var(--primary))]"
+            className="mt-0.5 size-4 accent-primary"
           />
           <span className="min-w-0">
             <span className="block text-[12.5px] font-medium text-primary">
