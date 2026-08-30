@@ -164,10 +164,10 @@ export function SiteChatbot({
   const destructive = chosen.filter((step) => step.destructive).length;
 
   return (
-    <Panel className="p-5">
+    <Panel id="website-assistant" className="scroll-mt-24 p-5">
       <SectionHeading
-        eyebrow="Website assistant"
-        title="Ask Revora to change anything on your site"
+        eyebrow="Start here · Website assistant"
+        title="Tell Revora what you want and it turns your site into a lead generator"
         action={
           messages.length ? (
             <Button
@@ -183,7 +183,19 @@ export function SiteChatbot({
           ) : null
         }
       />
-      <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
+      <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-3.5">
+        <p className="text-[12.5px] font-medium text-primary">How to use this to win more work</p>
+        <ol className="mt-1.5 grid gap-1 text-[12px] text-muted-foreground">
+          <li>1. Say what you want in plain words — “make the home page sell emergency callouts”.</li>
+          <li>2. Revora shows a plan of the exact changes before anything is written.</li>
+          <li>3. Approve it and your pages, buttons, forms and search text update together.</li>
+        </ol>
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          Ask for lead-generator work, not decoration: clear call, text, book and quote buttons on every page,
+          prices, proof, answers to the questions that stop people buying, and a follow-up path for every enquiry.
+        </p>
+      </div>
+      <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">
         Write as little or as much as you like — a single tweak or a full brief. Revora can rewrite copy, add and
         remove sections and pages, reorder the layout, edit items and buttons, write your search and social text, and
         change colours and fonts. Add photos or a short video, or just speak your request — Revora reads and listens too. You
