@@ -264,7 +264,7 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
     organization_id: orgId,
     job_id: job.id,
     kind: "website_copy",
-    model: COPY_MODEL,
+    model: copyModel,
     instruction: null,
     result: copy as unknown as never,
     created_by: job.created_by,
