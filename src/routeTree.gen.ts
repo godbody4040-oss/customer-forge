@@ -23,6 +23,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as WebsiteAuditRouteImport } from './routes/website-audit'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -131,6 +132,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteAuditRoute = WebsiteAuditRouteImport.update({
+  id: '/website-audit',
+  path: '/website-audit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/website-audit': typeof WebsiteAuditRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -415,6 +422,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/website-audit': typeof WebsiteAuditRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -470,6 +478,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/website-audit': typeof WebsiteAuditRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -527,6 +536,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/website-audit'
     | '/admin'
     | '/app'
     | '/onboarding'
@@ -580,6 +590,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/website-audit'
     | '/onboarding'
     | '/demo/dashboard'
     | '/industries/$slug'
@@ -634,6 +645,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/website-audit'
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
@@ -691,6 +703,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  WebsiteAuditRoute: typeof WebsiteAuditRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
@@ -800,6 +813,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website-audit': {
+      id: '/website-audit'
+      path: '/website-audit'
+      fullPath: '/website-audit'
+      preLoaderRoute: typeof WebsiteAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -1227,6 +1247,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  WebsiteAuditRoute: WebsiteAuditRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
