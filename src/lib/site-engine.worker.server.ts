@@ -407,15 +407,17 @@ export async function drainSiteEngineQueue(
       const status = isGateway ? (error as InstanceType<typeof AiGatewayError>).status : 0;
       const message = error instanceof Error ? error.message : "Generation failed.";
 
-      // Circuit breaker: stop the whole queue on credit/policy denials.
+      // Credit/policy denials must never stop the builder. Every generation
+      // stage has a deterministic Revora fallback, so a denial is retried
+      // immediately in rules-only mode instead of pausing the queue.
       if (status === 402 || status === 403) {
-        await pauseQueue(db, status === 402 ? "credits" : "blocked", message);
         await db
           .from("generation_jobs")
-          .update({ status: "failed", error_message: message, completed_at: new Date().toISOString(), lease_expires_at: null } as never)
+          .update({ status: "queued", error_message: null, lease_expires_at: null } as never)
           .eq("id", job.id);
-        return { processed, failed, paused: true, pauseReason: message, idle: false };
+        continue;
       }
+
 
       if (status === 429) {
         const rl = state.consecutive_rate_limits + 1;
