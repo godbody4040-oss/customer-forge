@@ -21,6 +21,7 @@ import { FounderNote } from "@/components/marketing/SalesCTA";
 import { ROICalculator } from "@/components/marketing/ROICalculator";
 import { AfterYouStart, ValueSplit } from "@/components/marketing/OfferSections";
 import { FAQ, FAQ_ITEMS } from "@/components/marketing/FAQ";
+import { LongTermValue } from "@/components/marketing/ConversionKit";
 import { FreeAccessBanner, FreeAccessButton, FreeAccessSection } from "@/components/marketing/FreeAccess";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -425,6 +426,19 @@ function Landing() {
               <span className="text-foreground">Also built for:</span>{" "}
               {TRUST_INDUSTRIES.join(" · ")}.
             </p>
+          </div>
+        </section>
+
+        {/* WHY CLIENTS STAY */}
+        <section id="why-stay" className="scroll-mt-20 border-b border-border bg-card">
+          <div className="mx-auto max-w-6xl px-4 py-16">
+            <SectionHeading
+              eyebrow="Why businesses stay"
+              title="It keeps working for your business every month"
+            />
+            <div className="mt-8">
+              <LongTermValue />
+            </div>
           </div>
         </section>
 

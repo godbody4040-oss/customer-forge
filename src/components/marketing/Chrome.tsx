@@ -7,6 +7,7 @@ import { useSession } from "@/lib/auth-session";
 import { useSignOut } from "@/lib/use-tenant";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 import { GROWTH_SYSTEM } from "@/lib/offer";
+import { MarketingConversionKit } from "@/components/marketing/ConversionKit";
 
 const NAV = [
   { to: "/demo", label: "Product" },
@@ -176,7 +177,7 @@ const FOOTER_GROUPS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto max-w-6xl px-4 py-14">
+      <div className="mx-auto max-w-6xl px-4 pt-14 pb-28">
         <div className="grid gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
             <Logo tagline />
@@ -271,6 +272,7 @@ export function SiteFooter() {
           </p>
         </div>
       </div>
+      <MarketingConversionKit />
     </footer>
   );
 }
