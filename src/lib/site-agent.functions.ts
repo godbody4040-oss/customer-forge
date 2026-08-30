@@ -21,6 +21,7 @@ import {
   type AgentTurn,
   type SiteIndex,
 } from "@/lib/site-agent";
+import { safeLinkUrl } from "@/lib/website-content";
 
 const orgIdOf = (input: { organizationId?: unknown }) => {
   const organizationId = String(input?.organizationId ?? "");
@@ -415,15 +416,20 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
             );
           }
           break;
-        case "set_component":
+        case "set_component": {
+          // Re-sanitize on write: link hrefs are rendered on the public site, so
+          // only http(s)/mailto/tel/sms/relative targets may ever be persisted.
+          const patch = { ...(action.patch as Record<string, unknown>) };
+          if ("link_url" in patch) patch["link_url"] = safeLinkUrl(patch["link_url"] as string | null);
           await run(action.type, () =>
             supabase
               .from("website_components")
-              .update(action.patch as never)
+              .update(patch as never)
               .eq("id", action.componentId)
               .eq("organization_id", orgId),
           );
           break;
+        }
         case "add_component":
           await run(action.type, () =>
             supabase.from("website_components").insert({
@@ -432,7 +438,7 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
               kind: action.kind,
               label: action.label ?? null,
               body: action.body ?? null,
-              link_url: action.link_url ?? null,
+              link_url: safeLinkUrl(action.link_url),
               link_label: action.link_label ?? null,
               sort_order: site.components.filter((c) => c.section_id === action.sectionId).length,
             }),

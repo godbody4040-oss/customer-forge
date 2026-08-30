@@ -10,7 +10,7 @@ import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server"
 
 type DnsAnswer = { name: string; type: number; data: string };
 
-async function dnsQuery(name: string, type: "A" | "CNAME" | "TXT" | "MX"): Promise<DnsAnswer[]> {
+async function dnsQuery(name: string, type: "A" | "AAAA" | "CNAME" | "TXT" | "MX"): Promise<DnsAnswer[]> {
   const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`, {
     headers: { accept: "application/dns-json" },
   });
@@ -36,9 +36,15 @@ async function guardedFetch(url: string): Promise<Response> {
   const parsed = new URL(url);
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("Unsupported address");
   if (!isFetchableHostname(parsed.hostname)) throw new Error("Not a public domain");
-  const a = await dnsQuery(parsed.hostname, "A").catch(() => [] as DnsAnswer[]);
-  const addresses = a.filter((r) => r.type === 1).map((r) => r.data);
-  if (!addresses.length || !areAddressesPublic(addresses)) throw new Error("Not a public address");
+  const [a, aaaa] = await Promise.all([
+    dnsQuery(parsed.hostname, "A").catch(() => [] as DnsAnswer[]),
+    dnsQuery(parsed.hostname, "AAAA").catch(() => [] as DnsAnswer[]),
+  ]);
+  const addresses = [
+    ...a.filter((r) => r.type === 1).map((r) => r.data),
+    ...aaaa.filter((r) => r.type === 28).map((r) => r.data),
+  ];
+  if (!areAddressesPublic(addresses)) throw new Error("Not a public address");
   return fetch(url, { method: "GET", redirect: "manual" });
 }
 

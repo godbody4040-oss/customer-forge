@@ -48,7 +48,7 @@ export function isValidDomain(value: string) {
 
 type DnsAnswer = { name: string; type: number; data: string };
 
-async function dnsQuery(name: string, type: "A" | "CNAME" | "TXT"): Promise<DnsAnswer[]> {
+async function dnsQuery(name: string, type: "A" | "AAAA" | "CNAME" | "TXT"): Promise<DnsAnswer[]> {
   const res = await fetch(
     `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,
     { headers: { accept: "application/dns-json" } },
@@ -140,12 +140,15 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
       return { status: records.txtVerified ? "verifying" : "dns_pending", detail, dnsOk: false, sslOk: false, records };
     }
 
-    // DNS resolves here. Never fetch a host that resolves into a private or
-    // reserved network range (SSRF guard).
-    if (records.a.length > 0 && !areAddressesPublic(records.a)) {
+    // DNS resolves here. Never fetch a host unless every address it resolves to
+    // (IPv4 and IPv6) is globally routable — an unresolvable or private/
+    // loopback/link-local/metadata target is refused outright (SSRF guard).
+    const aaaaRes = await dnsQuery(domain, "AAAA").catch(() => [] as DnsAnswer[]);
+    const resolved = [...records.a, ...aaaaRes.filter((r) => r.type === 28).map((r) => r.data.trim())];
+    if (!areAddressesPublic(resolved)) {
       return {
         status: "error",
-        detail: "That domain resolves to a private network address, so it can't be served publicly.",
+        detail: "That domain doesn't resolve to a public internet address, so it can't be checked or served publicly.",
         dnsOk: false,
         sslOk: false,
         records,
