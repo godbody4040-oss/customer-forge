@@ -279,6 +279,7 @@ function AuthPage() {
                   <Label htmlFor="a-name">Your name</Label>
                   <Input
                     id="a-name"
+                    name="name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     autoComplete="name"
@@ -290,6 +291,7 @@ function AuthPage() {
                 <Label htmlFor="a-email">Email</Label>
                 <Input
                   id="a-email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => {
@@ -305,6 +307,7 @@ function AuthPage() {
                   <Label htmlFor="a-password">Password</Label>
                   <Input
                     id="a-password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
