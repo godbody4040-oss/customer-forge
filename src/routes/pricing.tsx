@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
 import { AfterYouStart, TrialBadge, ValueSplit, WhyRevora } from "@/components/marketing/OfferSections";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { GROWTH_SYSTEM_SCHEMA, breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({

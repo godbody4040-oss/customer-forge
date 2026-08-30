@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, TEMPLATES, industrySlug } from "@/lib/domain";
+import { canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/industries/")({
   head: () => ({

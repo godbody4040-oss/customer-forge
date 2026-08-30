@@ -3,6 +3,7 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
 import { Panel } from "@/components/app/Bits";
 import { REVORA } from "@/lib/brand";
+import { canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
