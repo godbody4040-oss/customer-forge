@@ -258,6 +258,57 @@ function AuthPage() {
             </ol>
           ) : null}
 
+          {forgotMode ? (
+            <div className="panel mt-6 p-5">
+              <h2 className="font-display text-[17px] font-semibold text-foreground">
+                Reset your password
+              </h2>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
+                Enter your account email. We'll send a secure, single-use link that expires shortly
+                — open it on this device to choose a new password.
+              </p>
+              <form className="mt-4 space-y-4" onSubmit={handleForgotPassword}>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fp-email">Email</Label>
+                  <Input
+                    id="fp-email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setResetSent(false);
+                    }}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                {error ? <ErrorNote message={error} /> : null}
+                {resetSent ? (
+                  <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
+                    Reset link sent to <span className="gold-hl">{email}</span>. It works once and
+                    expires — if it's gone stale, request a fresh one.
+                  </p>
+                ) : null}
+                <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
+                  {busy === "reset" ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {resetSent ? "Send another link" : "Email me a reset link"}
+                </Button>
+                <button
+                  type="button"
+                  className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                  onClick={() => {
+                    setForgotMode(false);
+                    setResetSent(false);
+                    setError(null);
+                  }}
+                  disabled={busy !== null}
+                >
+                  Back to sign in
+                </button>
+              </form>
+            </div>
+          ) : (
           <div className="panel mt-6 p-5">
             <Button
               type="button"
@@ -328,6 +379,31 @@ function AuthPage() {
                   />
                 </div>
               )}
+              {magicMode && !isSignup ? null : (
+                <label
+                  htmlFor="a-remember"
+                  className="flex cursor-pointer items-start gap-2.5 rounded-md border border-border bg-elevated/60 px-3 py-2.5"
+                >
+                  <Checkbox
+                    id="a-remember"
+                    checked={remember}
+                    onCheckedChange={(v) => {
+                      const next = v === true;
+                      setRemember(next);
+                      setRememberPreference(next);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <span className="text-[12.5px] leading-snug">
+                    <span className="font-medium text-foreground">Remember me</span>
+                    <span className="block text-muted-foreground">
+                      {remember
+                        ? "Stay signed in on this device across refreshes — sign out any time."
+                        : "You'll be signed out when you close this browser."}
+                    </span>
+                  </span>
+                </label>
+              )}
               {error ? <ErrorNote message={error} /> : null}
               {magicSent && magicMode && !isSignup ? (
                 <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
@@ -367,7 +443,11 @@ function AuthPage() {
                     <button
                       type="button"
                       className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
-                      onClick={handleForgotPassword}
+                      onClick={() => {
+                        setError(null);
+                        setResetSent(false);
+                        setForgotMode(true);
+                      }}
                       disabled={busy !== null}
                     >
                       Forgot your password?
@@ -376,12 +456,15 @@ function AuthPage() {
                 </>
               ) : null}
               <p className="text-center text-[11.5px] text-muted-foreground">
-                We keep you signed in on this device, so next time you land straight in your
-                dashboard.
+                {remember
+                  ? "We keep you signed in on this device, so next time you land straight in your dashboard."
+                  : "This session ends when you close your browser."}
               </p>
             </form>
 
           </div>
+          )}
+
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
             {isSignup ? "Already have an account?" : "New here?"}{" "}
