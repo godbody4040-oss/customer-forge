@@ -420,6 +420,7 @@ export async function drainSiteEngineQueue(
 
 
       if (status === 429) {
+        failed += 1;
         const rl = state.consecutive_rate_limits + 1;
         await writeQueueState(db, { consecutive_rate_limits: rl, last_error: message });
         if (rl >= RATE_LIMIT_TRIP) await pauseQueue(db, "rate_limit", message);
@@ -432,6 +433,7 @@ export async function drainSiteEngineQueue(
       }
 
       // Ordinary failure: retry until MAX_ATTEMPTS, then mark it failed for good.
+      failed += 1;
       const { data: current } = await db
         .from("generation_jobs")
         .select("attempts")
