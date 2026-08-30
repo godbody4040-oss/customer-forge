@@ -19,14 +19,15 @@ import { applyWebsiteChanges } from "@/lib/site-agent.functions";
 import { chunkActions, scanForUpgrades, summarizeUpgrades, type EliteUpgrade, type StudioFacts } from "@/lib/upgrade-studio";
 import type { ContentPage } from "@/lib/website-content";
 
-const TIER_TONE: Record<EliteUpgrade["tier"], "info" | "good" | "warn"> = {
-  Conversion: "good",
+const TIER_TONE: Record<EliteUpgrade["tier"], "info" | "signal" | "attention"> = {
+  Conversion: "signal",
   Trust: "info",
   Search: "info",
   Local: "info",
-  "Premium visuals": "warn",
-  Structure: "good",
+  "Premium visuals": "attention",
+  Structure: "signal",
 };
+
 
 export function UpgradeStudio({
   organizationId,
