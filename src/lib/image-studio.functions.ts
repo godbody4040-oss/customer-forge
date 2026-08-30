@@ -41,9 +41,10 @@ export const generateStudioImage = createServerFn({ method: "POST" })
     const supabase = context.supabase;
 
     const { data: membership, error: memberError } = await supabase
-      .from("organization_members")
+      .from("memberships")
       .select("role")
       .eq("organization_id", data.organizationId)
+      .eq("user_id", context.userId)
       .maybeSingle();
     if (memberError) return { ok: false, message: "Couldn't verify workspace access." };
     if (!membership || !["owner", "admin", "editor"].includes(String(membership.role))) {

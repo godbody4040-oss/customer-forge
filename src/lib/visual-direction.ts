@@ -227,7 +227,7 @@ export type PlannedShot = {
   aspect: "16:9" | "4:3" | "1:1" | "3:2";
   /** Which section kinds this image should be placed in. */
   placement: string[];
-  subjectHint?: string;
+  subjectHint?: string | undefined;
 };
 
 /**
