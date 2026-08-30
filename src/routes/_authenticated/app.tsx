@@ -38,7 +38,8 @@ import { useSupportMode, writeSupportMode } from "@/lib/support-mode";
 import { dateLong, relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useBillingState } from "@/lib/stripe.hooks";
-import { isTrialActive, trialHoursLeft } from "@/lib/trial";
+import { trialEndsAtMs } from "@/lib/trial";
+import { useCountdown } from "@/lib/use-countdown";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
@@ -102,8 +103,11 @@ function AppShell() {
   const supporting = Boolean(data?.supporting && supportMode);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: billing, isLoading: billingLoading } = useBillingState(org?.id);
-  const trialStillActive = isTrialActive(org);
-  const hoursLeft = trialHoursLeft(org);
+  // Per-client countdown: derived from this workspace's own trial_ends_at, so
+  // two clients signing up minutes apart each see their own real deadline.
+  const trialEnd = trialEndsAtMs(org);
+  const countdown = useCountdown(trialEnd);
+  const trialStillActive = Boolean(countdown && !countdown.expired);
 
   const paidAccess = Boolean(
     org && (org.setup_paid_at || org.subscription_status === "active" || org.subscription_status === "past_due"),
@@ -122,6 +126,16 @@ function AppShell() {
   useEffect(() => {
     if (!isLoading && data && !data.workspace) navigate({ to: "/onboarding", replace: true });
   }, [data, isLoading, navigate]);
+
+  const queryClient = useQueryClient();
+  const trialExpired = Boolean(countdown?.expired);
+  useEffect(() => {
+    if (!trialExpired || !org?.id) return;
+    // The clock just ran out: re-read billing/workspace state so the paywall
+    // reflects the server's own entitlement decision.
+    void queryClient.invalidateQueries({ queryKey: ["workspace"] });
+    void queryClient.invalidateQueries({ queryKey: ["billing-state", org.id] });
+  }, [trialExpired, org?.id, queryClient]);
 
 
   return (
@@ -272,11 +286,14 @@ function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
-            {trialStillActive ? (
+            {trialStillActive && countdown ? (
               <Pill tone="attention">
-                {hoursLeft > 1
-                  ? `Free access · ${hoursLeft}h left`
-                  : "Free access · under 1h left"}
+                <span className="whitespace-nowrap">
+                  Free access ·{" "}
+                  <span className="tnum font-semibold" aria-live="off">
+                    {countdown.label}
+                  </span>
+                </span>
               </Pill>
             ) : org?.subscription_status === "trialing" ? (
               <Pill tone="attention">Trial</Pill>
