@@ -4,6 +4,7 @@ import { LoadingRows } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import {
   useBusinessProfile,
+  useSaveBusinessProfile,
   useSaveWebsiteSettings,
   useServices,
   useWebsiteSettings,
@@ -19,6 +20,7 @@ import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
 import { AssistantShowcase } from "@/components/app/AssistantShowcase";
 import { EffectStudio } from "@/components/app/EffectStudio";
+import { ImageStudio } from "@/components/app/ImageStudio";
 import { readBackdrop, writeBackdrop } from "@/lib/site-effects";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { UpgradeStudio } from "@/components/app/UpgradeStudio";
@@ -61,6 +63,7 @@ function WebsitePage() {
   const settingsQuery = useWebsiteSettings(orgId);
   const { data: services } = useServices(orgId);
   const saveSettings = useSaveWebsiteSettings(orgId);
+  const saveProfile = useSaveBusinessProfile(orgId);
   const { data: pages } = useWebsiteContent(orgId);
 
   const profile = profileQuery.data as Record<string, unknown> | null | undefined;
@@ -293,6 +296,19 @@ function WebsitePage() {
               onBackdrop={(backdrop) =>
                 saveSettings.mutate({ generation: writeBackdrop(generation ?? null, backdrop) })
               }
+            />
+            <ImageStudio
+              organizationId={orgId}
+              canManage={manage}
+              businessName={org?.name ?? null}
+              industry={(profile?.["industry"] as string) ?? null}
+              city={(profile?.["city"] as string) ?? null}
+              primaryColor={(profile?.["primary_color"] as string) ?? null}
+              accentColor={(profile?.["accent_color"] as string) ?? null}
+              services={(services ?? []).map((service) => ({ name: String(service.name ?? "") }))}
+              mediaCount={facts.data?.mediaCount ?? 0}
+              hasHeroImage={!!(profile?.["hero_image_url"] as string)}
+              onSetHero={(path) => saveProfile.mutate({ hero_image_url: path })}
             />
             <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
             <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
