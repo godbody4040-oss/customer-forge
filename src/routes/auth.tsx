@@ -258,6 +258,11 @@ function AuthPage() {
               {busy === "google" ? <Loader2 className="size-4 animate-spin" /> : null}
               Continue with Google
             </Button>
+            <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">
+              Google shows our secure sign-in provider on the consent screen — you're signing into{" "}
+              <span className="gold-hl">Revora</span>.
+            </p>
+
 
             <div className="my-5 flex items-center gap-3">
               <span className="h-px flex-1 bg-border" />
@@ -274,6 +279,7 @@ function AuthPage() {
                   <Label htmlFor="a-name">Your name</Label>
                   <Input
                     id="a-name"
+                    name="name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     autoComplete="name"
@@ -285,6 +291,7 @@ function AuthPage() {
                 <Label htmlFor="a-email">Email</Label>
                 <Input
                   id="a-email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => {
@@ -300,6 +307,7 @@ function AuthPage() {
                   <Label htmlFor="a-password">Password</Label>
                   <Input
                     id="a-password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
