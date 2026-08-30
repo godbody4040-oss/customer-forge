@@ -81,8 +81,17 @@ function AppShell() {
   const trialStillActive = isTrialActive(org);
   const hoursLeft = trialHoursLeft(org);
 
+  const paidAccess = Boolean(
+    org && (org.setup_paid_at || org.subscription_status === "active" || org.subscription_status === "past_due"),
+  );
   const paymentRequired = Boolean(
-    org && !org.is_demo && !billing?.active && !trialStillActive && !data?.isSuperAdmin && !supporting,
+    org &&
+      !org.is_demo &&
+      !billing?.active &&
+      !paidAccess &&
+      !trialStillActive &&
+      !data?.isSuperAdmin &&
+      !supporting,
   );
   const paymentLocked = paymentRequired && !pathname.startsWith("/app/billing");
 
