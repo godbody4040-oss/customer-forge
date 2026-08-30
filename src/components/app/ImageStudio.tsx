@@ -58,7 +58,7 @@ export function ImageStudio({
   onSetHero?: (path: string) => void;
 }) {
   const queryClient = useQueryClient();
-  const direction = useMemo(() => pickVisualDirection({ industry, services }), [industry, services]);
+  const direction = useMemo(() => pickVisualDirection({ industry: industry ?? null, services }), [industry, services]);
   const shots = useMemo(
     () =>
       planShots({
@@ -84,10 +84,10 @@ export function ImageStudio({
       direction,
       shot,
       style: CANDIDATE_STYLES[0]!,
-      businessName,
-      city,
-      primaryColor,
-      accentColor,
+      businessName: businessName ?? null,
+      city: city ?? null,
+      primaryColor: primaryColor ?? null,
+      accentColor: accentColor ?? null,
       refinements,
       extra: note || null,
     });
@@ -107,10 +107,10 @@ export function ImageStudio({
         direction,
         shot,
         style,
-        businessName,
-        city,
-        primaryColor,
-        accentColor,
+        businessName: businessName ?? null,
+        city: city ?? null,
+        primaryColor: primaryColor ?? null,
+        accentColor: accentColor ?? null,
         refinements,
         extra: note || null,
       });
