@@ -216,8 +216,13 @@ function GetStarted() {
     }
     setStartingTrial(true);
     try {
-      await ensureWorkspace();
+      const provisionedId = await ensureWorkspace();
       trackConversion("signup_completed", { email: intake.email.trim() });
+      trackConversion("workspace_provisioned", {
+        email: intake.email.trim(),
+        metadata: { organization_id: provisionedId },
+      });
+
       navigate({ to: "/app" });
     } catch (cause) {
       setError(
