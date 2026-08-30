@@ -244,8 +244,21 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   });
   await step("structure");
 
-  const copy = await generateSiteCopy({ ...copyFacts, ctaLabel: plan.primaryCtaLabel }, brief);
+  const copyFactsForWrite = { ...copyFacts, ctaLabel: plan.primaryCtaLabel };
+  let copy = fallbackCopy(copyFactsForWrite, brief);
+  let copyModel = "revora-rules";
+  if (!aiDenied) {
+    try {
+      copy = await generateSiteCopy(copyFactsForWrite, brief);
+      copyModel = COPY_MODEL;
+    } catch (error) {
+      if (error instanceof AiGatewayError && error.status === 429) throw error;
+      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
+      console.error("[site-engine] copy fell back to rules", error);
+    }
+  }
   await step("copy");
+
 
   await db.from("ai_generations").insert({
     organization_id: orgId,
