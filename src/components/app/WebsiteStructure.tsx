@@ -243,6 +243,8 @@ function PageSections({
             ) : null}
           </div>
 
+          <SectionPurpose kind={section.kind} />
+
           <form
             className="mt-3 grid gap-3"
             onSubmit={(event) => {
