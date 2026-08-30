@@ -3,6 +3,10 @@ import { ArrowRight, CheckCircle2, KeyRound, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Panel, Pill } from "@/components/app/Bits";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
+import { useExperiment } from "@/lib/experiments.hooks";
+import { START_FREE_COPY } from "@/lib/experiments";
+import { trackConversion } from "@/lib/conversion";
+
 
 /** The single destination for "try it free": create an account, then continue to setup. */
 export const FREE_ACCESS_TO = "/auth" as const;
