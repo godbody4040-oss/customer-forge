@@ -4,6 +4,7 @@ import { LoadingRows } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import {
   useBusinessProfile,
+  useSaveBusinessProfile,
   useSaveWebsiteSettings,
   useServices,
   useWebsiteSettings,
@@ -19,6 +20,7 @@ import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
 import { AssistantShowcase } from "@/components/app/AssistantShowcase";
 import { EffectStudio } from "@/components/app/EffectStudio";
+import { ImageStudio } from "@/components/app/ImageStudio";
 import { readBackdrop, writeBackdrop } from "@/lib/site-effects";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { UpgradeStudio } from "@/components/app/UpgradeStudio";
@@ -61,6 +63,7 @@ function WebsitePage() {
   const settingsQuery = useWebsiteSettings(orgId);
   const { data: services } = useServices(orgId);
   const saveSettings = useSaveWebsiteSettings(orgId);
+  const saveProfile = useSaveBusinessProfile(orgId);
   const { data: pages } = useWebsiteContent(orgId);
 
   const profile = profileQuery.data as Record<string, unknown> | null | undefined;
