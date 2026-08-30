@@ -41,8 +41,6 @@ export function isTrialActive(org: TrialOrgFields | null | undefined): boolean {
   // Any workspace inside its free-access window gets access, whatever the
   // subscription status says. Status drift (a webhook marking a brand-new org
   // past_due/canceled, or a null status) must never eat the promised free days.
-  const status = org.subscription_status ?? "trialing";
-  if (status === "canceled" && !org.created_at) return false;
   const end = trialEndsAtMs(org);
   return end !== null && end >= Date.now();
 }
