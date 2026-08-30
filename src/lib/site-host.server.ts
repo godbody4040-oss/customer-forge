@@ -87,6 +87,8 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
     return [
       "",
       "/pricing",
+      "/growth-assessment",
+      "/website-audit",
       "/industries",
       ...industryPaths,
       "/crm-for-contractors",
@@ -94,6 +96,8 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/contact",
       "/demo",
       "/demo/dashboard",
+      "/privacy",
+      "/terms",
     ].map(
       (path) => ({
         loc: `${origin}${path}`,

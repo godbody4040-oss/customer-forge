@@ -163,6 +163,8 @@ const FOOTER_GROUPS = [
       { to: "/demo", label: "Product tour" },
       { to: "/industries", label: "Solutions" },
       { to: "/pricing", label: "Pricing" },
+      { to: "/growth-assessment", label: "Free growth assessment" },
+      { to: "/website-audit", label: "Free website audit" },
     ],
   },
   {
@@ -170,6 +172,8 @@ const FOOTER_GROUPS = [
     links: [
       { to: "/about", label: "About" },
       { to: "/contact", label: "Contact" },
+      { to: "/privacy", label: "Privacy policy" },
+      { to: "/terms", label: "Terms of service" },
     ],
   },
 ] as const;
