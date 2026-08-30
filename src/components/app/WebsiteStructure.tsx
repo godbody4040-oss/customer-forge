@@ -599,3 +599,17 @@ function PageSeoPanel({
     </Panel>
   );
 }
+
+/** Plain-English banner explaining what a section is for and why it wins work. */
+function SectionPurpose({ kind }: { kind: string }) {
+  const guide = sectionGuide(kind);
+  return (
+    <div className="mt-3 rounded-md border border-primary/25 bg-primary/5 p-3">
+      <p className="text-[12px] text-muted-foreground">{guide.purpose}</p>
+      <p className="mt-1.5 flex items-start gap-1.5 text-[12px] font-medium text-primary">
+        <Target className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+        <span>{guide.lead}</span>
+      </p>
+    </div>
+  );
+}
