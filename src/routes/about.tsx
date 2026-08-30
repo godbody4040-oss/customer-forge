@@ -20,7 +20,9 @@ content: `Revora is a business growth platform founded by ${REVORA.founder.name}
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/about"),
     ],
+    links: [canonicalLink("/about")],
   }),
   component: About,
 });

@@ -17,7 +17,11 @@ export const Route = createFileRoute("/industries/")({
         property: "og:description",
         content: "Every trade sells differently. Pick your industry and get a site tuned to it.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/industries"),
     ],
+    links: [canonicalLink("/industries")],
   }),
   component: Industries,
 });

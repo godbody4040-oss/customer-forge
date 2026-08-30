@@ -24,6 +24,20 @@ export const Route = createFileRoute("/pricing")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/pricing"),
+    ],
+    links: [canonicalLink("/pricing")],
+    scripts: [
+      { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(
+          breadcrumbSchema([
+            { name: "Revora", path: "/" },
+            { name: "Pricing", path: "/pricing" },
+          ]),
+        ),
+      },
     ],
   }),
   component: Pricing,

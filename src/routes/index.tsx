@@ -44,8 +44,11 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      ogUrl("/"),
     ],
+    links: [canonicalLink("/")],
     scripts: [
+      { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
       {
         type: "application/ld+json",
         children: JSON.stringify({

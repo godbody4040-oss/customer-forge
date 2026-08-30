@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, resolvePostLoginPath } from "@/lib/auth-session";
+import { ORGANIZATION_SCHEMA, WEBSITE_SCHEMA } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -87,8 +88,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "Revora" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Revora Growth Systems" },
+      { property: "og:locale", content: "en_US" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1" },
       { name: "theme-color", content: "#0A0A0C" },
+    ],
+    scripts: [
+      { type: "application/ld+json", children: JSON.stringify(ORGANIZATION_SCHEMA) },
+      { type: "application/ld+json", children: JSON.stringify(WEBSITE_SCHEMA) },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
