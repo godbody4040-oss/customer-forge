@@ -68,7 +68,10 @@ export function SiteChatbot({
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
+  /** When on, safe plans (nothing removed, nothing missing) are written the moment they're ready. */
+  const [autoApply, setAutoApply] = useState(true);
   const queryClient = useQueryClient();
+
 
   // A section panel below can hand its request up to this box.
   useEffect(
