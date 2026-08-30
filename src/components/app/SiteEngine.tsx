@@ -19,6 +19,8 @@ import {
 } from "@/lib/site-engine.hooks";
 import { dateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { focusAndScrollToId } from "@/lib/use-step-scroll";
+
 
 /* ---------------------------- generation progress ---------------------------- */
 
