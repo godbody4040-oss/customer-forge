@@ -183,7 +183,7 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
       componentsBySection.set(component.section_id, list);
     }
 
-    const raw = await planChanges(
+    const agentContext = {
       {
         business: {
           name: org.data.name ?? "",
