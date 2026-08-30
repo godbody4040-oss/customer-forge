@@ -52,9 +52,10 @@ const groupCount = (rows: { organization_id: string }[] | null | undefined) => {
   return map;
 };
 
-const byOrg = <T extends { organization_id: string }>(rows: T[] | null | undefined) => {
-  const map = new Map<string, T>();
-  for (const row of rows ?? []) if (!map.has(row.organization_id)) map.set(row.organization_id, row);
+const byOrg = (rows: { organization_id: string }[] | null | undefined) => {
+  const map = new Map<string, Record<string, any>>();
+  for (const row of rows ?? [])
+    if (!map.has(row.organization_id)) map.set(row.organization_id, row as Record<string, any>);
   return map;
 };
 
