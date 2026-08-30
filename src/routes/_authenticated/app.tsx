@@ -44,23 +44,47 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppShell,
 });
 
-const NAV = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true, key: false },
-  { to: "/app/command", label: "AI Command Center", icon: Sparkles, exact: false, key: true },
-  { to: "/app/leads", label: "Leads & CRM", icon: Users, exact: false, key: true },
-
-  { to: "/app/calendar", label: "Calendar & bookings", icon: CalendarDays, exact: false, key: false },
-  { to: "/app/services", label: "Services", icon: Wrench, exact: false, key: false },
-  { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false, key: false },
-  { to: "/app/automations", label: "Automations", icon: Zap, exact: false, key: false },
-  { to: "/app/campaigns", label: "Campaigns & QR", icon: QrCode, exact: false, key: false },
-  { to: "/app/reviews", label: "Reviews", icon: Star, exact: false, key: false },
-  { to: "/app/website", label: "Website builder", icon: Globe, exact: false, key: true },
-  { to: "/app/domain", label: "Domain & SSL", icon: Globe2, exact: false, key: false },
-  { to: "/app/launch", label: "Launch checklist", icon: Rocket, exact: false, key: true },
-  { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false, key: false },
-  { to: "/app/billing", label: "Billing", icon: CreditCard, exact: false, key: false },
-  { to: "/app/settings", label: "Settings", icon: Settings, exact: false, key: false },
+const NAV_GROUPS = [
+  {
+    group: "Overview",
+    items: [
+      { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true, key: false, hint: "Today's leads, bookings and revenue at a glance" },
+      { to: "/app/command", label: "AI Command Center", icon: Sparkles, exact: false, key: true, hint: "Revora finds what's costing you work and fixes it" },
+    ],
+  },
+  {
+    group: "Win the work",
+    items: [
+      { to: "/app/website", label: "Website builder", icon: Globe, exact: false, key: true, hint: "Build the pages that turn visitors into enquiries" },
+      { to: "/app/launch", label: "Launch checklist", icon: Rocket, exact: false, key: true, hint: "Everything that must be true before you go live" },
+      { to: "/app/domain", label: "Domain & SSL", icon: Globe2, exact: false, key: false, hint: "Point your own web address at your site" },
+    ],
+  },
+  {
+    group: "Handle enquiries",
+    items: [
+      { to: "/app/leads", label: "Leads & CRM", icon: Users, exact: false, key: true, hint: "Every enquiry, its stage and what happens next" },
+      { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false, key: false, hint: "Instant prices so people don't wait to hear back" },
+      { to: "/app/calendar", label: "Calendar & bookings", icon: CalendarDays, exact: false, key: false, hint: "Jobs booked straight into your diary" },
+      { to: "/app/automations", label: "Automations", icon: Zap, exact: false, key: false, hint: "Automatic follow-up so no lead goes cold" },
+    ],
+  },
+  {
+    group: "Grow",
+    items: [
+      { to: "/app/services", label: "Services", icon: Wrench, exact: false, key: false, hint: "What you sell, prices and what's bookable" },
+      { to: "/app/reviews", label: "Reviews", icon: Star, exact: false, key: false, hint: "Ask happy customers and show the proof" },
+      { to: "/app/campaigns", label: "Campaigns & QR", icon: QrCode, exact: false, key: false, hint: "Track where your enquiries come from" },
+      { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false, key: false, hint: "Visitors, calls, forms and conversion" },
+    ],
+  },
+  {
+    group: "Account",
+    items: [
+      { to: "/app/billing", label: "Billing", icon: CreditCard, exact: false, key: false, hint: "Your plan, setup fee and invoices" },
+      { to: "/app/settings", label: "Settings", icon: Settings, exact: false, key: false, hint: "Business details, team and preferences" },
+    ],
+  },
 ] as const;
 
 
@@ -114,27 +138,42 @@ function AppShell() {
             <Logo />
           </Link>
         </div>
-        <nav aria-label="App" className="flex flex-col gap-0.5 p-2.5">
-          {NAV.map(({ to, label, icon: Icon, exact, key }) => (
-            <Link
-              key={to}
-              to={to}
-              activeOptions={{ exact }}
-              onClick={() => setNavOpen(false)}
-              className="group flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
-              activeProps={{
-                className: "border-primary/35 bg-primary/10 text-primary",
-              }}
-            >
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 truncate">{label}</span>
-              {key ? (
-                <span
-                  aria-hidden="true"
-                  className="ml-auto size-1.5 shrink-0 rounded-full bg-primary/70"
-                />
-              ) : null}
-            </Link>
+        <nav aria-label="App" className="flex flex-col gap-3 p-2.5">
+          {NAV_GROUPS.map(({ group, items }) => (
+            <div key={group}>
+              <p className="eyebrow px-2.5 pb-1">{group}</p>
+              <div className="flex flex-col gap-0.5">
+                {items.map(({ to, label, icon: Icon, exact, key, hint }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    activeOptions={{ exact }}
+                    onClick={() => setNavOpen(false)}
+                    title={hint}
+                    className="group flex items-start gap-2.5 rounded-md border border-transparent px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
+                    activeProps={{
+                      className: "border-primary/35 bg-primary/10 text-primary",
+                    }}
+                  >
+                    <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="min-w-0 truncate">{label}</span>
+                        {key ? (
+                          <span
+                            aria-hidden="true"
+                            className="size-1.5 shrink-0 rounded-full bg-primary/70"
+                          />
+                        ) : null}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground/80 group-hover:text-muted-foreground">
+                        {hint}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 

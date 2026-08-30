@@ -47,7 +47,7 @@ export function BriefReviewPanel({
 
   if (!brief)
     return (
-      <Panel className="p-5">
+      <Panel id="business-brief" className="scroll-mt-24 p-5">
         <SectionHeading eyebrow="Step one" title="Let Revora read your business first" />
         <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
           Before anything is written, Revora works out what you do, who buys from you and how they decide.
@@ -67,7 +67,7 @@ export function BriefReviewPanel({
 
   return (
     <div className="space-y-4">
-      <Panel className="p-5">
+      <Panel id="business-brief" className="scroll-mt-24 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <SectionHeading
@@ -210,7 +210,7 @@ export function MissingFactsPanel({
 
   if (!gaps.length)
     return (
-      <Panel className="p-5">
+      <Panel id="required-answers" className="scroll-mt-24 p-5">
         <SectionHeading eyebrow="Your information" title="Nothing missing" />
         <p className="mt-2 text-[13px] text-muted-foreground">
           Revora has everything it needs from you. Anything else you add makes the site stronger, not possible.
@@ -222,14 +222,15 @@ export function MissingFactsPanel({
   const advice = gaps.filter((g) => !g.field);
 
   return (
-    <Panel className="p-5">
+    <Panel id="required-answers" className="scroll-mt-24 p-5">
       <SectionHeading
         eyebrow="Only the blanks"
         title={required.length ? `${required.length} answer${required.length === 1 ? "" : "s"} needed to build` : "Optional detail Revora asked for"}
       />
       <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
         These are the only things Revora couldn't find in what you've already entered. Nothing here is guessed
-        on your behalf.
+        on your behalf. Answer the ones marked required and the build unlocks straight away — each answer is
+        reused across your pages, buttons, forms and search settings.
       </p>
 
       {answerable.length ? (

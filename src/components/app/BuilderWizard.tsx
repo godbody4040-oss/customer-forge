@@ -11,7 +11,7 @@ import { useAutosaveOrganization, useAutosaveProfile } from "@/lib/website-conte
 import { WIZARD_STEPS, type WizardStepKey } from "@/lib/website-content";
 import { WEBSITE_GOALS, type GoalKey } from "@/lib/website-plan";
 import { cn } from "@/lib/utils";
-import { useStepScroll } from "@/lib/use-step-scroll";
+import { focusAndScrollToId, useStepScroll } from "@/lib/use-step-scroll";
 
 type ProfileRow = Record<string, unknown> | null | undefined;
 
@@ -24,6 +24,8 @@ type Props = {
   canManage: boolean;
   structureSlot: ReactNode;
   launchSlot: ReactNode;
+  /** Set by the page to send the owner straight to a step (and an anchor inside it). */
+  jumpTo?: { step: WizardStepKey; anchor?: string; nonce: number } | null;
 };
 
 const text = (profile: ProfileRow, key: string) => {
@@ -44,6 +46,7 @@ export function BuilderWizard({
   canManage,
   structureSlot,
   launchSlot,
+  jumpTo = null,
 }: Props) {
   const [step, setStep] = useState<WizardStepKey>("business");
   const stepRef = useStepScroll<HTMLElement>(step);
@@ -55,6 +58,16 @@ export function BuilderWizard({
   useEffect(() => {
     if (!busy && (saveProfile.isSuccess || saveOrg.isSuccess)) setSavedAt(Date.now());
   }, [busy, saveProfile.isSuccess, saveOrg.isSuccess]);
+
+  // The page can send the owner directly to the step (and the question) that is
+  // blocking their build, instead of leaving them to hunt for it.
+  useEffect(() => {
+    if (!jumpTo) return;
+    setStep(jumpTo.step);
+    if (!jumpTo.anchor) return;
+    const timer = setTimeout(() => focusAndScrollToId(jumpTo.anchor!), 120);
+    return () => clearTimeout(timer);
+  }, [jumpTo]);
 
   const goals = Array.isArray(profile?.["website_goals"]) ? (profile?.["website_goals"] as string[]) : [];
 

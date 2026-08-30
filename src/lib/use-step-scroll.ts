@@ -29,6 +29,24 @@ export function scrollToHash(hash: string) {
 }
 
 /**
+ * Bring a panel into view AND put the cursor in its first unanswered field, so
+ * "answer the required questions" lands the owner on the actual question rather
+ * than somewhere near it.
+ */
+export function focusAndScrollToId(id: string) {
+  if (typeof document === "undefined") return;
+  const target = document.getElementById(id);
+  if (!target) return;
+  scrollElementIntoView(target);
+  const fields = Array.from(
+    target.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea"),
+  ).filter((el) => !el.disabled);
+  const first = fields.find((el) => !el.value.trim()) ?? fields[0];
+  if (first) window.setTimeout(() => first.focus({ preventScroll: true }), 320);
+}
+
+
+/**
  * Attach the returned ref to the container that renders the current step.
  * The container is scrolled into view every time `step` changes.
  */
