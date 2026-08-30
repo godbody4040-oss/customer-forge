@@ -255,7 +255,7 @@ export function SiteChatbot({
       <form className="mt-4 space-y-3" onSubmit={submit}>
         <Textarea
           id="assistant-instruction"
-          className="scroll-mt-28"
+          
           rows={messages.length ? 3 : 5}
           value={instruction}
           onChange={(event) => setInstruction(event.target.value.slice(0, PLAN_INSTRUCTION_LIMIT))}
