@@ -20,6 +20,7 @@ import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -117,6 +118,11 @@ const IndustriesRoute = IndustriesRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -475,6 +483,7 @@ export interface FileRoutesById {
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -533,6 +542,7 @@ export interface FileRouteTypes {
     | '/growth-assessment'
     | '/industries'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -587,6 +597,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -642,6 +653,7 @@ export interface FileRouteTypes {
     | '/growth-assessment'
     | '/industries'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -700,6 +712,7 @@ export interface RootRouteChildren {
   GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -792,6 +805,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1244,6 +1264,7 @@ const rootRouteChildren: RootRouteChildren = {
   GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
