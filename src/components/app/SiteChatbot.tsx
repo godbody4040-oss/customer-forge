@@ -70,6 +70,18 @@ export function SiteChatbot({
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
+  // A section panel below can hand its request up to this box.
+  useEffect(
+    () =>
+      onAssistantPrompt((prompt) => {
+        setInstruction(prompt.slice(0, PLAN_INSTRUCTION_LIMIT));
+        const box = document.getElementById("assistant-instruction");
+        if (box instanceof HTMLTextAreaElement || box instanceof HTMLInputElement) box.focus();
+      }),
+    [],
+  );
+
+
   const ask = useServerFn(planWebsiteChanges);
   const applyFn = useServerFn(applyWebsiteChanges);
 
