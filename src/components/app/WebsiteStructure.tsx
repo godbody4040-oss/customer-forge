@@ -1,5 +1,7 @@
 import { useState, type DragEvent } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Layers, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Layers, Loader2, Plus, RefreshCw, Search, Sparkle, Target, Trash2 } from "lucide-react";
+import { askAssistant } from "@/lib/assistant-bridge";
+import { sectionGuide } from "@/lib/section-guide";
 import { EmptyState, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
