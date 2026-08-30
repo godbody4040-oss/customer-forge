@@ -93,14 +93,37 @@ export function SiteEnginePanel({
       </div>
 
       {blocked && canManage ? (
-        <div className="mt-4 flex items-start gap-2.5 rounded-md border border-accent/40 bg-accent/5 p-3.5">
-          <TriangleAlert className="mt-0.5 size-4 text-accent" aria-hidden="true" />
-          <div>
-            <p className="text-[13px] font-medium">Not ready to build yet</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">{blockedReason}</p>
+        <div className="mt-4 rounded-md border border-accent/40 bg-accent/5 p-3.5">
+          <div className="flex items-start gap-2.5">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium">Not ready to build yet</p>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">{blockedReason}</p>
+              {requiredGaps.length ? (
+                <ul className="mt-2 grid gap-1">
+                  {requiredGaps.map((gap) => (
+                    <li key={gap.key} className="text-[12px] text-muted-foreground">
+                      <span className="text-primary">•</span> {gap.label}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           </div>
+          <Button
+            className="mt-3"
+            variant="signal"
+            size="sm"
+            onClick={() =>
+              focusAndScrollToId(requiredGaps.length ? "required-answers" : "business-brief")
+            }
+          >
+            {requiredGaps.length ? "Take me to these questions" : "Take me to the next step"}
+            <ArrowDown className="size-4" />
+          </Button>
         </div>
       ) : null}
+
 
       {status === "failed" && job?.error_message ? (
         <div className="mt-4 flex items-start gap-2.5 rounded-md border border-destructive/40 bg-destructive/5 p-3.5">
