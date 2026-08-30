@@ -24,7 +24,7 @@ export function EffectStudio({
   backdrop,
   onBackdrop,
 }: {
-  organizationId: string;
+  organizationId: string | undefined;
   canManage: boolean;
   backdrop: BackdropId;
   onBackdrop: (backdrop: BackdropId) => void;
