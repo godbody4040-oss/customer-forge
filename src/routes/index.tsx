@@ -234,18 +234,35 @@ function Landing() {
           <div className="mx-auto max-w-6xl px-4 py-14">
             <p className="eyebrow">The real problem</p>
             <h2 className="mt-2 max-w-3xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
-              You're not short on interest. You're losing it between the click and the booking.
+              You're not short on interest. You're{" "}
+              <span className="gold-text">losing it between the click and the booking</span>.
             </h2>
+            <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
+              Here are the five leaks that quietly cost local businesses the most work every month —
+              and exactly what Revora does about each one, starting on day one of your free access.
+            </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {PROBLEMS.map((p) => (
-                <Panel key={p.title} className="card-lift p-5">
+                <Panel key={p.title} className="card-lift flex flex-col p-5">
                   <h3 className="font-display text-[13px] font-bold tracking-[0.12em] uppercase">
                     {p.title}
                   </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
+                  <p className="mt-3 text-[12px] leading-relaxed font-medium text-destructive">
+                    {p.cost}
+                  </p>
+                  <div className="mt-4 border-t border-primary/25 pt-3">
+                    <p className="eyebrow text-primary/90">What Revora does</p>
+                    <p className="mt-1.5 text-[12.5px] leading-relaxed text-foreground">{p.fix}</p>
+                  </div>
                 </Panel>
               ))}
             </div>
+            <div className="mt-8">
+              <PrimaryCta />
+              <PriceLine className="mt-4" />
+            </div>
+
             <div className="mt-10">
               <WithoutWith />
             </div>
