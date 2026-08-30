@@ -7,6 +7,7 @@ import { useSession } from "@/lib/auth-session";
 import { useSignOut } from "@/lib/use-tenant";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 import { GROWTH_SYSTEM } from "@/lib/offer";
+import { MarketingConversionKit } from "@/components/marketing/ConversionKit";
 
 const NAV = [
   { to: "/demo", label: "Product" },
@@ -271,6 +272,7 @@ export function SiteFooter() {
           </p>
         </div>
       </div>
+      <MarketingConversionKit />
     </footer>
   );
 }
