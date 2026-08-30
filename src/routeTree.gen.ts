@@ -17,6 +17,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CrmForContractorsRouteImport } from './routes/crm-for-contractors'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GetStartedRouteImport } from './routes/get-started'
+import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -100,6 +101,11 @@ const DemoRoute = DemoRouteImport.update({
 const GetStartedRoute = GetStartedRouteImport.update({
   id: '/get-started',
   path: '/get-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrowthAssessmentRoute = GrowthAssessmentRouteImport.update({
+  id: '/growth-assessment',
+  path: '/growth-assessment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndustriesRoute = IndustriesRouteImport.update({
@@ -350,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
+  '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -403,6 +410,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/get-started': typeof GetStartedRoute
+  '/growth-assessment': typeof GrowthAssessmentRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
@@ -456,6 +464,7 @@ export interface FileRoutesById {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
+  '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -512,6 +521,7 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/demo'
     | '/get-started'
+    | '/growth-assessment'
     | '/industries'
     | '/pricing'
     | '/reset-password'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/crm-for-contractors'
     | '/get-started'
+    | '/growth-assessment'
     | '/pricing'
     | '/reset-password'
     | '/robots.txt'
@@ -617,6 +628,7 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/demo'
     | '/get-started'
+    | '/growth-assessment'
     | '/industries'
     | '/pricing'
     | '/reset-password'
@@ -673,6 +685,7 @@ export interface RootRouteChildren {
   CrmForContractorsRoute: typeof CrmForContractorsRoute
   DemoRoute: typeof DemoRouteWithChildren
   GetStartedRoute: typeof GetStartedRoute
+  GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -745,6 +758,13 @@ declare module '@tanstack/react-router' {
       path: '/get-started'
       fullPath: '/get-started'
       preLoaderRoute: typeof GetStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/growth-assessment': {
+      id: '/growth-assessment'
+      path: '/growth-assessment'
+      fullPath: '/growth-assessment'
+      preLoaderRoute: typeof GrowthAssessmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/industries': {
@@ -1201,6 +1221,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrmForContractorsRoute: CrmForContractorsRoute,
   DemoRoute: DemoRouteWithChildren,
   GetStartedRoute: GetStartedRoute,
+  GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
