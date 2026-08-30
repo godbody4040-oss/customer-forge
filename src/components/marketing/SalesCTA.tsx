@@ -59,29 +59,67 @@ export function SupportCard() {
   );
 }
 
-/** Understated founder note — Revora stays the primary brand. */
+/** Founder story — Revora stays the primary brand. */
 export function FounderNote() {
   return (
-    <div className="mx-auto max-w-2xl text-center">
-      <p className="eyebrow">From the founder</p>
-      <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-        Revora exists because most local businesses are handed software and left to figure it out.
-        We build, configure and manage the whole system instead — website, lead capture, CRM,
-        booking, quotes, follow-up, reviews and reporting — so owners can focus on doing the work
-        and serving customers.
-      </p>
-      <div className="mt-6 inline-flex items-center gap-3 rounded-full border border-primary/30 bg-card px-4 py-2">
-        <span className="grid size-7 place-items-center rounded-full bg-primary/15 font-display text-[12px] font-semibold text-primary">
-          A
-        </span>
-        <span className="text-left">
-          <span className="block text-[13px] font-medium">{REVORA.founder.name}</span>
-          <span className="block text-[11px] text-muted-foreground">{REVORA.founder.role}</span>
-        </span>
+    <div className="mx-auto max-w-3xl">
+      <p className="eyebrow text-center">From the founder</p>
+      <h2 className="mt-2 text-center font-display text-[clamp(1.35rem,2.8vw,2rem)] leading-tight font-semibold">
+        I built Revora because good local businesses keep losing to worse ones with better systems.
+      </h2>
+      <div className="mt-7 space-y-4 text-[14px] leading-relaxed text-muted-foreground">
+        <p>
+          The pattern was always the same. A skilled owner — great work, loyal customers, real
+          reputation — was losing jobs to a competitor who wasn't better, just{" "}
+          <span className="text-foreground">faster to respond and easier to book</span>. Leads came
+          in while they were on a roof, under a sink, or in a truck. By the time they called back,
+          the job was gone.
+        </p>
+        <p>
+          Software wasn't the answer either. Owners were sold a website from one company, a CRM from
+          another, a booking tool, an email tool, an SEO retainer — then left to wire it together in
+          their spare time. Most never did. So the tools sat unused while the leaks stayed open.
+        </p>
+        <p>
+          Revora is the opposite approach:{" "}
+          <span className="text-foreground">one system, built and managed for you</span>. We set up
+          the site, the quoting, the booking, the CRM, the follow-up, the reviews, the local SEO and
+          the reporting — and the AI keeps improving it while you do the work you're actually good
+          at. You should never have to become a marketer to grow.
+        </p>
+        <p>
+          That's also why the pricing is flat and the trial is free. You get{" "}
+          <span className="text-foreground">full access first</span>, see the system running on your
+          own business, and only then decide. No contracts, no retainers, no guesswork.
+        </p>
+      </div>
+      <div className="mt-8 flex flex-col items-center gap-4">
+        <div className="inline-flex items-center gap-3 rounded-full border border-primary/30 bg-card px-4 py-2">
+          <span className="grid size-7 place-items-center rounded-full bg-primary/15 font-display text-[12px] font-semibold text-primary">
+            A
+          </span>
+          <span className="text-left">
+            <span className="block text-[13px] font-medium">{REVORA.founder.name}</span>
+            <span className="block text-[11px] text-muted-foreground">{REVORA.founder.role}</span>
+          </span>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={revoraMailto(MAIL_SUBJECTS.inquiry)}>
+              <Mail className="size-4" aria-hidden="true" /> Email {REVORA.founder.name.split(" ")[0]}
+            </a>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <a href={revoraTel}>
+              <Phone className="size-4" aria-hidden="true" /> {REVORA.phoneDisplay}
+            </a>
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
+
 
 /** Sticky mobile action bar for Revora marketing pages only (never client sites). */
 export function RevoraMobileBar() {
