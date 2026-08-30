@@ -184,7 +184,6 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
     }
 
     const agentContext = {
-      {
         business: {
           name: org.data.name ?? "",
           industry: org.data.industry ?? null,
