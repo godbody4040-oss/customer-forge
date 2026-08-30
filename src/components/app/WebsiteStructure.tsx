@@ -1,5 +1,7 @@
 import { useState, type DragEvent } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Layers, Loader2, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Layers, Loader2, Plus, RefreshCw, Search, Sparkle, Target, Trash2 } from "lucide-react";
+import { askAssistant } from "@/lib/assistant-bridge";
+import { sectionGuide } from "@/lib/section-guide";
 import { EmptyState, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -243,6 +245,8 @@ function PageSections({
             ) : null}
           </div>
 
+          <SectionPurpose kind={section.kind} />
+
           <form
             className="mt-3 grid gap-3"
             onSubmit={(event) => {
@@ -265,8 +269,10 @@ function PageSections({
                   id={`h-${section.id}`}
                   name="heading"
                   defaultValue={section.heading ?? ""}
+                  placeholder={sectionGuide(section.kind).headingHint}
                   disabled={!canManage}
                 />
+                <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).headingHint}</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={`s-${section.id}`}>Supporting line</Label>
@@ -274,8 +280,10 @@ function PageSections({
                   id={`s-${section.id}`}
                   name="subheading"
                   defaultValue={section.subheading ?? ""}
+                  placeholder={sectionGuide(section.kind).subHint}
                   disabled={!canManage}
                 />
+                <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).subHint}</p>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -285,13 +293,26 @@ function PageSections({
                 name="body"
                 rows={3}
                 defaultValue={section.body ?? ""}
+                placeholder={sectionGuide(section.kind).bodyHint}
                 disabled={!canManage}
               />
+              <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).bodyHint}</p>
             </div>
             {canManage ? (
-              <div>
+              <div className="flex flex-wrap gap-2">
                 <Button type="submit" variant="outline" disabled={saveSection.isPending}>
                   Save section
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    askAssistant(
+                      `${sectionGuide(section.kind).ask} (the ${sectionLabel(section.kind)} section on ${page.title}).`,
+                    )
+                  }
+                >
+                  <Sparkle className="size-4" /> Let the assistant write this
                 </Button>
               </div>
             ) : null}
@@ -576,5 +597,19 @@ function PageSeoPanel({
         </form>
       ) : null}
     </Panel>
+  );
+}
+
+/** Plain-English banner explaining what a section is for and why it wins work. */
+function SectionPurpose({ kind }: { kind: string }) {
+  const guide = sectionGuide(kind);
+  return (
+    <div className="mt-3 rounded-md border border-primary/25 bg-primary/5 p-3">
+      <p className="text-[12px] text-muted-foreground">{guide.purpose}</p>
+      <p className="mt-1.5 flex items-start gap-1.5 text-[12px] font-medium text-primary">
+        <Target className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+        <span>{guide.lead}</span>
+      </p>
+    </div>
   );
 }

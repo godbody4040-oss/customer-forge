@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { onAssistantPrompt } from "@/lib/assistant-bridge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -68,6 +69,18 @@ export function SiteChatbot({
   const [plan, setPlan] = useState<Plan | null>(null);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
+
+  // A section panel below can hand its request up to this box.
+  useEffect(
+    () =>
+      onAssistantPrompt((prompt) => {
+        setInstruction(prompt.slice(0, PLAN_INSTRUCTION_LIMIT));
+        const box = document.getElementById("assistant-instruction");
+        if (box instanceof HTMLTextAreaElement || box instanceof HTMLInputElement) box.focus();
+      }),
+    [],
+  );
+
 
   const ask = useServerFn(planWebsiteChanges);
   const applyFn = useServerFn(applyWebsiteChanges);
@@ -241,6 +254,8 @@ export function SiteChatbot({
 
       <form className="mt-4 space-y-3" onSubmit={submit}>
         <Textarea
+          id="assistant-instruction"
+          
           rows={messages.length ? 3 : 5}
           value={instruction}
           onChange={(event) => setInstruction(event.target.value.slice(0, PLAN_INSTRUCTION_LIMIT))}
@@ -249,7 +264,7 @@ export function SiteChatbot({
           }
           disabled={!canManage || !hasSections}
           aria-label="Tell Revora what to change"
-          className="min-h-[96px]"
+          className="min-h-[96px] scroll-mt-28"
         />
         <AssistantMedia
           organizationId={organizationId}
