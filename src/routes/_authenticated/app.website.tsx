@@ -122,6 +122,11 @@ function WebsitePage() {
         <div>
           <p className="eyebrow">Website builder</p>
           <h1 className="mt-1 font-display text-[24px] font-semibold">Build your website</h1>
+          <p className="mt-1.5 max-w-2xl text-[13px] text-muted-foreground">
+            This page turns your business facts into a <span className="text-primary">lead generator</span> — pages
+            that ask for the enquiry on every screen, not a brochure. Work top to bottom: ask the assistant, answer
+            anything Revora is missing, build the pages, then run the launch checks.
+          </p>
         </div>
         {org ? (
           <PreviewSiteButton
@@ -131,6 +136,48 @@ function WebsitePage() {
           />
         ) : null}
       </div>
+
+      <section className="panel p-4">
+        <p className="eyebrow">Jump to what you need</p>
+        <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
+          {[
+            {
+              label: "Website assistant",
+              why: "Ask for any change in plain words. Revora shows the plan first.",
+              go: () => setJump({ step: "business", anchor: "website-assistant", nonce: Date.now() }),
+              key: true,
+            },
+            {
+              label: requiredCount ? `Required answers (${requiredCount})` : "Your answers",
+              why: requiredCount
+                ? "These blanks are the only thing stopping your build."
+                : "Everything Revora needs is answered.",
+              go: () => setJump({ step: "structure", anchor: "required-answers", nonce: Date.now() }),
+              key: requiredCount > 0,
+            },
+            {
+              label: "Launch checks",
+              why: "What must be true before your site can bring in work.",
+              go: () => setJump({ step: "launch", nonce: Date.now() }),
+              key: false,
+            },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.go}
+              className="cursor-pointer rounded-md border border-border p-3 text-left transition-colors hover:border-primary/40 hover:bg-elevated focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <span
+                className={`text-[13px] font-medium ${item.key ? "text-primary" : "text-foreground"}`}
+              >
+                {item.label}
+              </span>
+              <span className="mt-0.5 block text-[11.5px] text-muted-foreground">{item.why}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <SiteChatbot
         organizationId={orgId}
@@ -147,6 +194,28 @@ function WebsitePage() {
         }
       />
 
+      {requiredCount && manage ? (
+        <section className="panel border-accent/40 bg-accent/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium">
+                {requiredCount} answer{requiredCount === 1 ? "" : "s"} needed before Revora can build
+              </p>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                Answer them once — they're reused across your pages, buttons, forms, CRM and search settings.
+              </p>
+            </div>
+            <Button
+              variant="signal"
+              size="sm"
+              onClick={() => setJump({ step: "structure", anchor: "required-answers", nonce: Date.now() })}
+            >
+              Answer them now
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
       <BuilderWizard
         organizationId={orgId}
         org={org}
@@ -154,11 +223,12 @@ function WebsitePage() {
         servicesCount={servicesCount}
         pricedCount={pricedCount}
         canManage={manage}
+        jumpTo={jump}
         structureSlot={
           <div className="space-y-6">
             <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
-            <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
             <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
+            <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
             <BusinessBriefPanel brief={brief} />
             <LeadEngine organizationId={orgId} canManage={manage} />
             <WebsiteStructure organizationId={orgId} canManage={manage} />
@@ -174,6 +244,7 @@ function WebsitePage() {
             />
           </div>
         }
+
         launchSlot={
           <div className="space-y-6">
             <RevoraScorePanel
