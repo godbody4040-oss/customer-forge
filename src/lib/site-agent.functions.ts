@@ -240,11 +240,24 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
         sectionKinds: SECTION_LIBRARY.map((s) => s.kind),
         pageKinds: PAGE_LIBRARY.map((p2) => p2.kind),
         componentKinds: ["feature", "faq", "step", "stat", "card", "link", "button", "quote", "list_item", "image"],
-      },
-      data.instruction || "(see the attached file(s) — follow what they show or say)",
-      data.history,
-      data.attachments,
-    );
+    };
+    const instruction = data.instruction || "(see the attached file(s) — follow what they show or say)";
+
+    // The builder must keep working with zero AI credits: a credit or policy
+    // denial hands the request to Revora's own rule-based planner instead of
+    // failing. Rate limits still surface so the client can retry.
+    let raw: Record<string, unknown>;
+    try {
+      raw = (await planChanges(agentContext, instruction, data.history, data.attachments)) as Record<string, unknown>;
+    } catch (error) {
+      const status = (error as { status?: number } | null)?.status;
+      if (status === 402 || status === 403) {
+        const { planWithoutAi } = await import("@/lib/site-agent.offline");
+        raw = planWithoutAi(instruction, agentContext, status === 402 ? "AI credits unavailable" : "AI unavailable") as unknown as Record<string, unknown>;
+      } else {
+        throw error;
+      }
+    }
 
     const actions = readActions(raw["actions"], {
       pageIds: new Set(site.pages.map((page) => page.id)),
