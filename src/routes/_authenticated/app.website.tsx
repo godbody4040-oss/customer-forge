@@ -197,7 +197,7 @@ function WebsitePage() {
         }
       />
 
-      {requiredCount && manage ? (
+      {requiredCount > 0 && manage ? (
         <section className="panel border-accent/40 bg-accent/5 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
