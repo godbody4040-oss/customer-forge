@@ -12,6 +12,8 @@ import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
 import { SiteNav } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
+import { SiteBackdrop } from "@/components/site/SiteBackdrop";
+import { readBackdrop } from "@/lib/site-effects";
 
 
 export const Route = createFileRoute("/s/$slug")({
@@ -159,6 +161,8 @@ export function PublicSiteView({
 
   return (
     <div className="min-h-screen bg-background">
+      <SiteBackdrop backdrop={readBackdrop(site.settings?.generation ?? null)} />
+      <div className="relative z-[1]">
       {preview ? (
         <div className="bg-accent/12 px-4 py-2 text-center text-[12px] text-accent">
           Draft preview — this version is not live yet.
@@ -473,6 +477,7 @@ export function PublicSiteView({
       </footer>
 
       <StickyCallBar site={site} label={ctaLabel} />
+      </div>
     </div>
 
   );

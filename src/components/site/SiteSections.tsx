@@ -13,6 +13,7 @@ import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
 import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
+import { readSectionEffect, sectionEffectClass } from "@/lib/site-effects";
 
 type Site = NonNullable<PublicSite>;
 type Section = NonNullable<Site["content"]>["sections"][number];
@@ -78,7 +79,19 @@ function SectionButtons({ site, components }: { site: Site; components: Componen
   );
 }
 
+/**
+ * Public section renderer. Wraps the block in the visual effect the client (or
+ * the Website Assistant) installed on it — 3D float, tilt, glass, glow, shine —
+ * chosen from the allowlisted effect catalog.
+ */
 export function SiteSection({ site, section }: { site: Site; section: Section }) {
+  const effect = readSectionEffect(section.settings);
+  const inner = <SiteSectionBody site={site} section={section} />;
+  if (effect === "none") return inner;
+  return <div className={sectionEffectClass(effect)}>{inner}</div>;
+}
+
+function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
   const components = section.components ?? [];
   const { profile, services, reviews, gallery, org } = site;
   const rating = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null;

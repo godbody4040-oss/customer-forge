@@ -8,6 +8,7 @@
  * keeps one client's website out of another's.
  */
 
+import { writeBackdrop, writeSectionEffect } from "@/lib/site-effects";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -474,6 +475,35 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
               .update(action.patch as never)
               .eq("organization_id", orgId),
           );
+          break;
+        case "set_backdrop":
+          await run(action.type, async () => {
+            const { data: current } = await supabase
+              .from("website_settings")
+              .select("generation")
+              .eq("organization_id", orgId)
+              .maybeSingle();
+            const generation = writeBackdrop(current?.["generation"] ?? null, action.backdrop);
+            return supabase
+              .from("website_settings")
+              .upsert({ organization_id: orgId, generation } as never, { onConflict: "organization_id" });
+          });
+          break;
+        case "set_section_effect":
+          await run(action.type, async () => {
+            const { data: current } = await supabase
+              .from("website_sections")
+              .select("settings")
+              .eq("id", action.sectionId)
+              .eq("organization_id", orgId)
+              .maybeSingle();
+            const settings = writeSectionEffect(current?.["settings"] ?? null, action.effect);
+            return supabase
+              .from("website_sections")
+              .update({ settings } as never)
+              .eq("id", action.sectionId)
+              .eq("organization_id", orgId);
+          });
           break;
         case "set_business_fact":
           await run(action.type, () =>

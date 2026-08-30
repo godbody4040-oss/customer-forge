@@ -15,6 +15,9 @@ import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
+import { AssistantShowcase } from "@/components/app/AssistantShowcase";
+import { EffectStudio } from "@/components/app/EffectStudio";
+import { readBackdrop, writeBackdrop } from "@/lib/site-effects";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
@@ -140,6 +143,8 @@ function WebsitePage() {
         ) : null}
       </div>
 
+      <AssistantShowcase />
+
       <section className="panel p-4">
         <p className="eyebrow">Jump to what you need</p>
         <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
@@ -230,6 +235,14 @@ function WebsitePage() {
         structureSlot={
           <div className="space-y-6">
             <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
+            <EffectStudio
+              organizationId={orgId}
+              canManage={manage}
+              backdrop={readBackdrop(generation ?? null)}
+              onBackdrop={(backdrop) =>
+                saveSettings.mutate({ generation: writeBackdrop(generation ?? null, backdrop) })
+              }
+            />
             <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
             <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
             <BusinessBriefPanel brief={brief} />

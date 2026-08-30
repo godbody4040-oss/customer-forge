@@ -1,3 +1,11 @@
+import {
+  backdropLabel,
+  isBackdropId,
+  isSectionEffectId,
+  sectionEffectLabel,
+  type BackdropId,
+  type SectionEffectId,
+} from "@/lib/site-effects";
 import { safeLinkUrl } from "@/lib/website-content";
 /**
  * Revora Site Agent — the shared vocabulary for "just tell it what you want".
@@ -32,6 +40,8 @@ export type ComponentPatch = {
   link_label?: string;
   is_visible?: boolean;
 };
+
+export type { BackdropId, SectionEffectId };
 
 export type ThemePatch = {
   primary_color?: string;
@@ -84,6 +94,8 @@ export type AgentAction =
   | { type: "set_page"; pageId: string; patch: PageSeoPatch }
   | { type: "delete_page"; pageId: string }
   | { type: "set_theme"; patch: ThemePatch }
+  | { type: "set_backdrop"; backdrop: BackdropId }
+  | { type: "set_section_effect"; sectionId: string; effect: SectionEffectId }
   | { type: "set_business_fact"; field: BusinessFactField; value: string };
 
 export type AgentStep = {
@@ -286,6 +298,18 @@ export function readActions(
         out.push({ type, patch });
         break;
       }
+      case "set_backdrop": {
+        const backdrop = text(row["backdrop"], 30);
+        if (!isBackdropId(backdrop)) break;
+        out.push({ type, backdrop });
+        break;
+      }
+      case "set_section_effect": {
+        const effect = text(row["effect"], 30);
+        if (!known.sectionIds.has(sectionId) || !isSectionEffectId(effect)) break;
+        out.push({ type, sectionId, effect });
+        break;
+      }
       case "set_business_fact": {
         const field = text(row["field"], 40) as BusinessFactField;
         const value2 = text(row["value"], 1200);
@@ -456,6 +480,22 @@ export function describeActions(actions: AgentAction[], index: SiteIndex, curren
           title: `Update the look (${Object.keys(action.patch).map((f) => f.replace(/_/g, " ")).join(", ")})`,
           where: "Whole website",
           after: Object.values(action.patch).join("  "),
+          destructive: false,
+          action,
+        };
+      case "set_backdrop":
+        return {
+          key,
+          title: `Install the "${backdropLabel(action.backdrop)}" animated background`,
+          where: "Whole website",
+          destructive: false,
+          action,
+        };
+      case "set_section_effect":
+        return {
+          key,
+          title: `Add the "${sectionEffectLabel(action.effect)}" effect to this section`,
+          where: locate(index, { sectionId: action.sectionId }),
           destructive: false,
           action,
         };
