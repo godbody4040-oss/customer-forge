@@ -401,7 +401,7 @@ export async function drainSiteEngineQueue(
       processed += 1;
       if (state.paused || state.consecutive_rate_limits > 0) await resumeQueue(db);
     } catch (error) {
-      failed += 1;
+
       const { AiGatewayError } = await import("@/lib/site-engine.server");
       const isGateway = error instanceof AiGatewayError;
       const status = isGateway ? (error as InstanceType<typeof AiGatewayError>).status : 0;
