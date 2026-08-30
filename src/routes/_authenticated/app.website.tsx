@@ -294,6 +294,19 @@ function WebsitePage() {
                 saveSettings.mutate({ generation: writeBackdrop(generation ?? null, backdrop) })
               }
             />
+            <ImageStudio
+              organizationId={orgId}
+              canManage={manage}
+              businessName={org?.name ?? null}
+              industry={(profile?.["industry"] as string) ?? null}
+              city={(profile?.["city"] as string) ?? null}
+              primaryColor={(profile?.["primary_color"] as string) ?? null}
+              accentColor={(profile?.["accent_color"] as string) ?? null}
+              services={(services ?? []).map((service) => ({ name: String(service.name ?? "") }))}
+              mediaCount={facts.data?.mediaCount ?? 0}
+              hasHeroImage={!!(profile?.["hero_image_url"] as string)}
+              onSetHero={(path) => saveProfile.mutate({ hero_image_url: path })}
+            />
             <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
             <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
             <BusinessBriefPanel brief={brief} />
