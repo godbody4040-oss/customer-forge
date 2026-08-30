@@ -17,11 +17,15 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CrmForContractorsRouteImport } from './routes/crm-for-contractors'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GetStartedRouteImport } from './routes/get-started'
+import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as WebsiteAuditRouteImport } from './routes/website-audit'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -102,6 +106,11 @@ const GetStartedRoute = GetStartedRouteImport.update({
   path: '/get-started',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GrowthAssessmentRoute = GrowthAssessmentRouteImport.update({
+  id: '/growth-assessment',
+  path: '/growth-assessment',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndustriesRoute = IndustriesRouteImport.update({
   id: '/industries',
   path: '/industries',
@@ -110,6 +119,11 @@ const IndustriesRoute = IndustriesRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -125,6 +139,16 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebsiteAuditRoute = WebsiteAuditRouteImport.update({
+  id: '/website-audit',
+  path: '/website-audit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -350,11 +374,15 @@ export interface FileRoutesByFullPath {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
+  '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
+  '/website-audit': typeof WebsiteAuditRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -403,10 +431,14 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/get-started': typeof GetStartedRoute
+  '/growth-assessment': typeof GrowthAssessmentRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
+  '/website-audit': typeof WebsiteAuditRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -456,11 +488,15 @@ export interface FileRoutesById {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/demo': typeof DemoRouteWithChildren
   '/get-started': typeof GetStartedRoute
+  '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
+  '/website-audit': typeof WebsiteAuditRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -512,11 +548,15 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/demo'
     | '/get-started'
+    | '/growth-assessment'
     | '/industries'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/terms'
+    | '/website-audit'
     | '/admin'
     | '/app'
     | '/onboarding'
@@ -565,10 +605,14 @@ export interface FileRouteTypes {
     | '/contact'
     | '/crm-for-contractors'
     | '/get-started'
+    | '/growth-assessment'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/terms'
+    | '/website-audit'
     | '/onboarding'
     | '/demo/dashboard'
     | '/industries/$slug'
@@ -617,11 +661,15 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/demo'
     | '/get-started'
+    | '/growth-assessment'
     | '/industries'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/terms'
+    | '/website-audit'
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
@@ -673,11 +721,15 @@ export interface RootRouteChildren {
   CrmForContractorsRoute: typeof CrmForContractorsRoute
   DemoRoute: typeof DemoRouteWithChildren
   GetStartedRoute: typeof GetStartedRoute
+  GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
+  WebsiteAuditRoute: typeof WebsiteAuditRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
@@ -747,6 +799,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GetStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/growth-assessment': {
+      id: '/growth-assessment'
+      path: '/growth-assessment'
+      fullPath: '/growth-assessment'
+      preLoaderRoute: typeof GrowthAssessmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/industries': {
       id: '/industries'
       path: '/industries'
@@ -759,6 +818,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -780,6 +846,20 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/website-audit': {
+      id: '/website-audit'
+      path: '/website-audit'
+      fullPath: '/website-audit'
+      preLoaderRoute: typeof WebsiteAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -1201,11 +1281,15 @@ const rootRouteChildren: RootRouteChildren = {
   CrmForContractorsRoute: CrmForContractorsRoute,
   DemoRoute: DemoRouteWithChildren,
   GetStartedRoute: GetStartedRoute,
+  GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
+  WebsiteAuditRoute: WebsiteAuditRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,

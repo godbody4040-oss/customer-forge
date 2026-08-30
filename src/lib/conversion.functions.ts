@@ -3,6 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const EVENTS = [
   "landing_view",
+  "assessment_submitted",
+  "audit_requested",
   "cta_click",
   "experiment_exposure",
   "signup_started",
