@@ -153,6 +153,54 @@ export function ImageStudio({
     if (!blocked) toast.success("Options ready — pick the one you want.");
   };
 
+  /**
+   * Fills an empty photo library automatically: one image for each shot this
+   * website needs, in the business's own visual language. Clients replace these
+   * with their own photos whenever they like — nothing is overwritten.
+   */
+  const generateStarterSet = async () => {
+    if (!organizationId) return;
+    setBusy(true);
+    const style = CANDIDATE_STYLES[0]!;
+    for (const entry of shots.slice(0, 3)) {
+      const imageBrief = buildImageBrief({
+        direction,
+        shot: entry,
+        style,
+        businessName: businessName ?? null,
+        city: city ?? null,
+        primaryColor: primaryColor ?? null,
+        accentColor: accentColor ?? null,
+        refinements: [],
+        extra: null,
+      });
+      try {
+        const result = await generateStudioImage({
+          data: {
+            organizationId,
+            prompt: imageBrief.prompt,
+            altText: altTextFor(entry, businessName),
+            category: entry.slot === "hero" ? "hero" : entry.slot === "about" ? "team" : "work",
+            label: `starter-${entry.slot}`,
+          },
+        });
+        if (!result.ok) {
+          toast.error(result.message ?? "Couldn't create that image.");
+          if (result.blocked) break;
+        } else if (result.path && entry.slot === "hero" && !hasHeroImage) {
+          onSetHero?.(result.path);
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Couldn't create that image.");
+        break;
+      }
+    }
+    setBusy(false);
+    void queryClient.invalidateQueries({ queryKey: ["media", organizationId] });
+    void queryClient.invalidateQueries({ queryKey: ["score-facts", organizationId] });
+    toast.success("Starter photos added to your library.");
+  };
+
   return (
     <Panel className="p-5">
       <SectionHeading eyebrow="AI Image Studio" title="Create the photography your website needs" />
@@ -162,6 +210,34 @@ export function ImageStudio({
         goes into your photo library.
       </p>
 
+      {mediaCount === 0 && canManage ? (
+        <div className="mt-4 rounded-lg border border-primary/40 bg-primary/5 p-3.5">
+          <p className="text-[13px] font-medium">No photos on your site yet</p>
+          <p className="mt-1 text-[12.5px] text-muted-foreground">
+            Revora can fill your site with images made for your trade right now, so it never looks empty
+            while you gather your own photos. Swap them for real job photos any time.
+          </p>
+          <Button
+            type="button"
+            variant="signal"
+            size="sm"
+            className="mt-2.5"
+            disabled={busy}
+            onClick={() => void generateStarterSet()}
+          >
+            {busy ? (
+              <>
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Creating your photos…
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-4" aria-hidden="true" /> Generate my starter photo set
+              </>
+            )}
+          </Button>
+        </div>
+      ) : null}
+
       <div className="mt-4 rounded-lg border border-border bg-elevated p-3.5">
         <p className="text-[12px] uppercase tracking-wide text-muted-foreground">Visual direction</p>
         <p className="mt-1 text-[13px]">{direction.language}.</p>
@@ -169,6 +245,7 @@ export function ImageStudio({
           Lighting: {direction.lighting} · Environment: {direction.environment}
         </p>
       </div>
+
 
       <p className="mt-5 text-[12px] uppercase tracking-wide text-muted-foreground">Shots this website needs</p>
       <div className="mt-2 flex flex-wrap gap-2">
