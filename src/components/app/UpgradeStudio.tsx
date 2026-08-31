@@ -44,8 +44,12 @@ export function UpgradeStudio({
   const applyFn = useServerFn(applyWebsiteChanges);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<string | null>(null);
+  const [cycle, setCycle] = useState(0);
 
-  const upgrades = useMemo(() => scanForUpgrades(pages, facts), [pages, facts]);
+  const upgrades = useMemo(
+    () => scanForUpgrades(pages, { ...facts, cycle }),
+    [pages, facts, cycle],
+  );
   const chosen = useMemo(() => upgrades.filter((upgrade) => !skipped.has(upgrade.id)), [upgrades, skipped]);
   const totals = summarizeUpgrades(chosen);
 
@@ -77,6 +81,7 @@ export function UpgradeStudio({
         { description: `Rollback point saved as “${result.label}”. Scanning again for the next upgrades…` },
       );
       setSkipped(new Set());
+      setCycle((value) => value + 1);
       void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website-versions", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
@@ -196,6 +201,7 @@ export function UpgradeStudio({
               size="sm"
               disabled={apply.isPending}
               onClick={() => {
+                setCycle((value) => value + 1);
                 void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
                 void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
                 toast.success("Re-scanning your site for new upgrades.");
