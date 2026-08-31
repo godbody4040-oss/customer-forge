@@ -15,6 +15,7 @@
 import type { AgentAction } from "@/lib/site-agent";
 import type { BackdropId, SectionEffectId } from "@/lib/site-effects";
 import type { ContentPage } from "@/lib/website-content";
+import { siteTone } from "@/lib/site-theme";
 
 export type DesignDirection = {
   id: string;
@@ -385,13 +386,23 @@ export function recommendDirections(input: {
   city: string | null;
   currentFont?: string | null;
   count?: number;
+  /** Bump to shuffle in a completely fresh set of elite options. */
+  refresh?: number;
+  /** Set to "light" or "dark" to only offer directions of that tone. */
+  tone?: "light" | "dark" | "any";
 }): DesignDirection[] {
   const words = [input.industry ?? "", ...input.services.map((service) => service.name)]
     .join(" ")
     .toLowerCase();
-  const seed = hash(`${input.businessName ?? ""}|${input.industry ?? ""}|${input.city ?? ""}`);
+  const seed = hash(
+    `${input.businessName ?? ""}|${input.industry ?? ""}|${input.city ?? ""}|${input.refresh ?? 0}`,
+  );
+  const pool =
+    !input.tone || input.tone === "any"
+      ? DESIGN_DIRECTIONS
+      : DESIGN_DIRECTIONS.filter((direction) => directionTone(direction) === input.tone);
 
-  const scored = DESIGN_DIRECTIONS.map((direction, index) => {
+  const scored = pool.map((direction, index) => {
     const matches = direction.affinity.filter((word) => words.includes(word)).length;
     const jitter = (hash(`${direction.id}:${seed}`) % 100) / 100;
     const current = input.currentFont && direction.font.toLowerCase() === input.currentFont.toLowerCase() ? 0.4 : 0;
@@ -436,9 +447,15 @@ export function directionActions(direction: DesignDirection, pages: ContentPage[
   return actions;
 }
 
+/** Whether a direction renders as a light (white/pale) or dark website. */
+export function directionTone(direction: DesignDirection): "light" | "dark" {
+  return siteTone(direction.secondary);
+}
+
 /** Plain-language preview of what a direction changes. */
 export function directionPreview(direction: DesignDirection, sectionCount: number): string[] {
   return [
+    `Overall look → ${directionTone(direction) === "light" ? "light, white-page website" : "dark, high-contrast website"}`,
     `Brand colours → ${direction.primary} with ${direction.accent}`,
     `Headings → ${direction.font} (${direction.fontNote})`,
     `Background → ${direction.backdrop === "none" ? "clean, no animation" : direction.backdrop.replace(/_/g, " ")}`,
