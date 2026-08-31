@@ -109,10 +109,15 @@ async function chatJson(
       const retryAfter = Number(response.headers.get("retry-after")) || null;
       throw new AiGatewayError(429, "AI is busy right now. The build will retry automatically.", retryAfter);
     }
-    if (response.status === 402)
-      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to continue building sites.");
-    if (response.status === 403)
-      throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+    if (response.status === 402) {
+      markAiUnavailable();
+      throw new AiGatewayError(402, "Building without AI credits — Revora is writing from your own business details.");
+    }
+    if (response.status === 403) {
+      markAiUnavailable();
+      throw new AiGatewayError(403, "AI is blocked for this workspace, so Revora built the site from your details.");
+    }
+
     console.error("[site-engine] gateway error", response.status, body);
     throw new AiGatewayError(response.status, "The copy engine couldn't be reached. Try again.");
   }
