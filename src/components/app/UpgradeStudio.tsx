@@ -82,6 +82,7 @@ export function UpgradeStudio({
       );
       setSkipped(new Set());
       setCycle((value) => value + 1);
+      setCycle((value) => value + 1);
       void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website-versions", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
@@ -204,6 +205,7 @@ export function UpgradeStudio({
                 setCycle((value) => value + 1);
                 void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
                 void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
+                setCycle((value) => value + 1);
                 toast.success("Re-scanning your site for new upgrades.");
               }}
             >
