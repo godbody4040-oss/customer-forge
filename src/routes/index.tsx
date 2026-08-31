@@ -162,7 +162,8 @@ function PrimaryCta({ className = "" }: { className?: string }) {
       <FreeAccessButton />
       <Button asChild variant="outline" size="lg">
         <Link to="/growth-assessment">
-          Get my free growth score <ArrowRight className="size-4" aria-hidden="true" />
+          See what your business is leaving on the table{" "}
+          <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
       </Button>
       <Button asChild variant="ghost" size="lg">
@@ -201,16 +202,18 @@ function Landing() {
               </Pill>
               <h1 className="mt-5 font-display text-[clamp(2.1rem,5vw,3.5rem)] leading-[1.04] font-semibold tracking-tight">
                 Your business books jobs{" "}
-                <span className="gold-text">while you're working — and while you sleep</span>.
+                <span className="gold-text">while you're on the job, and while you sleep</span>.
               </h1>
-              <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-                Revora's AI builds your website, prices jobs, answers leads in seconds, books them on
-                your calendar, chases the quiet ones and collects reviews —{" "}
+              <p className="mt-3 text-[13px] font-medium tracking-wide text-primary/90">
+                The AI growth system that turns your website into your hardest-working employee.
+              </p>
+              <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+                Every call you miss, every quote that goes unchased, every lead that goes quiet is
+                money your competitor invoices. Revora's AI runs your entire customer pipeline —{" "}
                 <span className="text-foreground">
-                  one system that replaces the website guy, the CRM, the booking tool, the follow-up
-                  app and the SEO retainer
-                </span>
-                . We build it, launch it and keep improving it for you.
+                  website, quotes, booking, follow-up, reviews and local SEO
+                </span>{" "}
+                — so the work finds you, books itself, and shows up in your calendar while you work.
               </p>
 
               <PrimaryCta className="mt-8" />
@@ -235,14 +238,15 @@ function Landing() {
         {/* PROBLEM */}
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-6xl px-4 py-14">
-            <p className="eyebrow">The real problem</p>
+            <p className="eyebrow">The quiet leaks</p>
             <h2 className="mt-2 max-w-3xl font-display text-[clamp(1.5rem,3vw,2.1rem)] leading-tight font-semibold">
               You're not short on interest. You're{" "}
               <span className="gold-text">losing it between the click and the booking</span>.
             </h2>
             <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-muted-foreground">
-              Here are the five leaks that quietly cost local businesses the most work every month —
-              and exactly what Revora does about each one, starting on day one of your free access.
+              Your customers are ready to book. The only question is who answers first. Here are the
+              five leaks that quietly cost local businesses the most work every month — and exactly
+              what Revora does about each one, starting on day one of your free access.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {PROBLEMS.map((p) => (
@@ -502,7 +506,7 @@ function Landing() {
             <TrustSection />
             <div className="mt-12">
               <SectionHeading
-                eyebrow="Why businesses stay"
+                eyebrow="The compounding advantage"
                 title="It keeps compounding every month you run it"
               />
               <div className="mt-8">
@@ -538,7 +542,7 @@ function Landing() {
         <section className="hero-aura">
           <div className="mx-auto max-w-6xl px-4 py-20 text-center">
             <h2 className="mx-auto max-w-2xl font-display text-[clamp(1.6rem,3.5vw,2.4rem)] leading-tight font-semibold">
-              Turn your website into a system that sells for you.
+              The only website you'll ever have to think about again.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
               Stop losing customers between the first click and the final booking. Website, leads,
