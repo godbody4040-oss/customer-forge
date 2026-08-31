@@ -60,13 +60,35 @@ export class AiGatewayError extends Error {
   }
 }
 
+/**
+ * Credit-free mode. Every generation stage has a deterministic Revora fallback,
+ * so once the gateway reports a credit/policy denial we stop calling it for a
+ * cooldown window. Builds then complete instantly with zero credits instead of
+ * spending time on calls that are certain to be denied.
+ */
+const AI_COOLDOWN_MS = 30 * 60 * 1000;
+let aiUnavailableUntil = 0;
+
+export function markAiUnavailable() {
+  aiUnavailableUntil = Date.now() + AI_COOLDOWN_MS;
+}
+
+export function isAiAvailable() {
+  return Date.now() >= aiUnavailableUntil;
+}
+
 async function chatJson(
   system: string,
   prompt: string,
   model: string = COPY_MODEL,
 ): Promise<Record<string, unknown>> {
+  if (!isAiAvailable())
+    throw new AiGatewayError(402, "Building without AI credits — Revora is writing from your own business details.");
+
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI copywriting isn't configured for this workspace.");
+  if (!key)
+    throw new AiGatewayError(402, "Building without AI credits — Revora is writing from your own business details.");
+
 
   const response = await fetch(GATEWAY, {
     method: "POST",
@@ -87,10 +109,15 @@ async function chatJson(
       const retryAfter = Number(response.headers.get("retry-after")) || null;
       throw new AiGatewayError(429, "AI is busy right now. The build will retry automatically.", retryAfter);
     }
-    if (response.status === 402)
-      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to continue building sites.");
-    if (response.status === 403)
-      throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+    if (response.status === 402) {
+      markAiUnavailable();
+      throw new AiGatewayError(402, "Building without AI credits — Revora is writing from your own business details.");
+    }
+    if (response.status === 403) {
+      markAiUnavailable();
+      throw new AiGatewayError(403, "AI is blocked for this workspace, so Revora built the site from your details.");
+    }
+
     console.error("[site-engine] gateway error", response.status, body);
     throw new AiGatewayError(response.status, "The copy engine couldn't be reached. Try again.");
   }
