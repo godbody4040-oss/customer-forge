@@ -468,7 +468,12 @@ const MODIFIERS: Modifier[] = [
   {
     match: /cursor|finger|mouse|pointer|touch|react|interactive|follow/,
     note: "reacts to the visitor",
-    apply: (l) => map(l, (x, i) => (i === 0 ? { ...x, interaction: x.interaction === "scroll" ? "both" : "cursor" } : x)),
+    apply: (l) =>
+      l.map((x, i) =>
+        i === 0
+          ? { ...x, interaction: (x.interaction === "scroll" ? "both" : "cursor") as LayerInteraction }
+          : x,
+      ),
   },
   {
     match: /scroll|as (i|you) scroll|parallax|depth/,
