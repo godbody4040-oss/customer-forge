@@ -374,18 +374,21 @@ export async function drainSiteEngineQueue(
   const max = Math.min(Math.max(options.max ?? 2, 1), 5);
   const state = await readQueueState(db);
 
-  // Paused-state guard. While paused we run at most one probe item, so the queue
-  // recovers on its own once credits are topped up or the block is lifted.
+  // Paused-state guard. Rate limits and credit/policy denials are both
+  // self-healing: every generation stage has a deterministic Revora fallback, so
+  // the builder keeps running at full speed with rules-only writing instead of
+  // parking the queue. Only an explicit hard block keeps the probe-only budget.
   let budget = max;
   if (state.paused) {
-    if (state.pause_kind === "rate_limit") {
-      await resumeQueue(db); // rate limits are transient — the next run retries
+    if (state.pause_kind === "rate_limit" || state.pause_kind === "credits") {
+      await resumeQueue(db); // transient or fallback-covered — retry immediately
     } else if (options.probeWhilePaused) {
       budget = 1;
     } else {
       return { processed: 0, failed: 0, paused: true, pauseReason: state.pause_reason, idle: true };
     }
   }
+
 
   await writeQueueState(db, { last_run_at: new Date().toISOString() });
 
