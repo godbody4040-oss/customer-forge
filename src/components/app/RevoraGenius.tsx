@@ -83,6 +83,8 @@ export function RevoraGenius({
   const [tab, setTab] = useState<TabKey>("gems");
   const [open, setOpen] = useState<string | null>(null);
   const [shuffle, setShuffle] = useState(0);
+  const [designShuffle, setDesignShuffle] = useState(0);
+  const [tone, setTone] = useState<"any" | "light" | "dark">("any");
 
   const gems = useMemo(() => suggestGems(pages, facts), [pages, facts]);
   const gaps = useMemo(() => findGaps(pages, facts), [pages, facts]);
@@ -95,8 +97,11 @@ export function RevoraGenius({
         industry: facts.industry,
         services: facts.services,
         city: facts.city,
+        count: 6,
+        refresh: designShuffle,
+        tone,
       }),
-    [facts],
+    [facts, designShuffle, tone],
   );
   const visibleSections = useMemo(
     () =>
@@ -342,10 +347,38 @@ export function RevoraGenius({
       {tab === "options" ? (
         <div className="mt-4 space-y-3">
           <p className="text-[12.5px] text-muted-foreground">
-            Four complete identities built for <span className="text-foreground">{facts.businessName ?? "your business"}</span>
+            Six complete identities built for <span className="text-foreground">{facts.businessName ?? "your business"}</span>
             {facts.industry ? ` (${facts.industry})` : ""} — colours, type, background and motion together. Every Revora
             client gets a different starting set, so no two sites look alike. Installing one is reversible.
           </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {([
+              { key: "any", label: "Any style" },
+              { key: "light", label: "White / light sites" },
+              { key: "dark", label: "Dark sites" },
+            ] as const).map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                aria-pressed={tone === option.key}
+                onClick={() => setTone(option.key)}
+                className={`cursor-pointer rounded-full border px-3 py-1.5 text-[12px] transition-colors ${
+                  tone === option.key
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border text-muted-foreground hover:bg-elevated"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setDesignShuffle((value) => value + 1)}
+              className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-elevated"
+            >
+              Show me a fresh set
+            </button>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {directions.map((direction) => (
               <div key={direction.id} className="rounded-md border border-border p-3.5">
