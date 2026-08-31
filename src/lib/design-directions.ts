@@ -15,6 +15,7 @@
 import type { AgentAction } from "@/lib/site-agent";
 import type { BackdropId, SectionEffectId } from "@/lib/site-effects";
 import type { ContentPage } from "@/lib/website-content";
+import { siteTone } from "@/lib/site-theme";
 
 export type DesignDirection = {
   id: string;
@@ -208,7 +209,161 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyEffect: "rise",
     affinity: ["lawn", "tree", "garden", "eco", "green", "solar", "clean", "wash", "septic"],
   },
+  {
+    id: "pure-white",
+    name: "Pure white",
+    mood: "Bright white space, black type, one strong colour. Reads instantly on any phone.",
+    bestFor: "Anyone who wants to look clean, modern and easy to trust",
+    primary: "#111827",
+    secondary: "#ffffff",
+    accent: "#2563eb",
+    font: "Inter",
+    fontNote: "Neutral, highly readable at every size",
+    backdrop: "none",
+    heroEffect: "rise",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["clean", "dental", "med", "law", "account", "consult", "real estate", "insur"],
+  },
+  {
+    id: "coastal-blue",
+    name: "Coastal blue",
+    mood: "Daylight blues on white. Calm, dependable, easy on the eye.",
+    bestFor: "Home services where reassurance closes the job",
+    primary: "#1d4ed8",
+    secondary: "#f6f9ff",
+    accent: "#0ea5e9",
+    font: "Figtree",
+    fontNote: "Friendly rounded sans",
+    backdrop: "gradient_mesh",
+    heroEffect: "rise",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["plumb", "pool", "wash", "clean", "hvac", "water", "roof", "window"],
+  },
+  {
+    id: "deep-navy",
+    name: "Deep navy",
+    mood: "Rich navy with a bright signal blue. Serious money, modern edges.",
+    bestFor: "Commercial buyers and bigger contracts",
+    primary: "#38bdf8",
+    secondary: "#0b1220",
+    accent: "#7dd3fc",
+    font: "IBM Plex Sans",
+    fontNote: "Institutional, dependable",
+    backdrop: "grid",
+    heroEffect: "float_3d",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["commercial", "security", "it", "tech", "engineer", "logistic", "finance"],
+  },
+  {
+    id: "soft-sand",
+    name: "Soft sand",
+    mood: "Warm off-white, clay accents, unhurried. Feels handmade and local.",
+    bestFor: "Family businesses and care work",
+    primary: "#a3541f",
+    secondary: "#fbf7f1",
+    accent: "#d99b5b",
+    font: "Lora",
+    fontNote: "Warm serif headings, easy body text",
+    backdrop: "none",
+    heroEffect: "rise",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["care", "child", "salon", "groom", "bake", "florist", "interior", "furniture"],
+  },
+  {
+    id: "signal-orange",
+    name: "Signal orange",
+    mood: "White page, hot orange buttons. Impossible to miss the next step.",
+    bestFor: "Fast-response trades that live on phone calls",
+    primary: "#ea580c",
+    secondary: "#fffdfa",
+    accent: "#f59e0b",
+    font: "Archivo Black",
+    fontNote: "Big impact headings, tight body copy",
+    backdrop: "none",
+    heroEffect: "tilt_3d",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["tow", "emergency", "lock", "garage", "auto", "mechanic", "pest", "moving"],
+  },
+  {
+    id: "clinic-teal",
+    name: "Clinic teal",
+    mood: "Clean white with clinical teal. Hygienic, precise, calm.",
+    bestFor: "Health, dental and anything where cleanliness sells",
+    primary: "#0f766e",
+    secondary: "#f5fbfa",
+    accent: "#14b8a6",
+    font: "Manrope",
+    fontNote: "Soft geometric sans, wide spacing",
+    backdrop: "none",
+    heroEffect: "rise",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["dental", "med", "clinic", "therap", "wellness", "clean", "sanit", "vet"],
+  },
+  {
+    id: "slate-mono",
+    name: "Slate mono",
+    mood: "Grey-on-white, almost no colour, all structure. Quietly expensive.",
+    bestFor: "Design-led and professional services",
+    primary: "#0f172a",
+    secondary: "#f4f5f7",
+    accent: "#64748b",
+    font: "Space Grotesk",
+    fontNote: "Technical sans with character",
+    backdrop: "none",
+    heroEffect: "parallax_slow",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["architect", "design", "consult", "photo", "stone", "tile", "carpent"],
+  },
+  {
+    id: "orchard-green",
+    name: "Orchard green",
+    mood: "White daylight with deep garden green. Outdoor, healthy, well-kept.",
+    bestFor: "Lawn, tree, garden and eco work",
+    primary: "#166534",
+    secondary: "#f7fbf5",
+    accent: "#4ade80",
+    font: "Figtree",
+    fontNote: "Friendly rounded sans",
+    backdrop: "gradient_mesh",
+    heroEffect: "rise",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "rise",
+    affinity: ["lawn", "tree", "garden", "landscap", "eco", "green", "farm", "septic"],
+  },
+  {
+    id: "violet-studio",
+    name: "Violet studio",
+    mood: "Soft white with electric violet. Creative, current, memorable.",
+    bestFor: "Businesses that want to look nothing like their competitors",
+    primary: "#6d28d9",
+    secondary: "#faf8ff",
+    accent: "#a855f7",
+    font: "Sora",
+    fontNote: "Modern sans, confident headings",
+    backdrop: "aurora",
+    heroEffect: "float_3d",
+    ctaEffect: "gold_glow",
+    formEffect: "glass",
+    bodyEffect: "parallax_slow",
+    affinity: ["event", "photo", "music", "brand", "market", "salon", "studio", "wedding"],
+  },
 ];
+
 
 const hash = (value: string) => {
   let out = 2166136261;
@@ -231,13 +386,23 @@ export function recommendDirections(input: {
   city: string | null;
   currentFont?: string | null;
   count?: number;
+  /** Bump to shuffle in a completely fresh set of elite options. */
+  refresh?: number;
+  /** Set to "light" or "dark" to only offer directions of that tone. */
+  tone?: "light" | "dark" | "any";
 }): DesignDirection[] {
   const words = [input.industry ?? "", ...input.services.map((service) => service.name)]
     .join(" ")
     .toLowerCase();
-  const seed = hash(`${input.businessName ?? ""}|${input.industry ?? ""}|${input.city ?? ""}`);
+  const seed = hash(
+    `${input.businessName ?? ""}|${input.industry ?? ""}|${input.city ?? ""}|${input.refresh ?? 0}`,
+  );
+  const pool =
+    !input.tone || input.tone === "any"
+      ? DESIGN_DIRECTIONS
+      : DESIGN_DIRECTIONS.filter((direction) => directionTone(direction) === input.tone);
 
-  const scored = DESIGN_DIRECTIONS.map((direction, index) => {
+  const scored = pool.map((direction, index) => {
     const matches = direction.affinity.filter((word) => words.includes(word)).length;
     const jitter = (hash(`${direction.id}:${seed}`) % 100) / 100;
     const current = input.currentFont && direction.font.toLowerCase() === input.currentFont.toLowerCase() ? 0.4 : 0;
@@ -282,9 +447,15 @@ export function directionActions(direction: DesignDirection, pages: ContentPage[
   return actions;
 }
 
+/** Whether a direction renders as a light (white/pale) or dark website. */
+export function directionTone(direction: DesignDirection): "light" | "dark" {
+  return siteTone(direction.secondary);
+}
+
 /** Plain-language preview of what a direction changes. */
 export function directionPreview(direction: DesignDirection, sectionCount: number): string[] {
   return [
+    `Overall look → ${directionTone(direction) === "light" ? "light, white-page website" : "dark, high-contrast website"}`,
     `Brand colours → ${direction.primary} with ${direction.accent}`,
     `Headings → ${direction.font} (${direction.fontNote})`,
     `Background → ${direction.backdrop === "none" ? "clean, no animation" : direction.backdrop.replace(/_/g, " ")}`,

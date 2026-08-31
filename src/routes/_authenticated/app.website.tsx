@@ -252,6 +252,9 @@ function WebsitePage() {
           headline: seo.headline ?? copy?.heroHeadline ?? null,
           metaDescription: seo.meta_description ?? null,
           backdrop: readBackdrop(generation ?? null),
+          industry: (org?.industry as string | undefined) ?? null,
+          primaryColor: (profile?.["primary_color"] as string) ?? null,
+
         }}
       />
 
