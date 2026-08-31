@@ -22,8 +22,11 @@ import { cn } from "@/lib/utils";
 
 const DEVICES = [
   { key: "desktop", label: "Desktop", width: "100%", icon: Monitor },
+  { key: "laptop", label: "Laptop", width: "1280px", icon: Monitor },
   { key: "tablet", label: "Tablet", width: "820px", icon: Tablet },
+  { key: "tablet-small", label: "Small tablet", width: "600px", icon: Tablet },
   { key: "mobile", label: "Mobile", width: "390px", icon: Smartphone },
+  { key: "mobile-small", label: "Small phone", width: "320px", icon: Smartphone },
 ] as const;
 
 type Props = {

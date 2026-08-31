@@ -8,7 +8,7 @@ import {
   type ContentSection,
   type SectionKind,
 } from "@/lib/website-content";
-import { safeLinkUrl } from "@/lib/website-content";
+import { safeLinkUrl, slugify } from "@/lib/website-content";
 import { readCopy } from "@/lib/site-engine";
 
 const KEY = "website_content";
@@ -491,4 +491,195 @@ export function useRevokePreviewLink(organizationId: string | undefined) {
     },
     onError: (error: Error) => toast.error(error.message || "Couldn't revoke that link."),
   });
+}
+
+/* ------------------------------------------------------------------ *
+ * Page management: add, rename, duplicate, hide, reorder, homepage,
+ * delete. Every write is scoped to the workspace id.
+ * ------------------------------------------------------------------ */
+
+export function useReorderPages(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const orgId = organizationId!;
+      for (const [index, id] of orderedIds.entries()) {
+        const { error } = await supabase
+          .from("website_pages")
+          .update({ sort_order: index })
+          .eq("id", id)
+          .eq("organization_id", orgId);
+        if (error) throw error;
+      }
+      return orderedIds.length;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't reorder your pages."),
+  });
+}
+
+/** Adds an empty page the owner can then fill with sections. */
+export function useAddPage(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ title, kind, sortOrder }: { title: string; kind: string; sortOrder: number }) => {
+      const orgId = organizationId!;
+      const clean = title.trim();
+      if (!clean) throw new Error("Give the page a name first.");
+      const { error } = await supabase.from("website_pages").insert({
+        organization_id: orgId,
+        title: clean,
+        kind,
+        slug: await uniquePageSlug(orgId, slugify(clean) || "page"),
+        sort_order: sortOrder,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Page added.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't add that page."),
+  });
+}
+
+/** Copies a page with every section and item inside it. */
+export function useDuplicatePage(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (page: ContentPage) => {
+      const orgId = organizationId!;
+      const slug = await uniquePageSlug(orgId, `${page.slug}-copy`);
+      const inserted = await supabase
+        .from("website_pages")
+        .insert({
+          organization_id: orgId,
+          title: `${page.title} (copy)`,
+          // A second "home" page would fight the published home route.
+          kind: page.kind === "home" ? "custom" : page.kind,
+          slug,
+          sort_order: page.sort_order + 1,
+          is_visible: false,
+          seo_title: page.seo_title,
+          seo_description: page.seo_description,
+          og_title: page.og_title,
+          og_description: page.og_description,
+          og_image_url: page.og_image_url,
+          noindex: page.noindex,
+        } as never)
+        .select("id")
+        .single();
+      if (inserted.error) throw inserted.error;
+      const newPageId = (inserted.data as { id: string }).id;
+
+      for (const section of page.sections) {
+        const copy = await supabase
+          .from("website_sections")
+          .insert({
+            organization_id: orgId,
+            page_id: newPageId,
+            kind: section.kind,
+            variant: section.variant,
+            heading: section.heading,
+            subheading: section.subheading,
+            body: section.body,
+            settings: section.settings as never,
+            sort_order: section.sort_order,
+            is_visible: section.is_visible,
+          } as never)
+          .select("id")
+          .single();
+        if (copy.error) throw copy.error;
+        const newSectionId = (copy.data as { id: string }).id;
+        if (!section.components.length) continue;
+        const { error } = await supabase.from("website_components").insert(
+          section.components.map((component) => ({
+            organization_id: orgId,
+            section_id: newSectionId,
+            kind: component.kind,
+            label: component.label,
+            body: component.body,
+            media_url: component.media_url,
+            link_url: component.link_url,
+            link_label: component.link_label,
+            settings: component.settings,
+            sort_order: component.sort_order,
+            is_visible: component.is_visible,
+          })) as never,
+        );
+        if (error) throw error;
+      }
+      return slug;
+    },
+    onSuccess: () => {
+      toast.success("Page duplicated — it stays hidden until you show it.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't duplicate that page."),
+  });
+}
+
+/** Promotes a page to the published home page and demotes the old one. */
+export function useSetHomePage(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({ pageId, currentHomeId }: { pageId: string; currentHomeId: string | null }) => {
+      const orgId = organizationId!;
+      if (currentHomeId && currentHomeId !== pageId) {
+        const demote = await supabase
+          .from("website_pages")
+          .update({ kind: "custom" })
+          .eq("id", currentHomeId)
+          .eq("organization_id", orgId);
+        if (demote.error) throw demote.error;
+      }
+      const promote = await supabase
+        .from("website_pages")
+        .update({ kind: "home", is_visible: true, sort_order: 0 })
+        .eq("id", pageId)
+        .eq("organization_id", orgId);
+      if (promote.error) throw promote.error;
+    },
+    onSuccess: () => {
+      toast.success("Home page updated.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't set that home page."),
+  });
+}
+
+export function useDeletePage(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (page: ContentPage) => {
+      if (page.kind === "home") throw new Error("Set another page as your home page first.");
+      const { error } = await supabase
+        .from("website_pages")
+        .delete()
+        .eq("id", page.id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Page deleted.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't delete that page."),
+  });
+}
+
+/** Keeps page addresses unique inside one workspace. */
+async function uniquePageSlug(organizationId: string, base: string) {
+  const root = slugify(base) || "page";
+  const { data } = await supabase
+    .from("website_pages")
+    .select("slug")
+    .eq("organization_id", organizationId);
+  const taken = new Set((data ?? []).map((row) => (row as { slug: string }).slug));
+  if (!taken.has(root)) return root;
+  for (let index = 2; index < 200; index += 1) {
+    const candidate = `${root}-${index}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return `${root}-${Date.now()}`;
 }

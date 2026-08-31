@@ -29,6 +29,7 @@ import {
   type ContentSection,
   type SectionKind,
 } from "@/lib/website-content";
+import { PageManager } from "@/components/app/PageManager";
 import { cn } from "@/lib/utils";
 
 /**
@@ -92,6 +93,10 @@ export function WebsiteStructure({
           </div>
         ) : null}
       </Panel>
+
+      {list.length ? (
+        <PageManager pages={list} organizationId={organizationId} canManage={canManage} />
+      ) : null}
 
       {isLoading ? null : !list.length ? (
         <EmptyState
