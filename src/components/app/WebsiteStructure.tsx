@@ -29,6 +29,7 @@ import {
   type ContentSection,
   type SectionKind,
 } from "@/lib/website-content";
+import { PageManager } from "@/components/app/PageManager";
 import { cn } from "@/lib/utils";
 
 /**
