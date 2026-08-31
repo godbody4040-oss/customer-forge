@@ -19,6 +19,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -114,6 +115,11 @@ const GrowthAssessmentRoute = GrowthAssessmentRouteImport.update({
 const IndustriesRoute = IndustriesRouteImport.update({
   id: '/industries',
   path: '/industries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -376,6 +382,7 @@ export interface FileRoutesByFullPath {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByTo {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -490,6 +498,7 @@ export interface FileRoutesById {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -550,6 +559,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/industries'
+    | '/manifest.webmanifest'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -606,6 +616,7 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/get-started'
     | '/growth-assessment'
+    | '/manifest.webmanifest'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/industries'
+    | '/manifest.webmanifest'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -723,6 +735,7 @@ export interface RootRouteChildren {
   GetStartedRoute: typeof GetStartedRoute
   GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -811,6 +824,13 @@ declare module '@tanstack/react-router' {
       path: '/industries'
       fullPath: '/industries'
       preLoaderRoute: typeof IndustriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1283,6 +1303,7 @@ const rootRouteChildren: RootRouteChildren = {
   GetStartedRoute: GetStartedRoute,
   GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
