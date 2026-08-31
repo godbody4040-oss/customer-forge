@@ -513,3 +513,101 @@ a[href*="lovable.app"][target="_blank"][class*="fixed"],
   }
   .fx-sec-tilt-3d { transform: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Revora Infinite Creative Engine — visual composition layers.
+   Pure CSS: transforms/opacity only, driven by per-layer custom properties
+   written by src/components/site/VisualComposition.tsx.
+--------------------------------------------------------------------------- */
+.fxc {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  --fxc-mx: 0.5;
+  --fxc-my: 0.35;
+  --fxc-scroll: 0;
+  --fxc-intensity: 0.7;
+}
+.fxc-inline { position: absolute; border-radius: inherit; }
+.fxc-layer {
+  position: absolute;
+  inset: -10%;
+  display: block;
+  opacity: calc(var(--fxc-op, 0.5) * var(--fxc-intensity));
+  will-change: transform, opacity;
+  transform: translate3d(
+    calc((var(--fxc-mx) - 0.5) * var(--fxc-par, 0) * 60px),
+    calc(((var(--fxc-my) - 0.5) * var(--fxc-par, 0) * 40px) + (var(--fxc-scroll) * var(--fxc-par, 0) * -120px)),
+    0
+  );
+}
+
+/* palettes ---------------------------------------------------------------- */
+.fxc-pal-brand { --fxc-c1: hsl(43 96% 56% / 0.55); --fxc-c2: hsl(43 96% 56% / 0.14); }
+.fxc-pal-accent { --fxc-c1: hsl(43 100% 72% / 0.6); --fxc-c2: hsl(28 90% 55% / 0.16); }
+.fxc-pal-cool { --fxc-c1: hsl(200 90% 70% / 0.45); --fxc-c2: hsl(220 80% 55% / 0.16); }
+.fxc-pal-warm { --fxc-c1: hsl(20 90% 65% / 0.45); --fxc-c2: hsl(43 96% 56% / 0.16); }
+.fxc-pal-mono { --fxc-c1: hsl(0 0% 100% / 0.4); --fxc-c2: hsl(0 0% 100% / 0.08); }
+.fxc-pal-deep { --fxc-c1: hsl(265 70% 70% / 0.4); --fxc-c2: hsl(240 70% 40% / 0.18); }
+
+/* layer looks ------------------------------------------------------------- */
+.fxc-stars, .fxc-constellation, .fxc-particles, .fxc-snow, .fxc-meteors, .fxc-rain {
+  background-image:
+    radial-gradient(calc(var(--fxc-size, 1) * 1.6px) calc(var(--fxc-size, 1) * 1.6px) at 20% 30%, var(--fxc-c1) 50%, transparent 51%),
+    radial-gradient(calc(var(--fxc-size, 1) * 1.2px) calc(var(--fxc-size, 1) * 1.2px) at 70% 60%, var(--fxc-c1) 50%, transparent 51%),
+    radial-gradient(calc(var(--fxc-size, 1) * 1px) calc(var(--fxc-size, 1) * 1px) at 45% 80%, var(--fxc-c1) 50%, transparent 51%);
+  background-size: calc(360px - var(--fxc-density, 0.5) * 220px) calc(360px - var(--fxc-density, 0.5) * 220px);
+}
+.fxc-rain, .fxc-streaks {
+  background-image: repeating-linear-gradient(105deg, var(--fxc-c1) 0 1px, transparent 1px 14px);
+}
+.fxc-grid, .fxc-blueprint, .fxc-pattern {
+  background-image:
+    linear-gradient(to right, var(--fxc-c2) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--fxc-c2) 1px, transparent 1px);
+  background-size: calc(120px * var(--fxc-size, 1)) calc(120px * var(--fxc-size, 1));
+}
+.fxc-aurora, .fxc-nebula, .fxc-mesh, .fxc-fog, .fxc-liquid, .fxc-waves, .fxc-orbs, .fxc-holo {
+  background-image:
+    radial-gradient(60% 50% at calc(var(--fxc-mx) * 100%) calc(var(--fxc-my) * 100%), var(--fxc-c1), transparent 70%),
+    radial-gradient(70% 60% at 20% 80%, var(--fxc-c2), transparent 72%);
+  filter: blur(calc(30px * var(--fxc-size, 1)));
+}
+.fxc-rays, .fxc-spotlight {
+  background-image: conic-gradient(from 200deg at calc(var(--fxc-mx) * 100%) 0%, var(--fxc-c1), transparent 25%, var(--fxc-c2) 45%, transparent 60%);
+  filter: blur(18px);
+}
+.fxc-metal, .fxc-texture {
+  background-image: repeating-linear-gradient(115deg, var(--fxc-c2) 0 2px, transparent 2px 9px);
+}
+.fxc-vignette {
+  background-image: radial-gradient(70% 60% at 50% 40%, transparent 40%, hsl(0 0% 0% / 0.85) 100%);
+  filter: none;
+}
+
+/* motion ------------------------------------------------------------------ */
+@keyframes fxc-drift { from { background-position: 0 0; } to { background-position: 600px 300px; } }
+@keyframes fxc-sweep { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+@keyframes fxc-fall { from { background-position: 0 -400px; } to { background-position: 0 600px; } }
+@keyframes fxc-rise { from { background-position: 0 600px; } to { background-position: 0 -400px; } }
+@keyframes fxc-orbit { from { transform: rotate(0deg) scale(1.06); } to { transform: rotate(360deg) scale(1.06); } }
+@keyframes fxc-pulse { 0%, 100% { opacity: calc(var(--fxc-op) * var(--fxc-intensity) * 0.55); } 50% { opacity: calc(var(--fxc-op) * var(--fxc-intensity)); } }
+
+.fxc-motion-drift { animation: fxc-drift var(--fxc-speed, 60s) linear infinite; }
+.fxc-motion-sweep { animation: fxc-sweep var(--fxc-speed, 60s) linear infinite; }
+.fxc-motion-fall { animation: fxc-fall var(--fxc-speed, 60s) linear infinite; }
+.fxc-motion-rise { animation: fxc-rise var(--fxc-speed, 60s) linear infinite; }
+.fxc-motion-orbit { animation: fxc-orbit var(--fxc-speed, 60s) linear infinite; }
+.fxc-motion-pulse { animation: fxc-pulse var(--fxc-speed, 60s) ease-in-out infinite; }
+.fxc-motion-still { animation: none; }
+
+/* mobile + accessibility -------------------------------------------------- */
+@media (max-width: 640px) {
+  .fxc-mob-off { display: none; }
+  .fxc-mob-simplify { animation: none; opacity: calc(var(--fxc-op, 0.5) * var(--fxc-intensity) * 0.55); filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fxc-layer { animation: none !important; transform: none !important; }
+}
