@@ -99,7 +99,12 @@ export function SitePageView({ site, preview = false }: { site: NonNullable<Publ
   }, [org.slug, track, preview]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={siteThemeStyle({
+      primaryColor: profile?.primary_color ?? null,
+      secondaryColor: profile?.secondary_color ?? null,
+      accentColor: profile?.accent_color ?? null,
+    })}>
+
       <SiteBackdrop
         backdrop={readBackdrop(site.settings?.generation ?? null)}
         composition={readComposition(site.settings?.generation ?? null)}
