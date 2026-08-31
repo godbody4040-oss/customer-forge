@@ -93,6 +93,10 @@ export function WebsiteStructure({
         ) : null}
       </Panel>
 
+      {list.length ? (
+        <PageManager pages={list} organizationId={organizationId} canManage={canManage} />
+      ) : null}
+
       {isLoading ? null : !list.length ? (
         <EmptyState
           icon={<Layers className="size-5" />}
