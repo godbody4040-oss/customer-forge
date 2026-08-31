@@ -60,13 +60,35 @@ export class AiGatewayError extends Error {
   }
 }
 
+/**
+ * Credit-free mode. Every generation stage has a deterministic Revora fallback,
+ * so once the gateway reports a credit/policy denial we stop calling it for a
+ * cooldown window. Builds then complete instantly with zero credits instead of
+ * spending time on calls that are certain to be denied.
+ */
+const AI_COOLDOWN_MS = 30 * 60 * 1000;
+let aiUnavailableUntil = 0;
+
+export function markAiUnavailable() {
+  aiUnavailableUntil = Date.now() + AI_COOLDOWN_MS;
+}
+
+export function isAiAvailable() {
+  return Date.now() >= aiUnavailableUntil;
+}
+
 async function chatJson(
   system: string,
   prompt: string,
   model: string = COPY_MODEL,
 ): Promise<Record<string, unknown>> {
+  if (!isAiAvailable())
+    throw new AiGatewayError(402, "Building without AI credits — Revora is writing from your own business details.");
+
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI copywriting isn't configured for this workspace.");
+  if (!key)
+    throw new AiGatewayError(402, "Building without AI credits — Revora is writing from your own business details.");
+
 
   const response = await fetch(GATEWAY, {
     method: "POST",
