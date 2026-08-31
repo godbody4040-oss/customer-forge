@@ -139,24 +139,64 @@ function AppShell() {
   }, [trialExpired, org?.id, queryClient]);
 
 
+  // Close the mobile drawer on route change, on Escape, and lock page scroll
+  // while it is open so it behaves like a real app drawer.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [navOpen]);
+
   return (
     <div className="min-h-screen bg-background lg:flex">
+      {/* Mobile drawer backdrop */}
+      {navOpen ? (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setNavOpen(false)}
+          className="fixed inset-0 z-40 cursor-default bg-background/80 backdrop-blur-sm lg:hidden"
+        />
+      ) : null}
+
       {/* Sidebar */}
       <aside
         className={cn(
-          "border-border bg-card lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:shrink-0 lg:overflow-y-auto lg:overscroll-contain lg:border-r",
-          navOpen ? "block" : "hidden lg:block",
+          "border-border bg-card",
+          "fixed inset-y-0 left-0 z-50 flex w-[17.5rem] max-w-[86vw] flex-col overflow-y-auto overscroll-contain border-r shadow-2xl transition-transform duration-200 ease-out",
+          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-60 lg:max-w-none lg:shrink-0 lg:translate-x-0 lg:shadow-none",
+          navOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center border-b border-border px-4">
+        <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-4">
           <Link to="/app" onClick={() => setNavOpen(false)}>
             <Logo />
           </Link>
+          <button
+            type="button"
+            onClick={() => setNavOpen(false)}
+            aria-label="Close navigation"
+            className="grid size-8 cursor-pointer place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+          >
+            <X className="size-4" />
+          </button>
         </div>
-        <nav aria-label="App" className="flex flex-col gap-3 p-2.5">
+        <nav aria-label="App" className="flex flex-1 flex-col gap-4 p-2.5">
           {NAV_GROUPS.map(({ group, items }) => (
             <div key={group}>
-              <p className="eyebrow px-2.5 pb-1">{group}</p>
+              <p className="eyebrow px-2.5 pb-1.5">{group}</p>
               <div className="flex flex-col gap-0.5">
                 {items.map(({ to, label, icon: Icon, exact, key, hint }) => (
                   <Link
@@ -165,32 +205,27 @@ function AppShell() {
                     activeOptions={{ exact }}
                     onClick={() => setNavOpen(false)}
                     title={hint}
-                    className="group flex items-start gap-2.5 rounded-md border border-transparent px-2.5 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
+                    className="group relative flex items-center gap-2.5 rounded-md border border-transparent px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-elevated hover:text-foreground"
                     activeProps={{
                       className: "border-primary/35 bg-primary/10 text-primary",
+                      "aria-current": "page",
                     }}
                   >
-                    <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
-                        <span className="min-w-0 truncate">{label}</span>
-                        {key ? (
-                          <span
-                            aria-hidden="true"
-                            className="size-1.5 shrink-0 rounded-full bg-primary/70"
-                          />
-                        ) : null}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground/80 group-hover:text-muted-foreground">
-                        {hint}
-                      </span>
-                    </span>
+                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                    {key ? (
+                      <span
+                        aria-hidden="true"
+                        className="size-1.5 shrink-0 rounded-full bg-primary/70"
+                      />
+                    ) : null}
                   </Link>
                 ))}
               </div>
             </div>
           ))}
         </nav>
+
 
 
         {org ? (
