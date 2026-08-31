@@ -126,7 +126,7 @@ function AutomationsPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="eyebrow">When: {triggerLabel(automation.trigger_event)}</p>
-                <h2 className="mt-1 truncate font-display text-[17px] font-semibold">
+                <h2 className="mt-1 font-display text-[17px] font-semibold">
                   {automation.name}
                 </h2>
               </div>
@@ -168,7 +168,7 @@ function AutomationsPage() {
                           {delayLabel(s.delay_minutes)}
                         </span>
                       </div>
-                      <p className="mt-1.5 truncate text-[13px] font-medium">{s.subject}</p>
+                      <p className="mt-1.5 text-[13px] font-medium">{s.subject}</p>
                       <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">{s.body}</p>
                     </div>
                     <div className="flex shrink-0 gap-1">

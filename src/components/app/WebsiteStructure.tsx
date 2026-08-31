@@ -419,9 +419,9 @@ function SectionComponents({
               <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground" aria-hidden="true" />
             ) : null}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px]">{item.label ?? item.kind}</p>
+              <p className="text-[13px]">{item.label ?? item.kind}</p>
               {item.body ? (
-                <p className="truncate text-[12px] text-muted-foreground">{item.body}</p>
+                <p className="text-[12px] text-muted-foreground">{item.body}</p>
               ) : null}
             </div>
             {canManage ? (

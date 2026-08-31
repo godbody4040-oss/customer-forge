@@ -253,7 +253,7 @@ export function PublicSiteView({
                   <dt className="eyebrow flex items-center gap-1.5">
                     <Mail className="size-3.5" aria-hidden="true" /> Email
                   </dt>
-                  <dd className="mt-1 truncate text-[13px]">{profile.email}</dd>
+                  <dd className="mt-1 text-[13px]">{profile.email}</dd>
                 </div>
               ) : null}
               {profile?.city ? (
