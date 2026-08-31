@@ -40,8 +40,8 @@ const Row = ({
   tone?: "muted" | "gold";
 }) => (
   <div className="flex items-center justify-between gap-3 border-b border-border/70 py-2.5 last:border-0">
-    <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground">{left}</span>
-    <span className="hidden min-w-0 flex-1 truncate text-[12px] text-muted-foreground sm:block">
+    <span className="min-w-0 flex-1 text-[12.5px] text-foreground">{left}</span>
+    <span className="hidden min-w-0 flex-1 text-[12px] text-muted-foreground sm:block">
       {mid}
     </span>
     <span
@@ -67,7 +67,7 @@ const Bars = ({ data }: { data: { label: string; value: number }[] }) => {
             style={{ height: `${Math.max(8, (d.value / max) * 100)}%` }}
             aria-hidden="true"
           />
-          <span className="truncate text-[10px] text-muted-foreground">{d.label}</span>
+          <span className="text-[10px] text-muted-foreground">{d.label}</span>
         </div>
       ))}
     </div>
@@ -221,8 +221,8 @@ function Screen({ view }: { view: ScreenKey }) {
           >
             <Zap className="size-4 shrink-0 text-primary" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12.5px]">{trigger}</span>
-              <span className="block truncate text-[11px] text-muted-foreground">{action}</span>
+              <span className="block text-[12.5px]">{trigger}</span>
+              <span className="block text-[11px] text-muted-foreground">{action}</span>
             </span>
             <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10.5px] text-primary">
               {state}
@@ -309,11 +309,11 @@ export function ProductTour() {
                 />
                 <span className="min-w-0">
                   <span
-                    className={`block truncate text-[12.5px] font-medium ${selected ? "text-primary" : ""}`}
+                    className={`block text-[12.5px] font-medium ${selected ? "text-primary" : ""}`}
                   >
                     {label}
                   </span>
-                  <span className="block truncate text-[11px] text-muted-foreground">{outcome}</span>
+                  <span className="block text-[11px] text-muted-foreground">{outcome}</span>
                 </span>
               </button>
             );

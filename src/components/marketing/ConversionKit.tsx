@@ -60,11 +60,11 @@ function StickyCtaBar() {
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-primary/35 bg-background/95 px-3 py-2.5 backdrop-blur-sm sm:px-4">
       <div className="mx-auto flex max-w-6xl items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[12.5px] leading-snug">
+          <p className="text-[12.5px] leading-snug">
             <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days free — full access</span>
             <span className="text-muted-foreground"> · no card to start</span>
           </p>
-          <p className="hidden truncate text-[11px] text-muted-foreground sm:block">
+          <p className="hidden text-[11px] text-muted-foreground sm:block">
             Then {usd(GROWTH_SYSTEM.setupPrice)} setup, first month free, {usd(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
           </p>
         </div>
