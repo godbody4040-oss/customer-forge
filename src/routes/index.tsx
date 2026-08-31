@@ -30,6 +30,8 @@ import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import { GROWTH_SYSTEM_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
+import { VisualComposition } from "@/components/site/VisualComposition";
+import { HOMEPAGE_COMPOSITION } from "@/lib/homepage-concept";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -185,6 +187,7 @@ function PriceLine({ className = "" }: { className?: string }) {
 function Landing() {
   return (
     <div className="min-h-screen bg-background">
+      <VisualComposition composition={HOMEPAGE_COMPOSITION} />
       <SiteHeader />
 
       <main>
