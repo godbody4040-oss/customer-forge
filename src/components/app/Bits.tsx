@@ -111,10 +111,11 @@ export function SectionHeading({
         {eyebrow ? (
           <p className="eyebrow flex items-center gap-2">
             <span aria-hidden="true" className="h-3 w-0.5 rounded-full bg-primary" />
-            <span className="truncate text-primary/90">{eyebrow}</span>
+            <span className="text-primary/90">{eyebrow}</span>
           </p>
         ) : null}
-        <h2 className="mt-1.5 truncate font-display text-[17px] font-semibold">{title}</h2>
+        <h2 className="mt-1.5 font-display text-[17px] font-semibold text-balance">{title}</h2>
+
         {description ? (
           <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{description}</p>
         ) : null}

@@ -46,7 +46,7 @@ function ScreenShell({ title, chip, children }: { title: string; chip: string; c
   return (
     <div className="panel-inset overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-border bg-elevated px-3.5 py-2.5">
-        <span className="eyebrow truncate">{title}</span>
+        <span className="eyebrow">{title}</span>
         <Pill tone="signal">{chip}</Pill>
       </div>
       <div className="p-3.5">{children}</div>
@@ -160,7 +160,7 @@ const STAGES: Stage[] = [
             <div key={when} className="panel flex items-center justify-between gap-3 p-2.5">
               <div className="min-w-0">
                 <p className="eyebrow">{when}</p>
-                <p className="mt-1 truncate text-[12.5px]">{what}</p>
+                <p className="mt-1 text-[12.5px]">{what}</p>
               </div>
               <span
                 className={`shrink-0 text-[11px] font-semibold ${

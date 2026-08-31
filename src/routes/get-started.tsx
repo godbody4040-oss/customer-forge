@@ -612,7 +612,7 @@ function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="truncate">{value || "—"}</dd>
+      <dd className="">{value || "—"}</dd>
     </div>
   );
 }

@@ -416,7 +416,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                 <dt className="eyebrow flex items-center gap-1.5">
                   <Mail className="size-3.5" aria-hidden="true" /> Email
                 </dt>
-                <dd className="mt-1 truncate text-[13px]">
+                <dd className="mt-1 text-[13px]">
                   <a href={`mailto:${profile.email}`} className="text-primary underline">
                     {profile.email}
                   </a>
