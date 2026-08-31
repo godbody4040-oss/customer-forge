@@ -11,6 +11,7 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteSection, StickyCallBar } from "@/components/site/SiteSections";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
+import { siteThemeStyle } from "@/lib/site-theme";
 import { readComposition } from "@/lib/visual-composition";
 import { readBackdrop } from "@/lib/site-effects";
 import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-site.functions";

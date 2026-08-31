@@ -13,6 +13,7 @@ import { readCopy } from "@/lib/site-engine";
 import { SiteNav } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
+import { siteThemeStyle } from "@/lib/site-theme";
 import { readComposition } from "@/lib/visual-composition";
 import { readBackdrop } from "@/lib/site-effects";
 
@@ -161,7 +162,14 @@ export function PublicSiteView({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      style={siteThemeStyle({
+        primaryColor: profile?.primary_color ?? null,
+        secondaryColor: profile?.secondary_color ?? null,
+        accentColor: profile?.accent_color ?? null,
+      })}
+    >
       <SiteBackdrop
         backdrop={readBackdrop(site.settings?.generation ?? null)}
         composition={readComposition(site.settings?.generation ?? null)}
