@@ -60,9 +60,9 @@ export function FreeAccessBanner({ className = "" }: { className?: string }) {
       <div className="min-w-0">
         <p className="text-[13px] leading-snug">
           <span className="gold-hl">
-            Try the whole system free for {GROWTH_SYSTEM.fullAccessTrialDays} days
+            Full system access. Zero risk. {GROWTH_SYSTEM.fullAccessTrialDays} days.
           </span>{" "}
-          — every feature unlocked. Create your account and you're inside in about a minute.
+          If it doesn't pay for itself, walk away — no card, no charge, no hard feelings.
         </p>
         <p className="mt-1 text-[12px] text-muted-foreground">
           After your free days: <span className="gold-hl">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span>,
