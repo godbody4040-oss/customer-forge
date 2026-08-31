@@ -13,6 +13,7 @@ import { readCopy } from "@/lib/site-engine";
 import { SiteNav } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
+import { readComposition } from "@/lib/visual-composition";
 import { readBackdrop } from "@/lib/site-effects";
 
 
@@ -161,7 +162,10 @@ export function PublicSiteView({
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteBackdrop backdrop={readBackdrop(site.settings?.generation ?? null)} />
+      <SiteBackdrop
+        backdrop={readBackdrop(site.settings?.generation ?? null)}
+        composition={readComposition(site.settings?.generation ?? null)}
+      />
       <div className="relative z-[1]">
       {preview ? (
         <div className="bg-accent/12 px-4 py-2 text-center text-[12px] text-accent">

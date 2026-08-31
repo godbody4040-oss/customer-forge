@@ -11,6 +11,7 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteSection, StickyCallBar } from "@/components/site/SiteSections";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
+import { readComposition } from "@/lib/visual-composition";
 import { readBackdrop } from "@/lib/site-effects";
 import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-site.functions";
 import { readSeo } from "@/lib/site-seo";
@@ -99,7 +100,10 @@ export function SitePageView({ site, preview = false }: { site: NonNullable<Publ
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteBackdrop backdrop={readBackdrop(site.settings?.generation ?? null)} />
+      <SiteBackdrop
+        backdrop={readBackdrop(site.settings?.generation ?? null)}
+        composition={readComposition(site.settings?.generation ?? null)}
+      />
       <div className="relative z-[1]">
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5">

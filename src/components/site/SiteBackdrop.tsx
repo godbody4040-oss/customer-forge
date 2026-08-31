@@ -5,8 +5,20 @@
  * visitors who prefer reduced motion.
  */
 import type { BackdropId } from "@/lib/site-effects";
+import { VisualComposition } from "@/components/site/VisualComposition";
+import type { VisualComposition as Composition } from "@/lib/visual-composition";
 
-export function SiteBackdrop({ backdrop }: { backdrop: BackdropId }) {
+export function SiteBackdrop({
+  backdrop,
+  composition = null,
+}: {
+  backdrop: BackdropId;
+  /** Infinite Creative Engine composition; when present it replaces the preset. */
+  composition?: Composition | null;
+}) {
+  if (composition && composition.layers.length) {
+    return <VisualComposition composition={composition} />;
+  }
   if (backdrop === "none") return null;
   return (
     <div aria-hidden className={`fx-backdrop fx-backdrop-${backdrop.replace(/_/g, "-")}`}>
