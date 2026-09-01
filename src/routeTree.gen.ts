@@ -63,6 +63,7 @@ import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
 import { Route as AuthenticatedAppWelcomeRouteImport } from './routes/_authenticated/app.welcome'
+import { Route as AuthenticatedMyIndexRouteImport } from './routes/_authenticated/my.index'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
@@ -352,6 +353,11 @@ const AuthenticatedAppWelcomeRoute = AuthenticatedAppWelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedMyIndexRoute = AuthenticatedMyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedMyRoute,
+} as any)
 const SSlugPageRoute = SSlugPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -419,7 +425,7 @@ export interface FileRoutesByFullPath {
   '/website-audit': typeof WebsiteAuditRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
-  '/my': typeof AuthenticatedMyRoute
+  '/my': typeof AuthenticatedMyRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -452,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/my/': typeof AuthenticatedMyIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -478,7 +485,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/website-audit': typeof WebsiteAuditRoute
-  '/my': typeof AuthenticatedMyRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -511,6 +517,7 @@ export interface FileRoutesByTo {
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/my': typeof AuthenticatedMyIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -543,7 +550,7 @@ export interface FileRoutesById {
   '/website-audit': typeof WebsiteAuditRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
-  '/_authenticated/my': typeof AuthenticatedMyRoute
+  '/_authenticated/my': typeof AuthenticatedMyRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -576,6 +583,7 @@ export interface FileRoutesById {
   '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/my/': typeof AuthenticatedMyIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -641,6 +649,7 @@ export interface FileRouteTypes {
     | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
+    | '/my/'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -667,7 +676,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/website-audit'
-    | '/my'
     | '/onboarding'
     | '/demo/dashboard'
     | '/industries/$slug'
@@ -700,6 +708,7 @@ export interface FileRouteTypes {
     | '/s/$slug/$page'
     | '/admin'
     | '/app'
+    | '/my'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -764,6 +773,7 @@ export interface FileRouteTypes {
     | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
+    | '/_authenticated/my/'
     | '/_authenticated/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -1185,6 +1195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppWelcomeRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/my/': {
+      id: '/_authenticated/my/'
+      path: '/'
+      fullPath: '/my/'
+      preLoaderRoute: typeof AuthenticatedMyIndexRouteImport
+      parentRoute: typeof AuthenticatedMyRoute
+    }
     '/s/$slug/$page': {
       id: '/s/$slug/$page'
       path: '/$page'
@@ -1322,17 +1339,29 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
 const AuthenticatedAppRouteWithChildren =
   AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
+interface AuthenticatedMyRouteChildren {
+  AuthenticatedMyIndexRoute: typeof AuthenticatedMyIndexRoute
+}
+
+const AuthenticatedMyRouteChildren: AuthenticatedMyRouteChildren = {
+  AuthenticatedMyIndexRoute: AuthenticatedMyIndexRoute,
+}
+
+const AuthenticatedMyRouteWithChildren = AuthenticatedMyRoute._addFileChildren(
+  AuthenticatedMyRouteChildren,
+)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
-  AuthenticatedMyRoute: typeof AuthenticatedMyRoute
+  AuthenticatedMyRoute: typeof AuthenticatedMyRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
-  AuthenticatedMyRoute: AuthenticatedMyRoute,
+  AuthenticatedMyRoute: AuthenticatedMyRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
 }
 
