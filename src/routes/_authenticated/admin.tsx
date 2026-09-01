@@ -1,6 +1,8 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import {
+  BarChart3,
   Building2,
+
   ClipboardList,
   CreditCard,
   Globe2,
@@ -30,12 +32,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutGrid, exact: true },
+  { to: "/admin/monthly", label: "Monthly", icon: BarChart3, exact: false },
   { to: "/admin/clients", label: "Clients", icon: Building2, exact: false },
   { to: "/admin/websites", label: "Websites", icon: ClipboardList, exact: false },
   { to: "/admin/domains", label: "Domains", icon: Globe2, exact: false },
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
   { to: "/admin/payments", label: "Payments", icon: CreditCard, exact: false },
 ] as const;
+
 
 function AdminShell() {
   const { data, isLoading } = useWorkspace();
