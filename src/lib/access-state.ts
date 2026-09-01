@@ -106,16 +106,6 @@ export function resolveAccess(org: AccessOrgFields | null | undefined): AccessDe
       trialEndsAt,
     };
   }
-  if (setupPaid) {
-    return {
-      state: "ACTIVE_SETUP",
-      allowed: true,
-      label: "Setup paid — access active",
-      reason: `Your ${usd(GROWTH_SYSTEM.setupPrice)} setup is confirmed and your access is active. ${BUILDER_INCLUDED_DETAIL}`,
-      builderUsage: "included",
-      trialEndsAt,
-    };
-  }
   if (status === "past_due" || status === "unpaid" || status === "incomplete") {
     return {
       state: "PAST_DUE",
@@ -126,6 +116,20 @@ export function resolveAccess(org: AccessOrgFields | null | undefined): AccessDe
       trialEndsAt,
     };
   }
+  // Setup paid, monthly not yet canceled: access is active. This is checked
+  // AFTER the failed/canceled states so a one-time setup payment can never
+  // grant permanent access once the monthly subscription stops paying.
+  if (setupPaid && status !== "canceled" && status !== "cancelled") {
+    return {
+      state: "ACTIVE_SETUP",
+      allowed: true,
+      label: "Setup paid — access active",
+      reason: `Your ${usd(GROWTH_SYSTEM.setupPrice)} setup is confirmed and your access is active. ${BUILDER_INCLUDED_DETAIL}`,
+      builderUsage: "included",
+      trialEndsAt,
+    };
+  }
+
   if (status === "canceled" || status === "cancelled") {
     return {
       state: "CANCELED",
