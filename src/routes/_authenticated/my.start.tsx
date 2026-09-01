@@ -81,7 +81,7 @@ function MyStart() {
     {
       title: "Publish it",
       body: `Go live on your free address${
-        settings?.subdomain ? ` — ${revoraUrl(settings.subdomain).replace("https://", "")}` : ""
+        settings?.subdomain ? ` — ${revoraUrl(settings?.subdomain).replace("https://", "")}` : ""
       }. No domain purchase needed.`,
 
       done: live,
