@@ -31,9 +31,8 @@ import {
   normalizeInput,
 } from "@/lib/domain-setup";
 import { DOMAIN_STATES } from "@/lib/readiness";
-import { revoraSubdomain } from "@/lib/website-plan";
 import { RevoraAddressCard } from "@/components/app/RevoraAddressCard";
-import { revoraHost } from "@/lib/revora-address";
+import { clientSitePath } from "@/lib/revora-address";
 import { dateLong } from "@/lib/format";
 
 type Availability = {
@@ -103,6 +102,10 @@ export function DomainCenter({
     seen: string[];
     expected: string;
   } | null>(null);
+
+  // While a client's own domain is being verified, the address that always
+  // works is the platform path — no DNS, no certificate, nothing to buy.
+  const previewPath = clientSitePath(slug ?? null);
 
   const status = settings?.domain_status ?? "not_connected";
   const dnsOk = !!settings?.dns_ok;
@@ -641,6 +644,25 @@ export function DomainCenter({
           ) : null}
         </Panel>
       ) : null}
+
+      {/* ADVANCED — legacy Revora-hosted preview address. Kept for internal
+          previews only; it never replaces or redirects a verified client domain. */}
+      <details className="rounded-lg border border-border/60 bg-elevated/30 p-4">
+        <summary className="cursor-pointer text-[13px] font-medium">
+          Advanced — Revora preview address
+        </summary>
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          For internal previews only. Your own domain is always your public website address.
+        </p>
+        <div className="mt-3">
+          <RevoraAddressCard
+            organizationId={organizationId}
+            orgSlug={slug ?? null}
+            settings={settings}
+            canManage={canManage}
+          />
+        </div>
+      </details>
     </div>
   );
 }
