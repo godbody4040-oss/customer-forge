@@ -5,7 +5,7 @@
  * claims. Lead-capture blocks (quote, booking, sticky call bar) render the same
  * forms used on the home page, so any page can convert a visitor.
  */
-import { blockCss, readBlockStyle, textClasses } from "@/lib/site-style";
+import { blockCss, readBlockStyle } from "@/lib/site-style";
 import { Link } from "@tanstack/react-router";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
