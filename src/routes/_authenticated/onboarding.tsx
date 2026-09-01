@@ -383,10 +383,37 @@ function Onboarding() {
       assertNoError(settingsError, "Could not create your website draft");
 
       await supabase.from("onboarding_drafts").delete().eq("user_id", user.id);
+
+      // Actually build the website the button promises. Each stage is real:
+      // the brief is analysed from the owner's own answers, approved on their
+      // behalf (they review and can rebuild in the builder), then the build is
+      // queued. The builder polls the job and shows live progress.
+      let queued = false;
+      try {
+        const analysis = await analyzeBrief({ data: { organizationId: org.id } });
+        await approveBrief({
+          data: { organizationId: org.id, brief: analysis.brief, approved: true },
+        });
+        await queueBuild({ data: { organizationId: org.id } });
+        queued = true;
+      } catch (buildError) {
+        // Never trap the owner in onboarding: their answers are saved, and the
+        // builder's own Build button lets them start the build with one click.
+        console.error("[onboarding] build queue failed", supabaseErrorMessage(buildError));
+      }
+
       await queryClient.invalidateQueries();
 
-      toast.success("Your website draft is ready to review.");
+      if (queued)
+        toast.success("Revora is building your website", {
+          description: "Progress shows in the builder — it only takes a moment.",
+        });
+      else
+        toast.message("Your details are saved", {
+          description: "Open Build in the builder to start your website.",
+        });
       navigate({ to: "/app/website", replace: true });
+
     } catch (err) {
       console.error("[onboarding] build failed", err);
       setError(supabaseErrorMessage(err));
