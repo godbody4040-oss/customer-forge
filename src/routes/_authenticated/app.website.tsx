@@ -92,7 +92,12 @@ function WebsitePage() {
   const buildReport = readReport(generation?.["report"]);
   const manage = canManage(ws?.workspace?.role ?? "viewer");
   const [jump, setJump] = useState<{ step: WizardStepKey; anchor?: string; nonce: number } | null>(null);
-  const [section, setSection] = useState("overview");
+  const [section, setSection] = useState(sectionParam ?? "overview");
+  // A finding elsewhere can deep-link straight into the area that fixes it.
+  useEffect(() => {
+    if (sectionParam) setSection(sectionParam);
+  }, [sectionParam]);
+
   const requiredCount = (readiness?.requiredGaps ?? []).length;
 
   // One server-verified launch path for every publish button on this page.
