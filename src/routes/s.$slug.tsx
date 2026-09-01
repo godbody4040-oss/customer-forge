@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { captureAttribution } from "@/lib/attribution";
 import { useServerFn } from "@tanstack/react-start";
@@ -90,8 +90,13 @@ export const Route = createFileRoute("/s/$slug")({
 });
 
 function PublicSiteRoute() {
+  // `/s/:slug/:page` nests under this route, so inner pages must render instead
+  // of the home page — otherwise every deep link would show the home layout.
+  const children = useChildMatches();
+  if (children.length > 0) return <Outlet />;
   return <PublicSiteView site={Route.useLoaderData()} />;
 }
+
 
 /**
  * The home address serves whatever the owner actually built. When the builder
