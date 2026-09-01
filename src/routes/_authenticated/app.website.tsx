@@ -18,6 +18,7 @@ import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { InteractionHealth } from "@/components/app/InteractionHealth";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { BuilderShell, type BuilderSection } from "@/components/app/BuilderShell";
+import { BuilderHistoryProvider } from "@/lib/builder-history.hooks";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
 import { WebsiteProject } from "@/components/app/WebsiteProject";
@@ -413,7 +414,6 @@ function WebsitePage() {
             result={launchFlow.result}
           />
           <InteractionHealth
-
             pages={pages ?? []}
             onFix={() => {
               setSection("pages");
@@ -484,51 +484,55 @@ function WebsitePage() {
 
   return (
     <>
-      <BuilderShell
-        projectName={org?.name ? `${org.name} · website` : "Your website"}
-        statusLabel={
-          publishState === "published"
-            ? "Live"
-            : publishState === "unpublished"
-              ? "Unpublished"
-              : "Draft"
-        }
-        statusTone={publishState === "published" ? "live" : "draft"}
-        saveLabel={
-          saveSettings.isPending || saveProfile.isPending
-            ? "Saving…"
-            : settings?.last_published_at && publishState === "published"
-              ? "Changes saved"
-              : "Changes save automatically"
-        }
-        activeKey={section}
-        onActiveKeyChange={setSection}
-        sections={sections}
-        actions={
-          <>
-            {org ? (
-              <PreviewSiteButton
-                organizationId={orgId}
-                slug={org.slug}
-                publishState={publishState}
-              />
-            ) : null}
-            {manage ? (
-              <Button
-                size="sm"
-                variant="signal"
-                disabled={launchFlow.isLaunching}
-                onClick={() => {
-                  trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
-                  launchFlow.launch();
-                }}
-              >
-                {launchFlow.isLaunching ? "Launching…" : "Launch"}
-              </Button>
-            ) : null}
-          </>
-        }
-      />
+      <BuilderHistoryProvider organizationId={orgId}>
+        <BuilderShell
+          projectName={org?.name ? `${org.name} · website` : "Your website"}
+          statusLabel={
+            publishState === "published"
+              ? "Live"
+              : publishState === "unpublished"
+                ? "Unpublished"
+                : "Draft"
+          }
+          statusTone={publishState === "published" ? "live" : "draft"}
+          saveLabel={
+            saveSettings.isPending || saveProfile.isPending
+              ? "Saving…"
+              : settings?.last_published_at && publishState === "published"
+                ? "Changes saved"
+                : "Changes save automatically"
+          }
+          activeKey={section}
+          onActiveKeyChange={setSection}
+          sections={sections}
+          actions={
+            <>
+              {org ? (
+                <PreviewSiteButton
+                  organizationId={orgId}
+                  slug={org.slug}
+                  publishState={publishState}
+                />
+              ) : null}
+              {manage ? (
+                <Button
+                  size="sm"
+                  variant="signal"
+                  disabled={launchFlow.isLaunching}
+                  onClick={() => {
+                    trackConversion("site_published", {
+                      metadata: { organization_id: orgId ?? "" },
+                    });
+                    launchFlow.launch();
+                  }}
+                >
+                  {launchFlow.isLaunching ? "Launching…" : "Launch"}
+                </Button>
+              ) : null}
+            </>
+          }
+        />
+      </BuilderHistoryProvider>
 
       <ProductionLaunchModal
         open={launchFlow.lockedOpen}

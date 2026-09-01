@@ -83,3 +83,64 @@ export const usd = (amount: number) =>
 
 export const usdExact = (amount: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+
+/* ---------------------------------------------------------------------------
+ * Stripe price verification
+ *
+ * The checkout session must never be created against a price that disagrees
+ * with the published offer. A mis-set price in the payment provider would
+ * silently charge the customer the wrong amount, so the server verifies the
+ * live Price objects against GROWTH_SYSTEM before any session is opened.
+ * ------------------------------------------------------------------------- */
+
+/** The subset of a Stripe Price the verifier reads. */
+export type PriceShape = {
+  id?: string | null;
+  lookup_key?: string | null;
+  active?: boolean | null;
+  currency?: string | null;
+  unit_amount?: number | null;
+  type?: string | null;
+  recurring?: { interval?: string | null; interval_count?: number | null } | null;
+} | null | undefined;
+
+export type PriceVerification = { ok: true } | { ok: false; reason: string };
+
+const money = (cents: number) => usd(cents / 100);
+
+/**
+ * Verifies the two Revora prices against the canonical offer: currency, exact
+ * amount, one-time vs monthly recurring, and active state. Returns a
+ * customer-safe reason on failure — never a raw provider payload.
+ */
+export function verifyGrowthPrices(setup: PriceShape, monthly: PriceShape): PriceVerification {
+  const check = (
+    price: PriceShape,
+    label: string,
+    expectedDollars: number,
+    recurring: boolean,
+  ): string | null => {
+    if (!price?.id) return `${label} price is not set up in the payment provider yet.`;
+    if (price.active === false) return `${label} price is archived in the payment provider.`;
+    if ((price.currency ?? "usd").toLowerCase() !== "usd")
+      return `${label} price is not in US dollars.`;
+    const cents = Math.round(expectedDollars * 100);
+    if (price.unit_amount !== cents)
+      return `${label} price is ${
+        typeof price.unit_amount === "number" ? money(price.unit_amount) : "unset"
+      } but the Revora offer is ${usd(expectedDollars)}.`;
+    if (recurring) {
+      if (price.type !== "recurring") return `${label} price is not a recurring subscription price.`;
+      if (price.recurring?.interval !== "month" || (price.recurring?.interval_count ?? 1) !== 1)
+        return `${label} price does not bill once per month.`;
+    } else if (price.type === "recurring") {
+      return `${label} price is recurring but the setup fee is charged once.`;
+    }
+    return null;
+  };
+
+  const reason =
+    check(setup, "The one-time setup", GROWTH_SYSTEM.setupPrice, false) ??
+    check(monthly, "The monthly subscription", GROWTH_SYSTEM.monthlyPrice, true);
+  return reason ? { ok: false, reason } : { ok: true };
+}

@@ -9,8 +9,43 @@
  * It only arranges existing, already-working panels — no feature is replaced.
  */
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, Redo2, Undo2, X } from "lucide-react";
+import { useBuilderHistory } from "@/lib/builder-history.hooks";
 import { cn } from "@/lib/utils";
+
+/**
+ * Undo/redo for every builder edit in this session. Disabled buttons stay
+ * visible so the safety net is discoverable before the first edit.
+ */
+function UndoRedo() {
+  const history = useBuilderHistory();
+  const base =
+    "grid size-8 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-40 disabled:hover:border-border disabled:hover:text-muted-foreground";
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={history.undo}
+        disabled={!history.canUndo}
+        className={base}
+        title={history.undoLabel ? `Undo ${history.undoLabel}` : "Nothing to undo yet"}
+        aria-label={history.undoLabel ? `Undo ${history.undoLabel}` : "Undo"}
+      >
+        <Undo2 className="size-4" aria-hidden />
+      </button>
+      <button
+        type="button"
+        onClick={history.redo}
+        disabled={!history.canRedo}
+        className={base}
+        title={history.redoLabel ? `Redo ${history.redoLabel}` : "Nothing to redo"}
+        aria-label={history.redoLabel ? `Redo ${history.redoLabel}` : "Redo"}
+      >
+        <Redo2 className="size-4" aria-hidden />
+      </button>
+    </div>
+  );
+}
 
 export type BuilderSection = {
   key: string;
@@ -109,7 +144,10 @@ export function BuilderShell({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">{actions}</div>
+          <div className="flex shrink-0 items-center gap-2">
+            <UndoRedo />
+            {actions}
+          </div>
         </div>
       </div>
 

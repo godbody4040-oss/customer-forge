@@ -10,6 +10,7 @@ import {
 } from "@/lib/website-content";
 import { safeLinkUrl, slugify } from "@/lib/website-content";
 import { readCopy } from "@/lib/site-engine";
+import { useBuilderHistory } from "@/lib/builder-history.hooks";
 
 const KEY = "website_content";
 
@@ -199,10 +200,45 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
   });
 }
 
+/**
+ * Finds a row in the cached content tree so an edit's inverse can be recorded
+ * for undo without an extra round trip.
+ */
+function useCachedRow(organizationId: string | undefined) {
+  const queryClient = useQueryClient();
+  return (table: "website_pages" | "website_sections" | "website_components", id: string) => {
+    const pages = queryClient.getQueryData<ContentPage[]>([KEY, organizationId]);
+    if (!pages) return null;
+    for (const page of pages) {
+      if (table === "website_pages") {
+        if (page.id === id) return page as unknown as Record<string, unknown>;
+        continue;
+      }
+      for (const section of page.sections) {
+        if (table === "website_sections" && section.id === id)
+          return section as unknown as Record<string, unknown>;
+        if (table === "website_components") {
+          const component = section.components.find((item) => item.id === id);
+          if (component) return component as unknown as Record<string, unknown>;
+        }
+      }
+    }
+    return null;
+  };
+}
+
 export function useSaveSection(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
+  const history = useBuilderHistory();
+  const cachedRow = useCachedRow(organizationId);
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      history.capture({
+        table: "website_sections",
+        rowId: id,
+        row: cachedRow("website_sections", id),
+        patch,
+      });
       const { error } = await supabase
         .from("website_sections")
         .update(patch as never)
@@ -217,8 +253,16 @@ export function useSaveSection(organizationId: string | undefined) {
 
 export function useSavePage(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
+  const history = useBuilderHistory();
+  const cachedRow = useCachedRow(organizationId);
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      history.capture({
+        table: "website_pages",
+        rowId: id,
+        row: cachedRow("website_pages", id),
+        patch,
+      });
       const { error } = await supabase
         .from("website_pages")
         .update(patch as never)
@@ -420,6 +464,8 @@ export function useReorderComponents(organizationId: string | undefined) {
 
 export function useSaveComponent(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
+  const history = useBuilderHistory();
+  const cachedRow = useCachedRow(organizationId);
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
       // Link targets end up as hrefs on the public site: only safe schemes save.
@@ -432,6 +478,12 @@ export function useSaveComponent(organizationId: string | undefined) {
           );
         clean["link_url"] = safe;
       }
+      history.capture({
+        table: "website_components",
+        rowId: id,
+        row: cachedRow("website_components", id),
+        patch: clean,
+      });
       const { error } = await supabase
         .from("website_components")
         .update(clean as never)
