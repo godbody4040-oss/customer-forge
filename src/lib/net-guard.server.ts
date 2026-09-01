@@ -91,3 +91,36 @@ export function areAddressesPublic(addresses: string[]): boolean {
 export function assertFetchableHostname(host: string): void {
   if (!isFetchableHostname(host)) throw new Error("That address can't be checked.");
 }
+
+/**
+ * The ONLY way server code should fetch a user-supplied address.
+ *
+ * Re-validates the parsed URL itself (so tricks like
+ * `https://example.com@169.254.169.254/` can't slip past a check made on a
+ * normalized string), refuses credentials, non-http(s) schemes and any host
+ * that resolves to a private, loopback, link-local or metadata address, and
+ * never follows redirects automatically so a public host can't bounce us
+ * inward.
+ */
+export async function guardedFetch(
+  rawUrl: string,
+  init: RequestInit = {},
+  resolve?: (hostname: string) => Promise<string[]>,
+): Promise<Response> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error("That address isn't a valid web address.");
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
+    throw new Error("Only web addresses starting with http or https can be checked.");
+  if (parsed.username || parsed.password) throw new Error("That address can't be checked.");
+  assertFetchableHostname(parsed.hostname);
+  if (resolve) {
+    const addresses = await resolve(parsed.hostname).catch(() => [] as string[]);
+    if (!areAddressesPublic(addresses)) throw new Error("Not a public address");
+  }
+  return fetch(parsed.toString(), { redirect: "manual", ...init });
+}
+
