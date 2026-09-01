@@ -65,24 +65,36 @@ import {
 import { cn } from "@/lib/utils";
 import {
   ALIGNMENTS,
+  BORDER_WIDTHS,
   BUTTON_SIZES,
   BUTTON_STYLES,
+  COLUMNS,
+  DEVICES,
+  DEVICE_META,
   FONT_FAMILIES,
   FONT_WEIGHTS,
-  LAYOUTS,
-  LAYOUT_CLASS,
+  LETTER_SPACINGS,
   LINE_HEIGHTS,
+  MAX_WIDTHS,
   OBJECT_FITS,
-  SPACING,
+  OPACITIES,
+  OVERLAYS,
+  RADII,
+  SHADOWS,
+  SPACES,
   TEXT_SIZES,
+  TEXT_TRANSFORMS,
   blockCss,
   buttonClasses,
   buttonCss,
-  paddingClass,
+  clearDeviceLayer,
+  isOverridden,
+  itemsCss,
   readBlockStyle,
-  textClasses,
   writeBlockStyle,
   type BlockStyle,
+  type Device,
+  type StyleKey,
 } from "@/lib/site-style";
 
 /** Alt text lives in the component's settings JSONB; always read it as text. */
@@ -94,13 +106,11 @@ function readAlt(settings: unknown): string {
   return "";
 }
 
-type Device = "mobile" | "tablet" | "desktop";
-
-const DEVICES: { key: Device; label: string; width: number; icon: typeof Monitor }[] = [
-  { key: "mobile", label: "Phone", width: 390, icon: Smartphone },
-  { key: "tablet", label: "Tablet", width: 768, icon: Tablet },
-  { key: "desktop", label: "Desktop", width: 1180, icon: Monitor },
-];
+const DEVICE_ICON: Record<Device, typeof Monitor> = {
+  desktop: Monitor,
+  tablet: Tablet,
+  mobile: Smartphone,
+};
 
 /** Where a dragged row would land relative to the row it is hovering over. */
 type DropHint = { id: string; position: "before" | "after" } | null;
@@ -332,7 +342,7 @@ export function BuilderCanvas({
     );
   }
 
-  const width = DEVICES.find((d) => d.key === device)!.width;
+  const width = DEVICE_META[device].width;
   const trail = breadcrumb(page, selectedSection, selectedComponent);
   const layerNodes = layers(page);
 
@@ -429,23 +439,26 @@ export function BuilderCanvas({
         ) : null}
 
         <div className="ml-auto flex items-center gap-1">
-          {DEVICES.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => setDevice(option.key)}
-              aria-pressed={device === option.key}
-              title={`${option.label} preview`}
-              className={cn(
-                "grid size-8 place-items-center rounded-md border transition-colors",
-                device === option.key
-                  ? "border-primary text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <option.icon className="size-4" aria-hidden />
-            </button>
-          ))}
+          {DEVICES.map((option) => {
+            const Icon = DEVICE_ICON[option];
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setDevice(option)}
+                aria-pressed={device === option}
+                title={`${DEVICE_META[option].label} preview`}
+                className={cn(
+                  "grid size-8 place-items-center rounded-md border transition-colors",
+                  device === option
+                    ? "border-primary text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4" aria-hidden />
+              </button>
+            );
+          })}
         </div>
       </header>
 
