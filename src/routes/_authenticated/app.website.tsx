@@ -53,6 +53,10 @@ import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { websiteQa, type WizardStepKey } from "@/lib/website-content";
 
 export const Route = createFileRoute("/_authenticated/app/website")({
+  // Deep links from audit findings land on the exact builder area that fixes them.
+  validateSearch: (search: Record<string, unknown>) => ({
+    section: typeof search["section"] === "string" ? (search["section"] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Website builder — Revora" },
@@ -62,6 +66,7 @@ export const Route = createFileRoute("/_authenticated/app/website")({
   }),
   component: WebsitePage,
 });
+
 
 function WebsitePage() {
   const { data: ws } = useWorkspace();
