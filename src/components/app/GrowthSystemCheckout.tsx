@@ -21,11 +21,14 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
   const [attempt, setAttempt] = useState(0);
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
-    setError(null);
+    // No synchronous setState here: Stripe calls this while the provider is
+    // still rendering, and updating state during render warns and can drop the
+    // update. Errors are cleared by the retry button and set after the await.
     trackConversion("checkout_started", {
       email: intake.email,
       amountCents: GROWTH_SYSTEM.setupPrice * 100,
     });
+
     try {
       const result = await createGrowthSystemCheckout({
         data: {
