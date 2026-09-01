@@ -113,11 +113,13 @@ export async function loadSite(
     .eq("organization_id", orgId)
     .maybeSingle();
 
-  // A client site is only served publicly once it is published (or in preview).
+  // A client site is served on its public address only once it is published.
+  // Unpublished work stays private: the owner previews it inside the builder,
+  // or shares a signed preview link (/p/<token>).
   if (!allowUnpublished) {
-    if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview"))
-      return null;
+    if (!gate || gate.publish_state !== "published") return null;
   }
+
 
   const [profile, services, settings, social, reviews, galleryRows, quoteForm] = await Promise.all([
     supabase
