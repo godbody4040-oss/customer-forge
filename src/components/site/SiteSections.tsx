@@ -12,7 +12,7 @@ import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
-import { DirectContact, telHref } from "@/components/site/ContactDetails";
+import { DirectContact, mailHref, telHref } from "@/components/site/ContactDetails";
 import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
@@ -462,7 +462,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                   <Mail className="size-3.5" aria-hidden="true" /> Email
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={`mailto:${profile.email}`} className="text-primary underline">
+                  <a href={mailHref(profile.email)} className="text-primary underline">
                     {profile.email}
                   </a>
                 </dd>

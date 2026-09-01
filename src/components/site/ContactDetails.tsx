@@ -16,6 +16,15 @@ export type ContactInfo = {
 /** Digits only — `tel:` links break on spaces and formatting characters. */
 export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
+/**
+ * Only a plain address ever reaches a `mailto:` href, so a saved business
+ * "email" can never smuggle another scheme or markup into a public page.
+ */
+export const mailHref = (email: string) => {
+  const clean = email.trim().replace(/[\s<>"'`]/g, "");
+  return /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(clean) ? `mailto:${clean}` : "#";
+};
+
 /** Short "prefer to talk?" strip used above forms. */
 export function DirectContact({
   profile,
@@ -43,7 +52,7 @@ export function DirectContact({
         ) : null}
         {email ? (
           <Button asChild size="sm" variant="outline">
-            <a href={`mailto:${email}`} aria-label={`Email ${businessName} at ${email}`}>
+            <a href={mailHref(email)} aria-label={`Email ${businessName} at ${email}`}>
               <Mail className="size-3.5" aria-hidden="true" /> {email}
             </a>
           </Button>

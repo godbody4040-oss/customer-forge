@@ -30,6 +30,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { safeLinkUrl } from "@/lib/website-content";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -818,7 +819,7 @@ export function BuilderCanvas({
                     event.target.value !== (selectedComponent.link_url ?? "") &&
                     saveComponent.mutate({
                       id: selectedComponent.id,
-                      patch: { link_url: event.target.value.trim() || null },
+                      patch: { link_url: safeLinkUrl(event.target.value) },
                     })
                   }
                 />
