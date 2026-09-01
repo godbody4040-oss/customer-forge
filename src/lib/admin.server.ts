@@ -2,7 +2,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NewClientInput } from "@/lib/admin-types";
 import { seedQuoteCalculator } from "@/lib/quote-seed";
-import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server";
+import { areAddressesPublic, guardedFetch, isFetchableHostname } from "@/lib/net-guard.server";
 
 /** Where clients point their domain. Both records are checked automatically. */
 export const DOMAIN_TARGET = "revoragrowthsystems.com";
