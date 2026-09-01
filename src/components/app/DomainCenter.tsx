@@ -176,7 +176,7 @@ export function DomainCenter({
       {/* FREE REVORA ADDRESS — always included, never blocked on a purchase */}
       <RevoraAddressCard
         organizationId={organizationId}
-        orgSlug={slug}
+        orgSlug={slug ?? null}
         settings={settings}
         canManage={canManage}
       />
