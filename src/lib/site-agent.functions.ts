@@ -242,21 +242,32 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
     };
     const instruction = data.instruction || "(see the attached file(s) — follow what they show or say)";
 
-    // The builder must keep working with zero AI credits: a credit or policy
-    // denial hands the request to Revora's own rule-based planner instead of
-    // failing. Rate limits still surface so the client can retry.
+    // The builder is included in the subscription, so no request may dead-end on
+    // an AI provider limit. One quiet retry for transient busy/rate-limit
+    // responses, then Revora's own rule-based planner answers instead.
     let raw: Record<string, unknown>;
+    const planOffline = async (reason: string) => {
+      const { planWithoutAi } = await import("@/lib/site-agent.offline");
+      return planWithoutAi(instruction, agentContext, reason) as unknown as Record<string, unknown>;
+    };
     try {
       raw = (await planChanges(agentContext, instruction, data.history, data.attachments)) as Record<string, unknown>;
     } catch (error) {
       const status = (error as { status?: number } | null)?.status;
-      if (status === 402 || status === 403) {
-        const { planWithoutAi } = await import("@/lib/site-agent.offline");
-        raw = planWithoutAi(instruction, agentContext, status === 402 ? "AI credits unavailable" : "AI unavailable") as unknown as Record<string, unknown>;
+      if (status === 429 || status === 503) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+          raw = (await planChanges(agentContext, instruction, data.history, data.attachments)) as Record<string, unknown>;
+        } catch {
+          raw = await planOffline("AI writer busy");
+        }
+      } else if (status === 402 || status === 403 || status === 500 || status === 502) {
+        raw = await planOffline("AI writer paused");
       } else {
         throw error;
       }
     }
+
 
     const actions = readActions(raw["actions"], {
       pageIds: new Set(site.pages.map((page) => page.id)),
