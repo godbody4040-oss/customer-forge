@@ -96,9 +96,23 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
             ? "Checking…"
             : "Trial",
       tone: paid ? "signal" : accountStatus === "expired" ? "danger" : "info",
-      hint: paid ? "$100/month after your first free month." : "$750 setup, first month free, then $100/month.",
+      hint: paid
+        ? `${usd(GROWTH_SYSTEM.monthlyPrice)}/month after your first free month.`
+        : `${usd(GROWTH_SYSTEM.setupPrice)} setup, first month free, then ${usd(GROWTH_SYSTEM.monthlyPrice)}/month.`,
       to: "/app/billing",
     };
+
+    // Builder usage is never metered or charged separately — this tile exists so
+    // the customer can see that at a glance.
+    const builder: Tile = {
+      key: "builder",
+      label: "Builder access",
+      value: "Included",
+      tone: "signal",
+      hint: "Unlimited AI building, editing, audits, fixes and publishing — no credits.",
+      to: "/app/website",
+    };
+
 
     const domainState = DOMAIN_LABEL[settings?.domain_status ?? "not_connected"] ?? {
       value: "Not connected",
