@@ -18,6 +18,13 @@ import { useWorkspace } from "@/lib/use-tenant";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useStepScroll } from "@/lib/use-step-scroll";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  analyzeSiteBrief,
+  runSiteGeneration,
+  saveSiteBrief,
+} from "@/lib/site-engine.functions";
+
 import {
   WEBSITE_GOALS,
   generateWebsitePlan,
