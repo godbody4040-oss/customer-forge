@@ -257,7 +257,7 @@ export function DomainOperations({
   const reportMutation = useMutation({
     mutationFn: () => runReport({ data: { organizationId: organizationId! } }),
     onSuccess: (result) => {
-      setReport(result as SeoReport);
+      setReport(normalizeReport(result));
       toast.success("Search visibility report updated");
       refresh();
     },
