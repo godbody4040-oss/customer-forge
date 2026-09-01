@@ -64,6 +64,7 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppWebsiteRouteImport } from './routes/_authenticated/app.website'
 import { Route as AuthenticatedAppWelcomeRouteImport } from './routes/_authenticated/app.welcome'
 import { Route as AuthenticatedMyIndexRouteImport } from './routes/_authenticated/my.index'
+import { Route as AuthenticatedMySiteRouteImport } from './routes/_authenticated/my.site'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
@@ -358,6 +359,11 @@ const AuthenticatedMyIndexRoute = AuthenticatedMyIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedMyRoute,
 } as any)
+const AuthenticatedMySiteRoute = AuthenticatedMySiteRouteImport.update({
+  id: '/site',
+  path: '/site',
+  getParentRoute: () => AuthenticatedMyRoute,
+} as any)
 const SSlugPageRoute = SSlugPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -455,6 +461,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
   '/app/welcome': typeof AuthenticatedAppWelcomeRoute
+  '/my/site': typeof AuthenticatedMySiteRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -514,6 +521,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/website': typeof AuthenticatedAppWebsiteRoute
   '/app/welcome': typeof AuthenticatedAppWelcomeRoute
+  '/my/site': typeof AuthenticatedMySiteRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -580,6 +588,7 @@ export interface FileRoutesById {
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/website': typeof AuthenticatedAppWebsiteRoute
   '/_authenticated/app/welcome': typeof AuthenticatedAppWelcomeRoute
+  '/_authenticated/my/site': typeof AuthenticatedMySiteRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -646,6 +655,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/website'
     | '/app/welcome'
+    | '/my/site'
     | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
@@ -705,6 +715,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/website'
     | '/app/welcome'
+    | '/my/site'
     | '/s/$slug/$page'
     | '/admin'
     | '/app'
@@ -770,6 +781,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/settings'
     | '/_authenticated/app/website'
     | '/_authenticated/app/welcome'
+    | '/_authenticated/my/site'
     | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
@@ -1202,6 +1214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyIndexRouteImport
       parentRoute: typeof AuthenticatedMyRoute
     }
+    '/_authenticated/my/site': {
+      id: '/_authenticated/my/site'
+      path: '/site'
+      fullPath: '/my/site'
+      preLoaderRoute: typeof AuthenticatedMySiteRouteImport
+      parentRoute: typeof AuthenticatedMyRoute
+    }
     '/s/$slug/$page': {
       id: '/s/$slug/$page'
       path: '/$page'
@@ -1340,10 +1359,12 @@ const AuthenticatedAppRouteWithChildren =
   AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
 
 interface AuthenticatedMyRouteChildren {
+  AuthenticatedMySiteRoute: typeof AuthenticatedMySiteRoute
   AuthenticatedMyIndexRoute: typeof AuthenticatedMyIndexRoute
 }
 
 const AuthenticatedMyRouteChildren: AuthenticatedMyRouteChildren = {
+  AuthenticatedMySiteRoute: AuthenticatedMySiteRoute,
   AuthenticatedMyIndexRoute: AuthenticatedMyIndexRoute,
 }
 
