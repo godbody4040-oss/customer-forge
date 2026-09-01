@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Revora gives businesses one powerful system to get discovered, capture opportunities, convert leads, book customers, automate follow-up and measure growth.",
       },
       { name: "author", content: "Revora" },
+      {
+        name: "google-site-verification",
+        content: "X29U2dPnKNmd9GwB685Soe4W_2tKU4F6YNJZAtkCo4w",
+      },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Revora Growth Systems" },
       { property: "og:locale", content: "en_US" },
