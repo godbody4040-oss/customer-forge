@@ -1278,6 +1278,7 @@ export type Database = {
           plan_id: string | null
           setup_checkout_session_id: string | null
           setup_paid_at: string | null
+          setup_payment_status: string
           slug: string
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at: string | null
@@ -1299,6 +1300,7 @@ export type Database = {
           plan_id?: string | null
           setup_checkout_session_id?: string | null
           setup_paid_at?: string | null
+          setup_payment_status?: string
           slug: string
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
@@ -1320,6 +1322,7 @@ export type Database = {
           plan_id?: string | null
           setup_checkout_session_id?: string | null
           setup_paid_at?: string | null
+          setup_payment_status?: string
           slug?: string
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           trial_ends_at?: string | null
