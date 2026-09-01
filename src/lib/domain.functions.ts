@@ -73,6 +73,9 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
  * worth clicking through to a registrar. RDAP is the registries' own public
  * directory: a 404 means nobody holds the name. Availability is reported as a
  * strong hint, never as a guarantee — the registrar's checkout is the truth.
+ *
+ * A lookup that cannot be completed is reported honestly as "unknown" with a
+ * plain-language reason, never guessed at.
  */
 export const checkDomainAvailability = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -84,27 +87,63 @@ export const checkDomainAvailability = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { normalizeDomain, isValidDomain } = await import("@/lib/admin.server");
 
-    const lookup = async (raw: string) => {
-      const domain = normalizeDomain(raw);
-      if (!domain || !isValidDomain(domain)) {
-        return { domain, state: "invalid" as const };
-      }
+    /** One RDAP request with a hard timeout so a slow registry can't hang the page. */
+    const rdap = async (domain: string) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6000);
       try {
-        const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
+        return await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
           headers: { Accept: "application/rdap+json" },
           redirect: "follow",
+          signal: controller.signal,
         });
-        if (res.status === 404) return { domain, state: "available" as const };
-        if (res.ok) return { domain, state: "taken" as const };
-        return { domain, state: "unknown" as const };
-      } catch {
-        return { domain, state: "unknown" as const };
+      } finally {
+        clearTimeout(timer);
       }
     };
 
+    const lookup = async (raw: string) => {
+      const domain = normalizeDomain(raw);
+      if (!domain || !isValidDomain(domain)) {
+        return { domain, state: "invalid" as const, reason: "That isn't a valid domain name." };
+      }
+
+      let lastReason = "We couldn't reach the domain registry.";
+      // One retry: registry directories time out or rate-limit intermittently.
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const res = await rdap(domain);
+          if (res.status === 404) return { domain, state: "available" as const, reason: null };
+          if (res.ok) return { domain, state: "taken" as const, reason: null };
+          if (res.status === 429) {
+            lastReason = "The registry is busy right now. Try again in a moment.";
+          } else if (res.status === 400 || res.status === 501) {
+            lastReason = "This domain ending can't be checked automatically.";
+          } else {
+            lastReason = "The domain registry didn't answer.";
+          }
+        } catch (error) {
+          lastReason =
+            error instanceof Error && error.name === "AbortError"
+              ? "The registry took too long to answer."
+              : "We couldn't reach the domain registry.";
+        }
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+      return { domain, state: "unknown" as const, reason: lastReason };
+    };
+
     const results = await Promise.all(data.domains.map(lookup));
-    return { results, checkedAt: new Date().toISOString() };
+    const checked = results.filter((r) => r.state === "available" || r.state === "taken").length;
+    return {
+      results,
+      checkedAt: new Date().toISOString(),
+      /** True when nothing could be confirmed — the UI shows a retry instead of a wall of "unknown". */
+      unavailable: results.length > 0 && checked === 0,
+      reason: results.find((r) => r.state === "unknown")?.reason ?? null,
+    };
   });
+
 
 /**
  * Re-run the live DNS + HTTPS verification for the domain already saved on this
