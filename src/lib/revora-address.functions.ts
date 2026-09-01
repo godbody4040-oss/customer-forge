@@ -103,15 +103,28 @@ export const checkRevoraAddressLive = createServerFn({ method: "POST" })
           ? `${host} doesn't resolve yet. The hosting domain needs a wildcard A record: * → ${DOMAIN_A_RECORD} on ${SITE_ROOT}.`
           : `${host} resolves correctly, but HTTPS isn't answering yet. Secure certificates can take a few minutes after the address first resolves.`;
 
+    const live = check.dnsOk && check.sslOk;
+    const checkedAt = new Date().toISOString();
+
+    // Record the proven state so every other screen (launch checklist, portal,
+    // canonical URLs) reads a verified fact instead of assuming the hostname
+    // works. A failed probe clears the flag, so a hostname that stops answering
+    // stops being advertised.
+    await context.supabase
+      .from("website_settings")
+      .update({ revora_host_ok: live, revora_host_checked_at: checkedAt })
+      .eq("organization_id", data.organizationId);
+
     return {
       host,
       url: `https://${host}`,
       dnsOk: check.dnsOk,
       sslOk: check.sslOk,
-      live: check.dnsOk && check.sslOk,
+      live,
       status: check.status,
       detail,
       expected: DOMAIN_A_RECORD,
-      checkedAt: new Date().toISOString(),
+      checkedAt,
     };
   });
+
