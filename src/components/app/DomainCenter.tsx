@@ -92,6 +92,8 @@ export function DomainCenter({
   const [input, setInput] = useState(connected);
   const [idea, setIdea] = useState("");
   const [results, setResults] = useState<Availability[]>([]);
+  const [lookupIssue, setLookupIssue] = useState<string | null>(null);
+
   const [registrar, setRegistrar] = useState("godaddy");
   const [lastCheck, setLastCheck] = useState<{
     dnsOk: boolean;
