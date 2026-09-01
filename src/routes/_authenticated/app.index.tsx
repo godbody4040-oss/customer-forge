@@ -255,15 +255,30 @@ function Dashboard() {
   if (leadsQuery.isLoading || !orgId) return <LoadingRows rows={5} />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow">Business growth center</p>
-          <h1 className="mt-1 font-display text-[24px] font-semibold">
-            {org?.name ?? "Your business"}
-          </h1>
+    <div className="space-y-5 sm:space-y-6">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">Business growth center</p>
+            <h1 className="mt-1 font-display text-[22px] leading-tight font-semibold text-balance sm:text-[26px]">
+              {org?.name ?? "Your business"}
+            </h1>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {window.label} · updated {relative(new Date())}
+            </p>
+          </div>
+          <Button asChild size="sm" variant="signal" className="shrink-0">
+            <Link to="/app/leads">
+              Work leads <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+
+        <div
+          role="group"
+          aria-label="Date range"
+          className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+        >
           {RANGES.map((r) => (
             <button
               key={r.value}
@@ -271,10 +286,10 @@ function Dashboard() {
               onClick={() => setRange(r.value)}
               aria-pressed={range === r.value}
               className={cn(
-                "cursor-pointer rounded-full border px-3 py-1 text-[12px]",
+                "shrink-0 cursor-pointer snap-start rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
                 range === r.value
-                  ? "border-primary text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground",
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
               )}
             >
               {r.label}
@@ -282,6 +297,7 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
 
       <OnboardingJourney />
 
