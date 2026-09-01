@@ -187,6 +187,7 @@ function ItemCard({
   onDrop,
   onDragEnd,
   actions,
+  device,
 }: {
   item: ContentComponent;
   selected: boolean;
@@ -200,8 +201,10 @@ function ItemCard({
   onDrop: () => void;
   onDragEnd: () => void;
   actions?: React.ReactNode;
+  /** Which device tier to preview this element at. */
+  device: Device;
 }) {
-  const style = readBlockStyle(item.settings);
+  const style = readBlockStyle(item.settings, device);
   return (
     <div
       role="button"
@@ -237,6 +240,7 @@ function ItemCard({
         "relative rounded-lg border p-3 text-left transition-colors",
         selected ? "border-primary bg-primary/5" : "border-border/70 hover:border-primary/40",
         !item.is_visible && "opacity-50",
+        style.hidden === true && "opacity-40 outline-1 outline-dashed outline-border",
         dragging && "opacity-40",
         hint === "before" && "ring-2 ring-primary/70 ring-offset-1",
         hint === "after" && "ring-2 ring-primary/70 ring-offset-1",
@@ -248,14 +252,14 @@ function ItemCard({
           alt={readAlt(item.settings)}
           loading="lazy"
           className="mb-2 h-28 w-full rounded-md"
-          style={{ objectFit: style.objectFit }}
+          style={{ objectFit: style.objectFit ?? "cover" }}
         />
       ) : null}
       <InlineText
         value={item.label ?? ""}
         placeholder="Item title"
         editable={editable}
-        className={cn("font-medium", textClasses(style))}
+        className="font-medium"
         onCommit={(label) => onCommit({ label })}
       />
       <InlineText
@@ -400,7 +404,7 @@ export function BuilderCanvas({
       sectionId: section.id,
       kind: preset.kind,
       sortOrder: section.components.length,
-      values: preset.defaults,
+      values: preset.defaults ?? {},
     });
   };
 
@@ -544,6 +548,7 @@ export function BuilderCanvas({
             {sections.map((section, index) => {
               const isSelected = selectedSectionId === section.id;
               const sectionHint = hint?.id === section.id ? hint.position : null;
+              const sectionStyle = readBlockStyle(section.settings, device);
               return (
                 <div
                   key={section.id}
@@ -573,14 +578,15 @@ export function BuilderCanvas({
                     if (event.key === "Enter")
                       setSelection({ type: "section", pageId: page.id, sectionId: section.id });
                   }}
-                  style={blockCss(readBlockStyle(section.settings))}
+                  style={blockCss(sectionStyle)}
                   className={cn(
-                    "rounded-xl border bg-card text-left transition-colors",
-                    paddingClass(readBlockStyle(section.settings)),
+                    "rounded-xl border bg-card p-4 text-left transition-colors",
                     isSelected
                       ? "border-primary ring-1 ring-primary/40"
                       : "border-border hover:border-primary/40",
                     !section.is_visible && "opacity-50",
+                    sectionStyle.hidden === true &&
+                      "opacity-40 outline-1 outline-dashed outline-border",
                     dragId === section.id && "opacity-40",
                     sectionHint === "before" && "border-t-2 border-t-primary",
                     sectionHint === "after" && "border-b-2 border-b-primary",
@@ -602,10 +608,7 @@ export function BuilderCanvas({
                     value={section.heading ?? ""}
                     placeholder="Add a headline"
                     editable={canManage}
-                    className={cn(
-                      "mt-2 font-display text-[18px] leading-snug font-semibold",
-                      textClasses(readBlockStyle(section.settings)),
-                    )}
+                    className="mt-2 font-display text-[18px] leading-snug font-semibold"
                     onCommit={(heading) =>
                       saveSection.mutate({ id: section.id, patch: { heading } })
                     }
@@ -631,16 +634,16 @@ export function BuilderCanvas({
                     <div
                       className={cn(
                         "mt-3 grid gap-2",
-                        device === "mobile"
-                          ? "grid-cols-1"
-                          : LAYOUT_CLASS[readBlockStyle(section.settings).layout] ||
-                              "sm:grid-cols-2",
+                        sectionStyle.columns === null &&
+                          (device === "mobile" ? "grid-cols-1" : "sm:grid-cols-2"),
                       )}
+                      style={itemsCss(sectionStyle)}
                     >
                       {orderedComponents(section).map((item) => (
                         <ItemCard
                           key={item.id}
                           item={item}
+                          device={device}
                           editable={canManage}
                           dragging={dragId === item.id}
                           hint={hint?.id === item.id ? hint.position : null}
