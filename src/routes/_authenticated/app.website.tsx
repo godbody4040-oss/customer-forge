@@ -254,6 +254,8 @@ function WebsitePage() {
           <ClientOnboardingFlow
             organizationId={orgId}
             canManage={manage}
+            contactPhone={(profile?.["phone"] as string | null) ?? null}
+            contactEmail={(profile?.["email"] as string | null) ?? null}
             setupPaid={!!org?.setup_paid_at}
             publishState={settings?.publish_state ?? "draft"}
             buildReady={requiredCount === 0 && visibleSections > 0}

@@ -11,6 +11,7 @@ import { readAttribution } from "@/lib/attribution";
 import { currency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useStepScroll } from "@/lib/use-step-scroll";
+import { DirectContact } from "@/components/site/ContactDetails";
 
 type Site = NonNullable<PublicSite>;
 
@@ -297,6 +298,13 @@ export function BookingForm({ site }: { site: Site }) {
           title="Booking request received"
           body={`${site.org.name} will confirm your time slot by phone or email shortly.`}
         />
+        <div className="mt-4">
+          <DirectContact
+            profile={site.profile}
+            businessName={site.org.name}
+            label={`Need it sooner? Reach ${site.org.name} directly`}
+          />
+        </div>
       </div>
     );
   }
@@ -348,6 +356,8 @@ export function BookingForm({ site }: { site: Site }) {
         <p className="eyebrow">Book now</p>
         <h3 className="mt-1 font-display text-[19px] font-semibold">Request your appointment</h3>
       </div>
+
+      <DirectContact profile={site.profile} businessName={site.org.name} />
 
       {bookable.length ? (
         <div className="space-y-1.5">

@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils";
 type Props = {
   organizationId: string | undefined;
   canManage: boolean;
+  /** Real business phone + email are on file, so visitors can reach the client. */
+  contactPhone?: string | null;
+  contactEmail?: string | null;
   /** "paid" once the one-time setup fee has cleared. */
   setupPaid: boolean;
   publishState: string;
@@ -33,6 +36,8 @@ type Props = {
 export function ClientOnboardingFlow({
   organizationId,
   canManage,
+  contactPhone,
+  contactEmail,
   setupPaid,
   publishState,
   buildReady,
@@ -51,11 +56,15 @@ export function ClientOnboardingFlow({
   const monthlyPrice = rates.data?.monthlyPrice ?? GROWTH_SYSTEM.monthlyPrice;
 
   const published = publishState === "published";
+  const phone = contactPhone?.trim() || "";
+  const email = contactEmail?.trim() || "";
+  const contactReady = !!phone && !!email;
   const steps = [
+    { key: "account", title: "Set up your account & contact details", done: contactReady },
     { key: "plan", title: "Choose your plan", done: setupPaid },
     { key: "build", title: "Build your website", done: buildReady },
     { key: "publish", title: "Publish it", done: published },
-    { key: "portal", title: "Share your portal link", done: published && setupPaid },
+    { key: "portal", title: "Walk your client portal", done: published && contactReady },
   ];
   const current = steps.find((step) => !step.done)?.key ?? "portal";
   const [open, setOpen] = React.useState<string>(current);
@@ -68,7 +77,7 @@ export function ClientOnboardingFlow({
         <div>
           <p className="eyebrow">Getting started</p>
           <h2 className="mt-1 font-display text-[16px] font-semibold">
-            Four steps to a live growth system
+            Five steps to a live growth system
           </h2>
         </div>
         <p className="text-[12px] text-muted-foreground">
@@ -111,6 +120,32 @@ export function ClientOnboardingFlow({
 
               {isOpen ? (
                 <div className="border-t border-border/70 p-3">
+                  {step.key === "account" ? (
+                    <div>
+                      <p className="text-[12px] leading-relaxed text-muted-foreground">
+                        Your account keeps everything you enter, so you can sign back in and pick up
+                        where you left off. Your business phone and email are published on your
+                        contact page and shown on your booking form, so visitors can reach you.
+                      </p>
+                      <ul className="mt-3 space-y-1 text-[12px]">
+                        <li className={phone ? "text-primary" : "text-muted-foreground"}>
+                          {phone ? `Phone: ${phone}` : "Phone: not added yet"}
+                        </li>
+                        <li className={email ? "text-primary" : "text-muted-foreground"}>
+                          {email ? `Email: ${email}` : "Email: not added yet"}
+                        </li>
+                      </ul>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button size="sm" variant="signal" onClick={() => onGoTo("answers")}>
+                          {contactReady ? "Review contact details" : "Add phone & email"}
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/app/settings">Account settings</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+
                   {step.key === "plan" ? (
                     <div>
                       <p className="text-[13px]">
@@ -182,7 +217,28 @@ export function ClientOnboardingFlow({
                   ) : null}
 
                   {step.key === "portal" ? (
-                    <PortalAccess organizationId={organizationId} canManage={canManage} />
+                    <div className="space-y-3">
+                      <p className="text-[12px] leading-relaxed text-muted-foreground">
+                        Finish the flow the way your client sees it: open the client portal, check
+                        the dashboard, your pages and your live site, then confirm booking leads are
+                        landing in your inbox.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button asChild size="sm" variant="signal">
+                          <Link to="/my/start">Open guided portal walkthrough</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/my">Portal dashboard</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/my/site">My live site</Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/my/activity">Leads & bookings</Link>
+                        </Button>
+                      </div>
+                      <PortalAccess organizationId={organizationId} canManage={canManage} />
+                    </div>
                   ) : null}
                 </div>
               ) : null}

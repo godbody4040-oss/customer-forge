@@ -12,6 +12,7 @@ import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
+import { DirectContact, telHref } from "@/components/site/ContactDetails";
 import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
@@ -449,7 +450,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                   <Phone className="size-3.5" aria-hidden="true" /> Phone
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={`tel:${profile.phone}`} className="text-primary underline">
+                  <a href={telHref(profile.phone)} className="text-primary underline">
                     {profile.phone}
                   </a>
                 </dd>
@@ -475,7 +476,32 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                 <dd className="mt-1 text-[13px]">{profile.service_area ?? profile.city}</dd>
               </div>
             ) : null}
+            {profile?.address ? (
+              <div>
+                <dt className="eyebrow flex items-center gap-1.5">
+                  <MapPin className="size-3.5" aria-hidden="true" /> Address
+                </dt>
+                <dd className="mt-1 text-[13px]">
+                  {[profile.address, profile.city, profile.state, profile.zip]
+                    .filter(Boolean)
+                    .join(", ")}
+                </dd>
+              </div>
+            ) : null}
+            {profile?.hours ? (
+              <div>
+                <dt className="eyebrow">Hours</dt>
+                <dd className="mt-1 whitespace-pre-line text-[13px]">{String(profile.hours)}</dd>
+              </div>
+            ) : null}
           </dl>
+          <div className="mt-6">
+            <DirectContact
+              profile={profile}
+              businessName={site.org.name}
+              label={`Call or email ${site.org.name} directly`}
+            />
+          </div>
         </Shell>
       );
 
@@ -508,7 +534,7 @@ export function StickyCallBar({ site, label }: { site: Site; label: string }) {
       <div className="flex gap-2">
         {phone ? (
           <Button asChild variant="outline" className="flex-1">
-            <a href={`tel:${phone}`}>
+            <a href={telHref(phone)}>
               <Phone className="size-4" /> Call
             </a>
           </Button>
