@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useBusinessProfile, useServices, useWebsiteSettings } from "@/lib/queries";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { useWorkspace } from "@/lib/use-tenant";
-import { revoraUrl } from "@/lib/revora-address";
+import { revoraHost, revoraUrl } from "@/lib/revora-address";
 
 export const Route = createFileRoute("/_authenticated/my/start")({
   head: () => ({
@@ -81,8 +81,10 @@ function MyStart() {
     {
       title: "Publish it",
       body: `Go live on your free address${
-        settings?.subdomain ? ` — ${settings.subdomain}.revoragrowthsystems.com` : ""
+        revoraHost(settings?.subdomain) ? ` — ${revoraHost(settings?.subdomain)}` : ""
       }. No domain purchase needed.`,
+
+
       done: live,
       to: "/app/launch",
       cta: "Publish",
