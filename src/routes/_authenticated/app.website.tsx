@@ -217,7 +217,7 @@ function WebsitePage() {
           <ClientOnboardingFlow
             organizationId={orgId}
             canManage={manage}
-            setupPaid={(org?.setup_payment_status ?? "unpaid") === "paid"}
+            setupPaid={!!org?.setup_paid_at}
             publishState={settings?.publish_state ?? "draft"}
             buildReady={requiredCount === 0 && visibleSections > 0}
             requiredAnswers={requiredCount}
