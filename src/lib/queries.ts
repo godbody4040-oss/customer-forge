@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { nextPublishState } from "@/lib/publish-state";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppointmentStatus, LeadStatus } from "@/lib/domain";
@@ -1256,6 +1257,7 @@ export function useGenerateWebsite(organizationId: string | undefined) {
         socialLinks: (socials.data ?? []).length,
       });
 
+      const keepState = await nextPublishState(supabase, orgId);
       const { error } = await supabase.from("website_settings").upsert(
         {
           organization_id: orgId,
@@ -1270,7 +1272,7 @@ export function useGenerateWebsite(organizationId: string | undefined) {
             primary_cta_label: plan.primaryCtaLabel,
             title: plan.seoTitle,
           },
-          publish_state: "preview",
+          publish_state: keepState,
         } as never,
         { onConflict: "organization_id" },
       );

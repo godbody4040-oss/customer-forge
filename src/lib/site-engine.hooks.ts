@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { nextPublishState } from "@/lib/publish-state";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -185,6 +186,7 @@ export function useRestoreWebsiteVersion(organizationId: string | undefined) {
           ? stored.settings_pages
           : snapshot.pages;
 
+      const keepState = await nextPublishState(supabase, orgId);
       const { error } = await supabase.from("website_settings").upsert(
         {
           organization_id: orgId,
@@ -193,7 +195,7 @@ export function useRestoreWebsiteVersion(organizationId: string | undefined) {
           seo: snapshot.seo as never,
           pages: settingsPages as never,
           review_state: "ready_for_review",
-          publish_state: "preview",
+          publish_state: keepState,
         } as never,
         { onConflict: "organization_id" },
       );

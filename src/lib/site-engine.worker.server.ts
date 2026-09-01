@@ -1,4 +1,5 @@
 /**
+import { nextPublishState } from "@/lib/publish-state";
  * Detached worker for Revora Site Engine generation jobs.
  *
  * The database is the queue and the single source of truth:
@@ -326,6 +327,8 @@ async function runJob(
     ].slice(0, 8),
   };
 
+  const keepState = await nextPublishState(db, orgId);
+
   const { error: saveError } = await db.from("website_settings").upsert(
     {
       organization_id: orgId,
@@ -333,7 +336,7 @@ async function runJob(
       generation: { ...plan, copy, brief, report } as unknown as Record<string, unknown>,
       generated_at: new Date().toISOString(),
       review_state: "ready_for_review",
-      publish_state: "preview",
+      publish_state: keepState,
       seo: {
         title: copy.metaTitle || plan.seoTitle,
         headline: copy.heroHeadline,
