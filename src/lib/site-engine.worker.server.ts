@@ -1,5 +1,4 @@
 /**
-import { nextPublishState } from "@/lib/publish-state";
  * Detached worker for Revora Site Engine generation jobs.
  *
  * The database is the queue and the single source of truth:
@@ -11,6 +10,7 @@ import { nextPublishState } from "@/lib/publish-state";
  *  - the queue pauses itself when AI credits run out or AI is blocked, and
  *    backs off on rate limits
  */
+import { nextPublishState } from "@/lib/publish-state";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
