@@ -99,7 +99,7 @@ export function DomainCenter({
       toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
         description: result.detail,
       });
-      void queryClient.invalidateQueries({ queryKey: ["website-settings", organizationId] });
+      void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
