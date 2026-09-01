@@ -83,10 +83,42 @@ function PortalPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [joined, setJoined] = React.useState<string | null>(null);
 
+  const joinCode = React.useCallback(
+    async (value: string) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await join({ data: { code: value } });
+        if ("error" in result) setError(result.error);
+        else {
+          window.localStorage.removeItem("revora.portal_code");
+          setJoined(result.organizationName ?? "your workspace");
+        }
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Could not join that workspace.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [join],
+  );
+
   React.useEffect(() => {
     let cancelled = false;
     void supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled) setSignedIn(!!data.session);
+      if (cancelled) return;
+      setSignedIn(!!data.session);
+      // Signed in and arriving with a code (including after confirming their
+      // signup email): finish the join without making them press anything.
+      const pending =
+        codeParam ?? window.localStorage.getItem("revora.portal_code") ?? undefined;
+      if (data.session && pending) {
+        const normalized = normalizePortalCode(pending);
+        if (normalized.length === PORTAL_CODE_LENGTH) {
+          setCode(normalized);
+          void joinCode(normalized);
+        }
+      }
     });
     return () => {
       cancelled = true;
@@ -103,21 +135,14 @@ function PortalPage() {
     // Not signed in yet: create/sign in first, then come straight back here
     // with the code preserved so the join finishes in one motion.
     if (!signedIn) {
+      // Survive the email-confirmation round trip.
+      window.localStorage.setItem("revora.portal_code", code);
       const next = `/portal?code=${encodeURIComponent(code)}`;
       navigate({ to: "/auth", search: { mode: "signup", redirect: next } });
       return;
     }
 
-    setBusy(true);
-    try {
-      const result = await join({ data: { code } });
-      if ("error" in result) setError(result.error);
-      else setJoined(result.organizationName ?? "your workspace");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not join that workspace.");
-    } finally {
-      setBusy(false);
-    }
+    await joinCode(code);
   };
 
   return (
