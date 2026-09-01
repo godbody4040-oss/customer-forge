@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import {
+  EmptyState,
+  LoadingRows,
+  MetricCard,
+  Panel,
+  Pill,
+  SectionHeading,
+} from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -222,8 +229,16 @@ function CalendarPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Jobs this week" value={String(thisWeek.length)} tone="signal" />
-        <MetricCard label="Awaiting confirmation" value={String(pending.length)} tone={pending.length ? "attention" : "neutral"} />
-        <MetricCard label="Booked value this week" value={currency(weekValue)} hint="based on service pricing" />
+        <MetricCard
+          label="Awaiting confirmation"
+          value={String(pending.length)}
+          tone={pending.length ? "attention" : "neutral"}
+        />
+        <MetricCard
+          label="Booked value this week"
+          value={currency(weekValue)}
+          hint="based on service pricing"
+        />
         <MetricCard
           label="Completed all time"
           value={String(all.filter((a) => a.status === "completed").length)}
@@ -289,7 +304,9 @@ function CalendarPage() {
                 )}
               >
                 <p className={cn("eyebrow", isToday && "text-primary")}>{DAY_LABELS[index]}</p>
-                <p className="tnum mt-0.5 font-display text-[15px] font-semibold">{day.getDate()}</p>
+                <p className="tnum mt-0.5 font-display text-[15px] font-semibold">
+                  {day.getDate()}
+                </p>
                 <div className="mt-2.5 space-y-1.5">
                   {items.map((appt) => (
                     <div key={appt.id} className="panel-inset p-2">
@@ -358,7 +375,10 @@ function CalendarPage() {
         ) : (
           <ul className="mt-4 divide-y divide-border">
             {all.map((appt) => (
-              <li key={appt.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <li
+                key={appt.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-2.5"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-medium">{appt.name}</p>
                   <p className="truncate text-[11px] text-muted-foreground">
@@ -405,7 +425,8 @@ function CalendarPage() {
               <DialogHeader>
                 <DialogTitle>Reschedule {rescheduling.name}</DialogTitle>
                 <DialogDescription>
-                  Currently {dateLong(rescheduling.starts_at)} at {timeShort(rescheduling.starts_at)}.
+                  Currently {dateLong(rescheduling.starts_at)} at{" "}
+                  {timeShort(rescheduling.starts_at)}.
                 </DialogDescription>
               </DialogHeader>
               <form

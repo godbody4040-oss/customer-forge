@@ -45,7 +45,6 @@ export function SiteHeader() {
           ))}
         </nav>
 
-
         <div className="hidden items-center gap-2 md:flex">
           {signedIn ? (
             <>
@@ -96,7 +95,6 @@ export function SiteHeader() {
       {open ? (
         <div className="border-t border-border bg-card px-4 py-2 md:hidden">
           <nav aria-label="Mobile" className="flex flex-col divide-y divide-border">
-
             {NAV.map((item) => (
               <Link
                 key={item.label}
@@ -280,4 +278,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

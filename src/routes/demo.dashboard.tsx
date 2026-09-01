@@ -39,7 +39,6 @@ import {
   type DemoStage,
 } from "@/lib/demo-workspace";
 
-
 export const Route = createFileRoute("/demo/dashboard")({
   head: () => ({
     meta: [
@@ -148,12 +147,14 @@ function DemoDashboard() {
               <Pill tone="neutral">Interactive</Pill>
             </div>
             <h1 className="mt-4 max-w-3xl font-display text-[clamp(1.7rem,4vw,2.6rem)] leading-[1.08] font-semibold tracking-tight">
-              This is what running your business inside{" "}
-              <span className="gold-text">Revora</span> looks like.
+              This is what running your business inside <span className="gold-text">Revora</span>{" "}
+              looks like.
             </h1>
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
               {workspace.business.name} — {workspace.business.tagline}.{" "}
-              <span className="text-accent">All metrics shown are fictional demonstration data.</span>
+              <span className="text-accent">
+                All metrics shown are fictional demonstration data.
+              </span>
             </p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {[
@@ -164,7 +165,9 @@ function DemoDashboard() {
               ].map((item) => (
                 <div key={item.label} className="panel card-lift p-3">
                   <p className="eyebrow">{item.label}</p>
-                  <p className="mt-1 font-display text-[15px] font-semibold gold-hl">{item.value}</p>
+                  <p className="mt-1 font-display text-[15px] font-semibold gold-hl">
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -182,7 +185,6 @@ function DemoDashboard() {
             </div>
           </div>
         </section>
-
 
         <section className="mx-auto max-w-6xl px-4 py-8">
           <DemoBanner />
@@ -265,14 +267,26 @@ function DemoDashboard() {
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <MetricCard label="Follow-ups sent" value={String(metrics.followUps)} hint="Email + SMS (demo)" />
-                <MetricCard label="Site visitors" value={String(metrics.visitors)} hint="All sources (demo)" />
+                <MetricCard
+                  label="Follow-ups sent"
+                  value={String(metrics.followUps)}
+                  hint="Email + SMS (demo)"
+                />
+                <MetricCard
+                  label="Site visitors"
+                  value={String(metrics.visitors)}
+                  hint="All sources (demo)"
+                />
                 <MetricCard
                   label="Reviews left"
                   value={`${metrics.reviewsLeft}/${metrics.reviewsRequested}`}
                   hint="Requested automatically (demo)"
                 />
-                <MetricCard label="Repeat customers" value={`${metrics.repeatRate}%`} hint="Rebooked within 90 days (demo)" />
+                <MetricCard
+                  label="Repeat customers"
+                  value={`${metrics.repeatRate}%`}
+                  hint="Rebooked within 90 days (demo)"
+                />
               </div>
 
               <Panel>
@@ -290,13 +304,10 @@ function DemoDashboard() {
 
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
                 <Panel className="min-w-0">
-                  <SectionHeading
-                    eyebrow="The full flow"
-                    title="Visitor to repeat customer"
-                  />
+                  <SectionHeading eyebrow="The full flow" title="Visitor to repeat customer" />
                   <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-                    Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat. Tap any
-                    step to open those demo records in the pipeline.
+                    Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat. Tap
+                    any step to open those demo records in the pipeline.
                   </p>
                   <FunnelChart
                     rows={funnel}
@@ -368,15 +379,18 @@ function DemoDashboard() {
                       })}
                     </ol>
                     <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <Activity className="size-3.5" aria-hidden="true" /> Simulated events — demo data
-                      only.
+                      <Activity className="size-3.5" aria-hidden="true" /> Simulated events — demo
+                      data only.
                     </p>
                   </Panel>
                 </div>
               </div>
 
               <Panel>
-                <SectionHeading eyebrow="What happens at each step" title="Revora runs the whole loop" />
+                <SectionHeading
+                  eyebrow="What happens at each step"
+                  title="Revora runs the whole loop"
+                />
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {DEMO_STAGES.map((stage) => {
                     const count = workspace.leads.filter((l) => l.stage === stage.id).length;
@@ -404,7 +418,6 @@ function DemoDashboard() {
                 </ul>
               </Panel>
             </div>
-
           ) : null}
 
           {tab === "pipeline" ? (
@@ -412,7 +425,9 @@ function DemoDashboard() {
               <Panel>
                 <SectionHeading
                   eyebrow={`Demo pipeline · ${leads.length} records`}
-                  title={stageFilter === "all" ? "All demo leads" : `Stage: ${stageLabel(stageFilter)}`}
+                  title={
+                    stageFilter === "all" ? "All demo leads" : `Stage: ${stageLabel(stageFilter)}`
+                  }
                   action={
                     stageFilter === "all" ? null : (
                       <Button variant="outline" size="sm" onClick={() => setStageFilter("all")}>
@@ -445,7 +460,10 @@ function DemoDashboard() {
                           {lead.quoteHigh > 0
                             ? `${usd(lead.quoteLow)} – ${usd(lead.quoteHigh)}`
                             : "No quote yet"}{" "}
-                          · {lead.daysAgo === 0 ? "today" : `${workspace.formatRelative(lead.daysAgo)}`}
+                          ·{" "}
+                          {lead.daysAgo === 0
+                            ? "today"
+                            : `${workspace.formatRelative(lead.daysAgo)}`}
                         </p>
                       </button>
                     </li>
@@ -479,7 +497,9 @@ function DemoDashboard() {
                         </div>
                         <div className="rounded-md border border-border bg-elevated p-2.5">
                           <dt className="eyebrow">Phone (masked)</dt>
-                          <dd className="tnum mt-1 text-muted-foreground">{selected.phoneMasked}</dd>
+                          <dd className="tnum mt-1 text-muted-foreground">
+                            {selected.phoneMasked}
+                          </dd>
                         </div>
                         <div className="rounded-md border border-border bg-elevated p-2.5">
                           <dt className="eyebrow">Email (masked)</dt>
@@ -512,7 +532,9 @@ function DemoDashboard() {
                         lead's timeline.
                       </p>
 
-                      <h3 className="mt-5 font-display text-[13px] font-semibold">Activity timeline</h3>
+                      <h3 className="mt-5 font-display text-[13px] font-semibold">
+                        Activity timeline
+                      </h3>
                       <ol className="mt-2 space-y-2">
                         {selected.activity.map((entry, i) => (
                           <li key={`${entry.label}-${i}`} className="flex gap-2.5">
@@ -584,7 +606,10 @@ function DemoDashboard() {
 
           {tab === "automations" ? (
             <Panel className="reveal mt-5">
-              <SectionHeading eyebrow="Demo automations" title="Follow-up sequences that run themselves" />
+              <SectionHeading
+                eyebrow="Demo automations"
+                title="Follow-up sequences that run themselves"
+              />
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-[12px]">
                   <thead className="text-muted-foreground">
@@ -599,7 +624,10 @@ function DemoDashboard() {
                   </thead>
                   <tbody>
                     {workspace.automations.map((a) => (
-                      <tr key={a.name} className="border-t border-border transition-colors hover:bg-elevated/60">
+                      <tr
+                        key={a.name}
+                        className="border-t border-border transition-colors hover:bg-elevated/60"
+                      >
                         <td className="py-2.5 font-medium">
                           <span className="inline-flex items-center gap-1.5">
                             <Zap className="size-3.5 text-primary" aria-hidden="true" />
@@ -627,15 +655,25 @@ function DemoDashboard() {
               <SectionHeading eyebrow="Demo reviews" title="Review requests and responses" />
               <ul className="mt-4 space-y-2">
                 {workspace.reviews.map((review) => (
-                  <li key={review.name} className="card-lift rounded-md border border-border bg-elevated p-3">
+                  <li
+                    key={review.name}
+                    className="card-lift rounded-md border border-border bg-elevated p-3"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold">
                         <BadgeCheck className="size-3.5 text-primary" aria-hidden="true" />
                         {review.name}
                       </span>
-                      <span className="inline-flex items-center gap-0.5" aria-label={`${review.rating} of 5`}>
+                      <span
+                        className="inline-flex items-center gap-0.5"
+                        aria-label={`${review.rating} of 5`}
+                      >
                         {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="size-3.5 fill-primary text-primary" aria-hidden="true" />
+                          <Star
+                            key={i}
+                            className="size-3.5 fill-primary text-primary"
+                            aria-hidden="true"
+                          />
                         ))}
                       </span>
                     </div>
@@ -656,7 +694,10 @@ function DemoDashboard() {
 
           {tab === "traffic" ? (
             <Panel className="reveal mt-5">
-              <SectionHeading eyebrow={`Demo traffic · last ${rangeLabel}`} title="Where the demo leads came from" />
+              <SectionHeading
+                eyebrow={`Demo traffic · last ${rangeLabel}`}
+                title="Where the demo leads came from"
+              />
               <ul className="mt-4 space-y-3">
                 {workspace.traffic.map((row) => {
                   const factor = DEMO_RANGES.find((r) => r.id === range)?.factor ?? 1;
@@ -690,8 +731,8 @@ function DemoDashboard() {
           <Panel className="mt-6">
             <SectionHeading eyebrow="Next step" title="Want this running for your business?" />
             <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
-              $750 one-time setup, first month free, then $100/month from month two. We build it, connect it, launch
-              it and keep optimizing it.
+              $750 one-time setup, first month free, then $100/month from month two. We build it,
+              connect it, launch it and keep optimizing it.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button asChild variant="signal">

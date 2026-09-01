@@ -69,14 +69,20 @@ export function BuilderWizard({
     return () => clearTimeout(timer);
   }, [jumpTo]);
 
-  const goals = Array.isArray(profile?.["website_goals"]) ? (profile?.["website_goals"] as string[]) : [];
+  const goals = Array.isArray(profile?.["website_goals"])
+    ? (profile?.["website_goals"] as string[])
+    : [];
 
   const done: Record<WizardStepKey, boolean> = {
     business: !!org?.name && !!text(profile, "description"),
     services: servicesCount > 0,
     brand: !!text(profile, "primary_color") || !!text(profile, "hero_image_url"),
     contact: !!(text(profile, "phone") || text(profile, "email")),
-    proof: !!(text(profile, "years_in_business") || text(profile, "certifications") || text(profile, "review_link")),
+    proof: !!(
+      text(profile, "years_in_business") ||
+      text(profile, "certifications") ||
+      text(profile, "review_link")
+    ),
     goals: goals.length > 0,
     structure: true,
     launch: true,
@@ -100,7 +106,10 @@ export function BuilderWizard({
           <p className="eyebrow">
             Step {index + 1} of {WIZARD_STEPS.length}
           </p>
-          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-live="polite">
+          <span
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+            aria-live="polite"
+          >
             {busy ? (
               <>
                 <Loader2 className="size-3 animate-spin" /> Saving…
@@ -115,7 +124,10 @@ export function BuilderWizard({
           </span>
         </div>
         <div className="mt-3 flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated" role="presentation">
+          <div
+            className="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated"
+            role="presentation"
+          >
             <div
               className="h-full rounded-full bg-primary transition-all duration-500"
               style={{ width: `${completion}%` }}
@@ -152,13 +164,18 @@ export function BuilderWizard({
         <SectionHeading
           eyebrow={current.help}
           title={current.title}
-          action={done[step] ? <Pill tone="signal">Complete</Pill> : <Pill tone="neutral">In progress</Pill>}
+          action={
+            done[step] ? (
+              <Pill tone="signal">Complete</Pill>
+            ) : (
+              <Pill tone="neutral">In progress</Pill>
+            )
+          }
         />
 
         <div className="mt-5 space-y-4">
           {step === "business" ? (
             <>
-              
               <AutoField
                 label="Business name"
                 value={org?.name ?? ""}
@@ -193,8 +210,8 @@ export function BuilderWizard({
             <div className="space-y-3">
               <p className="text-[13px] text-muted-foreground">
                 You have {servicesCount} service{servicesCount === 1 ? "" : "s"} listed
-                {servicesCount ? `, ${pricedCount} with a price` : ""}. Services become cards on your website and
-                options in your quote calculator.
+                {servicesCount ? `, ${pricedCount} with a price` : ""}. Services become cards on
+                your website and options in your quote calculator.
               </p>
               <Button asChild variant="outline">
                 <a href="/app/services">Manage my services</a>
@@ -282,8 +299,8 @@ export function BuilderWizard({
           {step === "proof" ? (
             <>
               <p className="text-[13px] text-muted-foreground">
-                Only enter things that are true — Revora will never claim awards, licences or ratings you
-                haven&apos;t supplied.
+                Only enter things that are true — Revora will never claim awards, licences or
+                ratings you haven&apos;t supplied.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <AutoField
@@ -339,7 +356,9 @@ export function BuilderWizard({
                     )}
                   >
                     <p className="text-[14px] font-medium">{goal.label}</p>
-                    <p className="mt-1 text-[12px] text-muted-foreground">Main button: {goal.cta}</p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Main button: {goal.cta}
+                    </p>
                   </button>
                 );
               })}
@@ -351,7 +370,11 @@ export function BuilderWizard({
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-3 border-t border-border pt-4">
-          <Button variant="outline" disabled={!previous} onClick={() => previous && setStep(previous.key)}>
+          <Button
+            variant="outline"
+            disabled={!previous}
+            onClick={() => previous && setStep(previous.key)}
+          >
             <ChevronLeft className="size-4" /> Back
           </Button>
           {next ? (
@@ -393,7 +416,12 @@ function AutoField({
     setDraft(value);
   }, [value]);
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   const schedule = (nextValue: string) => {
     setDraft(nextValue);

@@ -73,8 +73,10 @@ const WHY: Record<string, string> = {
   seo: "Google decides what to show from these fields. Left blank, it guesses — usually badly.",
   content: "Thin pages give neither a visitor nor a search engine a reason to trust the business.",
   design: "Layout and imagery are the first quality signal a stranger judges you on.",
-  mobile: "Most local-service visitors arrive on a phone; anything broken there is broken for most people.",
-  accessibility: "Missing descriptions lock out screen-reader users and remove you from image search.",
+  mobile:
+    "Most local-service visitors arrive on a phone; anything broken there is broken for most people.",
+  accessibility:
+    "Missing descriptions lock out screen-reader users and remove you from image search.",
   forms: "A form that does not capture and route an enquiry loses the lead permanently.",
   business: "Your phone, email, hours and area are the facts customers look for before acting.",
   publishing: "An unpublished or failing page cannot be reached by customers or search engines.",
@@ -84,20 +86,36 @@ const WHY: Record<string, string> = {
 /** Classifies an audit issue and routes it to the builder area that fixes it. */
 function classify(issue: AuditIssue): { category: IssueCategory; area: BuilderArea } {
   const key = issue.key;
-  if (issue.upgrade === "publish_site" || key.startsWith("live-status")) return { category: "publishing", area: "launch" };
-  if (issue.upgrade === "page_seo" || issue.upgrade === "page_index" || issue.upgrade === "apply_meta")
+  if (issue.upgrade === "publish_site" || key.startsWith("live-status"))
+    return { category: "publishing", area: "launch" };
+  if (
+    issue.upgrade === "page_seo" ||
+    issue.upgrade === "page_index" ||
+    issue.upgrade === "apply_meta"
+  )
     return { category: "seo", area: "pages" };
-  if (key.startsWith("live-title") || key.startsWith("live-desc") || key.startsWith("live-og") || key === "site-meta")
+  if (
+    key.startsWith("live-title") ||
+    key.startsWith("live-desc") ||
+    key.startsWith("live-og") ||
+    key === "site-meta"
+  )
     return { category: "seo", area: "pages" };
-  if (key.startsWith("live-canonical") || key.startsWith("live-schema")) return { category: "technical", area: "launch" };
+  if (key.startsWith("live-canonical") || key.startsWith("live-schema"))
+    return { category: "technical", area: "launch" };
   if (key.startsWith("live-alt")) return { category: "accessibility", area: "design" };
-  if (key.startsWith("live-cta") || key.startsWith("no-cta")) return { category: "conversion", area: "pages" };
-  if (key === "no-capture" || issue.upgrade === "add_capture_section") return { category: "forms", area: "pages" };
-  if (key === "no-trust" || key === "goal-sections") return { category: "conversion", area: "upgrades" };
-  if (key === "no-faq" || issue.upgrade === "add_faq_section") return { category: "content", area: "upgrades" };
+  if (key.startsWith("live-cta") || key.startsWith("no-cta"))
+    return { category: "conversion", area: "pages" };
+  if (key === "no-capture" || issue.upgrade === "add_capture_section")
+    return { category: "forms", area: "pages" };
+  if (key === "no-trust" || key === "goal-sections")
+    return { category: "conversion", area: "upgrades" };
+  if (key === "no-faq" || issue.upgrade === "add_faq_section")
+    return { category: "content", area: "upgrades" };
   if (key.startsWith("thin") || key.startsWith("live-thin") || key === "no-pages")
     return { category: "content", area: "pages" };
-  if (key.startsWith("no-h1") || key.startsWith("live-h1")) return { category: "content", area: "pages" };
+  if (key.startsWith("no-h1") || key.startsWith("live-h1"))
+    return { category: "content", area: "pages" };
   return { category: "conversion", area: "pages" };
 }
 
@@ -105,9 +123,11 @@ function classify(issue: AuditIssue): { category: IssueCategory; area: BuilderAr
 function matchProposal(issue: AuditIssue, proposals: UpgradeProposal[]) {
   if (!issue.upgrade) return null;
   const scoped = proposals.find(
-    (proposal) => proposal.kind === issue.upgrade && (!issue.pageId || proposal.pageId === issue.pageId),
+    (proposal) =>
+      proposal.kind === issue.upgrade && (!issue.pageId || proposal.pageId === issue.pageId),
   );
-  const any = scoped ?? proposals.find((proposal) => proposal.kind === issue.upgrade && !proposal.pageId);
+  const any =
+    scoped ?? proposals.find((proposal) => proposal.kind === issue.upgrade && !proposal.pageId);
   return any && any.applyable ? any.id : null;
 }
 
@@ -135,7 +155,9 @@ export function fixTargets(issues: AuditIssue[], proposals: UpgradeProposal[]): 
 /** Conversion gaps use the same card shape so one list can present everything. */
 export function gapTargets(gaps: ConversionGap[]): FixTarget[] {
   return gaps.map((gap) => {
-    const wantsBusinessFact = /phone|email|call|text|sms|hours|area/i.test(`${gap.title} ${gap.detail}`);
+    const wantsBusinessFact = /phone|email|call|text|sms|hours|area/i.test(
+      `${gap.title} ${gap.detail}`,
+    );
     const area: BuilderArea = wantsBusinessFact ? "answers" : "pages";
     return {
       issueKey: `gap-${gap.key}`,
@@ -154,8 +176,11 @@ export function gapTargets(gaps: ConversionGap[]): FixTarget[] {
 }
 
 export function criticalFirst(targets: FixTarget[]) {
-  const rank = (severity: AuditSeverity) => (severity === "critical" ? 0 : severity === "warning" ? 1 : 2);
-  return [...targets].sort((a, b) => rank(a.severity) - rank(b.severity) || a.title.localeCompare(b.title));
+  const rank = (severity: AuditSeverity) =>
+    severity === "critical" ? 0 : severity === "warning" ? 1 : 2;
+  return [...targets].sort(
+    (a, b) => rank(a.severity) - rank(b.severity) || a.title.localeCompare(b.title),
+  );
 }
 
 /** Deep link into the builder area that owns a fix. */

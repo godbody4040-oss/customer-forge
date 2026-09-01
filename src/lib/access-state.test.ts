@@ -30,11 +30,16 @@ describe("resolveAccess", () => {
   });
 
   it("locks canceled and expired workspaces", () => {
-    expect(resolveAccess({ created_at: iso(-60 * DAY), subscription_status: "canceled" })).toMatchObject({
+    expect(
+      resolveAccess({ created_at: iso(-60 * DAY), subscription_status: "canceled" }),
+    ).toMatchObject({
       state: "CANCELED",
       allowed: false,
     });
-    expect(resolveAccess({ created_at: iso(-60 * DAY) })).toMatchObject({ state: "EXPIRED", allowed: false });
+    expect(resolveAccess({ created_at: iso(-60 * DAY) })).toMatchObject({
+      state: "EXPIRED",
+      allowed: false,
+    });
   });
 
   it("locks suspended workspaces", () => {
@@ -56,7 +61,6 @@ describe("resolveAccess", () => {
       expect(result.reason.toLowerCase()).not.toMatch(
         /out of credits|buy credits|purchase credits|credits required|0 credits|credits remaining/,
       );
-
     }
   });
 });

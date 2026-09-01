@@ -83,9 +83,15 @@ function WebsiteAuditPage() {
               Revora builds the site, connects the lead capture, quotes, booking, follow-up, reviews
               and analytics, then keeps improving it every month.
             </p>
-            <Button asChild variant="signal" size="lg" className="mt-7 h-auto py-3 leading-snug whitespace-normal">
+            <Button
+              asChild
+              variant="signal"
+              size="lg"
+              className="mt-7 h-auto py-3 leading-snug whitespace-normal"
+            >
               <Link to="/get-started">
-                Start 3 free days of full access <ArrowRight className="size-4" aria-hidden="true" />
+                Start 3 free days of full access{" "}
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>

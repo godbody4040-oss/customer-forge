@@ -61,10 +61,14 @@ export function BuilderAudit({
   const runBatch = async (mode: "critical" | "all") => {
     if (!canManage) return;
     const criticalKinds = new Set(
-      model.structure.issues.filter((issue) => issue.severity === "critical").map((issue) => issue.upgrade),
+      model.structure.issues
+        .filter((issue) => issue.severity === "critical")
+        .map((issue) => issue.upgrade),
     );
     const selected =
-      mode === "critical" ? model.proposals.filter((proposal) => criticalKinds.has(proposal.kind)) : model.proposals;
+      mode === "critical"
+        ? model.proposals.filter((proposal) => criticalKinds.has(proposal.kind))
+        : model.proposals;
     const result = await batchFix.mutateAsync({
       proposals: selected,
       label: mode === "critical" ? "Fix all critical issues" : "Optimise entire website",

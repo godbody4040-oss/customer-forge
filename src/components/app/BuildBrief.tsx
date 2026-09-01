@@ -23,7 +23,9 @@ export function BusinessBriefPanel({ brief }: { brief: SiteBrief | null }) {
           </p>
           <p className="mt-1.5 text-[13px] text-muted-foreground">{brief.buyer}</p>
           {brief.buyerGoal ? (
-            <p className="mt-1 text-[12px] text-muted-foreground">They want to: {brief.buyerGoal}</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              They want to: {brief.buyerGoal}
+            </p>
           ) : null}
         </div>
         <div>
@@ -43,7 +45,8 @@ export function BusinessBriefPanel({ brief }: { brief: SiteBrief | null }) {
           <ul className="mt-2 grid gap-1.5">
             {brief.intents.map((intent) => (
               <li key={intent} className="text-[12px] text-muted-foreground">
-                <span className="text-foreground">{INTENT_META[intent].label}</span> — {INTENT_META[intent].path}
+                <span className="text-foreground">{INTENT_META[intent].label}</span> —{" "}
+                {INTENT_META[intent].path}
               </li>
             ))}
           </ul>
@@ -52,7 +55,9 @@ export function BusinessBriefPanel({ brief }: { brief: SiteBrief | null }) {
 
       {brief.objections.length ? (
         <div className="mt-5">
-          <p className="text-[12px] font-medium">Questions the page answers before someone enquires</p>
+          <p className="text-[12px] font-medium">
+            Questions the page answers before someone enquires
+          </p>
           <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
             {brief.objections.map((objection) => (
               <li key={objection} className="flex gap-2 text-[12px] text-muted-foreground">
@@ -67,7 +72,8 @@ export function BusinessBriefPanel({ brief }: { brief: SiteBrief | null }) {
       {brief.missingFacts.length ? (
         <div className="mt-5 rounded-md border border-accent/30 bg-accent/10 p-3.5">
           <p className="flex items-center gap-2 text-[12px] font-medium text-accent">
-            <AlertCircle className="size-3.5" aria-hidden="true" /> Give Revora these and the site gets stronger
+            <AlertCircle className="size-3.5" aria-hidden="true" /> Give Revora these and the site
+            gets stronger
           </p>
           <ul className="mt-2 grid gap-1">
             {brief.missingFacts.map((fact) => (
@@ -99,9 +105,21 @@ export function BuildReportPanel({ report }: { report: BuildReport | null }) {
     { label: "FAQs written", value: String(report.faqs), ok: report.faqs > 0 },
     { label: "Photos in use", value: String(report.photos), ok: report.photos > 0 },
     { label: "Quote forms live", value: String(report.leadForms), ok: report.leadForms > 0 },
-    { label: "Bookable services", value: String(report.bookableServices), ok: report.bookableServices > 0 },
-    { label: "Search settings", value: report.seoConfigured ? "Configured" : "Incomplete", ok: report.seoConfigured },
-    { label: "Leads go to your CRM", value: report.crmConnected ? "Connected" : "Not connected", ok: report.crmConnected },
+    {
+      label: "Bookable services",
+      value: String(report.bookableServices),
+      ok: report.bookableServices > 0,
+    },
+    {
+      label: "Search settings",
+      value: report.seoConfigured ? "Configured" : "Incomplete",
+      ok: report.seoConfigured,
+    },
+    {
+      label: "Leads go to your CRM",
+      value: report.crmConnected ? "Connected" : "Not connected",
+      ok: report.crmConnected,
+    },
     {
       label: "Visitor tracking",
       value: report.analyticsConfigured ? "Connected" : "Not connected",
@@ -118,7 +136,10 @@ export function BuildReportPanel({ report }: { report: BuildReport | null }) {
 
       <dl className="mt-4 grid gap-2 sm:grid-cols-2">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-3 rounded-md bg-elevated px-3 py-2">
+          <div
+            key={row.label}
+            className="flex items-center justify-between gap-3 rounded-md bg-elevated px-3 py-2"
+          >
             <dt className="text-[12px] text-muted-foreground">{row.label}</dt>
             <dd className={row.ok ? "text-[12px]" : "text-[12px] text-accent"}>{row.value}</dd>
           </div>
@@ -134,13 +155,23 @@ export function BuildReportPanel({ report }: { report: BuildReport | null }) {
                 key={check.key}
                 className="flex flex-wrap items-start gap-2 rounded-md bg-elevated px-3 py-2 text-[12px]"
               >
-                <span className={check.ok ? "text-primary" : check.severity === "blocker" ? "text-accent" : "text-muted-foreground"}>
+                <span
+                  className={
+                    check.ok
+                      ? "text-primary"
+                      : check.severity === "blocker"
+                        ? "text-accent"
+                        : "text-muted-foreground"
+                  }
+                >
                   {check.ok ? "\u2713" : check.severity === "blocker" ? "\u2715" : "!"}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="font-medium">{check.label}</span>
                   <span className="block text-muted-foreground">{check.detail}</span>
-                  {!check.ok && check.fix ? <span className="mt-0.5 block">{check.fix}</span> : null}
+                  {!check.ok && check.fix ? (
+                    <span className="mt-0.5 block">{check.fix}</span>
+                  ) : null}
                 </span>
               </li>
             ))}
@@ -160,7 +191,9 @@ export function BuildReportPanel({ report }: { report: BuildReport | null }) {
           </ul>
         </div>
       ) : (
-        <p className="mt-4 text-[12px] text-muted-foreground">Nothing outstanding from this build.</p>
+        <p className="mt-4 text-[12px] text-muted-foreground">
+          Nothing outstanding from this build.
+        </p>
       )}
     </Panel>
   );

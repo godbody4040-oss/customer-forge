@@ -18,8 +18,14 @@ export const getPlatformMetrics = createServerFn({ method: "GET" })
     const [orgs, sites, leads, appts, plans] = await Promise.all([
       supabaseAdmin.from("organizations").select("id, subscription_status, is_suspended, plan_id"),
       supabaseAdmin.from("website_settings").select("publish_state, domain_status"),
-      supabaseAdmin.from("leads").select("id", { count: "exact", head: true }).gte("created_at", since),
-      supabaseAdmin.from("appointments").select("id", { count: "exact", head: true }).gte("created_at", since),
+      supabaseAdmin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", since),
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", since),
       supabaseAdmin.from("plans").select("id, monthly_price"),
     ]);
 
@@ -64,27 +70,37 @@ export const listClients = createServerFn({ method: "GET" })
     const ids = (orgs ?? []).map((o) => o.id);
     if (!ids.length) return [];
 
-    const [profiles, sites, services, media, forms, leads, appts, events, subs, pays] = await Promise.all([
-      supabaseAdmin.from("business_profiles").select("*").in("organization_id", ids),
-      supabaseAdmin.from("website_settings").select("*").in("organization_id", ids),
-      supabaseAdmin.from("services").select("organization_id, bookable, is_active").in("organization_id", ids),
-      supabaseAdmin.from("media").select("organization_id").in("organization_id", ids),
-      supabaseAdmin.from("quote_forms").select("organization_id, is_active").in("organization_id", ids),
-      supabaseAdmin.from("leads").select("organization_id").in("organization_id", ids),
-      supabaseAdmin.from("appointments").select("organization_id").in("organization_id", ids),
-      supabaseAdmin.from("analytics_events").select("organization_id").in("organization_id", ids).limit(20000),
-      supabaseAdmin
-        .from("subscriptions")
-        .select(
-          "organization_id, status, provider_customer_id, provider_subscription_id, current_period_end, cancel_at_period_end, price_id",
-        )
-        .in("organization_id", ids),
-      supabaseAdmin
-        .from("payments")
-        .select("organization_id, amount, status")
-        .in("organization_id", ids),
-    ]);
-
+    const [profiles, sites, services, media, forms, leads, appts, events, subs, pays] =
+      await Promise.all([
+        supabaseAdmin.from("business_profiles").select("*").in("organization_id", ids),
+        supabaseAdmin.from("website_settings").select("*").in("organization_id", ids),
+        supabaseAdmin
+          .from("services")
+          .select("organization_id, bookable, is_active")
+          .in("organization_id", ids),
+        supabaseAdmin.from("media").select("organization_id").in("organization_id", ids),
+        supabaseAdmin
+          .from("quote_forms")
+          .select("organization_id, is_active")
+          .in("organization_id", ids),
+        supabaseAdmin.from("leads").select("organization_id").in("organization_id", ids),
+        supabaseAdmin.from("appointments").select("organization_id").in("organization_id", ids),
+        supabaseAdmin
+          .from("analytics_events")
+          .select("organization_id")
+          .in("organization_id", ids)
+          .limit(20000),
+        supabaseAdmin
+          .from("subscriptions")
+          .select(
+            "organization_id, status, provider_customer_id, provider_subscription_id, current_period_end, cancel_at_period_end, price_id",
+          )
+          .in("organization_id", ids),
+        supabaseAdmin
+          .from("payments")
+          .select("organization_id, amount, status")
+          .in("organization_id", ids),
+      ]);
 
     const countBy = (rows: { organization_id: string }[] | null, id: string) =>
       (rows ?? []).filter((r) => r.organization_id === id).length;
@@ -99,7 +115,9 @@ export const listClients = createServerFn({ method: "GET" })
         servicesCount: orgServices.filter((s) => s.is_active).length,
         bookableCount: orgServices.filter((s) => s.bookable && s.is_active).length,
         mediaCount: countBy(media.data, org.id),
-        quoteFormCount: (forms.data ?? []).filter((f) => f.organization_id === org.id && f.is_active).length,
+        quoteFormCount: (forms.data ?? []).filter(
+          (f) => f.organization_id === org.id && f.is_active,
+        ).length,
         analyticsCount: countBy(events.data, org.id),
       }).score;
 
@@ -144,7 +162,6 @@ export const listClients = createServerFn({ method: "GET" })
         appointments: countBy(appts.data, org.id),
         readinessScore: score,
       };
-
     });
   });
 
@@ -161,35 +178,48 @@ export const getClientDetail = createServerFn({ method: "GET" })
     const id = data.organizationId;
     const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
-    const [org, profile, settings, social, services, media, forms, leads, appts, events, team, sub, support] =
-      await Promise.all([
-        supabaseAdmin.from("organizations").select("*").eq("id", id).maybeSingle(),
-        supabaseAdmin.from("business_profiles").select("*").eq("organization_id", id).maybeSingle(),
-        supabaseAdmin.from("website_settings").select("*").eq("organization_id", id).maybeSingle(),
-        supabaseAdmin.from("social_profiles").select("*").eq("organization_id", id).maybeSingle(),
-        supabaseAdmin.from("services").select("*").eq("organization_id", id).order("sort_order"),
-        supabaseAdmin.from("media").select("id, url").eq("organization_id", id),
-        supabaseAdmin.from("quote_forms").select("id, is_active").eq("organization_id", id),
-        supabaseAdmin.from("leads").select("id, status, created_at").eq("organization_id", id),
-        supabaseAdmin.from("appointments").select("id, status, starts_at").eq("organization_id", id),
-        supabaseAdmin
-          .from("analytics_events")
-          .select("id, event_type, created_at")
-          .eq("organization_id", id)
-          .gte("created_at", since)
-          .limit(20000),
-        supabaseAdmin
-          .from("memberships")
-          .select("id, role, user_id, profiles(full_name, email)")
-          .eq("organization_id", id),
-        supabaseAdmin.from("subscriptions").select("*").eq("organization_id", id).maybeSingle(),
-        supabaseAdmin
-          .from("support_sessions")
-          .select("*")
-          .eq("organization_id", id)
-          .order("started_at", { ascending: false })
-          .limit(20),
-      ]);
+    const [
+      org,
+      profile,
+      settings,
+      social,
+      services,
+      media,
+      forms,
+      leads,
+      appts,
+      events,
+      team,
+      sub,
+      support,
+    ] = await Promise.all([
+      supabaseAdmin.from("organizations").select("*").eq("id", id).maybeSingle(),
+      supabaseAdmin.from("business_profiles").select("*").eq("organization_id", id).maybeSingle(),
+      supabaseAdmin.from("website_settings").select("*").eq("organization_id", id).maybeSingle(),
+      supabaseAdmin.from("social_profiles").select("*").eq("organization_id", id).maybeSingle(),
+      supabaseAdmin.from("services").select("*").eq("organization_id", id).order("sort_order"),
+      supabaseAdmin.from("media").select("id, url").eq("organization_id", id),
+      supabaseAdmin.from("quote_forms").select("id, is_active").eq("organization_id", id),
+      supabaseAdmin.from("leads").select("id, status, created_at").eq("organization_id", id),
+      supabaseAdmin.from("appointments").select("id, status, starts_at").eq("organization_id", id),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("id, event_type, created_at")
+        .eq("organization_id", id)
+        .gte("created_at", since)
+        .limit(20000),
+      supabaseAdmin
+        .from("memberships")
+        .select("id, role, user_id, profiles(full_name, email)")
+        .eq("organization_id", id),
+      supabaseAdmin.from("subscriptions").select("*").eq("organization_id", id).maybeSingle(),
+      supabaseAdmin
+        .from("support_sessions")
+        .select("*")
+        .eq("organization_id", id)
+        .order("started_at", { ascending: false })
+        .limit(20),
+    ]);
 
     if (!org.data) throw new Error("That client no longer exists.");
 
@@ -284,7 +314,10 @@ export const updateClientOrg = createServerFn({ method: "POST" })
       if (data.subscription_status !== undefined) {
         subPatch.status = data.subscription_status as SubscriptionStatus;
       }
-      await supabaseAdmin.from("subscriptions").update(subPatch).eq("organization_id", data.organizationId);
+      await supabaseAdmin
+        .from("subscriptions")
+        .update(subPatch)
+        .eq("organization_id", data.organizationId);
     }
 
     await supabaseAdmin.from("audit_logs").insert({
@@ -307,14 +340,14 @@ export const setClientDomain = createServerFn({ method: "POST" })
     return { organizationId: String(input.organizationId), domain: String(input.domain ?? "") };
   })
   .handler(async ({ data, context }) => {
-    const { assertSuperAdmin, checkDomain, isValidDomain, normalizeDomain, DOMAIN_TARGET } = await import(
-      "@/lib/admin.server"
-    );
+    const { assertSuperAdmin, checkDomain, isValidDomain, normalizeDomain, DOMAIN_TARGET } =
+      await import("@/lib/admin.server");
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const domain = normalizeDomain(data.domain);
-    if (domain && !isValidDomain(domain)) throw new Error("That doesn't look like a valid domain name.");
+    if (domain && !isValidDomain(domain))
+      throw new Error("That doesn't look like a valid domain name.");
 
     const check = domain
       ? await checkDomain(domain)
@@ -331,7 +364,8 @@ export const setClientDomain = createServerFn({ method: "POST" })
       .update({
         custom_domain: domain || null,
         domain_status: check.status,
-        domain_error: check.status === "error" || check.status === "dns_pending" ? check.detail : null,
+        domain_error:
+          check.status === "error" || check.status === "dns_pending" ? check.detail : null,
         domain_checked_at: new Date().toISOString(),
         domain_target: DOMAIN_TARGET,
         domain_verified: check.dnsOk,
@@ -370,7 +404,8 @@ export const verifyClientDomain = createServerFn({ method: "POST" })
       .from("website_settings")
       .update({
         domain_status: check.status,
-        domain_error: check.status === "error" || check.status === "dns_pending" ? check.detail : null,
+        domain_error:
+          check.status === "error" || check.status === "dns_pending" ? check.detail : null,
         domain_checked_at: new Date().toISOString(),
         domain_verified: check.dnsOk,
         dns_ok: check.dnsOk,

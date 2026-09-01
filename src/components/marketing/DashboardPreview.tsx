@@ -61,9 +61,30 @@ export function DashboardPreview() {
         <div className="-mx-3.5 overflow-x-auto px-3.5">
           <div className="flex w-max gap-2.5">
             {[
-              { label: "New", count: 9, tone: "neutral" as const, rows: [["Marcus Bell", "Interior Detail"], ["Dana Reyes", "Quote request"]] },
-              { label: "Qualified", count: 4, tone: "signal" as const, rows: [["Priya Nair", "Fleet · 3 vans"], ["Tom Okafor", "Paint correction"]] },
-              { label: "Booked", count: 6, tone: "neutral" as const, rows: [["Sofia Lin", "Tomorrow 9:00a"]] },
+              {
+                label: "New",
+                count: 9,
+                tone: "neutral" as const,
+                rows: [
+                  ["Marcus Bell", "Interior Detail"],
+                  ["Dana Reyes", "Quote request"],
+                ],
+              },
+              {
+                label: "Qualified",
+                count: 4,
+                tone: "signal" as const,
+                rows: [
+                  ["Priya Nair", "Fleet · 3 vans"],
+                  ["Tom Okafor", "Paint correction"],
+                ],
+              },
+              {
+                label: "Booked",
+                count: 6,
+                tone: "neutral" as const,
+                rows: [["Sofia Lin", "Tomorrow 9:00a"]],
+              },
             ].map((col) => (
               <div
                 key={col.label}

@@ -16,7 +16,10 @@ const LINE_ITEMS = [
   { item: "CRM + lead pipeline setup", elsewhere: "$30 – $99/month tool" },
   { item: "Automated follow-up sequences", elsewhere: "$50 – $200/month tool" },
   { item: "Review request engine", elsewhere: "$40 – $150/month tool" },
-  { item: "Local SEO foundation (service + city pages, schema)", elsewhere: "$500 – $1,500 project" },
+  {
+    item: "Local SEO foundation (service + city pages, schema)",
+    elsewhere: "$500 – $1,500 project",
+  },
   { item: "Analytics + conversion tracking", elsewhere: "$300 – $800 setup" },
   { item: "Domain, hosting and launch", elsewhere: "$200 – $500 + hosting" },
   { item: "Ongoing updates, support and optimization", elsewhere: "$500+/month agency retainer" },
@@ -30,7 +33,10 @@ export function ValueStack() {
         <p className="eyebrow">What the {usd(GROWTH_SYSTEM.setupPrice)} setup replaces</p>
         <ul className="mt-4 divide-y divide-border/70">
           {LINE_ITEMS.map(({ item, elsewhere }) => (
-            <li key={item} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5">
+            <li
+              key={item}
+              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5"
+            >
               <span className="min-w-0 flex-1 text-[13px]">
                 <span aria-hidden="true" className="mr-2 text-primary">
                   ✓
@@ -83,9 +89,15 @@ export function ValueStack() {
         <p className="mt-5 flex items-start gap-2 text-[12.5px] leading-relaxed text-muted-foreground">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
           Try the entire system free for {GROWTH_SYSTEM.fullAccessTrialDays} days before you pay
-          anything. Cancel the monthly at any time — your site, content and customer list stay yours.
+          anything. Cancel the monthly at any time — your site, content and customer list stay
+          yours.
         </p>
-        <Button asChild variant="signal" size="lg" className="mt-5 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto">
+        <Button
+          asChild
+          variant="signal"
+          size="lg"
+          className="mt-5 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+        >
           <Link to="/get-started">
             {GROWTH_SYSTEM.ctaShort} <ArrowRight className="size-4" aria-hidden="true" />
           </Link>

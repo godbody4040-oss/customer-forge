@@ -15,12 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  useDeleteService,
-  useQuoteRequests,
-  useSaveService,
-  useServices,
-} from "@/lib/queries";
+import { useDeleteService, useQuoteRequests, useSaveService, useServices } from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
 import { currency, relative } from "@/lib/format";
 
@@ -28,7 +23,10 @@ export const Route = createFileRoute("/_authenticated/app/services")({
   head: () => ({
     meta: [
       { title: "Services & Quotes — Revora" },
-      { name: "description", content: "Manage your service menu and review incoming quote requests." },
+      {
+        name: "description",
+        content: "Manage your service menu and review incoming quote requests.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -129,8 +127,11 @@ function ServicesPage() {
                       description: service.description ?? "",
                       category: service.category ?? "",
                       price: service.price === null ? "" : String(service.price),
-                      starting_price: service.starting_price === null ? "" : String(service.starting_price),
-                      duration_minutes: service.duration_minutes ? String(service.duration_minutes) : "",
+                      starting_price:
+                        service.starting_price === null ? "" : String(service.starting_price),
+                      duration_minutes: service.duration_minutes
+                        ? String(service.duration_minutes)
+                        : "",
                       bookable: service.bookable,
                       featured: service.featured,
                       is_active: service.is_active,
@@ -208,7 +209,9 @@ function ServicesPage() {
                       description: editing.description.trim() || null,
                       category: editing.category.trim() || null,
                       price: editing.price ? Number(editing.price) : null,
-                      starting_price: editing.starting_price ? Number(editing.starting_price) : null,
+                      starting_price: editing.starting_price
+                        ? Number(editing.starting_price)
+                        : null,
                       duration_minutes: editing.duration_minutes
                         ? Number(editing.duration_minutes)
                         : null,

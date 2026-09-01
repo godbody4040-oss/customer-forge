@@ -36,7 +36,10 @@ export const Route = createFileRoute("/_authenticated/app/")({
   head: () => ({
     meta: [
       { title: "Growth Center — Revora" },
-      { name: "description", content: "Leads, bookings, revenue and conversion for any date range." },
+      {
+        name: "description",
+        content: "Leads, bookings, revenue and conversion for any date range.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -127,8 +130,8 @@ function Dashboard() {
   const org = ws?.workspace?.organization;
 
   const [range, setRange] = useState<RangeValue>("30");
-  const [customFrom, setCustomFrom] = useState(
-    () => new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10),
+  const [customFrom, setCustomFrom] = useState(() =>
+    new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10),
   );
   const [customTo, setCustomTo] = useState(() => new Date().toISOString().slice(0, 10));
 
@@ -140,7 +143,6 @@ function Dashboard() {
   useEffect(() => {
     globalThis.localStorage.setItem(RANGE_KEY, range);
   }, [range]);
-
 
   const window = useMemo(() => {
     if (range === "custom") {
@@ -195,10 +197,16 @@ function Dashboard() {
     const rangeLeads = leads.filter((l) => inRange(l.created_at));
     const prevLeads = leads.filter((l) => inPrev(l.created_at));
     const rangeAppts = appts.filter((a) => inRange(a.starts_at));
-    const bookedAppts = rangeAppts.filter((a) => a.status !== "cancelled" && a.status !== "no_show");
+    const bookedAppts = rangeAppts.filter(
+      (a) => a.status !== "cancelled" && a.status !== "no_show",
+    );
     const completedAppts = rangeAppts.filter((a) => a.status === "completed");
-    const views = events.filter((e) => e.event_type === "page_view" && inRange(e.created_at)).length;
-    const calls = events.filter((e) => e.event_type === "call_click" && inRange(e.created_at)).length;
+    const views = events.filter(
+      (e) => e.event_type === "page_view" && inRange(e.created_at),
+    ).length;
+    const calls = events.filter(
+      (e) => e.event_type === "call_click" && inRange(e.created_at),
+    ).length;
 
     const revenueWon = leads
       .filter((l) => l.status === "completed" && inRange(l.created_at))
@@ -207,13 +215,10 @@ function Dashboard() {
       .filter((l) => !["completed", "lost"].includes(l.status))
       .reduce((sum, l) => sum + Number(l.estimated_value ?? 0), 0);
 
-    const bookedLeads = rangeLeads.filter((l) =>
-      ["booked", "completed"].includes(l.status),
-    ).length;
+    const bookedLeads = rangeLeads.filter((l) => ["booked", "completed"].includes(l.status)).length;
 
     const needsAttention = leads.filter(
-      (l) =>
-        (l.status === "new" || l.status === "contacted") && !l.last_contacted_at,
+      (l) => (l.status === "new" || l.status === "contacted") && !l.last_contacted_at,
     );
 
     const upcoming = appts
@@ -266,8 +271,16 @@ function Dashboard() {
 
   const checklist = [
     { done: !!profileQuery.data?.phone, label: "Add your phone number", to: "/app/settings" },
-    { done: (servicesQuery.data ?? []).length > 0, label: "Add your services", to: "/app/services" },
-    { done: !!profileQuery.data?.description, label: "Write your About section", to: "/app/website" },
+    {
+      done: (servicesQuery.data ?? []).length > 0,
+      label: "Add your services",
+      to: "/app/services",
+    },
+    {
+      done: !!profileQuery.data?.description,
+      label: "Write your About section",
+      to: "/app/website",
+    },
     { done: !!org?.conversion_goal, label: "Pick your main conversion goal", to: "/app/settings" },
   ];
   const peak = stats.trend.reduce(
@@ -275,7 +288,6 @@ function Dashboard() {
     stats.trend[0] ?? { start: Date.now(), count: 0 },
   );
   const remaining = checklist.filter((c) => !c.done);
-
 
   if (leadsQuery.isLoading || !orgId) return <LoadingRows rows={5} />;
 
@@ -323,15 +335,11 @@ function Dashboard() {
         </div>
       </div>
 
-
       <StatusCenter organizationId={orgId} />
 
       <ProductionSummaryCard status={production} />
 
       <OnboardingJourney />
-
-
-
 
       {range === "custom" ? (
         <Panel className="p-4">
@@ -375,8 +383,8 @@ function Dashboard() {
               {stats.leads}
             </p>
             <p className={`mt-2 text-xs ${stats.delta >= 0 ? "text-primary" : "text-destructive"}`}>
-              {stats.delta >= 0 ? "▲" : "▼"} {Math.abs(stats.delta)}% vs previous {window.days}{" "}
-              day{window.days === 1 ? "" : "s"} ({stats.prevLeads})
+              {stats.delta >= 0 ? "▲" : "▼"} {Math.abs(stats.delta)}% vs previous {window.days} day
+              {window.days === 1 ? "" : "s"} ({stats.prevLeads})
             </p>
             <p className="mt-2 text-[12px] text-muted-foreground">
               Every lead here came from your Revora website, quote calculator or booking form.
@@ -434,8 +442,6 @@ function Dashboard() {
           <span>{dateShort(window.to.toISOString())}</span>
         </div>
       </Panel>
-
-
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
@@ -521,7 +527,6 @@ function Dashboard() {
         </ul>
       </Panel>
 
-
       {remaining.length ? (
         <Panel className="p-5">
           <SectionHeading eyebrow="Finish setup" title={`${remaining.length} steps left`} />
@@ -571,7 +576,9 @@ function Dashboard() {
                     {[lead.service_interest, relative(lead.created_at)].filter(Boolean).join(" · ")}
                   </p>
                 </div>
-                <Pill tone={leadStatusMeta(lead.status).tone}>{leadStatusMeta(lead.status).label}</Pill>
+                <Pill tone={leadStatusMeta(lead.status).tone}>
+                  {leadStatusMeta(lead.status).label}
+                </Pill>
               </li>
             ))}
             {stats.needsAttention.length === 0 ? (
@@ -603,7 +610,9 @@ function Dashboard() {
                     {dateShort(appt.starts_at)} · {timeShort(appt.starts_at)}
                   </p>
                 </div>
-                <Pill tone={appt.status === "confirmed" ? "signal" : "attention"}>{appt.status}</Pill>
+                <Pill tone={appt.status === "confirmed" ? "signal" : "attention"}>
+                  {appt.status}
+                </Pill>
               </li>
             ))}
             {stats.upcoming.length === 0 ? (
@@ -616,7 +625,10 @@ function Dashboard() {
       </div>
 
       <Panel className="p-5">
-        <SectionHeading eyebrow={`Leads in ${window.label.toLowerCase()}`} title="Latest activity" />
+        <SectionHeading
+          eyebrow={`Leads in ${window.label.toLowerCase()}`}
+          title="Latest activity"
+        />
         {stats.recent.length === 0 ? (
           <div className="mt-4">
             <EmptyState

@@ -35,7 +35,9 @@ export function useWebsiteContent(organizationId: string | undefined) {
           .order("sort_order"),
         supabase
           .from("website_sections")
-          .select("id, page_id, kind, variant, heading, subheading, body, settings, sort_order, is_visible")
+          .select(
+            "id, page_id, kind, variant, heading, subheading, body, settings, sort_order, is_visible",
+          )
           .eq("organization_id", orgId)
           .order("sort_order"),
         supabase
@@ -77,7 +79,11 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
     mutationFn: async () => {
       const orgId = organizationId!;
       const [org, profile, services, media, reviews, settings] = await Promise.all([
-        supabase.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
+        supabase
+          .from("organizations")
+          .select("name, industry, conversion_goal")
+          .eq("id", orgId)
+          .maybeSingle(),
         supabase.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
         supabase
           .from("services")
@@ -87,7 +93,11 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
           .order("sort_order"),
         supabase.from("media").select("id").eq("organization_id", orgId),
         supabase.from("reviews").select("id").eq("organization_id", orgId).eq("is_published", true),
-        supabase.from("website_settings").select("generation, seo").eq("organization_id", orgId).maybeSingle(),
+        supabase
+          .from("website_settings")
+          .select("generation, seo")
+          .eq("organization_id", orgId)
+          .maybeSingle(),
       ]);
       const p = (profile.data ?? {}) as Record<string, unknown>;
       const generation = (settings.data?.generation ?? null) as Record<string, unknown> | null;
@@ -107,8 +117,7 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
         hasHours: Boolean(p["hours"] && Object.keys(p["hours"] as object).length),
         photoCount: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
         reviewCount: (reviews.data ?? []).length,
-        ctaLabel:
-          copy?.primaryCta || (seo["primary_cta_label"] as string) || "Get my price",
+        ctaLabel: copy?.primaryCta || (seo["primary_cta_label"] as string) || "Get my price",
         services: services.data ?? [],
         benefits: copy?.benefits ?? [],
         faqs: copy?.faqs ?? [],
@@ -156,7 +165,8 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
 
             .select("id")
             .single();
-          if (sectionError || !sectionRow) throw sectionError ?? new Error("Couldn't create a section.");
+          if (sectionError || !sectionRow)
+            throw sectionError ?? new Error("Couldn't create a section.");
 
           const components = section.components ?? [];
           if (components.length) {
@@ -179,10 +189,13 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
       return blueprint.length;
     },
     onSuccess: (count) => {
-      toast.success(`${count} page${count === 1 ? "" : "s"} laid out from your business information.`);
+      toast.success(
+        `${count} page${count === 1 ? "" : "s"} laid out from your business information.`,
+      );
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't build your website structure."),
+    onError: (error: Error) =>
+      toast.error(error.message || "Couldn't build your website structure."),
   });
 }
 
@@ -221,7 +234,13 @@ export function useSavePage(organizationId: string | undefined) {
 export function useMoveSection(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
   return useMutation({
-    mutationFn: async ({ a, b }: { a: { id: string; sort_order: number }; b: { id: string; sort_order: number } }) => {
+    mutationFn: async ({
+      a,
+      b,
+    }: {
+      a: { id: string; sort_order: number };
+      b: { id: string; sort_order: number };
+    }) => {
       const orgId = organizationId!;
       const first = await supabase
         .from("website_sections")
@@ -244,7 +263,15 @@ export function useMoveSection(organizationId: string | undefined) {
 export function useAddSection(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
   return useMutation({
-    mutationFn: async ({ pageId, kind, sortOrder }: { pageId: string; kind: SectionKind; sortOrder: number }) => {
+    mutationFn: async ({
+      pageId,
+      kind,
+      sortOrder,
+    }: {
+      pageId: string;
+      kind: SectionKind;
+      sortOrder: number;
+    }) => {
       const { error } = await supabase.from("website_sections").insert({
         organization_id: organizationId!,
         page_id: pageId,
@@ -325,7 +352,9 @@ export function useAutosaveProfile(organizationId: string | undefined) {
     mutationFn: async (patch: Record<string, unknown>) => {
       const { error } = await supabase
         .from("business_profiles")
-        .upsert({ organization_id: organizationId!, ...patch } as never, { onConflict: "organization_id" });
+        .upsert({ organization_id: organizationId!, ...patch } as never, {
+          onConflict: "organization_id",
+        });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -397,7 +426,10 @@ export function useSaveComponent(organizationId: string | undefined) {
       const clean = { ...patch };
       if ("link_url" in clean) {
         const safe = safeLinkUrl(clean["link_url"] as string | null);
-        if (clean["link_url"] && !safe) throw new Error("That link isn't allowed. Use a web address, /page, tel: or mailto: link.");
+        if (clean["link_url"] && !safe)
+          throw new Error(
+            "That link isn't allowed. Use a web address, /page, tel: or mailto: link.",
+          );
         clean["link_url"] = safe;
       }
       const { error } = await supabase
@@ -449,7 +481,9 @@ export function usePreviewLinks(organizationId: string | undefined) {
 function newToken() {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 40);
+  return Array.from(bytes, (b) => b.toString(36).padStart(2, "0"))
+    .join("")
+    .slice(0, 40);
 }
 
 export function useCreatePreviewLink(organizationId: string | undefined) {
@@ -523,7 +557,15 @@ export function useReorderPages(organizationId: string | undefined) {
 export function useAddPage(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
   return useMutation({
-    mutationFn: async ({ title, kind, sortOrder }: { title: string; kind: string; sortOrder: number }) => {
+    mutationFn: async ({
+      title,
+      kind,
+      sortOrder,
+    }: {
+      title: string;
+      kind: string;
+      sortOrder: number;
+    }) => {
       const orgId = organizationId!;
       const clean = title.trim();
       if (!clean) throw new Error("Give the page a name first.");
@@ -624,7 +666,13 @@ export function useDuplicatePage(organizationId: string | undefined) {
 export function useSetHomePage(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
   return useMutation({
-    mutationFn: async ({ pageId, currentHomeId }: { pageId: string; currentHomeId: string | null }) => {
+    mutationFn: async ({
+      pageId,
+      currentHomeId,
+    }: {
+      pageId: string;
+      currentHomeId: string | null;
+    }) => {
       const orgId = organizationId!;
       if (currentHomeId && currentHomeId !== pageId) {
         const demote = await supabase

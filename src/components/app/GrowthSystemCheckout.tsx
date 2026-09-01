@@ -22,7 +22,10 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
-    trackConversion("checkout_started", { email: intake.email, amountCents: GROWTH_SYSTEM.setupPrice * 100 });
+    trackConversion("checkout_started", {
+      email: intake.email,
+      amountCents: GROWTH_SYSTEM.setupPrice * 100,
+    });
     try {
       const result = await createGrowthSystemCheckout({
         data: {

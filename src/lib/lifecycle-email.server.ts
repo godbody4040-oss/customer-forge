@@ -44,11 +44,14 @@ export type LifecycleResult = {
 
 const has = (v: unknown) => typeof v === "string" && v.trim().length > 0;
 const dateLabel = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
+  iso
+    ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : "";
 
 const groupCount = (rows: { organization_id: string }[] | null | undefined) => {
   const map = new Map<string, number>();
-  for (const row of rows ?? []) map.set(row.organization_id, (map.get(row.organization_id) ?? 0) + 1);
+  for (const row of rows ?? [])
+    map.set(row.organization_id, (map.get(row.organization_id) ?? 0) + 1);
   return map;
 };
 
@@ -85,7 +88,9 @@ const byOrg = <T extends { organization_id: string }>(rows: unknown) => {
 export async function planLifecycleEmails(db: Db, limit = 40): Promise<LifecycleSend[]> {
   const { data: orgs } = await db
     .from("organizations")
-    .select("id, name, created_at, onboarding_completed, trial_ends_at, setup_paid_at, is_demo, is_suspended")
+    .select(
+      "id, name, created_at, onboarding_completed, trial_ends_at, setup_paid_at, is_demo, is_suspended",
+    )
     .eq("is_demo", false)
     .eq("is_suspended", false)
     .order("created_at", { ascending: false })
@@ -102,42 +107,66 @@ export async function planLifecycleEmails(db: Db, limit = 40): Promise<Lifecycle
   if (list.length === 0) return [];
   const ids = list.map((o) => o.id);
 
-  const [profiles, settings, services, media, forms, automations, reviews, leads, appointments, analytics, log] =
-    await Promise.all([
-      db
-        .from("business_profiles")
-        .select(
-          "organization_id, email, owner_email, owner_name, phone, city, service_area, description, hours, logo_url, primary_color",
-        )
-        .in("organization_id", ids),
-      db
-        .from("website_settings")
-        .select("organization_id, publish_state, domain_status, generated_at, updated_at")
-        .in("organization_id", ids),
-      db.from("services").select("organization_id, bookable").in("organization_id", ids),
-      db.from("media").select("organization_id").in("organization_id", ids),
-      db.from("quote_forms").select("organization_id, is_active").in("organization_id", ids),
-      db.from("automations").select("organization_id, is_active").in("organization_id", ids),
-      db.from("reviews").select("organization_id").in("organization_id", ids),
-      db.from("leads").select("organization_id, status, created_at").in("organization_id", ids),
-      db
-        .from("appointments")
-        .select("organization_id, id, name, starts_at, status, created_at")
-        .in("organization_id", ids)
-        .gte("created_at", new Date(Date.now() - 2 * DAY).toISOString()),
-      db.from("analytics_events").select("organization_id").in("organization_id", ids).limit(2000),
-      db.from("lifecycle_email_log").select("organization_id, kind, window_key").in("organization_id", ids),
-    ]);
+  const [
+    profiles,
+    settings,
+    services,
+    media,
+    forms,
+    automations,
+    reviews,
+    leads,
+    appointments,
+    analytics,
+    log,
+  ] = await Promise.all([
+    db
+      .from("business_profiles")
+      .select(
+        "organization_id, email, owner_email, owner_name, phone, city, service_area, description, hours, logo_url, primary_color",
+      )
+      .in("organization_id", ids),
+    db
+      .from("website_settings")
+      .select("organization_id, publish_state, domain_status, generated_at, updated_at")
+      .in("organization_id", ids),
+    db.from("services").select("organization_id, bookable").in("organization_id", ids),
+    db.from("media").select("organization_id").in("organization_id", ids),
+    db.from("quote_forms").select("organization_id, is_active").in("organization_id", ids),
+    db.from("automations").select("organization_id, is_active").in("organization_id", ids),
+    db.from("reviews").select("organization_id").in("organization_id", ids),
+    db.from("leads").select("organization_id, status, created_at").in("organization_id", ids),
+    db
+      .from("appointments")
+      .select("organization_id, id, name, starts_at, status, created_at")
+      .in("organization_id", ids)
+      .gte("created_at", new Date(Date.now() - 2 * DAY).toISOString()),
+    db.from("analytics_events").select("organization_id").in("organization_id", ids).limit(2000),
+    db
+      .from("lifecycle_email_log")
+      .select("organization_id, kind, window_key")
+      .in("organization_id", ids),
+  ]);
 
   const profileMap = byOrg<ProfileRow>(profiles?.data);
   const settingsMap = byOrg<SettingRow>(settings?.data);
-  const serviceRows = (services?.data ?? []) as { organization_id: string; bookable: boolean | null }[];
+  const serviceRows = (services?.data ?? []) as {
+    organization_id: string;
+    bookable: boolean | null;
+  }[];
   const mediaCount = groupCount(media?.data);
   const formRows = (forms?.data ?? []) as { organization_id: string; is_active: boolean | null }[];
-  const automationRows = (automations?.data ?? []) as { organization_id: string; is_active: boolean | null }[];
+  const automationRows = (automations?.data ?? []) as {
+    organization_id: string;
+    is_active: boolean | null;
+  }[];
   const reviewCount = groupCount(reviews?.data);
   const analyticsCount = groupCount(analytics?.data);
-  const leadRows = (leads?.data ?? []) as { organization_id: string; status: string; created_at: string }[];
+  const leadRows = (leads?.data ?? []) as {
+    organization_id: string;
+    status: string;
+    created_at: string;
+  }[];
   const bookingRows = (appointments?.data ?? []) as {
     organization_id: string;
     id: string;
@@ -176,19 +205,25 @@ export async function planLifecycleEmails(db: Db, limit = 40): Promise<Lifecycle
       mediaCount: mediaCount.get(org.id) ?? 0,
       quoteFormCount: formRows.filter((f) => f.organization_id === org.id && f.is_active).length,
       bookableCount: orgServices.filter((s) => s.bookable).length,
-      automationsCount: automationRows.filter((a) => a.organization_id === org.id && a.is_active).length,
+      automationsCount: automationRows.filter((a) => a.organization_id === org.id && a.is_active)
+        .length,
       leadsCount: orgLeads.length,
       reviewsCount: reviewCount.get(org.id) ?? 0,
       analyticsCount: analyticsCount.get(org.id) ?? 0,
       localSeo: {
         city: has(profile?.city),
         serviceArea: has(profile?.service_area),
-        hours: Boolean(profile?.hours && typeof profile.hours === "object" && Object.keys(profile.hours).length > 0),
+        hours: Boolean(
+          profile?.hours &&
+          typeof profile.hours === "object" &&
+          Object.keys(profile.hours).length > 0,
+        ),
         phone: has(profile?.phone),
         description: has(profile?.description),
       },
       setupPaid: Boolean(org.setup_paid_at),
-      domainConnected: setting?.domain_status === "connected" || setting?.domain_status === "ssl_active",
+      domainConnected:
+        setting?.domain_status === "connected" || setting?.domain_status === "ssl_active",
       now,
     };
 
@@ -319,7 +354,11 @@ export async function runLifecycleEmails(db: Db, options: { limit?: number; max?
     });
     if (claimError) {
       result.skipped += 1;
-      result.details.push({ organizationId: send.organizationId, kind: send.kind, status: "already_logged" });
+      result.details.push({
+        organizationId: send.organizationId,
+        kind: send.kind,
+        status: "already_logged",
+      });
       continue;
     }
 
@@ -340,7 +379,11 @@ export async function runLifecycleEmails(db: Db, options: { limit?: number; max?
       if (outcome.sent) {
         result.sent += 1;
         await finish("sent");
-        result.details.push({ organizationId: send.organizationId, kind: send.kind, status: "sent" });
+        result.details.push({
+          organizationId: send.organizationId,
+          kind: send.kind,
+          status: "sent",
+        });
       } else {
         result.skipped += 1;
         await finish("skipped", outcome.reason);
@@ -366,7 +409,12 @@ export async function runLifecycleEmails(db: Db, options: { limit?: number; max?
         .eq("organization_id", send.organizationId)
         .eq("kind", send.kind)
         .eq("window_key", send.windowKey);
-      result.details.push({ organizationId: send.organizationId, kind: send.kind, status: "failed", reason });
+      result.details.push({
+        organizationId: send.organizationId,
+        kind: send.kind,
+        status: "failed",
+        reason,
+      });
     }
   }
 

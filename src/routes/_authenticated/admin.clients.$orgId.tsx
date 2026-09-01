@@ -4,7 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Circle, ExternalLink, LifeBuoy, RefreshCw } from "lucide-react";
-import { ErrorNote, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import {
+  ErrorNote,
+  LoadingRows,
+  MetricCard,
+  Panel,
+  Pill,
+  SectionHeading,
+} from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +58,8 @@ function ClientDetail() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
 
   const orgMutation = useMutation({
-    mutationFn: (patch: Record<string, unknown>) => update({ data: { organizationId: orgId, ...patch } }),
+    mutationFn: (patch: Record<string, unknown>) =>
+      update({ data: { organizationId: orgId, ...patch } }),
     onSuccess: async () => {
       toast.success("Client updated.");
       await refresh();
@@ -62,7 +70,9 @@ function ClientDetail() {
   const domainMutation = useMutation({
     mutationFn: (value: string) => saveDomain({ data: { organizationId: orgId, domain: value } }),
     onSuccess: async (result) => {
-      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, { description: result.detail });
+      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
+        description: result.detail,
+      });
       await refresh();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -71,7 +81,9 @@ function ClientDetail() {
   const verifyMutation = useMutation({
     mutationFn: () => verifyDomain({ data: { organizationId: orgId } }),
     onSuccess: async (result) => {
-      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, { description: result.detail });
+      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
+        description: result.detail,
+      });
       await refresh();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -144,7 +156,9 @@ function ClientDetail() {
       </div>
 
       <SectionHeading
-        eyebrow={profile?.city ? `${profile.city}${profile.state ? `, ${profile.state}` : ""}` : "Client"}
+        eyebrow={
+          profile?.city ? `${profile.city}${profile.state ? `, ${profile.state}` : ""}` : "Client"
+        }
         title={org.name}
         action={
           <div className="flex flex-wrap items-center gap-2">
@@ -203,7 +217,11 @@ function ClientDetail() {
         <SectionHeading
           eyebrow="Website"
           title="Publishing"
-          action={<Pill tone={PUBLISH_STATES[publishState]?.tone ?? "neutral"}>{PUBLISH_STATES[publishState]?.label}</Pill>}
+          action={
+            <Pill tone={PUBLISH_STATES[publishState]?.tone ?? "neutral"}>
+              {PUBLISH_STATES[publishState]?.label}
+            </Pill>
+          }
         />
         <p className="text-[12px] text-muted-foreground">{PUBLISH_STATES[publishState]?.help}</p>
         <div className="flex flex-wrap gap-2">
@@ -231,7 +249,11 @@ function ClientDetail() {
         <SectionHeading
           eyebrow="Domain"
           title="Custom domain"
-          action={<Pill tone={DOMAIN_STATES[domainStatus]?.tone ?? "neutral"}>{DOMAIN_STATES[domainStatus]?.label}</Pill>}
+          action={
+            <Pill tone={DOMAIN_STATES[domainStatus]?.tone ?? "neutral"}>
+              {DOMAIN_STATES[domainStatus]?.label}
+            </Pill>
+          }
         />
         <p className="text-[12px] text-muted-foreground">{DOMAIN_STATES[domainStatus]?.help}</p>
         <div className="flex flex-wrap items-end gap-2">
@@ -270,7 +292,9 @@ function ClientDetail() {
             <p className="mt-2 text-destructive">{settings.domain_error}</p>
           ) : null}
           {settings?.domain_checked_at ? (
-            <p className="mt-2 text-muted-foreground">Last checked {dateLong(settings.domain_checked_at)}</p>
+            <p className="mt-2 text-muted-foreground">
+              Last checked {dateLong(settings.domain_checked_at)}
+            </p>
           ) : null}
         </div>
       </Panel>
@@ -310,7 +334,9 @@ function ClientDetail() {
           </div>
         </div>
         {org.trial_ends_at ? (
-          <p className="text-[11px] text-muted-foreground">Trial ends {dateShort(org.trial_ends_at)}</p>
+          <p className="text-[11px] text-muted-foreground">
+            Trial ends {dateShort(org.trial_ends_at)}
+          </p>
         ) : null}
       </Panel>
 
@@ -322,8 +348,8 @@ function ClientDetail() {
           action={openSession ? <Pill tone="attention">Session open</Pill> : null}
         />
         <p className="text-[12px] text-muted-foreground">
-          Entering a client workspace is explicit, time-boxed to 4 hours, shown to the client with a banner,
-          and recorded below. Access is never silent.
+          Entering a client workspace is explicit, time-boxed to 4 hours, shown to the client with a
+          banner, and recorded below. Access is never silent.
         </p>
         <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
@@ -346,7 +372,9 @@ function ClientDetail() {
         </div>
         <ul className="divide-y divide-border rounded-md border border-border">
           {data.supportSessions.length === 0 ? (
-            <li className="px-3 py-3 text-[12px] text-muted-foreground">No support sessions recorded.</li>
+            <li className="px-3 py-3 text-[12px] text-muted-foreground">
+              No support sessions recorded.
+            </li>
           ) : (
             data.supportSessions.map((session) => (
               <li key={session.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
@@ -372,13 +400,26 @@ function ClientDetail() {
       <Panel className="space-y-3">
         <SectionHeading eyebrow="Handoff" title="Client handoff sheet" />
         <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
-          <Row label="Website URL" value={settings?.custom_domain ? `https://${settings.custom_domain}` : `/s/${org.slug}`} />
+          <Row
+            label="Website URL"
+            value={settings?.custom_domain ? `https://${settings.custom_domain}` : `/s/${org.slug}`}
+          />
           <Row label="Client login" value="/auth" />
           <Row label="Domain status" value={DOMAIN_STATES[domainStatus]?.label ?? domainStatus} />
           <Row label="Publishing" value={PUBLISH_STATES[publishState]?.label ?? publishState} />
-          <Row label="Business owner" value={`${profile?.owner_name ?? "—"} · ${profile?.owner_email ?? "—"}`} />
+          <Row
+            label="Business owner"
+            value={`${profile?.owner_name ?? "—"} · ${profile?.owner_email ?? "—"}`}
+          />
           <Row label="Phone" value={profile?.phone ?? "—"} />
-          <Row label="Address" value={[profile?.address, profile?.city, profile?.state, profile?.zip].filter(Boolean).join(", ") || "—"} />
+          <Row
+            label="Address"
+            value={
+              [profile?.address, profile?.city, profile?.state, profile?.zip]
+                .filter(Boolean)
+                .join(", ") || "—"
+            }
+          />
           <Row label="Service area" value={profile?.service_area ?? "—"} />
           <Row
             label="Subscription"

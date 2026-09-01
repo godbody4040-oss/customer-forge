@@ -106,7 +106,8 @@ export function FounderNote() {
         <div className="flex flex-wrap justify-center gap-2">
           <Button asChild variant="outline" size="sm">
             <a href={revoraMailto(MAIL_SUBJECTS.inquiry)}>
-              <Mail className="size-4" aria-hidden="true" /> Email {REVORA.founder.name.split(" ")[0]}
+              <Mail className="size-4" aria-hidden="true" /> Email{" "}
+              {REVORA.founder.name.split(" ")[0]}
             </a>
           </Button>
           <Button asChild variant="ghost" size="sm">
@@ -119,7 +120,6 @@ export function FounderNote() {
     </div>
   );
 }
-
 
 /** Sticky mobile action bar for Revora marketing pages only (never client sites). */
 export function RevoraMobileBar() {

@@ -29,7 +29,8 @@ export const Route = createFileRoute("/get-started")({
       { property: "og:title", content: "Start your Revora Growth System" },
       {
         property: "og:description",
-        content: "$750 one-time setup + first month free + $100/month afterward. One complete customer acquisition system.",
+        content:
+          "$750 one-time setup + first month free + $100/month afterward. One complete customer acquisition system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -69,7 +70,8 @@ function GetStarted() {
     queryKey: ["get-started", "session"],
     queryFn: async () => {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) return { userId: null as string | null, organizationId: null as string | null };
+      if (!data.user)
+        return { userId: null as string | null, organizationId: null as string | null };
       const { data: membership } = await supabase
         .from("memberships")
         .select("organization_id, role")
@@ -94,7 +96,8 @@ function GetStarted() {
         const restored = { ...EMPTY, ...(JSON.parse(saved) as GrowthSystemIntake) };
         setIntake(restored);
         // Returning from account creation: go straight back to payment.
-        if (restored.businessName.trim() && restored.email.trim() && restored.city.trim()) setStep(2);
+        if (restored.businessName.trim() && restored.email.trim() && restored.city.trim())
+          setStep(2);
       }
     } catch {
       /* ignore unreadable drafts */
@@ -167,7 +170,11 @@ function GetStarted() {
     const base = safeSlug(intake.businessName);
     let slug = base;
     for (let attempt = 0; attempt < 5; attempt++) {
-      const { data: taken } = await supabase.from("organizations").select("id").eq("slug", slug).maybeSingle();
+      const { data: taken } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
       if (!taken) break;
       slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
     }
@@ -261,14 +268,19 @@ function GetStarted() {
           {GROWTH_SYSTEM.headline}
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">
-          <span className="gold-hl">{usdExact(GROWTH_SYSTEM.setupPrice)} setup charged today</span>. Platform is{" "}
-          <span className="gold-hl">{usdExact(0)} for your first {GROWTH_SYSTEM.trialDays} days</span>, then{" "}
-          {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month unless canceled. One complete growth system — no
-          packages to compare.
+          <span className="gold-hl">{usdExact(GROWTH_SYSTEM.setupPrice)} setup charged today</span>.
+          Platform is{" "}
+          <span className="gold-hl">
+            {usdExact(0)} for your first {GROWTH_SYSTEM.trialDays} days
+          </span>
+          , then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month unless canceled. One complete growth
+          system — no packages to compare.
         </p>
         <p className="mt-2 text-[12.5px] text-muted-foreground">
           Just exploring? You get{" "}
-          <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days of free full access</span>{" "}
+          <span className="gold-hl">
+            {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+          </span>{" "}
           first — your answers below are saved as you type, so you can leave and come back anytime.
         </p>
 
@@ -294,253 +306,301 @@ function GetStarted() {
         </ol>
 
         <div ref={stepRef}>
-        {step === 0 ? (
-          <section className="panel mt-6 p-5">
-            <h2 className="font-display text-[17px] font-semibold">Tell us about your business</h2>
-            <p className="mt-1 text-[12px] text-muted-foreground">
-              This is what we use to build and configure your system — it takes about a minute.
-            </p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Field label="Full name" value={intake.fullName} onChange={set("fullName")} autoComplete="name" required />
-              <Field
-                label="Business name"
-                value={intake.businessName}
-                onChange={set("businessName")}
-                autoComplete="organization"
-                required
-              />
-              <Field label="Email" type="email" value={intake.email} onChange={set("email")} autoComplete="email" required />
-              <Field label="Phone number" type="tel" value={intake.phone} onChange={set("phone")} autoComplete="tel" required />
-              <Field
-                label="Business website (optional)"
-                value={intake.website ?? ""}
-                onChange={set("website")}
-                placeholder="yourbusiness.com"
-              />
-              <Field
-                label="Business type"
-                value={intake.businessType}
-                onChange={set("businessType")}
-                placeholder="Mobile detailing, HVAC, landscaping…"
-                required
-              />
-              <Field label="City" value={intake.city} onChange={set("city")} autoComplete="address-level2" required />
-              <Field label="State" value={intake.state} onChange={set("state")} autoComplete="address-level1" required />
-              <div className="sm:col-span-2">
-                <Label htmlFor="services" className="text-[12px]">
-                  Primary services <span aria-hidden="true">*</span>
-                </Label>
-                <textarea
-                  id="services"
-                  value={intake.services}
-                  onChange={(event) => set("services")(event.target.value)}
-                  rows={3}
-                  className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  placeholder="Interior + exterior detailing, ceramic coating, fleet cleaning"
+          {step === 0 ? (
+            <section className="panel mt-6 p-5">
+              <h2 className="font-display text-[17px] font-semibold">
+                Tell us about your business
+              </h2>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                This is what we use to build and configure your system — it takes about a minute.
+              </p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Full name"
+                  value={intake.fullName}
+                  onChange={set("fullName")}
+                  autoComplete="name"
                   required
                 />
-              </div>
-            </div>
-            {error ? (
-              <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
-                {error}
-              </p>
-            ) : null}
-            <Button variant="signal" size="lg" className="mt-5 w-full sm:w-auto" onClick={goToSummary}>
-              Continue to order summary <ArrowRight className="size-4" />
-            </Button>
-          </section>
-        ) : null}
-
-        {step === 1 ? (
-          <section className="panel mt-6 p-5">
-            <h2 className="font-display text-[17px] font-semibold">Order summary</h2>
-            <div className="mt-5 rounded-md border border-border">
-              <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
-                <div>
-                  <p className="text-[14px] font-medium">{GROWTH_SYSTEM.name}</p>
-                  <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                <Field
+                  label="Business name"
+                  value={intake.businessName}
+                  onChange={set("businessName")}
+                  autoComplete="organization"
+                  required
+                />
+                <Field
+                  label="Email"
+                  type="email"
+                  value={intake.email}
+                  onChange={set("email")}
+                  autoComplete="email"
+                  required
+                />
+                <Field
+                  label="Phone number"
+                  type="tel"
+                  value={intake.phone}
+                  onChange={set("phone")}
+                  autoComplete="tel"
+                  required
+                />
+                <Field
+                  label="Business website (optional)"
+                  value={intake.website ?? ""}
+                  onChange={set("website")}
+                  placeholder="yourbusiness.com"
+                />
+                <Field
+                  label="Business type"
+                  value={intake.businessType}
+                  onChange={set("businessType")}
+                  placeholder="Mobile detailing, HVAC, landscaping…"
+                  required
+                />
+                <Field
+                  label="City"
+                  value={intake.city}
+                  onChange={set("city")}
+                  autoComplete="address-level2"
+                  required
+                />
+                <Field
+                  label="State"
+                  value={intake.state}
+                  onChange={set("state")}
+                  autoComplete="address-level1"
+                  required
+                />
+                <div className="sm:col-span-2">
+                  <Label htmlFor="services" className="text-[12px]">
+                    Primary services <span aria-hidden="true">*</span>
+                  </Label>
+                  <textarea
+                    id="services"
+                    value={intake.services}
+                    onChange={(event) => set("services")(event.target.value)}
+                    rows={3}
+                    className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    placeholder="Interior + exterior detailing, ceramic coating, fleet cleaning"
+                    required
+                  />
                 </div>
-                <p className="tnum text-[15px] font-semibold whitespace-nowrap">
-                  {usdExact(GROWTH_SYSTEM.setupPrice)}
-                </p>
               </div>
-              <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
-                <div>
-                  <p className="text-[14px] font-medium">Monthly subscription</p>
-                  <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
-                </div>
-                <div className="text-right">
-                  <p className="tnum text-[15px] font-semibold whitespace-nowrap text-primary">
-                    $0 for 30 days
-                  </p>
-                  <p className="tnum text-[12px] whitespace-nowrap text-muted-foreground">
-                    then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-baseline justify-between gap-3 px-4 py-3">
-                <p className="text-[13px] font-medium">Charged today</p>
-                <p className="tnum text-[17px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</p>
-              </div>
-            </div>
-            <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
-              {GROWTH_SYSTEM.explainer} Cancel anytime. No hidden fees.
-            </p>
-            <dl className="mt-5 grid gap-2 border-t border-border pt-4 text-[12px] sm:grid-cols-2">
-              <Summary label="Name" value={intake.fullName} />
-              <Summary label="Business" value={intake.businessName} />
-              <Summary label="Email" value={intake.email} />
-              <Summary label="Phone" value={intake.phone} />
-              <Summary label="Business type" value={intake.businessType} />
-              <Summary label="Location" value={`${intake.city}, ${intake.state}`} />
-              {intake.website ? <Summary label="Website" value={intake.website} /> : null}
-              <Summary label="Primary services" value={intake.services} />
-            </dl>
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-              <Button variant="outline" size="lg" onClick={() => setStep(0)}>
-                <ArrowLeft className="size-4" /> Edit information
-              </Button>
-              <Button variant="signal" size="lg" className="sm:flex-1" onClick={() => setStep(2)}>
-                Continue to secure payment <ArrowRight className="size-4" />
-              </Button>
-            </div>
-            <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
-              <p className="text-[13px] font-semibold">
-                <span className="gold-text">Not paying yet?</span> Start your{" "}
-                {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
-              </p>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Your business info is saved and your workspace opens instantly — website builder, leads,
-                quotes, bookings, automations and analytics, all unlocked for {GROWTH_SYSTEM.fullAccessTrialDays} days.
-                No card required.
-              </p>
-              <Button
-                variant="signal"
-                size="lg"
-                className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
-                disabled={startingTrial}
-                onClick={startFreeAccess}
-              >
-                <Sparkles className="size-4" aria-hidden="true" />{" "}
-                {startingTrial
-                  ? "Opening your workspace…"
-                  : signedIn
-                    ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
-                    : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
-              </Button>
-            </div>
-          </section>
-        ) : null}
-
-        {step === 2 ? (
-          <section className="mt-6 space-y-4">
-            <div className="panel p-5">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-primary" />
-                <h2 className="font-display text-[17px] font-semibold">Payment</h2>
-              </div>
-              <p className="mt-2 text-[13px] text-muted-foreground">
-                {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup charged today. Your {GROWTH_SYSTEM.trialDays}-day
-                platform trial is free, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month automatically unless canceled.
-                Payments are processed securely by our payment provider — Revora never sees your card details.
-              </p>
-
-              {session.isLoading ? (
-                <p className="mt-4 text-[13px] text-muted-foreground">Checking your account…</p>
-              ) : !signedIn ? (
-                <div className="mt-4 rounded-md border border-border bg-muted/30 p-4">
-                  <p className="text-[13px] font-medium">Create your Revora account to pay</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground">
-                    Your details are saved on this device, so nothing is re-entered. After creating your account
-                    you'll come straight back here to complete payment.
-                  </p>
-                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                    <Button asChild variant="signal" size="lg">
-                      <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
-                        Create account
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="lg">
-                      <Link to="/auth" search={{ mode: "signin", redirect: "/get-started" }}>
-                        I already have an account
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ) : !cardsReady ? (
-                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
-                  Card checkout is not configured for this build yet, so no payment can be taken. Contact{" "}
-                  <a className="underline" href={revoraMailto("Revora checkout")}>
-                    {REVORA.email}
-                  </a>
-                  .
-                </p>
-              ) : payNow ? null : (
-                <Button
-                  variant="signal"
-                  size="lg"
-                  className="mt-4 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
-                  disabled={provisioning}
-                  onClick={startPayment}
-                >
-                  <Lock className="size-4" />{" "}
-                  {provisioning ? "Preparing your workspace…" : `Pay ${usdExact(GROWTH_SYSTEM.setupPrice)} today`}
-                </Button>
-              )}
-
-              {step === 2 && error ? (
-                <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+              {error ? (
+                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
                   {error}
                 </p>
               ) : null}
-
-              {!payNow ? (
-<>
-            <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
-              <p className="text-[13px] font-semibold">
-                <span className="gold-text">Not paying yet?</span> Start your{" "}
-                {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
-              </p>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                Your business info is saved and your workspace opens instantly — website builder, leads,
-                quotes, bookings, automations and analytics, all unlocked for {GROWTH_SYSTEM.fullAccessTrialDays} days.
-                No card required.
-              </p>
               <Button
                 variant="signal"
                 size="lg"
-                className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
-                disabled={startingTrial}
-                onClick={startFreeAccess}
+                className="mt-5 w-full sm:w-auto"
+                onClick={goToSummary}
               >
-                <Sparkles className="size-4" aria-hidden="true" />{" "}
-                {startingTrial
-                  ? "Opening your workspace…"
-                  : signedIn
-                    ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
-                    : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+                Continue to order summary <ArrowRight className="size-4" />
               </Button>
-            </div>
-</>
-) : null}
+            </section>
+          ) : null}
 
-              {!payNow ? (
-                <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
-                  <ArrowLeft className="size-4" /> Back to summary
+          {step === 1 ? (
+            <section className="panel mt-6 p-5">
+              <h2 className="font-display text-[17px] font-semibold">Order summary</h2>
+              <div className="mt-5 rounded-md border border-border">
+                <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
+                  <div>
+                    <p className="text-[14px] font-medium">{GROWTH_SYSTEM.name}</p>
+                    <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                  </div>
+                  <p className="tnum text-[15px] font-semibold whitespace-nowrap">
+                    {usdExact(GROWTH_SYSTEM.setupPrice)}
+                  </p>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
+                  <div>
+                    <p className="text-[14px] font-medium">Monthly subscription</p>
+                    <p className="text-[12px] text-muted-foreground">
+                      {GROWTH_SYSTEM.monthlyLabel}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="tnum text-[15px] font-semibold whitespace-nowrap text-primary">
+                      $0 for 30 days
+                    </p>
+                    <p className="tnum text-[12px] whitespace-nowrap text-muted-foreground">
+                      then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+                  <p className="text-[13px] font-medium">Charged today</p>
+                  <p className="tnum text-[17px] font-semibold">
+                    {usdExact(GROWTH_SYSTEM.setupPrice)}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
+                {GROWTH_SYSTEM.explainer} Cancel anytime. No hidden fees.
+              </p>
+              <dl className="mt-5 grid gap-2 border-t border-border pt-4 text-[12px] sm:grid-cols-2">
+                <Summary label="Name" value={intake.fullName} />
+                <Summary label="Business" value={intake.businessName} />
+                <Summary label="Email" value={intake.email} />
+                <Summary label="Phone" value={intake.phone} />
+                <Summary label="Business type" value={intake.businessType} />
+                <Summary label="Location" value={`${intake.city}, ${intake.state}`} />
+                {intake.website ? <Summary label="Website" value={intake.website} /> : null}
+                <Summary label="Primary services" value={intake.services} />
+              </dl>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <Button variant="outline" size="lg" onClick={() => setStep(0)}>
+                  <ArrowLeft className="size-4" /> Edit information
                 </Button>
-              ) : null}
-            </div>
+                <Button variant="signal" size="lg" className="sm:flex-1" onClick={() => setStep(2)}>
+                  Continue to secure payment <ArrowRight className="size-4" />
+                </Button>
+              </div>
+              <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+                <p className="text-[13px] font-semibold">
+                  <span className="gold-text">Not paying yet?</span> Start your{" "}
+                  {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+                </p>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  Your business info is saved and your workspace opens instantly — website builder,
+                  leads, quotes, bookings, automations and analytics, all unlocked for{" "}
+                  {GROWTH_SYSTEM.fullAccessTrialDays} days. No card required.
+                </p>
+                <Button
+                  variant="signal"
+                  size="lg"
+                  className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                  disabled={startingTrial}
+                  onClick={startFreeAccess}
+                >
+                  <Sparkles className="size-4" aria-hidden="true" />{" "}
+                  {startingTrial
+                    ? "Opening your workspace…"
+                    : signedIn
+                      ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
+                      : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+                </Button>
+              </div>
+            </section>
+          ) : null}
 
-            {payNow && signedIn && cardsReady && organizationId ? (
-              <GrowthSystemCheckout
-                organizationId={organizationId}
-                intake={intake}
-                onClose={() => setPayNow(false)}
-              />
-            ) : null}
-          </section>
-        ) : null}
+          {step === 2 ? (
+            <section className="mt-6 space-y-4">
+              <div className="panel p-5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-primary" />
+                  <h2 className="font-display text-[17px] font-semibold">Payment</h2>
+                </div>
+                <p className="mt-2 text-[13px] text-muted-foreground">
+                  {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup charged today. Your{" "}
+                  {GROWTH_SYSTEM.trialDays}-day platform trial is free, then{" "}
+                  {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month automatically unless canceled.
+                  Payments are processed securely by our payment provider — Revora never sees your
+                  card details.
+                </p>
+
+                {session.isLoading ? (
+                  <p className="mt-4 text-[13px] text-muted-foreground">Checking your account…</p>
+                ) : !signedIn ? (
+                  <div className="mt-4 rounded-md border border-border bg-muted/30 p-4">
+                    <p className="text-[13px] font-medium">Create your Revora account to pay</p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Your details are saved on this device, so nothing is re-entered. After
+                      creating your account you'll come straight back here to complete payment.
+                    </p>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <Button asChild variant="signal" size="lg">
+                        <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+                          Create account
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" size="lg">
+                        <Link to="/auth" search={{ mode: "signin", redirect: "/get-started" }}>
+                          I already have an account
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                ) : !cardsReady ? (
+                  <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                    Card checkout is not configured for this build yet, so no payment can be taken.
+                    Contact{" "}
+                    <a className="underline" href={revoraMailto("Revora checkout")}>
+                      {REVORA.email}
+                    </a>
+                    .
+                  </p>
+                ) : payNow ? null : (
+                  <Button
+                    variant="signal"
+                    size="lg"
+                    className="mt-4 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                    disabled={provisioning}
+                    onClick={startPayment}
+                  >
+                    <Lock className="size-4" />{" "}
+                    {provisioning
+                      ? "Preparing your workspace…"
+                      : `Pay ${usdExact(GROWTH_SYSTEM.setupPrice)} today`}
+                  </Button>
+                )}
+
+                {step === 2 && error ? (
+                  <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+                    {error}
+                  </p>
+                ) : null}
+
+                {!payNow ? (
+                  <>
+                    <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+                      <p className="text-[13px] font-semibold">
+                        <span className="gold-text">Not paying yet?</span> Start your{" "}
+                        {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+                      </p>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        Your business info is saved and your workspace opens instantly — website
+                        builder, leads, quotes, bookings, automations and analytics, all unlocked
+                        for {GROWTH_SYSTEM.fullAccessTrialDays} days. No card required.
+                      </p>
+                      <Button
+                        variant="signal"
+                        size="lg"
+                        className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                        disabled={startingTrial}
+                        onClick={startFreeAccess}
+                      >
+                        <Sparkles className="size-4" aria-hidden="true" />{" "}
+                        {startingTrial
+                          ? "Opening your workspace…"
+                          : signedIn
+                            ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
+                            : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+                      </Button>
+                    </div>
+                  </>
+                ) : null}
+
+                {!payNow ? (
+                  <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
+                    <ArrowLeft className="size-4" /> Back to summary
+                  </Button>
+                ) : null}
+              </div>
+
+              {payNow && signedIn && cardsReady && organizationId ? (
+                <GrowthSystemCheckout
+                  organizationId={organizationId}
+                  intake={intake}
+                  onClose={() => setPayNow(false)}
+                />
+              ) : null}
+            </section>
+          ) : null}
         </div>
 
         <p className="mt-8 text-[12px] text-muted-foreground">

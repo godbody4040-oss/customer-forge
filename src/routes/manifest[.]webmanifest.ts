@@ -22,7 +22,12 @@ export const Route = createFileRoute("/manifest.webmanifest")({
             theme_color: "#0A0A0C",
             icons: [
               { src: "/favicon.png", sizes: "64x64", type: "image/png" },
-              { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png", purpose: "any maskable" },
+              {
+                src: "/apple-touch-icon.png",
+                sizes: "180x180",
+                type: "image/png",
+                purpose: "any maskable",
+              },
             ],
             shortcuts: [
               { name: "My dashboard", url: "/app" },

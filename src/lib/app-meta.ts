@@ -18,9 +18,7 @@ export const META_FALLBACK_DESCRIPTION =
   "Revora gives businesses one system to get discovered, capture opportunities, convert leads, book customers and automate follow-up.";
 
 export type MetaTag =
-  | { title: string }
-  | { name: string; content: string }
-  | { property: string; content: string };
+  { title: string } | { name: string; content: string } | { property: string; content: string };
 
 export interface PrivateMetaInput {
   /** Route path, always beginning with a slash. */
@@ -63,7 +61,6 @@ export function normalizePath(path: string) {
   const withSlash = path.startsWith("/") ? path : `/${path}`;
   return withSlash.length > 1 && withSlash.endsWith("/") ? withSlash.slice(0, -1) : withSlash;
 }
-
 
 function absoluteImage(image: string | undefined): string | null {
   if (!image) return null;

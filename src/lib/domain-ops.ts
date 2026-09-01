@@ -47,7 +47,11 @@ export function canonicalOrigin(domain: string | null, preference: HostPreferenc
 }
 
 /** Plain-language list of the redirects that should be in force. */
-export function redirectPlan(domain: string | null, preference: HostPreference, forceHttps: boolean) {
+export function redirectPlan(
+  domain: string | null,
+  preference: HostPreference,
+  forceHttps: boolean,
+) {
   const host = canonicalHost(domain, preference);
   if (!domain || !host) return [];
   const bare = domain.replace(/^www\./, "");
@@ -92,14 +96,16 @@ export function sslState(input: {
     return {
       label: "Not needed yet",
       tone: "neutral",
-      detail: "Your free Revora address is already secured. Connect your own domain to get a certificate for it.",
+      detail:
+        "Your free Revora address is already secured. Connect your own domain to get a certificate for it.",
       secure: true,
     };
   if (!input.dnsOk)
     return {
       label: "Waiting on DNS",
       tone: "attention",
-      detail: "A certificate can only be issued once your domain points at Revora. Add the DNS records, then re-check.",
+      detail:
+        "A certificate can only be issued once your domain points at Revora. Add the DNS records, then re-check.",
       secure: false,
     };
   if (input.sslOk)
@@ -185,8 +191,20 @@ export function emailForwardingRecords(
   if (!domain) return [];
   if (provider === "forwardemail")
     return [
-      { type: "MX", name: "@", value: "mx1.forwardemail.net", priority: "10", purpose: "Receives mail for your domain" },
-      { type: "MX", name: "@", value: "mx2.forwardemail.net", priority: "20", purpose: "Backup mail server" },
+      {
+        type: "MX",
+        name: "@",
+        value: "mx1.forwardemail.net",
+        priority: "10",
+        purpose: "Receives mail for your domain",
+      },
+      {
+        type: "MX",
+        name: "@",
+        value: "mx2.forwardemail.net",
+        priority: "20",
+        purpose: "Backup mail server",
+      },
       {
         type: "TXT",
         name: "@",
@@ -196,8 +214,20 @@ export function emailForwardingRecords(
       },
     ];
   return [
-    { type: "MX", name: "@", value: "mx1.improvmx.com", priority: "10", purpose: "Receives mail for your domain" },
-    { type: "MX", name: "@", value: "mx2.improvmx.com", priority: "20", purpose: "Backup mail server" },
+    {
+      type: "MX",
+      name: "@",
+      value: "mx1.improvmx.com",
+      priority: "10",
+      purpose: "Receives mail for your domain",
+    },
+    {
+      type: "MX",
+      name: "@",
+      value: "mx2.improvmx.com",
+      priority: "20",
+      purpose: "Backup mail server",
+    },
     {
       type: "TXT",
       name: "@",
@@ -208,7 +238,12 @@ export function emailForwardingRecords(
   ];
 }
 
-export const EMAIL_PROVIDERS: { id: EmailForwardProvider; name: string; note: string; setupUrl: string }[] = [
+export const EMAIL_PROVIDERS: {
+  id: EmailForwardProvider;
+  name: string;
+  note: string;
+  setupUrl: string;
+}[] = [
   {
     id: "improvmx",
     name: "ImprovMX",

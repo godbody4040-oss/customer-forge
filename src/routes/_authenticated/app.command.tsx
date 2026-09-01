@@ -12,7 +12,11 @@ import {
   useUpdateOrganization,
   useWebsiteSettings,
 } from "@/lib/queries";
-import { useRunSiteEngine, useScoreFacts, useSnapshotWebsiteVersion } from "@/lib/site-engine.hooks";
+import {
+  useRunSiteEngine,
+  useScoreFacts,
+  useSnapshotWebsiteVersion,
+} from "@/lib/site-engine.hooks";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/domain";
@@ -126,7 +130,9 @@ function CommandCenterPage() {
     smsCapable: !!input.phone,
     bookableCount: input.bookableCount,
     quoteFormCount: input.quoteFormCount,
-    paymentsEnabled: (services ?? []).some((service) => Number(service.price ?? service.starting_price ?? 0) > 0),
+    paymentsEnabled: (services ?? []).some(
+      (service) => Number(service.price ?? service.starting_price ?? 0) > 0,
+    ),
     email: input.email,
     slug: org?.slug ?? null,
   };
@@ -145,7 +151,12 @@ function CommandCenterPage() {
   const sectionKinds = (pages ?? []).flatMap((page) =>
     page.sections.filter((section) => section.is_visible).map((section) => section.kind),
   );
-  const gaps = conversionGaps(goal, conversionCtx, sectionKinds, (copy?.faqs ?? []).map((faq) => faq.question));
+  const gaps = conversionGaps(
+    goal,
+    conversionCtx,
+    sectionKinds,
+    (copy?.faqs ?? []).map((faq) => faq.question),
+  );
 
   const proposals = useMemo(
     () =>
@@ -206,10 +217,14 @@ function CommandCenterPage() {
   const runBatch = async (mode: "critical" | "all") => {
     if (!manage) return;
     const criticalKinds = new Set(
-      structure.issues.filter((issue) => issue.severity === "critical").map((issue) => issue.upgrade),
+      structure.issues
+        .filter((issue) => issue.severity === "critical")
+        .map((issue) => issue.upgrade),
     );
     const selected =
-      mode === "critical" ? proposals.filter((proposal) => criticalKinds.has(proposal.kind)) : proposals;
+      mode === "critical"
+        ? proposals.filter((proposal) => criticalKinds.has(proposal.kind))
+        : proposals;
     const result = await batchFix.mutateAsync({
       proposals: selected,
       label: mode === "critical" ? "Fix all critical issues" : "Optimise entire website",
@@ -217,7 +232,6 @@ function CommandCenterPage() {
     if (result.restore) setLastApplied(result.restore);
     if (live) await scanLive();
   };
-
 
   /* ------------------------------ One-input intake ---------------------------- */
 
@@ -247,7 +261,9 @@ function CommandCenterPage() {
       service_area: patch["service_area"] ?? null,
     });
     if ((patch["primary_goal"] ?? "") !== (seo.primary_cta_label ?? "")) {
-      await saveSettings.mutateAsync({ seo: { ...seo, primary_cta_label: patch["primary_goal"] || null } });
+      await saveSettings.mutateAsync({
+        seo: { ...seo, primary_cta_label: patch["primary_goal"] || null },
+      });
     }
   };
 
@@ -295,8 +311,8 @@ function CommandCenterPage() {
         <p className="eyebrow">Revora AI</p>
         <h1 className="mt-1 font-display text-[24px] font-semibold">Growth Command Center</h1>
         <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">
-          One place to inspect, improve, connect and repair your entire website and business system. Every finding
-          below is based on what is actually saved in your workspace.
+          One place to inspect, improve, connect and repair your entire website and business system.
+          Every finding below is based on what is actually saved in your workspace.
         </p>
       </div>
 
@@ -340,7 +356,8 @@ function CommandCenterPage() {
         onBatchFix={(mode) => void runBatch(mode)}
 
         onUndo={() => {
-          if (lastApplied) void undoUpgrade.mutateAsync(lastApplied).then(() => setLastApplied(null));
+          if (lastApplied)
+            void undoUpgrade.mutateAsync(lastApplied).then(() => setLastApplied(null));
         }}
       />
     </div>

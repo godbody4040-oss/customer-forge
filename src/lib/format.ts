@@ -15,9 +15,7 @@ export const percent = (value: number | null | undefined, digits = 1) =>
   `${Number(value ?? 0).toFixed(digits)}%`;
 
 export const dateShort = (value: string | Date | null | undefined) =>
-  value
-    ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    : "—";
+  value ? new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";
 
 export const dateLong = (value: string | Date | null | undefined) =>
   value
@@ -30,9 +28,7 @@ export const dateLong = (value: string | Date | null | undefined) =>
     : "—";
 
 export const timeShort = (value: string | Date | null | undefined) =>
-  value
-    ? new Date(value).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-    : "—";
+  value ? new Date(value).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "—";
 
 export const relative = (value: string | Date | null | undefined) => {
   if (!value) return "—";

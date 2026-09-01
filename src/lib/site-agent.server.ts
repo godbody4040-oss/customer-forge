@@ -12,7 +12,13 @@
  */
 
 import { AiGatewayError } from "@/lib/site-engine.server";
-import { MAX_ACTIONS, readChapters, type AgentAttachment, type AgentChapter, type AgentTurn } from "@/lib/site-agent";
+import {
+  MAX_ACTIONS,
+  readChapters,
+  type AgentAttachment,
+  type AgentChapter,
+  type AgentTurn,
+} from "@/lib/site-agent";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -37,7 +43,14 @@ export type SiteMapPage = {
     heading: string | null;
     subheading: string | null;
     body: string | null;
-    components: { id: string; kind: string; label: string | null; body: string | null; link_label: string | null; link_url: string | null }[];
+    components: {
+      id: string;
+      kind: string;
+      label: string | null;
+      body: string | null;
+      link_label: string | null;
+      link_url: string | null;
+    }[];
   }[];
 };
 
@@ -151,10 +164,15 @@ type ChatMessage = { role: string; content: string | ContentPart[] };
 
 /** Maps an attachment onto the gateway's multimodal content-part shape. */
 function attachmentPart(attachment: AgentAttachment): ContentPart {
-  if (attachment.kind === "image") return { type: "image_url", image_url: { url: attachment.dataUrl } };
-  if (attachment.kind === "video") return { type: "video_url", video_url: { url: attachment.dataUrl } };
+  if (attachment.kind === "image")
+    return { type: "image_url", image_url: { url: attachment.dataUrl } };
+  if (attachment.kind === "video")
+    return { type: "video_url", video_url: { url: attachment.dataUrl } };
   const format = attachment.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "webm";
-  return { type: "input_audio", input_audio: { data: attachment.dataUrl.slice(attachment.dataUrl.indexOf(",") + 1), format } };
+  return {
+    type: "input_audio",
+    input_audio: { data: attachment.dataUrl.slice(attachment.dataUrl.indexOf(",") + 1), format },
+  };
 }
 
 async function call(model: string, messages: ChatMessage[]) {
@@ -171,15 +189,28 @@ async function call(model: string, messages: ChatMessage[]) {
     const body = await response.text().catch(() => "");
     if (response.status === 429) {
       const retryAfter = Number(response.headers.get("retry-after")) || null;
-      throw new AiGatewayError(429, "The assistant is busy right now. Try again in a moment.", retryAfter);
+      throw new AiGatewayError(
+        429,
+        "The assistant is busy right now. Try again in a moment.",
+        retryAfter,
+      );
     }
     if (response.status === 402)
-      throw new AiGatewayError(402, "Revora's AI writer is paused right now — the built-in builder will handle this request.");
+      throw new AiGatewayError(
+        402,
+        "Revora's AI writer is paused right now — the built-in builder will handle this request.",
+      );
     if (response.status === 403)
-      throw new AiGatewayError(403, "Revora's AI writer is unavailable right now — the built-in builder will handle this request.");
+      throw new AiGatewayError(
+        403,
+        "Revora's AI writer is unavailable right now — the built-in builder will handle this request.",
+      );
 
     if (response.status === 413)
-      throw new AiGatewayError(413, "That attachment is too large for the assistant. Try a shorter clip or a smaller photo.");
+      throw new AiGatewayError(
+        413,
+        "That attachment is too large for the assistant. Try a shorter clip or a smaller photo.",
+      );
     console.error("[site-agent] gateway error", response.status, body.slice(0, 500));
     throw new AiGatewayError(response.status, "The assistant couldn't be reached. Try again.");
   }
@@ -192,7 +223,8 @@ async function call(model: string, messages: ChatMessage[]) {
     .trim();
   try {
     const parsed = JSON.parse(cleaned) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("bad shape");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      throw new Error("bad shape");
     return parsed as Record<string, unknown>;
   } catch {
     throw new Error("The assistant returned an unexpected response. Try rewording the request.");
@@ -227,11 +259,12 @@ export async function planChanges(
           .map(
             (attachment) =>
               `\nMoments already noted in "${attachment.name}": ` +
-              attachment.chapters!.map((chapter) => `${chapter.at} ${chapter.label} — ${chapter.detail}`).join(" | ") +
+              attachment
+                .chapters!.map((chapter) => `${chapter.at} ${chapter.label} — ${chapter.detail}`)
+                .join(" | ") +
               `. When the owner mentions a timestamp, use the moment at that time.`,
           )
           .join(""),
-
     });
     for (const attachment of attachments) parts.push(attachmentPart(attachment));
   }
@@ -282,20 +315,32 @@ export async function transcribeVoice(attachment: AgentAttachment): Promise<stri
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     if (response.status === 429)
-      throw new AiGatewayError(429, "Voice is busy right now. Try again in a moment.", Number(response.headers.get("retry-after")) || null);
+      throw new AiGatewayError(
+        429,
+        "Voice is busy right now. Try again in a moment.",
+        Number(response.headers.get("retry-after")) || null,
+      );
     if (response.status === 402)
-      throw new AiGatewayError(402, "Voice input is paused right now. Type your request instead — nothing else is limited.");
+      throw new AiGatewayError(
+        402,
+        "Voice input is paused right now. Type your request instead — nothing else is limited.",
+      );
     if (response.status === 403)
-      throw new AiGatewayError(403, "Voice input is unavailable right now. Type your request instead — nothing else is limited.");
+      throw new AiGatewayError(
+        403,
+        "Voice input is unavailable right now. Type your request instead — nothing else is limited.",
+      );
 
     console.error("[site-agent] transcribe error", response.status, body.slice(0, 300));
-    throw new AiGatewayError(response.status, "Couldn't transcribe that recording. Try again or type the request.");
+    throw new AiGatewayError(
+      response.status,
+      "Couldn't transcribe that recording. Try again or type the request.",
+    );
   }
 
   const payload = (await response.json()) as { text?: string };
   return (payload.text ?? "").trim();
 }
-
 
 /* ---------------------------- video chapters ------------------------------- */
 
@@ -313,7 +358,7 @@ export async function summarizeChapters(
     {
       role: "system",
       content:
-        'You index short business videos for a website editor. Reply as JSON only: ' +
+        "You index short business videos for a website editor. Reply as JSON only: " +
         '{"summary":"one sentence about the clip","chapters":[{"at":"0:12","label":"short title","detail":"what is visible or said"}]}. ' +
         "Write between 2 and 8 chapters in time order, using m:ss timestamps that exist in the clip. " +
         "Describe only what is actually visible or spoken. Never infer prices, ratings, awards, guarantees or business claims.",

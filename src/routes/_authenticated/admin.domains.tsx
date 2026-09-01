@@ -22,7 +22,9 @@ function AdminDomains() {
   const recheck = useMutation({
     mutationFn: (organizationId: string) => verify({ data: { organizationId } }),
     onSuccess: async (result) => {
-      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, { description: result.detail });
+      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
+        description: result.detail,
+      });
       await queryClient.invalidateQueries({ queryKey: ["admin"] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -34,8 +36,9 @@ function AdminDomains() {
     <div className="space-y-5">
       <SectionHeading eyebrow="Domains" title="Custom domain connections" />
       <p className="max-w-2xl text-[13px] text-muted-foreground">
-        Each domain is bound to exactly one client workspace. A domain is only reported as connected after DNS
-        actually resolves to the platform, and SSL only once HTTPS answers on that hostname.
+        Each domain is bound to exactly one client workspace. A domain is only reported as connected
+        after DNS actually resolves to the platform, and SSL only once HTTPS answers on that
+        hostname.
       </p>
 
       {clients.isLoading ? (
@@ -54,7 +57,9 @@ function AdminDomains() {
                 <p className="truncate font-mono text-[13px]">{client.custom_domain}</p>
                 <p className="mt-1 truncate text-[12px] text-muted-foreground">
                   {client.name} · workspace {client.slug}
-                  {client.domain_checked_at ? ` · checked ${dateLong(client.domain_checked_at)}` : ""}
+                  {client.domain_checked_at
+                    ? ` · checked ${dateLong(client.domain_checked_at)}`
+                    : ""}
                 </p>
                 {client.domain_error ? (
                   <p className="mt-0.5 text-[11px] text-destructive">{client.domain_error}</p>

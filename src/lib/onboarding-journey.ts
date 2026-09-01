@@ -80,7 +80,9 @@ const DAY_LABELS: Record<number, string> = {
 export function onboardingJourney(facts: JourneyFacts): JourneyPlan {
   const now = facts.now ?? Date.now();
   const started = facts.signedUpAt ? new Date(facts.signedUpAt).getTime() : now;
-  const elapsedDays = Number.isFinite(started) ? Math.floor(Math.max(0, now - started) / DAY_MS) : 0;
+  const elapsedDays = Number.isFinite(started)
+    ? Math.floor(Math.max(0, now - started) / DAY_MS)
+    : 0;
   const seoOk = localSeoReady(facts.localSeo);
 
   const steps: JourneyStep[] = [

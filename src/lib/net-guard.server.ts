@@ -6,8 +6,21 @@
  * into the internal network (SSRF).
  */
 
-const BLOCKED_SUFFIXES = [".local", ".internal", ".localhost", ".home.arpa", ".onion", ".test", ".invalid"];
-const BLOCKED_HOSTS = new Set(["localhost", "metadata", "metadata.google.internal", "instance-data"]);
+const BLOCKED_SUFFIXES = [
+  ".local",
+  ".internal",
+  ".localhost",
+  ".home.arpa",
+  ".onion",
+  ".test",
+  ".invalid",
+];
+const BLOCKED_HOSTS = new Set([
+  "localhost",
+  "metadata",
+  "metadata.google.internal",
+  "instance-data",
+]);
 
 function isIpv4(host: string) {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
@@ -16,7 +29,8 @@ function isIpv4(host: string) {
 /** True only for globally routable IPv4 addresses. */
 export function isPublicIpv4(ip: string): boolean {
   const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255))
+    return false;
   const [a, b] = parts as [number, number, number, number];
   if (a === 0 || a === 10 || a === 127) return false;
   if (a === 169 && b === 254) return false; // link-local + cloud metadata
@@ -77,4 +91,3 @@ export function areAddressesPublic(addresses: string[]): boolean {
 export function assertFetchableHostname(host: string): void {
   if (!isFetchableHostname(host)) throw new Error("That address can't be checked.");
 }
-

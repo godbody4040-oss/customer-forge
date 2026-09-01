@@ -4,11 +4,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /** Saves which address is canonical and whether HTTPS is forced. */
 export const saveDomainRouting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { organizationId: string; primaryHost: "root" | "www"; forceHttps: boolean }) => ({
-    organizationId: String(input?.organizationId ?? ""),
-    primaryHost: input?.primaryHost === "www" ? ("www" as const) : ("root" as const),
-    forceHttps: input?.forceHttps !== false,
-  }))
+  .inputValidator(
+    (input: { organizationId: string; primaryHost: "root" | "www"; forceHttps: boolean }) => ({
+      organizationId: String(input?.organizationId ?? ""),
+      primaryHost: input?.primaryHost === "www" ? ("www" as const) : ("root" as const),
+      forceHttps: input?.forceHttps !== false,
+    }),
+  )
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("website_settings")
@@ -36,7 +38,8 @@ export const monitorCertificate = createServerFn({ method: "POST" })
       .eq("organization_id", data.organizationId)
       .maybeSingle();
     if (error || !settings) throw new Error("You don't have access to that workspace.");
-    if (!settings.custom_domain) return { domain: null, sslOk: false, detail: "No custom domain connected yet." };
+    if (!settings.custom_domain)
+      return { domain: null, sslOk: false, detail: "No custom domain connected yet." };
 
     const check = await checkDomain(settings.custom_domain);
     const now = new Date().toISOString();
@@ -52,10 +55,13 @@ export const monitorCertificate = createServerFn({ method: "POST" })
       ssl_detail: check.detail,
     };
     if (check.sslOk) {
-      patch['ssl_last_ok_at'] = now;
-      if (!settings.ssl_issued_at) patch['ssl_issued_at'] = now;
+      patch["ssl_last_ok_at"] = now;
+      if (!settings.ssl_issued_at) patch["ssl_issued_at"] = now;
     }
-    await context.supabase.from("website_settings").update(patch as never).eq("organization_id", data.organizationId);
+    await context.supabase
+      .from("website_settings")
+      .update(patch as never)
+      .eq("organization_id", data.organizationId);
 
     // A certificate that used to answer and now doesn't is worth interrupting for.
     if (!check.sslOk && settings.ssl_last_ok_at) {
@@ -95,7 +101,8 @@ export const startDomainTransfer = createServerFn({ method: "POST" })
       from_domain: settings.custom_domain,
       to_domain: toDomain,
       started_at: new Date().toISOString(),
-      detail: "Add the DNS records for the new domain. Your current address keeps working until the new one is proven.",
+      detail:
+        "Add the DNS records for the new domain. Your current address keeps working until the new one is proven.",
     };
     const { error: saveError } = await context.supabase
       .from("website_settings")
@@ -123,7 +130,10 @@ export const completeDomainTransfer = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error || !settings) throw new Error("You don't have access to that workspace.");
 
-    const transfer = (settings.domain_transfer ?? {}) as { to_domain?: string; from_domain?: string | null };
+    const transfer = (settings.domain_transfer ?? {}) as {
+      to_domain?: string;
+      from_domain?: string | null;
+    };
     if (!transfer.to_domain) throw new Error("Start a transfer first.");
 
     const check = await checkDomain(transfer.to_domain);
@@ -216,14 +226,22 @@ export const rollbackDomainTransfer = createServerFn({ method: "POST" })
 export const saveEmailForwarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { organizationId: string; provider: "improvmx" | "forwardemail"; alias: string; forwardTo: string }) => ({
+    (input: {
+      organizationId: string;
+      provider: "improvmx" | "forwardemail";
+      alias: string;
+      forwardTo: string;
+    }) => ({
       organizationId: String(input?.organizationId ?? ""),
-      provider: input?.provider === "forwardemail" ? ("forwardemail" as const) : ("improvmx" as const),
+      provider:
+        input?.provider === "forwardemail" ? ("forwardemail" as const) : ("improvmx" as const),
       alias: String(input?.alias ?? "")
         .toLowerCase()
         .replace(/[^a-z0-9._-]/g, "")
         .slice(0, 40),
-      forwardTo: String(input?.forwardTo ?? "").trim().slice(0, 160),
+      forwardTo: String(input?.forwardTo ?? "")
+        .trim()
+        .slice(0, 160),
     }),
   )
   .handler(async ({ data, context }) => {
@@ -237,7 +255,8 @@ export const saveEmailForwarding = createServerFn({ method: "POST" })
       .eq("organization_id", data.organizationId)
       .maybeSingle();
     if (error || !settings) throw new Error("You don't have access to that workspace.");
-    if (!settings.custom_domain) throw new Error("Connect your own domain first — branded email needs it.");
+    if (!settings.custom_domain)
+      throw new Error("Connect your own domain first — branded email needs it.");
 
     const forwarding = {
       provider: data.provider,
@@ -277,9 +296,13 @@ export const verifyEmailForwarding = createServerFn({ method: "POST" })
       alias?: string;
       forward_to?: string;
     };
-    if (!settings.custom_domain || !current.alias) throw new Error("Set up your branded address first.");
+    if (!settings.custom_domain || !current.alias)
+      throw new Error("Set up your branded address first.");
 
-    const dns = await checkEmailForwardingDns(settings.custom_domain, current.provider ?? "improvmx");
+    const dns = await checkEmailForwardingDns(
+      settings.custom_domain,
+      current.provider ?? "improvmx",
+    );
     const forwarding = {
       ...current,
       mx_ok: dns.mxOk,
@@ -309,7 +332,8 @@ export const runDomainSeoReport = createServerFn({ method: "POST" })
       .eq("organization_id", data.organizationId)
       .maybeSingle();
     if (error || !settings) throw new Error("You don't have access to that workspace.");
-    if (!settings.custom_domain) throw new Error("Connect a domain first — there's nothing to report on yet.");
+    if (!settings.custom_domain)
+      throw new Error("Connect a domain first — there's nothing to report on yet.");
 
     const report = await domainSeoReport(
       settings.custom_domain,

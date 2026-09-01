@@ -32,7 +32,10 @@ const DEVICES = [
 type Props = {
   organizationId: string | undefined;
   slug: string | undefined;
-  settings: { review_state?: string | null; generation?: unknown; generated_at?: string | null } | null | undefined;
+  settings:
+    | { review_state?: string | null; generation?: unknown; generated_at?: string | null }
+    | null
+    | undefined;
   canManage: boolean;
 };
 
@@ -87,7 +90,10 @@ export function WebsiteReview({ organizationId, slug, settings, canManage }: Pro
               variant="signal"
               disabled={setState.isPending || settings?.review_state === "approved"}
               onClick={() =>
-                setState.mutate({ state: "approved", message: "Website approved. Next: choose your web address." })
+                setState.mutate({
+                  state: "approved",
+                  message: "Website approved. Next: choose your web address.",
+                })
               }
             >
               <CheckCircle2 className="size-4" /> Approve website
@@ -191,7 +197,9 @@ export function WebsiteReview({ organizationId, slug, settings, canManage }: Pro
 
           {plan.placeholders.length ? (
             <div className="mt-5 rounded-md border border-accent/40 bg-accent/5 p-4">
-              <p className="text-[13px] font-medium">Needs your input ({plan.placeholders.length})</p>
+              <p className="text-[13px] font-medium">
+                Needs your input ({plan.placeholders.length})
+              </p>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 Revora only publishes facts you supply. These items are empty or generated
                 placeholders:
@@ -263,7 +271,9 @@ export function WebsiteReview({ organizationId, slug, settings, canManage }: Pro
                   <div>
                     <p className="text-[13px] font-medium">{r.title as string}</p>
                     {r.details ? (
-                      <p className="mt-1 text-[12px] text-muted-foreground">{r.details as string}</p>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        {r.details as string}
+                      </p>
                     ) : null}
                     {r.admin_notes ? (
                       <p className="mt-1 text-[12px] text-primary">

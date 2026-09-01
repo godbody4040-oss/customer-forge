@@ -21,8 +21,12 @@ export function VisualComposition({
   inline?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const wantsPointer = !!composition?.layers.some((l) => l.interaction === "cursor" || l.interaction === "both");
-  const wantsScroll = !!composition?.layers.some((l) => l.interaction === "scroll" || l.interaction === "both");
+  const wantsPointer = !!composition?.layers.some(
+    (l) => l.interaction === "cursor" || l.interaction === "both",
+  );
+  const wantsScroll = !!composition?.layers.some(
+    (l) => l.interaction === "scroll" || l.interaction === "both",
+  );
 
   useEffect(() => {
     const node = ref.current;

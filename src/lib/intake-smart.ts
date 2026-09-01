@@ -41,7 +41,8 @@ export function smartName(value: string) {
   const trimmed = value.trim().replace(/\s{2,}/g, " ");
   if (!trimmed) return trimmed;
   // Leave intentional casing alone; only fix all-lower or all-upper input.
-  if (trimmed === trimmed.toLowerCase() || trimmed === trimmed.toUpperCase()) return titleCase(trimmed);
+  if (trimmed === trimmed.toLowerCase() || trimmed === trimmed.toUpperCase())
+    return titleCase(trimmed);
   return trimmed;
 }
 
@@ -54,9 +55,15 @@ export function smartList(value: string) {
 }
 
 export function smartParagraph(value: string) {
-  const cleaned = value.trim().replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n");
+  const cleaned = value
+    .trim()
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n");
   if (!cleaned) return cleaned;
-  return cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (_m, lead: string, char: string) => lead + char.toUpperCase());
+  return cleaned.replace(
+    /(^|[.!?]\s+)([a-z])/g,
+    (_m, lead: string, char: string) => lead + char.toUpperCase(),
+  );
 }
 
 /** Apply the right tidy-up for an intake field key. */

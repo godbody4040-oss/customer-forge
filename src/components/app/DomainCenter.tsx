@@ -93,9 +93,12 @@ export function DomainCenter({
   );
 
   const save = useMutation({
-    mutationFn: (value: string) => saveFn({ data: { organizationId: organizationId!, domain: value } }),
+    mutationFn: (value: string) =>
+      saveFn({ data: { organizationId: organizationId!, domain: value } }),
     onSuccess: (result) => {
-      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, { description: result.detail });
+      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
+        description: result.detail,
+      });
       void queryClient.invalidateQueries({ queryKey: ["website-settings", organizationId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -140,7 +143,9 @@ export function DomainCenter({
         <div className="grid gap-2 sm:grid-cols-2">
           <div className="rounded-md border border-border/60 p-3">
             <p className="text-[12px] font-medium">Free Revora address</p>
-            <p className="mt-1 font-mono text-[12px] text-muted-foreground">{revoraSubdomain(slug ?? "")}</p>
+            <p className="mt-1 font-mono text-[12px] text-muted-foreground">
+              {revoraSubdomain(slug ?? "")}
+            </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Always included. It keeps working even after your own domain goes live.
             </p>
@@ -178,13 +183,10 @@ export function DomainCenter({
 
       {/* Buy a new domain */}
       <Panel className="space-y-4 p-5">
-        <SectionHeading
-          eyebrow="Buy a domain"
-          title="Find a name that's still available"
-        />
+        <SectionHeading eyebrow="Buy a domain" title="Find a name that's still available" />
         <p className="text-[13px] text-muted-foreground">
-          We check the official registry directory for each name. When one is free, register it at any
-          registrar below, then come back and connect it — it takes a couple of minutes.
+          We check the official registry directory for each name. When one is free, register it at
+          any registrar below, then come back and connect it — it takes a couple of minutes.
         </p>
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-56 flex-1">
@@ -255,7 +257,11 @@ export function DomainCenter({
                     <>
                       {REGISTRARS.slice(0, 3).map((r) => (
                         <Button key={r.id} size="sm" variant="outline" asChild>
-                          <a href={r.search(result.domain)} target="_blank" rel="noreferrer noopener">
+                          <a
+                            href={r.search(result.domain)}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                          >
                             {r.name.split(" ")[0]} <ExternalLink className="size-3.5" />
                           </a>
                         </Button>
@@ -281,8 +287,8 @@ export function DomainCenter({
               </div>
             ))}
             <p className="text-[11px] text-muted-foreground">
-              Availability is a strong hint from the registry directory — the registrar's checkout is the
-              final word on price and availability.
+              Availability is a strong hint from the registry directory — the registrar's checkout
+              is the final word on price and availability.
             </p>
           </div>
         )}
@@ -293,7 +299,11 @@ export function DomainCenter({
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[12px] font-medium">{r.name}</p>
                 <Button size="sm" variant="ghost" asChild>
-                  <a href={r.search(normalizeInput(idea) || suggestions[0] || "")} target="_blank" rel="noreferrer noopener">
+                  <a
+                    href={r.search(normalizeInput(idea) || suggestions[0] || "")}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
                     Open <ExternalLink className="size-3.5" />
                   </a>
                 </Button>
@@ -308,8 +318,8 @@ export function DomainCenter({
       <Panel className="space-y-4 p-5">
         <SectionHeading eyebrow="Connect a domain" title="Use a domain you already own" />
         <p className="text-[13px] text-muted-foreground">
-          Save it here first. We keep checking your DNS in the background and only report it live once the
-          records resolve here and HTTPS is working.
+          Save it here first. We keep checking your DNS in the background and only report it live
+          once the records resolve here and HTTPS is working.
         </p>
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-56 flex-1">
@@ -326,7 +336,11 @@ export function DomainCenter({
             disabled={!canManage || save.isPending || (!!input && !looksLikeDomain(input))}
             onClick={() => save.mutate(input)}
           >
-            {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+            {save.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="size-4" />
+            )}
             Save & check
           </Button>
           {connected ? (
@@ -353,8 +367,8 @@ export function DomainCenter({
         </div>
         {input && !looksLikeDomain(input) ? (
           <p className="text-[12px] text-destructive">
-            Enter a bare domain like <span className="font-mono">yourbusiness.com</span> — no https:// and no
-            trailing slash.
+            Enter a bare domain like <span className="font-mono">yourbusiness.com</span> — no
+            https:// and no trailing slash.
           </p>
         ) : null}
       </Panel>
@@ -390,7 +404,11 @@ export function DomainCenter({
                     <td className="py-2 pr-3 font-mono">{row.value}</td>
                     <td className="py-2 pr-3 text-muted-foreground">{row.ttl}</td>
                     <td className="py-2">
-                      <Button size="sm" variant="ghost" onClick={() => copy(row.value, "Record value")}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copy(row.value, "Record value")}
+                      >
                         <Copy className="size-3.5" /> Copy
                       </Button>
                     </td>

@@ -34,42 +34,99 @@ export const appointmentStatusMeta = (status: AppointmentStatus) =>
 export const ROLES: { value: AppRole; label: string; description: string }[] = [
   { value: "owner", label: "Owner", description: "Full control of the business and billing." },
   { value: "admin", label: "Admin", description: "Everything except billing ownership." },
-  { value: "manager", label: "Manager", description: "Manage settings, services and the team's work." },
+  {
+    value: "manager",
+    label: "Manager",
+    description: "Manage settings, services and the team's work.",
+  },
   { value: "staff", label: "Staff", description: "Work leads, bookings and customers." },
   { value: "viewer", label: "Viewer", description: "Read-only access to results." },
 ];
 
 export const CONVERSION_GOALS: { value: ConversionGoal; label: string; description: string }[] = [
-  { value: "calls", label: "Phone calls", description: "Make the phone ring. Call buttons lead everywhere." },
-  { value: "quotes", label: "Quote requests", description: "Push visitors into the instant estimate." },
-  { value: "bookings", label: "Bookings", description: "Get appointments on the calendar directly." },
-  { value: "consultations", label: "Consultations", description: "Book a call before quoting the job." },
-  { value: "purchases", label: "Website purchases", description: "Sell fixed-price packages online." },
+  {
+    value: "calls",
+    label: "Phone calls",
+    description: "Make the phone ring. Call buttons lead everywhere.",
+  },
+  {
+    value: "quotes",
+    label: "Quote requests",
+    description: "Push visitors into the instant estimate.",
+  },
+  {
+    value: "bookings",
+    label: "Bookings",
+    description: "Get appointments on the calendar directly.",
+  },
+  {
+    value: "consultations",
+    label: "Consultations",
+    description: "Book a call before quoting the job.",
+  },
+  {
+    value: "purchases",
+    label: "Website purchases",
+    description: "Sell fixed-price packages online.",
+  },
 ];
 
 export const INDUSTRIES = [
-  { name: "Auto Detailing", template: "detailing", emphasis: "Before/after proof, then an instant estimate." },
+  {
+    name: "Auto Detailing",
+    template: "detailing",
+    emphasis: "Before/after proof, then an instant estimate.",
+  },
   { name: "Hair Stylists", template: "beauty", emphasis: "Portfolio first, booking one tap away." },
   { name: "Barbers", template: "beauty", emphasis: "Recurring bookings and walk-in slots." },
-  { name: "Landscaping", template: "landscaping", emphasis: "Project gallery plus a property estimate." },
-  { name: "Pressure Washing", template: "landscaping", emphasis: "Square-footage pricing and fast quotes." },
+  {
+    name: "Landscaping",
+    template: "landscaping",
+    emphasis: "Project gallery plus a property estimate.",
+  },
+  {
+    name: "Pressure Washing",
+    template: "landscaping",
+    emphasis: "Square-footage pricing and fast quotes.",
+  },
   { name: "Cleaning", template: "cleaning", emphasis: "Service packages with online booking." },
-  { name: "Contractors", template: "contractor", emphasis: "Trust signals and a quote request path." },
+  {
+    name: "Contractors",
+    template: "contractor",
+    emphasis: "Trust signals and a quote request path.",
+  },
   { name: "HVAC", template: "contractor", emphasis: "Emergency calls and maintenance plans." },
   { name: "Plumbing", template: "contractor", emphasis: "Call-now urgency and service areas." },
-  { name: "Roofing", template: "contractor", emphasis: "Inspection requests and financing questions." },
+  {
+    name: "Roofing",
+    template: "contractor",
+    emphasis: "Inspection requests and financing questions.",
+  },
   { name: "Photography", template: "beauty", emphasis: "Galleries that lead into consultations." },
   { name: "Beauty", template: "beauty", emphasis: "Treatment menus and appointment booking." },
   { name: "Med Spa", template: "beauty", emphasis: "Consultation requests and treatment pages." },
   { name: "Fitness", template: "cleaning", emphasis: "Trial signups and class scheduling." },
-  { name: "Home Services", template: "contractor", emphasis: "Multi-service quoting with service areas." },
-  { name: "Professional Services", template: "contractor", emphasis: "Consultations and credibility." },
+  {
+    name: "Home Services",
+    template: "contractor",
+    emphasis: "Multi-service quoting with service areas.",
+  },
+  {
+    name: "Professional Services",
+    template: "contractor",
+    emphasis: "Consultations and credibility.",
+  },
 ] as const;
 
 export const TEMPLATES = [
   { id: "detailing", name: "Detailing", focus: "Visual-first, before/after led", primary: "quote" },
   { id: "beauty", name: "Beauty & Hair", focus: "Portfolio and appointment led", primary: "book" },
-  { id: "landscaping", name: "Landscaping", focus: "Project gallery and estimate led", primary: "quote" },
+  {
+    id: "landscaping",
+    name: "Landscaping",
+    focus: "Project gallery and estimate led",
+    primary: "quote",
+  },
   { id: "contractor", name: "Contractor", focus: "Trust and quote request led", primary: "quote" },
   { id: "cleaning", name: "Cleaning", focus: "Service packages and booking led", primary: "book" },
   { id: "default", name: "Universal", focus: "Balanced conversion paths", primary: "quote" },
@@ -120,8 +177,12 @@ export const DATE_RANGES = [
 ] as const;
 
 /** Owners, admins and managers may change publishing, domains and billing-facing settings. */
-export const canManage = (role: AppRole) => role === "owner" || role === "admin" || role === "manager";
+export const canManage = (role: AppRole) =>
+  role === "owner" || role === "admin" || role === "manager";
 
 export function industrySlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }

@@ -31,7 +31,8 @@ export const Route = createFileRoute("/_authenticated/app/campaigns")({
       { title: "Campaigns & QR codes — Revora" },
       {
         name: "description",
-        content: "Create tracked campaign links and printable QR codes, then see which ones produce leads.",
+        content:
+          "Create tracked campaign links and printable QR codes, then see which ones produce leads.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -115,8 +116,10 @@ function CampaignsPage() {
   const siteOrigin = useMemo(() => {
     const custom = settings.data?.custom_domain;
     if (custom && settings.data?.domain_verified) return `https://${custom}`;
-    if (settings.data?.subdomain) return `https://${settings.data.subdomain}.revoragrowthsystems.com`;
-    if (typeof window !== "undefined" && org?.slug) return `${window.location.origin}/s/${org.slug}`;
+    if (settings.data?.subdomain)
+      return `https://${settings.data.subdomain}.revoragrowthsystems.com`;
+    if (typeof window !== "undefined" && org?.slug)
+      return `${window.location.origin}/s/${org.slug}`;
     return org?.slug ? `/s/${org.slug}` : "";
   }, [settings.data, org?.slug]);
 
@@ -163,8 +166,8 @@ function CampaignsPage() {
 
       <Panel>
         <p className="text-[13px] leading-relaxed text-muted-foreground">
-          Every campaign gets a tracked link and a printable QR code. Visitors who arrive through one
-          are tagged for their whole session, so the leads, quotes and bookings they submit are
+          Every campaign gets a tracked link and a printable QR code. Visitors who arrive through
+          one are tagged for their whole session, so the leads, quotes and bookings they submit are
           attributed back here — even if they submit several pages later.
         </p>
       </Panel>
@@ -192,14 +195,21 @@ function CampaignsPage() {
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate font-display text-[15px] font-semibold">{campaign.name}</p>
+                      <p className="truncate font-display text-[15px] font-semibold">
+                        {campaign.name}
+                      </p>
                       <p className="truncate text-[11px] text-muted-foreground">
                         {campaign.source}
                         {campaign.medium ? ` · ${campaign.medium}` : ""} · {campaign.code}
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => copy(url)} aria-label="Copy campaign link">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copy(url)}
+                        aria-label="Copy campaign link"
+                      >
                         <Copy className="size-4" />
                       </Button>
                       <Button

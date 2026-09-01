@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -9,17 +9,14 @@ import {
   Html,
   Preview,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
 interface RecoveryEmailProps {
-  siteName: string
-  confirmationUrl: string
+  siteName: string;
+  confirmationUrl: string;
 }
 
-export const RecoveryEmail = ({
-  siteName,
-  confirmationUrl,
-}: RecoveryEmailProps) => (
+export const RecoveryEmail = ({ siteName, confirmationUrl }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head>
       <style>{darkModeCss}</style>
@@ -30,54 +27,62 @@ export const RecoveryEmail = ({
         <Text style={brand}>REVORA</Text>
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
+          We received a request to reset your password for {siteName}. Click the button below to
+          choose a new password.
         </Text>
         <Button className="dm-btn" style={button} href={confirmationUrl}>
           Reset Password
         </Button>
         <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
+          If you didn't request a password reset, you can safely ignore this email. Your password
+          will not be changed.
         </Text>
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default RecoveryEmail
+export default RecoveryEmail;
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+const main = {
+  backgroundColor: "#ffffff",
+  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+};
 const brand = {
-  fontSize: '13px',
-  letterSpacing: '3px',
-  fontWeight: 'bold' as const,
-  color: '#A5741F',
-  margin: '0 0 24px',
-}
-const container = { padding: '32px 28px', maxWidth: '560px', border: '1px solid #EDE7DA', borderRadius: '14px' }
+  fontSize: "13px",
+  letterSpacing: "3px",
+  fontWeight: "bold" as const,
+  color: "#A5741F",
+  margin: "0 0 24px",
+};
+const container = {
+  padding: "32px 28px",
+  maxWidth: "560px",
+  border: "1px solid #EDE7DA",
+  borderRadius: "14px",
+};
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#141210',
-  margin: '0 0 20px',
-}
+  fontSize: "22px",
+  fontWeight: "bold" as const,
+  color: "#141210",
+  margin: "0 0 20px",
+};
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
+  fontSize: "14px",
+  color: "#55575d",
+  lineHeight: "1.5",
+  margin: "0 0 25px",
+};
 const button = {
-  backgroundColor: '#B8862B',
-  color: '#ffffff',
-  fontSize: '14px',
-  border: '1px solid #A5741F',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+  backgroundColor: "#B8862B",
+  color: "#ffffff",
+  fontSize: "14px",
+  border: "1px solid #A5741F",
+  borderRadius: "8px",
+  padding: "12px 20px",
+  textDecoration: "none",
+};
+const footer = { fontSize: "12px", color: "#999999", margin: "30px 0 0" };
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
   @media (prefers-color-scheme: dark) {
@@ -85,4 +90,4 @@ const darkModeCss = `
   }
   [data-ogsc] .dm-btn { background-color: #E0B75A !important; color: #141210 !important; }
   [data-ogsb] .dm-btn { background-color: #E0B75A !important; color: #141210 !important; }
-`
+`;

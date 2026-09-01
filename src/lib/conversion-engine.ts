@@ -15,11 +15,27 @@ export type ConversionGoal = "call" | "text" | "book" | "quote" | "buy" | "lead"
 
 export const CONVERSION_GOALS: { value: ConversionGoal; label: string; blurb: string }[] = [
   { value: "call", label: "Phone calls", blurb: "Best for urgent, high-ticket or emergency work." },
-  { value: "text", label: "Text messages", blurb: "Best when customers want a quick answer without talking." },
-  { value: "book", label: "Online bookings", blurb: "Best for fixed-length, fixed-price appointments." },
+  {
+    value: "text",
+    label: "Text messages",
+    blurb: "Best when customers want a quick answer without talking.",
+  },
+  {
+    value: "book",
+    label: "Online bookings",
+    blurb: "Best for fixed-length, fixed-price appointments.",
+  },
   { value: "quote", label: "Quote requests", blurb: "Best when price depends on the job." },
-  { value: "buy", label: "Online purchases", blurb: "Best for packages you can charge for up front." },
-  { value: "lead", label: "Contact enquiries", blurb: "Best when the first step is a conversation." },
+  {
+    value: "buy",
+    label: "Online purchases",
+    blurb: "Best for packages you can charge for up front.",
+  },
+  {
+    value: "lead",
+    label: "Contact enquiries",
+    blurb: "Best when the first step is a conversation.",
+  },
 ];
 
 const GOAL_ALIASES: Record<string, ConversionGoal> = {
@@ -92,7 +108,9 @@ export function ctaLadder(goal: ConversionGoal, ctx: ConversionContext): CtaStep
       label: ctx.phone ? `Call ${ctx.phone}` : "Call us",
       href: ctx.phone ? `tel:${digits(ctx.phone)}` : null,
       available: !!ctx.phone,
-      note: ctx.phone ? "Tap-to-call in the header, hero and sticky bar." : "Add a phone number to switch calling on.",
+      note: ctx.phone
+        ? "Tap-to-call in the header, hero and sticky bar."
+        : "Add a phone number to switch calling on.",
     },
     text: {
       key: "text",
@@ -129,14 +147,18 @@ export function ctaLadder(goal: ConversionGoal, ctx: ConversionContext): CtaStep
       label: "Buy now",
       href: ctx.paymentsEnabled && site ? `${site}/pricing` : null,
       available: ctx.paymentsEnabled,
-      note: ctx.paymentsEnabled ? "Card checkout for packaged work." : "Connect payments to sell packages online.",
+      note: ctx.paymentsEnabled
+        ? "Card checkout for packaged work."
+        : "Connect payments to sell packages online.",
     },
     lead: {
       key: "lead",
       label: "Send a message",
       href: site ? `${site}/contact` : null,
       available: !!site,
-      note: ctx.email ? "Form submissions land in your CRM and email." : "Add an email so enquiries reach you.",
+      note: ctx.email
+        ? "Form submissions land in your CRM and email."
+        : "Add an email so enquiries reach you.",
     },
   };
 
@@ -158,17 +180,41 @@ export const GOAL_SECTIONS: Record<ConversionGoal, string[]> = {
 
 /** Objections a local-service visitor has before they act. */
 export const OBJECTIONS: { key: string; question: string; why: string }[] = [
-  { key: "price", question: "What does it cost?", why: "Price uncertainty is the most common reason visitors leave." },
-  { key: "speed", question: "How soon can you come out?", why: "Availability decides who gets the job." },
-  { key: "area", question: "Do you cover my area?", why: "Visitors bounce when coverage is unclear." },
-  { key: "trust", question: "Are you insured and experienced?", why: "Strangers need proof before letting you in." },
-  { key: "process", question: "What happens after I enquire?", why: "Removing the unknown lifts form completion." },
-  { key: "guarantee", question: "What if I'm not happy?", why: "A clear promise reduces perceived risk." },
+  {
+    key: "price",
+    question: "What does it cost?",
+    why: "Price uncertainty is the most common reason visitors leave.",
+  },
+  {
+    key: "speed",
+    question: "How soon can you come out?",
+    why: "Availability decides who gets the job.",
+  },
+  {
+    key: "area",
+    question: "Do you cover my area?",
+    why: "Visitors bounce when coverage is unclear.",
+  },
+  {
+    key: "trust",
+    question: "Are you insured and experienced?",
+    why: "Strangers need proof before letting you in.",
+  },
+  {
+    key: "process",
+    question: "What happens after I enquire?",
+    why: "Removing the unknown lifts form completion.",
+  },
+  {
+    key: "guarantee",
+    question: "What if I'm not happy?",
+    why: "A clear promise reduces perceived risk.",
+  },
 ];
 
 export type ConversionGap = {
   key: string;
-  title: string
+  title: string;
   detail: string;
   action: string;
   severity: "critical" | "warning" | "opportunity";
@@ -204,7 +250,8 @@ export function conversionGaps(
       key: "backup-paths",
       title: "Only one way to convert",
       detail: `${backups.length} backup path${backups.length === 1 ? "" : "s"} available besides your main action.`,
-      action: "Offer at least two more paths — some visitors will call, others will only ever use a form.",
+      action:
+        "Offer at least two more paths — some visitors will call, others will only ever use a form.",
       severity: "warning",
     });
   }

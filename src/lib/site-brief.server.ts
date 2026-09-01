@@ -25,7 +25,12 @@ export type BriefFacts = {
   socialLinks: number;
   testimonialCount: number;
   goals: string[];
-  serviceRows: { name: string; description?: string | null; price?: number | null; starting_price?: number | null }[];
+  serviceRows: {
+    name: string;
+    description?: string | null;
+    price?: number | null;
+    starting_price?: number | null;
+  }[];
 };
 
 const str = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
@@ -36,36 +41,74 @@ export async function gatherBriefFacts(
   orgId: string,
   briefRequests: string[] = [],
 ): Promise<BriefFacts> {
-  const [org, profile, services, media, socials, forms, questions, bookable, settings, sections, leads, activities, automations] =
-    await Promise.all([
-      db.from("organizations").select("name, slug, industry, conversion_goal").eq("id", orgId).maybeSingle(),
-      db.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-      db
-        .from("services")
-        .select("name, description, price, starting_price")
-        .eq("organization_id", orgId)
-        .eq("is_active", true)
-        .order("sort_order"),
-      db.from("media").select("id").eq("organization_id", orgId),
-      db.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-      db.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
-      db.from("quote_questions").select("id").eq("organization_id", orgId),
-      db.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
-      db.from("website_settings").select("seo, generation").eq("organization_id", orgId).maybeSingle(),
-      db.from("website_sections").select("id, kind").eq("organization_id", orgId).eq("is_visible", true),
-      db.from("leads").select("id").eq("organization_id", orgId).in("source", ["quote", "booking", "form_submission", "website"]),
-      db.from("lead_activities").select("id").eq("organization_id", orgId),
-      db.from("automations").select("id, trigger_event").eq("organization_id", orgId).eq("is_active", true),
-    ]);
+  const [
+    org,
+    profile,
+    services,
+    media,
+    socials,
+    forms,
+    questions,
+    bookable,
+    settings,
+    sections,
+    leads,
+    activities,
+    automations,
+  ] = await Promise.all([
+    db
+      .from("organizations")
+      .select("name, slug, industry, conversion_goal")
+      .eq("id", orgId)
+      .maybeSingle(),
+    db.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+    db
+      .from("services")
+      .select("name, description, price, starting_price")
+      .eq("organization_id", orgId)
+      .eq("is_active", true)
+      .order("sort_order"),
+    db.from("media").select("id").eq("organization_id", orgId),
+    db.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+    db.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
+    db.from("quote_questions").select("id").eq("organization_id", orgId),
+    db.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
+    db
+      .from("website_settings")
+      .select("seo, generation")
+      .eq("organization_id", orgId)
+      .maybeSingle(),
+    db
+      .from("website_sections")
+      .select("id, kind")
+      .eq("organization_id", orgId)
+      .eq("is_visible", true),
+    db
+      .from("leads")
+      .select("id")
+      .eq("organization_id", orgId)
+      .in("source", ["quote", "booking", "form_submission", "website"]),
+    db.from("lead_activities").select("id").eq("organization_id", orgId),
+    db
+      .from("automations")
+      .select("id, trigger_event")
+      .eq("organization_id", orgId)
+      .eq("is_active", true),
+  ]);
 
   if (!org.data) throw new Error("Workspace not found.");
 
   const p = (profile.data ?? {}) as Record<string, unknown>;
   const serviceRows = (services.data ?? []) as BriefFacts["serviceRows"];
   const social = (socials.data ?? {}) as Record<string, unknown>;
-  const socialLinks = ["instagram", "facebook", "tiktok", "youtube", "google_business", "linkedin"].filter(
-    (k) => typeof social[k] === "string" && String(social[k]).trim(),
-  ).length;
+  const socialLinks = [
+    "instagram",
+    "facebook",
+    "tiktok",
+    "youtube",
+    "google_business",
+    "linkedin",
+  ].filter((k) => typeof social[k] === "string" && String(social[k]).trim()).length;
   const testimonials = Array.isArray(p["testimonials"]) ? (p["testimonials"] as unknown[]) : [];
   const goalsRaw = (p["website_goals"] as string[] | undefined) ?? [];
   const goals = goalsRaw.length ? goalsRaw : [org.data.conversion_goal ?? "quote"];
@@ -77,7 +120,9 @@ export async function gatherBriefFacts(
   const captureSections = ((sections.data ?? []) as { kind: string }[]).filter((s) =>
     captureKinds.has(s.kind),
   ).length;
-  const triggers = ((automations.data ?? []) as { trigger_event: string }[]).map((a) => a.trigger_event);
+  const triggers = ((automations.data ?? []) as { trigger_event: string }[]).map(
+    (a) => a.trigger_event,
+  );
 
   const copyFacts: CopyFacts = {
     businessName: org.data.name ?? "",
@@ -129,7 +174,13 @@ export async function gatherBriefFacts(
       siteLeads: (leads.data ?? []).length,
       loggedActivities: (activities.data ?? []).length,
       confirmationAutomations: triggers.filter((t) =>
-        ["lead_created", "quote_requested", "appointment_booked", "booking_created", "lead_status_changed"].includes(t),
+        [
+          "lead_created",
+          "quote_requested",
+          "appointment_booked",
+          "booking_created",
+          "lead_status_changed",
+        ].includes(t),
       ).length,
       notifiesOwner: true,
     },

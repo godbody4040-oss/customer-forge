@@ -16,7 +16,9 @@ function AdminPlans() {
   const rows = clients.data ?? [];
 
   const paid = rows.filter((c) => Boolean(c.setup_paid_at) && c.subscription_state === "active");
-  const awaiting = rows.filter((c) => !c.is_demo && !(c.setup_paid_at && c.subscription_state === "active"));
+  const awaiting = rows.filter(
+    (c) => !c.is_demo && !(c.setup_paid_at && c.subscription_state === "active"),
+  );
   const collected = rows.reduce((sum, c) => sum + Number(c.paid_total ?? 0), 0);
   const mrr = paid.length * GROWTH_SYSTEM.monthlyPrice;
 
@@ -63,8 +65,9 @@ function AdminPlans() {
       )}
 
       <p className="text-[12px] text-muted-foreground">
-        Every client is on this single offer. Payment state, renewal dates and collected revenue are synced from
-        verified payment webhooks — see each client's detail page for their billing timeline.
+        Every client is on this single offer. Payment state, renewal dates and collected revenue are
+        synced from verified payment webhooks — see each client's detail page for their billing
+        timeline.
       </p>
     </div>
   );

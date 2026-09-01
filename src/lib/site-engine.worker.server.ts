@@ -46,7 +46,9 @@ async function readQueueState(db: Db): Promise<QueueState> {
 async function writeQueueState(db: Db, patch: Record<string, unknown>) {
   await db
     .from("job_queue_state")
-    .upsert({ id: QUEUE_ID, ...patch, updated_at: new Date().toISOString() } as never, { onConflict: "id" });
+    .upsert({ id: QUEUE_ID, ...patch, updated_at: new Date().toISOString() } as never, {
+      onConflict: "id",
+    });
 }
 
 async function pauseQueue(db: Db, kind: "credits" | "blocked" | "rate_limit", reason: string) {
@@ -100,22 +102,31 @@ async function claimJob(db: Db, organizationId?: string) {
       .eq("attempts", job.attempts as number)
       .select("id, organization_id, created_by")
       .maybeSingle();
-    if (claimed) return claimed as { id: string; organization_id: string; created_by: string | null };
+    if (claimed)
+      return claimed as { id: string; organization_id: string; created_by: string | null };
   }
   return null;
 }
 
 /** Runs the nine generation stages for one claimed job using the privileged client. */
-async function runJob(db: Db, job: { id: string; organization_id: string; created_by: string | null }) {
+async function runJob(
+  db: Db,
+  job: { id: string; organization_id: string; created_by: string | null },
+) {
   const orgId = job.organization_id;
   const { GENERATION_STEPS } = await import("@/lib/site-engine");
   const { generateWebsitePlan } = await import("@/lib/website-plan");
   const { readBrief } = await import("@/lib/site-brief");
   const { captureQa } = await import("@/lib/launch-qa");
   const { gatherBriefFacts } = await import("@/lib/site-brief.server");
-  const { generateSiteCopy, analyzeBusiness, fallbackBrief, fallbackCopy, AiGatewayError, COPY_MODEL } =
-    await import("@/lib/site-engine.server");
-
+  const {
+    generateSiteCopy,
+    analyzeBusiness,
+    fallbackBrief,
+    fallbackCopy,
+    AiGatewayError,
+    COPY_MODEL,
+  } = await import("@/lib/site-engine.server");
 
   const done: string[] = [];
   const step = async (key: string) => {
@@ -134,7 +145,11 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   };
 
   const [org, profile, services, media, socials, forms, bookable] = await Promise.all([
-    db.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
+    db
+      .from("organizations")
+      .select("name, industry, conversion_goal")
+      .eq("id", orgId)
+      .maybeSingle(),
     db.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
     db
       .from("services")
@@ -161,9 +176,14 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   await step("services");
 
   const social = (socials.data ?? {}) as Record<string, unknown>;
-  const socialLinks = ["instagram", "facebook", "tiktok", "youtube", "google_business", "linkedin"].filter(
-    (k) => typeof social[k] === "string" && String(social[k]).trim(),
-  ).length;
+  const socialLinks = [
+    "instagram",
+    "facebook",
+    "tiktok",
+    "youtube",
+    "google_business",
+    "linkedin",
+  ].filter((k) => typeof social[k] === "string" && String(social[k]).trim()).length;
   await step("brand");
 
   const testimonials = Array.isArray(p["testimonials"]) ? (p["testimonials"] as unknown[]) : [];
@@ -206,7 +226,11 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
   let brief = approvedBrief?.approved ? approvedBrief : fallbackBrief(copyFacts);
   if (!approvedBrief?.approved) {
     try {
-      brief = { ...(await analyzeBusiness(copyFacts)), factAnswers: approvedBrief?.factAnswers ?? {}, approved: false };
+      brief = {
+        ...(await analyzeBusiness(copyFacts)),
+        factAnswers: approvedBrief?.factAnswers ?? {},
+        approved: false,
+      };
     } catch (error) {
       if (error instanceof AiGatewayError && error.status === 429) throw error;
       if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
@@ -258,7 +282,6 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
     }
   }
   await step("copy");
-
 
   await db.from("ai_generations").insert({
     organization_id: orgId,
@@ -352,7 +375,6 @@ async function runJob(db: Db, job: { id: string; organization_id: string; create
     kind: "website",
     link: "/app/website",
   } as never);
-
 }
 
 export type DrainResult = {
@@ -389,7 +411,6 @@ export async function drainSiteEngineQueue(
     }
   }
 
-
   await writeQueueState(db, { last_run_at: new Date().toISOString() });
 
   let processed = 0;
@@ -397,14 +418,20 @@ export async function drainSiteEngineQueue(
 
   for (let i = 0; i < budget; i += 1) {
     const job = await claimJob(db, options.organizationId);
-    if (!job) return { processed, failed, paused: false, pauseReason: null, idle: processed + failed === 0 };
+    if (!job)
+      return {
+        processed,
+        failed,
+        paused: false,
+        pauseReason: null,
+        idle: processed + failed === 0,
+      };
 
     try {
       await runJob(db, job);
       processed += 1;
       if (state.paused || state.consecutive_rate_limits > 0) await resumeQueue(db);
     } catch (error) {
-
       const { AiGatewayError } = await import("@/lib/site-engine.server");
       const isGateway = error instanceof AiGatewayError;
       const status = isGateway ? (error as InstanceType<typeof AiGatewayError>).status : 0;
@@ -421,7 +448,6 @@ export async function drainSiteEngineQueue(
         continue;
       }
 
-
       if (status === 429) {
         failed += 1;
         const rl = state.consecutive_rate_limits + 1;
@@ -432,7 +458,13 @@ export async function drainSiteEngineQueue(
           .from("generation_jobs")
           .update({ status: "queued", error_message: message, lease_expires_at: null } as never)
           .eq("id", job.id);
-        return { processed, failed, paused: rl >= RATE_LIMIT_TRIP, pauseReason: message, idle: false };
+        return {
+          processed,
+          failed,
+          paused: rl >= RATE_LIMIT_TRIP,
+          pauseReason: message,
+          idle: false,
+        };
       }
 
       // Ordinary failure: retry until MAX_ATTEMPTS, then mark it failed for good.
@@ -447,7 +479,12 @@ export async function drainSiteEngineQueue(
         .from("generation_jobs")
         .update(
           attempts >= MAX_ATTEMPTS
-            ? { status: "failed", error_message: message, completed_at: new Date().toISOString(), lease_expires_at: null }
+            ? {
+                status: "failed",
+                error_message: message,
+                completed_at: new Date().toISOString(),
+                lease_expires_at: null,
+              }
             : { status: "queued", error_message: message, lease_expires_at: null },
         )
         .eq("id", job.id);

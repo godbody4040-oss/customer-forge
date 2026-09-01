@@ -37,7 +37,11 @@ export async function resolveHostSite(
   if (!rawHost) return null;
   const host = normalise(rawHost);
   if (!host || host.startsWith("localhost") || host.startsWith("127.0.0.1")) return null;
-  if (REVORA_HOSTS.includes(host) || host.endsWith("lovable.app") || host.endsWith("lovableproject.com")) {
+  if (
+    REVORA_HOSTS.includes(host) ||
+    host.endsWith("lovable.app") ||
+    host.endsWith("lovableproject.com")
+  ) {
     return null;
   }
 
@@ -98,12 +102,10 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/demo/dashboard",
       "/privacy",
       "/terms",
-    ].map(
-      (path) => ({
-        loc: `${origin}${path}`,
-        lastmod: null as string | null,
-      }),
-    );
+    ].map((path) => ({
+      loc: `${origin}${path}`,
+      lastmod: null as string | null,
+    }));
   }
   const paths = [{ slug: "home", updatedAt: null as string | null }, ...site.pages].filter(
     (p, i, all) => all.findIndex((x) => x.slug === p.slug) === i,

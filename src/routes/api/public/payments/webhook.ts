@@ -3,9 +3,8 @@ import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
 async function handleEvent(event: { type: string; data: { object: any } }, env: StripeEnv) {
   const { adminClient } = await import("@/lib/payments.server");
-  const { syncStripeSubscription, recordStripeTransaction, planFromPriceId, resolvePriceKey } = await import(
-    "@/lib/stripe-billing.server"
-  );
+  const { syncStripeSubscription, recordStripeTransaction, planFromPriceId, resolvePriceKey } =
+    await import("@/lib/stripe-billing.server");
   const admin = await adminClient();
   const object = event.data.object;
 
@@ -34,11 +33,15 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       }
       const organizationId = result.organizationId;
       const stripeStatus = String(payload?.status ?? "");
-      const periodEnd = payload?.items?.data?.[0]?.current_period_end ?? payload?.current_period_end;
+      const periodEnd =
+        payload?.items?.data?.[0]?.current_period_end ?? payload?.current_period_end;
       const accessUntil =
         typeof periodEnd === "number" ? new Date(periodEnd * 1000).toISOString() : null;
 
-      if (event.type === "customer.subscription.created" && ["active", "trialing"].includes(stripeStatus)) {
+      if (
+        event.type === "customer.subscription.created" &&
+        ["active", "trialing"].includes(stripeStatus)
+      ) {
         const priceKey = payload?.items?.data?.[0]?.price
           ? resolvePriceKey(payload.items.data[0].price)
           : null;
@@ -154,7 +157,6 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       if (md["kind"] !== "service" || !md["paymentId"]) break;
       if (object?.payment_status !== "paid") break;
 
-
       const { data: payment } = await admin
         .from("payments")
         .select("*")
@@ -167,7 +169,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         .update({
           status: "completed",
           completed_at: new Date().toISOString(),
-          customer_email: (object?.customer_details?.email as string | undefined) ?? payment.customer_email,
+          customer_email:
+            (object?.customer_details?.email as string | undefined) ?? payment.customer_email,
           metadata: {
             ...((payment.metadata as Record<string, unknown> | null) ?? {}),
             stripe_session_id: String(object?.id ?? ""),
@@ -226,7 +229,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
             currency: String(object?.currency ?? "usd"),
             failure_reason: succeeded
               ? null
-              : ((object?.last_payment_error?.message as string | undefined) ?? "Card payment failed"),
+              : ((object?.last_payment_error?.message as string | undefined) ??
+                "Card payment failed"),
           },
         });
         if (!succeeded) {
@@ -246,13 +250,15 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
   }
 }
 
-
 /**
  * Event-level idempotency: Stripe delivers at least once, so a verified event
  * id is claimed in `payment_events` (unique per provider) before any side
  * effect runs. A duplicate delivery short-circuits with 200.
  */
-async function claimEvent(event: { id?: string; type: string; data: { object: any } }, env: StripeEnv) {
+async function claimEvent(
+  event: { id?: string; type: string; data: { object: any } },
+  env: StripeEnv,
+) {
   const { adminClient } = await import("@/lib/payments.server");
   const admin = await adminClient();
   const eventId = String(event.id ?? "");
@@ -304,4 +310,3 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
     },
   },
 });
-

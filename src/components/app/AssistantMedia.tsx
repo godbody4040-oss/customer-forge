@@ -95,7 +95,9 @@ export function AssistantMedia({
       const result = await chapterFn({ data: { organizationId, video: attachment } });
       if (result.chapters.length) {
         onChange((prior) =>
-          prior.map((item) => (item.dataUrl === attachment.dataUrl ? { ...item, chapters: result.chapters } : item)),
+          prior.map((item) =>
+            item.dataUrl === attachment.dataUrl ? { ...item, chapters: result.chapters } : item,
+          ),
         );
       }
     } catch {
@@ -147,8 +149,11 @@ export function AssistantMedia({
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = ["audio/webm", "audio/mp4"].find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
-      const instance = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const mimeType =
+        ["audio/webm", "audio/mp4"].find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
+      const instance = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       chunks.current = [];
       instance.ondataavailable = (event) => {
         if (event.data.size) chunks.current.push(event.data);
@@ -208,7 +213,12 @@ export function AssistantMedia({
           <ImagePlus className="size-4" aria-hidden="true" /> Add photo or video
         </Button>
         {recording ? (
-          <Button type="button" variant="destructive" size="sm" onClick={() => recorder.current?.stop()}>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => recorder.current?.stop()}
+          >
             <Square className="size-4" aria-hidden="true" /> Stop recording ({seconds}s)
           </Button>
         ) : (
@@ -247,13 +257,19 @@ export function AssistantMedia({
             >
               <div className="flex items-center gap-2">
                 {attachment.kind === "image" ? (
-                  <img src={attachment.dataUrl} alt="" className="size-10 shrink-0 rounded object-cover" />
+                  <img
+                    src={attachment.dataUrl}
+                    alt=""
+                    className="size-10 shrink-0 rounded object-cover"
+                  />
                 ) : (
                   <span className="flex size-10 shrink-0 items-center justify-center rounded bg-surface">
                     <Film className="size-4 text-primary" aria-hidden="true" />
                   </span>
                 )}
-                <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">{attachment.name}</span>
+                <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">
+                  {attachment.name}
+                </span>
                 {indexing.includes(attachment.name) ? (
                   <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Loader2 className="size-3 animate-spin" aria-hidden="true" /> Indexing moments…
@@ -263,7 +279,9 @@ export function AssistantMedia({
                   type="button"
                   aria-label={`Remove ${attachment.name}`}
                   className={`${FOCUS} p-1 text-muted-foreground transition-colors hover:text-foreground`}
-                  onClick={() => onChange((prior) => prior.filter((_, position) => position !== index))}
+                  onClick={() =>
+                    onChange((prior) => prior.filter((_, position) => position !== index))
+                  }
                 >
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
@@ -280,7 +298,9 @@ export function AssistantMedia({
                         <button
                           type="button"
                           className={`${FOCUS} text-left hover:underline`}
-                          onClick={() => onInsert?.(`the moment at ${chapter.at} (${chapter.label})`)}
+                          onClick={() =>
+                            onInsert?.(`the moment at ${chapter.at} (${chapter.label})`)
+                          }
                         >
                           <span className="font-mono text-primary">{chapter.at}</span>{" "}
                           <span className="font-medium">{chapter.label}</span>{" "}

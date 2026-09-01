@@ -109,7 +109,11 @@ const SECTION_SYNONYMS: Record<string, string> = {
 const has = (text: string, ...words: string[]) => words.some((word) => text.includes(word));
 
 /** Builds a plan for `instruction` using only Revora's own catalogue. */
-export function planWithoutAi(instruction: string, context: OfflineContext, reason: string): RawPlan {
+export function planWithoutAi(
+  instruction: string,
+  context: OfflineContext,
+  reason: string,
+): RawPlan {
   const text = instruction.toLowerCase();
   const words = text.split(/[^a-z0-9]+/).filter(Boolean);
   const actions: Record<string, unknown>[] = [];
@@ -123,17 +127,28 @@ export function planWithoutAi(instruction: string, context: OfflineContext, reas
   const backdropId = words.map((word) => BACKDROP_WORDS[word]).find(Boolean);
   if (backdropId && BACKDROPS.some((b) => b.id === backdropId)) {
     actions.push({ type: "set_backdrop", backdrop: removing ? "none" : backdropId });
-    done.push(`set the site backdrop to ${BACKDROPS.find((b) => b.id === backdropId)?.label ?? backdropId}`);
+    done.push(
+      `set the site backdrop to ${BACKDROPS.find((b) => b.id === backdropId)?.label ?? backdropId}`,
+    );
   }
 
   // 2. Section motion, e.g. "make the hero float in 3d".
   const effectId = words.map((word) => EFFECT_WORDS[word]).find(Boolean);
   if (effectId && SECTION_EFFECTS.some((e) => e.id === effectId)) {
-    const named = allSections.find((section) => text.includes(section.kind.replace(/_/g, " ")) || text.includes(section.kind));
-    const target = named ?? allSections.find((section) => section.kind === "hero") ?? allSections[0];
+    const named = allSections.find(
+      (section) => text.includes(section.kind.replace(/_/g, " ")) || text.includes(section.kind),
+    );
+    const target =
+      named ?? allSections.find((section) => section.kind === "hero") ?? allSections[0];
     if (target) {
-      actions.push({ type: "set_section_effect", sectionId: target.id, effect: removing ? "none" : effectId });
-      done.push(`applied ${SECTION_EFFECTS.find((e) => e.id === effectId)?.label ?? effectId} to your ${target.kind.replace(/_/g, " ")} section`);
+      actions.push({
+        type: "set_section_effect",
+        sectionId: target.id,
+        effect: removing ? "none" : effectId,
+      });
+      done.push(
+        `applied ${SECTION_EFFECTS.find((e) => e.id === effectId)?.label ?? effectId} to your ${target.kind.replace(/_/g, " ")} section`,
+      );
     }
   }
 
@@ -157,14 +172,20 @@ export function planWithoutAi(instruction: string, context: OfflineContext, reas
       done.push(`turned your ${kind.replace(/_/g, " ")} section back on`);
     } else if (!existing && home) {
       actions.push({ type: "add_section", pageId: home.id, kind });
-      done.push(`added a ${SECTION_LIBRARY.find((s) => s.kind === kind)?.label ?? kind} section to ${home.title}`);
+      done.push(
+        `added a ${SECTION_LIBRARY.find((s) => s.kind === kind)?.label ?? kind} section to ${home.title}`,
+      );
     }
   }
 
   // 4. A whole new page, e.g. "add an about page".
   if (has(text, "page")) {
     for (const page of PAGE_LIBRARY) {
-      if (!text.includes(page.kind) || context.pages.some((existing) => existing.kind === page.kind)) continue;
+      if (
+        !text.includes(page.kind) ||
+        context.pages.some((existing) => existing.kind === page.kind)
+      )
+        continue;
       actions.push({ type: "add_page", kind: page.kind, title: page.label, slug: page.kind });
       done.push(`added a ${page.label} page`);
       break;
@@ -176,13 +197,14 @@ export function planWithoutAi(instruction: string, context: OfflineContext, reas
     reply: built
       ? `Done — I ${done.join(", ")}. Review the steps below and apply them.`
       : "I can build this straight away, but I need it in Revora's own terms: name a section (reviews, pricing, FAQ, gallery, booking), a background (starfield, aurora, nebula, tech grid, spotlight, gradient mesh) or a motion effect (3D float, 3D tilt, frosted glass, gold glow, rise, parallax, shine). Effect Studio and Upgrade Studio below do the same job with buttons.",
-    summary: built ? `${done.length} change${done.length === 1 ? "" : "s"} planned by Revora's built-in builder.` : "",
+    summary: built
+      ? `${done.length} change${done.length === 1 ? "" : "s"} planned by Revora's built-in builder.`
+      : "",
     actions,
     questions: built ? [] : ["Which section, background or effect do you want changed?"],
     notes: [
       `Built by Revora's own engine, included in your subscription (${reason}).`,
       "It arranges what Revora already knows how to build and never invents reviews, awards or prices.",
     ],
-
   };
 }

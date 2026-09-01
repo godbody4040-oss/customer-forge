@@ -23,12 +23,13 @@ import {
   type Severity,
 } from "@/lib/growth-command";
 
-const TONE: Record<Severity, { pill: "danger" | "attention" | "info" | "signal"; label: string }> = {
-  critical: { pill: "danger", label: "Critical" },
-  warning: { pill: "attention", label: "Needs work" },
-  opportunity: { pill: "info", label: "Opportunity" },
-  healthy: { pill: "signal", label: "Healthy" },
-};
+const TONE: Record<Severity, { pill: "danger" | "attention" | "info" | "signal"; label: string }> =
+  {
+    critical: { pill: "danger", label: "Critical" },
+    warning: { pill: "attention", label: "Needs work" },
+    opportunity: { pill: "info", label: "Opportunity" },
+    healthy: { pill: "signal", label: "Healthy" },
+  };
 
 const AUTO_LABEL: Record<AutoFixKey, string> = {
   generate_site: "Build with AI",
@@ -175,7 +176,10 @@ export function GrowthCommandCenter({
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
                 <div
-                  className={cn("h-full rounded-full", cat.score >= 75 ? "bg-primary" : "bg-accent")}
+                  className={cn(
+                    "h-full rounded-full",
+                    cat.score >= 75 ? "bg-primary" : "bg-accent",
+                  )}
                   style={{ width: `${Math.max(cat.score, 2)}%` }}
                 />
               </div>
@@ -191,8 +195,9 @@ export function GrowthCommandCenter({
             <Sparkles className="size-3.5 text-primary" aria-hidden="true" /> Ask Revora
           </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Pick a command. Revora analyses first, shows exactly what it would change, and only applies fixes you
-            approve — your existing content is never overwritten without a saved version.
+            Pick a command. Revora analyses first, shows exactly what it would change, and only
+            applies fixes you approve — your existing content is never overwritten without a saved
+            version.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {GROWTH_COMMANDS.map((c) => (

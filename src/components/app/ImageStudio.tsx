@@ -58,7 +58,10 @@ export function ImageStudio({
   onSetHero?: (path: string) => void;
 }) {
   const queryClient = useQueryClient();
-  const direction = useMemo(() => pickVisualDirection({ industry: industry ?? null, services }), [industry, services]);
+  const direction = useMemo(
+    () => pickVisualDirection({ industry: industry ?? null, services }),
+    [industry, services],
+  );
   const shots = useMemo(
     () =>
       planShots({
@@ -94,7 +97,9 @@ export function ImageStudio({
   }, [direction, shot, businessName, city, primaryColor, accentColor, refinements, note]);
 
   const toggleRefinement = (id: RefinementId) =>
-    setRefinements((current) => (current.includes(id) ? current.filter((r) => r !== id) : [...current, id]));
+    setRefinements((current) =>
+      current.includes(id) ? current.filter((r) => r !== id) : [...current, id],
+    );
 
   const generate = async (count: number) => {
     if (!organizationId || !shot) return;
@@ -206,16 +211,16 @@ export function ImageStudio({
       <SectionHeading eyebrow="AI Image Studio" title="Create the photography your website needs" />
       <p className="mt-1.5 text-[13px] text-muted-foreground">
         Revora works out which images this website is missing, then shoots them in your own visual
-        language — <span className="text-primary">{direction.label.toLowerCase()}</span>. Every image you keep
-        goes into your photo library.
+        language — <span className="text-primary">{direction.label.toLowerCase()}</span>. Every
+        image you keep goes into your photo library.
       </p>
 
       {mediaCount === 0 && canManage ? (
         <div className="mt-4 rounded-lg border border-primary/40 bg-primary/5 p-3.5">
           <p className="text-[13px] font-medium">No photos on your site yet</p>
           <p className="mt-1 text-[12.5px] text-muted-foreground">
-            Revora can fill your site with images made for your trade right now, so it never looks empty
-            while you gather your own photos. Swap them for real job photos any time.
+            Revora can fill your site with images made for your trade right now, so it never looks
+            empty while you gather your own photos. Swap them for real job photos any time.
           </p>
           <Button
             type="button"
@@ -239,15 +244,18 @@ export function ImageStudio({
       ) : null}
 
       <div className="mt-4 rounded-lg border border-border bg-elevated p-3.5">
-        <p className="text-[12px] uppercase tracking-wide text-muted-foreground">Visual direction</p>
+        <p className="text-[12px] uppercase tracking-wide text-muted-foreground">
+          Visual direction
+        </p>
         <p className="mt-1 text-[13px]">{direction.language}.</p>
         <p className="mt-1 text-[12px] text-muted-foreground">
           Lighting: {direction.lighting} · Environment: {direction.environment}
         </p>
       </div>
 
-
-      <p className="mt-5 text-[12px] uppercase tracking-wide text-muted-foreground">Shots this website needs</p>
+      <p className="mt-5 text-[12px] uppercase tracking-wide text-muted-foreground">
+        Shots this website needs
+      </p>
       <div className="mt-2 flex flex-wrap gap-2">
         {shots.map((entry, index) => (
           <button
@@ -318,7 +326,9 @@ export function ImageStudio({
               <summary className="cursor-pointer text-[12px] text-muted-foreground">
                 See the production brief Revora will use
               </summary>
-              <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">{brief.prompt}</p>
+              <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+                {brief.prompt}
+              </p>
             </details>
           ) : null}
 
@@ -355,7 +365,10 @@ export function ImageStudio({
       {candidates.length ? (
         <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {candidates.map((candidate) => (
-            <li key={candidate.id} className="overflow-hidden rounded-lg border border-border bg-elevated">
+            <li
+              key={candidate.id}
+              className="overflow-hidden rounded-lg border border-border bg-elevated"
+            >
               <img
                 src={candidate.preview}
                 alt={shot ? altTextFor(shot, businessName) : "Generated website image"}

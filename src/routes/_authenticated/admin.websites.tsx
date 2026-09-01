@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_authenticated/admin/websites")({
   head: () => ({
     meta: [
       { title: "Website queue — Revora admin" },
-      { name: "description", content: "Quality control and change requests for every client website." },
+      {
+        name: "description",
+        content: "Quality control and change requests for every client website.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -41,7 +44,9 @@ function useWebsiteStates() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("website_settings")
-        .select("organization_id, review_state, publish_state, generated_at, organizations(name, slug)")
+        .select(
+          "organization_id, review_state, publish_state, generated_at, organizations(name, slug)",
+        )
         .order("updated_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -49,7 +54,11 @@ function useWebsiteStates() {
   });
 }
 
-const FILTERS = [{ value: "open", label: "Open" }, ...REQUEST_STATUSES, { value: "all", label: "All" }];
+const FILTERS = [
+  { value: "open", label: "Open" },
+  ...REQUEST_STATUSES,
+  { value: "all", label: "All" },
+];
 
 function AdminWebsites() {
   const requests = useAllRequests();
@@ -149,10 +158,14 @@ function AdminWebsites() {
                         {org?.name ?? "Client"} · {String(r.kind)} · priority {String(r.priority)}
                       </p>
                       {r.details ? (
-                        <p className="mt-2 text-[12px] text-muted-foreground">{String(r.details)}</p>
+                        <p className="mt-2 text-[12px] text-muted-foreground">
+                          {String(r.details)}
+                        </p>
                       ) : null}
                       {r.admin_notes ? (
-                        <p className="mt-2 text-[12px] text-primary">Note: {String(r.admin_notes)}</p>
+                        <p className="mt-2 text-[12px] text-primary">
+                          Note: {String(r.admin_notes)}
+                        </p>
                       ) : null}
                     </div>
                     <Pill tone={meta.tone}>{meta.label}</Pill>
@@ -169,7 +182,11 @@ function AdminWebsites() {
                         {s.label}
                       </Button>
                     ))}
-                    <Button size="sm" variant="ghost" onClick={() => setNotesFor(notesFor === id ? null : id)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setNotesFor(notesFor === id ? null : id)}
+                    >
                       Add note
                     </Button>
                   </div>
@@ -186,7 +203,11 @@ function AdminWebsites() {
                         );
                       }}
                     >
-                      <Textarea name="note" rows={2} defaultValue={(r.admin_notes as string) ?? ""} />
+                      <Textarea
+                        name="note"
+                        rows={2}
+                        defaultValue={(r.admin_notes as string) ?? ""}
+                      />
                       <Button size="sm" type="submit" variant="signal">
                         Save note
                       </Button>

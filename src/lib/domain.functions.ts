@@ -9,8 +9,14 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
     domain: String(input?.domain ?? ""),
   }))
   .handler(async ({ data, context }) => {
-    const { checkDomain, isValidDomain, normalizeDomain, DOMAIN_TARGET, DOMAIN_A_RECORD, requiredDnsRecords } =
-      await import("@/lib/admin.server");
+    const {
+      checkDomain,
+      isValidDomain,
+      normalizeDomain,
+      DOMAIN_TARGET,
+      DOMAIN_A_RECORD,
+      requiredDnsRecords,
+    } = await import("@/lib/admin.server");
 
     // RLS scopes this read to the caller's own workspace.
     const { data: settings, error } = await context.supabase
@@ -21,7 +27,8 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
     if (error || !settings) throw new Error("You don't have access to that workspace.");
 
     const domain = data.domain ? normalizeDomain(data.domain) : "";
-    if (domain && !isValidDomain(domain)) throw new Error("That doesn't look like a valid domain name.");
+    if (domain && !isValidDomain(domain))
+      throw new Error("That doesn't look like a valid domain name.");
 
     const check = domain
       ? await checkDomain(domain)
@@ -38,7 +45,8 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
       .update({
         custom_domain: domain || null,
         domain_status: check.status,
-        domain_error: check.status === "error" || check.status === "dns_pending" ? check.detail : null,
+        domain_error:
+          check.status === "error" || check.status === "dns_pending" ? check.detail : null,
         domain_checked_at: new Date().toISOString(),
         domain_target: DOMAIN_TARGET,
         domain_verified: check.dnsOk,
@@ -69,7 +77,9 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
 export const checkDomainAvailability = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { domains: string[] }) => ({
-    domains: (Array.isArray(input?.domains) ? input.domains : []).slice(0, 12).map((d) => String(d)),
+    domains: (Array.isArray(input?.domains) ? input.domains : [])
+      .slice(0, 12)
+      .map((d) => String(d)),
   }))
   .handler(async ({ data }) => {
     const { normalizeDomain, isValidDomain } = await import("@/lib/admin.server");

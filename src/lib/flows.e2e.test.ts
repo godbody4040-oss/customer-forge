@@ -36,10 +36,14 @@ beforeAll(async () => {
 }, 60_000);
 
 const live = (name: string, fn: () => Promise<void>, timeout = 30_000) =>
-  it(name, async () => {
-    if (!reachable) return;
-    await fn();
-  }, timeout);
+  it(
+    name,
+    async () => {
+      if (!reachable) return;
+      await fn();
+    },
+    timeout,
+  );
 
 describe("marketing and discovery", () => {
   live("serves the home page with pricing and a signup path", async () => {
@@ -127,7 +131,6 @@ describe("payment and webhook endpoints", () => {
       } else {
         expect(response.status).toBeGreaterThanOrEqual(400);
       }
-
     }
   });
 

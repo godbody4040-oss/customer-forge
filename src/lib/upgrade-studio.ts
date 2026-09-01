@@ -21,7 +21,8 @@ import type { AgentAction, BackdropId, SectionEffectId } from "@/lib/site-agent"
 import type { ContentPage, ContentSection } from "@/lib/website-content";
 import { directionActions, directionTone, recommendDirections } from "@/lib/design-directions";
 
-export type UpgradeTier = "Conversion" | "Trust" | "Search" | "Local" | "Premium visuals" | "Structure";
+export type UpgradeTier =
+  "Conversion" | "Trust" | "Search" | "Local" | "Premium visuals" | "Structure";
 
 export type EliteUpgrade = {
   id: string;
@@ -62,7 +63,8 @@ const has = (page: ContentPage, kind: string) =>
   page.sections.some((section) => section.kind === kind && section.is_visible);
 
 const blank = (value: unknown) => !(typeof value === "string" && value.trim().length > 0);
-const clip = (value: string, max: number) => (value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`);
+const clip = (value: string, max: number) =>
+  value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`;
 
 const where = (facts: StudioFacts) => {
   const parts = [facts.city, facts.state].filter(Boolean);
@@ -72,7 +74,10 @@ const where = (facts: StudioFacts) => {
 
 const nameOf = (facts: StudioFacts) => facts.businessName?.trim() || "our team";
 const serviceWords = (facts: StudioFacts) =>
-  facts.services.slice(0, 3).map((service) => service.name.trim()).filter(Boolean);
+  facts.services
+    .slice(0, 3)
+    .map((service) => service.name.trim())
+    .filter(Boolean);
 
 const effectFor = (kind: string): SectionEffectId | null => {
   switch (kind) {
@@ -115,7 +120,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   const name = nameOf(facts);
   const services = serviceWords(facts);
   const listed = services.length ? services.join(", ") : "the work you do";
-  const priced = facts.services.filter((service) => typeof service.price === "number" && service.price! > 0);
+  const priced = facts.services.filter(
+    (service) => typeof service.price === "number" && service.price! > 0,
+  );
   const home = pages.find((page) => page.kind === "home") ?? pages[0];
   const visible = pages.filter((page) => page.is_visible);
 
@@ -124,7 +131,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   };
 
   // ---------- Conversion spine ----------
-  const missingCta = visible.filter((page) => !has(page, "cta") && page.kind !== "thanks" && page.kind !== "privacy");
+  const missingCta = visible.filter(
+    (page) => !has(page, "cta") && page.kind !== "thanks" && page.kind !== "privacy",
+  );
   if (missingCta.length) {
     push({
       id: "spine-cta",
@@ -167,7 +176,11 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   }
 
   const captureMissing = visible.filter(
-    (page) => !has(page, "quote") && !has(page, "booking") && !has(page, "contact") && page.kind !== "privacy",
+    (page) =>
+      !has(page, "quote") &&
+      !has(page, "booking") &&
+      !has(page, "contact") &&
+      page.kind !== "privacy",
   );
   if (captureMissing.length) {
     push({
@@ -253,7 +266,10 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   }
 
   if (facts.reviewCount > 0) {
-    const missingReviews = visible.filter((page) => !has(page, "reviews") && ["home", "services", "service", "pricing"].includes(page.kind));
+    const missingReviews = visible.filter(
+      (page) =>
+        !has(page, "reviews") && ["home", "services", "service", "pricing"].includes(page.kind),
+    );
     if (missingReviews.length) {
       push({
         id: "trust-reviews",
@@ -273,7 +289,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   }
 
   if (facts.mediaCount >= 3) {
-    const missingGallery = visible.filter((page) => !has(page, "gallery") && ["home", "service", "services"].includes(page.kind));
+    const missingGallery = visible.filter(
+      (page) => !has(page, "gallery") && ["home", "service", "services"].includes(page.kind),
+    );
     if (missingGallery.length) {
       push({
         id: "trust-gallery",
@@ -321,7 +339,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   }
 
   // ---------- Objections and price ----------
-  const missingFaq = visible.filter((page) => !has(page, "faq") && ["home", "service", "pricing", "services"].includes(page.kind));
+  const missingFaq = visible.filter(
+    (page) => !has(page, "faq") && ["home", "service", "pricing", "services"].includes(page.kind),
+  );
   if (missingFaq.length) {
     push({
       id: "convert-faq",
@@ -341,7 +361,10 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
     });
   }
 
-  const missingPricing = visible.filter((page) => !has(page, "pricing") && ["home", "services", "pricing", "service"].includes(page.kind));
+  const missingPricing = visible.filter(
+    (page) =>
+      !has(page, "pricing") && ["home", "services", "pricing", "service"].includes(page.kind),
+  );
   if (priced.length && missingPricing.length) {
     push({
       id: "convert-pricing",
@@ -402,7 +425,12 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
 
   // ---------- Local ----------
   if (area) {
-    const missingArea = visible.filter((page) => !has(page, "area") && !has(page, "areas") && ["home", "service", "services"].includes(page.kind));
+    const missingArea = visible.filter(
+      (page) =>
+        !has(page, "area") &&
+        !has(page, "areas") &&
+        ["home", "service", "services"].includes(page.kind),
+    );
     if (missingArea.length) {
       push({
         id: "local-area",
@@ -438,7 +466,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
         type: "set_page" as const,
         pageId: page.id,
         patch: {
-          ...(blank(page.seo_title) ? { seo_title: clip(`${page.title}${inArea} | ${name}`, 65) } : {}),
+          ...(blank(page.seo_title)
+            ? { seo_title: clip(`${page.title}${inArea} | ${name}`, 65) }
+            : {}),
           ...(blank(page.seo_description)
             ? {
                 seo_description: clip(
@@ -465,9 +495,16 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
         type: "set_page" as const,
         pageId: page.id,
         patch: {
-          ...(blank(page.og_title) ? { og_title: clip(`${page.title}${inArea} — ${name}`, 88) } : {}),
+          ...(blank(page.og_title)
+            ? { og_title: clip(`${page.title}${inArea} — ${name}`, 88) }
+            : {}),
           ...(blank(page.og_description)
-            ? { og_description: clip(`${listed}${inArea}. Fast replies, fixed prices, real reviews.`, 190) }
+            ? {
+                og_description: clip(
+                  `${listed}${inArea}. Fast replies, fixed prices, real reviews.`,
+                  190,
+                ),
+              }
             : {}),
         },
       })),
@@ -483,19 +520,54 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
       tier: "Search",
       impact: 10,
       preview: hidden.map((page) => `${page.title} → listed in Google`),
-      actions: hidden.map((page) => ({ type: "set_page" as const, pageId: page.id, patch: { noindex: false } })),
+      actions: hidden.map((page) => ({
+        type: "set_page" as const,
+        pageId: page.id,
+        patch: { noindex: false },
+      })),
     });
   }
 
   // ---------- Structure ----------
   const missingPages: { kind: string; title: string; slug: string; why: string }[] = [];
   const kinds = new Set(pages.map((page) => page.kind));
-  if (!kinds.has("pricing")) missingPages.push({ kind: "pricing", title: "Pricing", slug: "pricing", why: "price searches" });
-  if (!kinds.has("faq")) missingPages.push({ kind: "faq", title: "FAQ", slug: "faq", why: "objection searches" });
-  if (!kinds.has("reviews")) missingPages.push({ kind: "reviews", title: "Reviews", slug: "reviews", why: "brand searches" });
-  if (!kinds.has("book")) missingPages.push({ kind: "book", title: "Book online", slug: "book", why: "ready-to-buy visitors" });
-  if (!kinds.has("contact")) missingPages.push({ kind: "contact", title: "Contact", slug: "contact", why: "phone searches" });
-  if (!kinds.has("privacy")) missingPages.push({ kind: "privacy", title: "Privacy notice", slug: "privacy", why: "Google & Meta ads" });
+  if (!kinds.has("pricing"))
+    missingPages.push({
+      kind: "pricing",
+      title: "Pricing",
+      slug: "pricing",
+      why: "price searches",
+    });
+  if (!kinds.has("faq"))
+    missingPages.push({ kind: "faq", title: "FAQ", slug: "faq", why: "objection searches" });
+  if (!kinds.has("reviews"))
+    missingPages.push({
+      kind: "reviews",
+      title: "Reviews",
+      slug: "reviews",
+      why: "brand searches",
+    });
+  if (!kinds.has("book"))
+    missingPages.push({
+      kind: "book",
+      title: "Book online",
+      slug: "book",
+      why: "ready-to-buy visitors",
+    });
+  if (!kinds.has("contact"))
+    missingPages.push({
+      kind: "contact",
+      title: "Contact",
+      slug: "contact",
+      why: "phone searches",
+    });
+  if (!kinds.has("privacy"))
+    missingPages.push({
+      kind: "privacy",
+      title: "Privacy notice",
+      slug: "privacy",
+      why: "Google & Meta ads",
+    });
   if (missingPages.length) {
     push({
       id: "structure-pages",
@@ -556,7 +628,10 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
 
   const flatSections = pages
     .flatMap((page) => page.sections.map((section) => ({ page, section })))
-    .filter(({ section }) => section.is_visible && readEffect(section) === "none" && effectFor(section.kind));
+    .filter(
+      ({ section }) =>
+        section.is_visible && readEffect(section) === "none" && effectFor(section.kind),
+    );
   if (flatSections.length) {
     const batch = flatSections.slice(0, 12);
     push({
@@ -565,7 +640,10 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
       why: "Depth, frosted glass and a gold glow on the blocks that matter pull the eye straight to your offer and your buttons.",
       tier: "Premium visuals",
       impact: 6,
-      preview: batch.map(({ page, section }) => `${page.title} → ${section.kind} gets ${effectFor(section.kind)!.replace(/_/g, " ")}`),
+      preview: batch.map(
+        ({ page, section }) =>
+          `${page.title} → ${section.kind} gets ${effectFor(section.kind)!.replace(/_/g, " ")}`,
+      ),
       actions: batch.map(({ section }) => ({
         type: "set_section_effect" as const,
         sectionId: section.id,
@@ -577,7 +655,12 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
   // ---------- Copy quality ----------
   const weakHeadings = pages
     .flatMap((page) => page.sections.map((section) => ({ page, section })))
-    .filter(({ section }) => section.is_visible && section.kind === "hero" && (blank(section.heading) || (section.heading ?? "").trim().length < 18));
+    .filter(
+      ({ section }) =>
+        section.is_visible &&
+        section.kind === "hero" &&
+        (blank(section.heading) || (section.heading ?? "").trim().length < 18),
+    );
   if (weakHeadings.length) {
     push({
       id: "copy-hero",
@@ -591,7 +674,10 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
           type: "set_section_text" as const,
           sectionId: section.id,
           field: "heading" as const,
-          value: clip(`${services[0] ?? page.title}${inArea}, done properly and priced up front`, 90),
+          value: clip(
+            `${services[0] ?? page.title}${inArea}, done properly and priced up front`,
+            90,
+          ),
         },
         {
           type: "set_section_text" as const,
@@ -621,7 +707,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
       city: facts.city,
       count: 2,
       refresh: facts.cycle ?? 0,
-    }).filter((direction) => direction.primary.toLowerCase() !== (facts.primaryColor ?? "").toLowerCase());
+    }).filter(
+      (direction) => direction.primary.toLowerCase() !== (facts.primaryColor ?? "").toLowerCase(),
+    );
 
     for (const direction of identities) {
       push({
@@ -647,7 +735,8 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
 /** Splits a big approved batch into chunks the apply endpoint accepts. */
 export function chunkActions(actions: AgentAction[], size = 50): AgentAction[][] {
   const chunks: AgentAction[][] = [];
-  for (let index = 0; index < actions.length; index += size) chunks.push(actions.slice(index, index + size));
+  for (let index = 0; index < actions.length; index += size)
+    chunks.push(actions.slice(index, index + size));
   return chunks;
 }
 

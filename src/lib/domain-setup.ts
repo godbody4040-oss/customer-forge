@@ -11,7 +11,12 @@ export const DOMAIN_IP = "185.158.133.1";
 export const SUGGESTION_TLDS = [".com", ".co", ".net", ".services", ".pro"] as const;
 
 /** Where owners can register a name. Links open a pre-filled search. */
-export const REGISTRARS: { id: string; name: string; note: string; search: (domain: string) => string }[] = [
+export const REGISTRARS: {
+  id: string;
+  name: string;
+  note: string;
+  search: (domain: string) => string;
+}[] = [
   {
     id: "cloudflare",
     name: "Cloudflare Registrar",
@@ -28,13 +33,15 @@ export const REGISTRARS: { id: string; name: string; note: string; search: (doma
     id: "namecheap",
     name: "Namecheap",
     note: "Popular and beginner-friendly with 24/7 chat support.",
-    search: (d) => `https://www.namecheap.com/domains/registration/results/?domain=${encodeURIComponent(d)}`,
+    search: (d) =>
+      `https://www.namecheap.com/domains/registration/results/?domain=${encodeURIComponent(d)}`,
   },
   {
     id: "godaddy",
     name: "GoDaddy",
     note: "The most familiar name. Watch for add-ons at checkout.",
-    search: (d) => `https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(d)}`,
+    search: (d) =>
+      `https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(d)}`,
   },
 ];
 
@@ -44,7 +51,10 @@ export const DNS_HELP: { registrar: string; where: string }[] = [
   { registrar: "Porkbun", where: "Domain Management → your domain → DNS → Add record" },
   { registrar: "Namecheap", where: "Domain List → Manage → Advanced DNS → Add New Record" },
   { registrar: "GoDaddy", where: "My Products → DNS → Add / edit records" },
-  { registrar: "Squarespace / Google Domains", where: "Domains → your domain → DNS → Custom records" },
+  {
+    registrar: "Squarespace / Google Domains",
+    where: "Domains → your domain → DNS → Custom records",
+  },
   { registrar: "Wix", where: "Domains → your domain → Advanced → Edit DNS" },
 ];
 
@@ -132,9 +142,21 @@ export function dnsRows(domain: string): DnsRecordRow[] {
 }
 
 export const DOMAIN_STEPS = [
-  { id: "choose", title: "Choose your address", detail: "Buy a new name or use one you already own." },
+  {
+    id: "choose",
+    title: "Choose your address",
+    detail: "Buy a new name or use one you already own.",
+  },
   { id: "connect", title: "Save it in Revora", detail: "We store it and start watching your DNS." },
-  { id: "dns", title: "Add two DNS records", detail: "Copy them into your registrar exactly as shown." },
-  { id: "verify", title: "Verify and secure", detail: "We confirm DNS, then HTTPS is issued automatically." },
+  {
+    id: "dns",
+    title: "Add two DNS records",
+    detail: "Copy them into your registrar exactly as shown.",
+  },
+  {
+    id: "verify",
+    title: "Verify and secure",
+    detail: "We confirm DNS, then HTTPS is issued automatically.",
+  },
   { id: "live", title: "Go live", detail: "Publish your website and your domain serves it." },
 ] as const;

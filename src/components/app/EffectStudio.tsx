@@ -38,9 +38,10 @@ export function EffectStudio({
       <p className="eyebrow text-gold">Effect studio</p>
       <h2 className="mt-1 font-display text-[18px] font-semibold">Install premium visuals</h2>
       <p className="mt-1 text-[12.5px] text-muted-foreground">
-        Add an animated background to your whole site, then give individual sections depth. Everything below is
-        tuned for speed and switches itself off for visitors who prefer less motion. You can also just ask the
-        assistant — "put stars in the background and make my hero float in 3D".
+        Add an animated background to your whole site, then give individual sections depth.
+        Everything below is tuned for speed and switches itself off for visitors who prefer less
+        motion. You can also just ask the assistant — "put stars in the background and make my hero
+        float in 3D".
       </p>
 
       <div className="mt-4">
@@ -55,13 +56,19 @@ export function EffectStudio({
                 disabled={!canManage}
                 onClick={() => onBackdrop(option.id)}
                 className={`cursor-pointer rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                  active ? "border-gold/70 bg-gold/[0.07]" : "border-border hover:border-gold/40 hover:bg-elevated"
+                  active
+                    ? "border-gold/70 bg-gold/[0.07]"
+                    : "border-border hover:border-gold/40 hover:bg-elevated"
                 }`}
               >
-                <span className={`text-[13px] font-medium ${active ? "text-gold" : "text-foreground"}`}>
+                <span
+                  className={`text-[13px] font-medium ${active ? "text-gold" : "text-foreground"}`}
+                >
                   {option.label}
                 </span>
-                <span className="mt-0.5 block text-[11.5px] text-muted-foreground">{option.help}</span>
+                <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+                  {option.help}
+                </span>
               </button>
             );
           })}
@@ -80,12 +87,17 @@ export function EffectStudio({
               <p className="text-[12.5px] font-medium">{page.title}</p>
               <div className="mt-2 space-y-2">
                 {page.sections.length === 0 ? (
-                  <p className="text-[11.5px] text-muted-foreground">No sections on this page yet.</p>
+                  <p className="text-[11.5px] text-muted-foreground">
+                    No sections on this page yet.
+                  </p>
                 ) : (
                   page.sections.map((section) => {
                     const current = readSectionEffect(section.settings);
                     return (
-                      <div key={section.id} className="flex flex-wrap items-center justify-between gap-2">
+                      <div
+                        key={section.id}
+                        className="flex flex-wrap items-center justify-between gap-2"
+                      >
                         <span className="text-[12px] text-muted-foreground">
                           {sectionLabel(section.kind)}
                           {section.heading ? ` — ${section.heading}` : ""}

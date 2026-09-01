@@ -22,12 +22,24 @@ export type DemoStage =
   | "repeat";
 
 export const DEMO_STAGES: { id: DemoStage; label: string; blurb: string }[] = [
-  { id: "visitor", label: "Visitor", blurb: "Someone lands on the site from search, a QR code or an ad." },
-  { id: "lead", label: "Lead", blurb: "They capture a quote or contact form — a lead record appears instantly." },
+  {
+    id: "visitor",
+    label: "Visitor",
+    blurb: "Someone lands on the site from search, a QR code or an ad.",
+  },
+  {
+    id: "lead",
+    label: "Lead",
+    blurb: "They capture a quote or contact form — a lead record appears instantly.",
+  },
   { id: "qualified", label: "Qualified", blurb: "Service, location and timing are confirmed." },
   { id: "quoted", label: "Quote", blurb: "A priced estimate range is sent with add-ons." },
   { id: "follow_up", label: "Follow-up", blurb: "Automated email/SMS nudges run on a schedule." },
-  { id: "booked", label: "Booking", blurb: "A time is reserved on the calendar with confirmations." },
+  {
+    id: "booked",
+    label: "Booking",
+    blurb: "A time is reserved on the calendar with confirmations.",
+  },
   { id: "customer", label: "Customer", blurb: "Job completed and payment recorded." },
   { id: "review", label: "Review", blurb: "A review request goes out automatically." },
   { id: "repeat", label: "Repeat", blurb: "Recurring reminders bring them back." },
@@ -225,26 +237,126 @@ const LEADS: Omit<DemoLead, "id">[] = [
 ];
 
 const BOOKINGS: Omit<DemoBooking, "id">[] = [
-  { lead: "Devon Ackley", service: "Fleet detail — 6 vans", when: "7:30am", daysAhead: 2, status: "confirmed", value: 1_320, tech: "Andre" },
-  { lead: "Marcus Whitfield", service: "Full detail", when: "8:00am", daysAhead: 4, status: "confirmed", value: 295, tech: "Andre" },
-  { lead: "Nia Coleman", service: "Maintenance wash (x2)", when: "1:00pm", daysAhead: 5, status: "pending", value: 145, tech: "Unassigned" },
-  { lead: "Lauren Bishop", service: "Interior deep clean", when: "10:30am", daysAhead: 7, status: "pending", value: 210, tech: "Jo" },
-  { lead: "Priya Raman", service: "Ceramic coating", when: "9:00am", daysAhead: -3, status: "completed", value: 865, tech: "Andre" },
+  {
+    lead: "Devon Ackley",
+    service: "Fleet detail — 6 vans",
+    when: "7:30am",
+    daysAhead: 2,
+    status: "confirmed",
+    value: 1_320,
+    tech: "Andre",
+  },
+  {
+    lead: "Marcus Whitfield",
+    service: "Full detail",
+    when: "8:00am",
+    daysAhead: 4,
+    status: "confirmed",
+    value: 295,
+    tech: "Andre",
+  },
+  {
+    lead: "Nia Coleman",
+    service: "Maintenance wash (x2)",
+    when: "1:00pm",
+    daysAhead: 5,
+    status: "pending",
+    value: 145,
+    tech: "Unassigned",
+  },
+  {
+    lead: "Lauren Bishop",
+    service: "Interior deep clean",
+    when: "10:30am",
+    daysAhead: 7,
+    status: "pending",
+    value: 210,
+    tech: "Jo",
+  },
+  {
+    lead: "Priya Raman",
+    service: "Ceramic coating",
+    when: "9:00am",
+    daysAhead: -3,
+    status: "completed",
+    value: 865,
+    tech: "Andre",
+  },
 ];
 
 const AUTOMATIONS = [
-  { name: "New lead — instant reply", trigger: "Lead created", timing: "Immediately", channel: "Email", sent: 128, replies: 41 },
-  { name: "Quote follow-up #1", trigger: "Quote sent, no reply", timing: "After 24 hours", channel: "SMS", sent: 96, replies: 33 },
-  { name: "Quote follow-up #2", trigger: "Quote sent, no reply", timing: "After 3 days", channel: "Email", sent: 61, replies: 14 },
-  { name: "Booking reminder", trigger: "24h before appointment", timing: "1 day before", channel: "SMS", sent: 74, replies: 9 },
-  { name: "Review request", trigger: "Job marked complete", timing: "2 hours after", channel: "Email + SMS", sent: 58, replies: 27 },
-  { name: "Win-back / rebook", trigger: "No visit in 90 days", timing: "Day 90", channel: "Email", sent: 44, replies: 12 },
+  {
+    name: "New lead — instant reply",
+    trigger: "Lead created",
+    timing: "Immediately",
+    channel: "Email",
+    sent: 128,
+    replies: 41,
+  },
+  {
+    name: "Quote follow-up #1",
+    trigger: "Quote sent, no reply",
+    timing: "After 24 hours",
+    channel: "SMS",
+    sent: 96,
+    replies: 33,
+  },
+  {
+    name: "Quote follow-up #2",
+    trigger: "Quote sent, no reply",
+    timing: "After 3 days",
+    channel: "Email",
+    sent: 61,
+    replies: 14,
+  },
+  {
+    name: "Booking reminder",
+    trigger: "24h before appointment",
+    timing: "1 day before",
+    channel: "SMS",
+    sent: 74,
+    replies: 9,
+  },
+  {
+    name: "Review request",
+    trigger: "Job marked complete",
+    timing: "2 hours after",
+    channel: "Email + SMS",
+    sent: 58,
+    replies: 27,
+  },
+  {
+    name: "Win-back / rebook",
+    trigger: "No visit in 90 days",
+    timing: "Day 90",
+    channel: "Email",
+    sent: 44,
+    replies: 12,
+  },
 ];
 
 const REVIEWS = [
-  { name: "Demo reviewer A", rating: 5, service: "Full detail", daysAgo: 4, text: "Sample review text used to show how requests and replies appear in the dashboard." },
-  { name: "Demo reviewer B", rating: 5, service: "Ceramic coating", daysAgo: 11, text: "Placeholder review content — illustrative only, not a real customer statement." },
-  { name: "Demo reviewer C", rating: 4, service: "Interior deep clean", daysAgo: 19, text: "Example of a 4-star review and the owner reply workflow." },
+  {
+    name: "Demo reviewer A",
+    rating: 5,
+    service: "Full detail",
+    daysAgo: 4,
+    text: "Sample review text used to show how requests and replies appear in the dashboard.",
+  },
+  {
+    name: "Demo reviewer B",
+    rating: 5,
+    service: "Ceramic coating",
+    daysAgo: 11,
+    text: "Placeholder review content — illustrative only, not a real customer statement.",
+  },
+  {
+    name: "Demo reviewer C",
+    rating: 4,
+    service: "Interior deep clean",
+    daysAgo: 19,
+    text: "Example of a 4-star review and the owner reply workflow.",
+  },
 ];
 
 const TRAFFIC = [
@@ -384,8 +496,7 @@ export function demoFunnel(range: DemoRangeId) {
     ...r,
     label: stageLabel(r.id),
     share: Math.round((r.count / top) * 1000) / 10,
-    stepRate:
-      i === 0 ? 100 : Math.round((r.count / rows[i - 1]!.count) * 1000) / 10,
+    stepRate: i === 0 ? 100 : Math.round((r.count / rows[i - 1]!.count) * 1000) / 10,
   }));
 }
 
@@ -410,14 +521,49 @@ export type DemoActivity = {
 };
 
 const ACTIVITY: Omit<DemoActivity, "id">[] = [
-  { minutesAgo: 2, kind: "lead", title: "New lead captured", detail: "Owen H. · Exterior wash + wax · flyer link" },
-  { minutesAgo: 3, kind: "message", title: "Instant reply sent", detail: "Email delivered in 41 seconds" },
+  {
+    minutesAgo: 2,
+    kind: "lead",
+    title: "New lead captured",
+    detail: "Owen H. · Exterior wash + wax · flyer link",
+  },
+  {
+    minutesAgo: 3,
+    kind: "message",
+    title: "Instant reply sent",
+    detail: "Email delivered in 41 seconds",
+  },
   { minutesAgo: 26, kind: "quote", title: "Estimate sent", detail: "Terrance M. · $95 – $140" },
-  { minutesAgo: 58, kind: "message", title: "SMS follow-up replied", detail: "Devon A. · “Tuesday works”" },
-  { minutesAgo: 96, kind: "booking", title: "Booking confirmed", detail: "Fleet detail — 6 vans · Tue 7:30am" },
-  { minutesAgo: 180, kind: "payment", title: "Deposit recorded", detail: "Ceramic coating · $250 deposit" },
-  { minutesAgo: 265, kind: "review", title: "Review request sent", detail: "Automatic, 2 hours after job" },
-  { minutesAgo: 420, kind: "lead", title: "Repeat customer rebooked", detail: "Marcus W. · quarterly reminder" },
+  {
+    minutesAgo: 58,
+    kind: "message",
+    title: "SMS follow-up replied",
+    detail: "Devon A. · “Tuesday works”",
+  },
+  {
+    minutesAgo: 96,
+    kind: "booking",
+    title: "Booking confirmed",
+    detail: "Fleet detail — 6 vans · Tue 7:30am",
+  },
+  {
+    minutesAgo: 180,
+    kind: "payment",
+    title: "Deposit recorded",
+    detail: "Ceramic coating · $250 deposit",
+  },
+  {
+    minutesAgo: 265,
+    kind: "review",
+    title: "Review request sent",
+    detail: "Automatic, 2 hours after job",
+  },
+  {
+    minutesAgo: 420,
+    kind: "lead",
+    title: "Repeat customer rebooked",
+    detail: "Marcus W. · quarterly reminder",
+  },
 ];
 
 export function demoActivity(): DemoActivity[] {

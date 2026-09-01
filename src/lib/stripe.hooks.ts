@@ -29,6 +29,8 @@ export function useBillingState(organizationId: string | undefined) {
     queryKey: ["billing_state", organizationId],
     enabled: !!organizationId && isPaymentsConfigured(),
     queryFn: () =>
-      getBillingState({ data: { organizationId: organizationId!, environment: getStripeEnvironment() } }),
+      getBillingState({
+        data: { organizationId: organizationId!, environment: getStripeEnvironment() },
+      }),
   });
 }

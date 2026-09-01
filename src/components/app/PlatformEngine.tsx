@@ -27,7 +27,12 @@ type Props = {
   businessName: string | null | undefined;
   slug: string | null | undefined;
   profile: Record<string, unknown> | null | undefined;
-  services: { name: string; description?: string | null; price?: number | null; bookable?: boolean }[];
+  services: {
+    name: string;
+    description?: string | null;
+    price?: number | null;
+    bookable?: boolean;
+  }[];
   seo: { title?: string | null; description?: string | null; headline?: string | null };
   pages: ContentPage[];
   /** Publish flow hooks so a rebuild can be triggered from the builder. */
@@ -150,8 +155,9 @@ export function PlatformEngine({
           <Radar className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
           {detection ? (
             <span>
-              Detected <span className="text-foreground">{platformProfile(detection.platform).label}</span>{" "}
-              ({detection.confidence} confidence) — {detection.signals[detection.signals.length - 1]}
+              Detected{" "}
+              <span className="text-foreground">{platformProfile(detection.platform).label}</span> (
+              {detection.confidence} confidence) — {detection.signals[detection.signals.length - 1]}
               {override ? " · manual override active" : ""}
             </span>
           ) : (
@@ -209,13 +215,19 @@ export function PlatformEngine({
           <ul className="mt-2 space-y-1.5 text-[13px]">
             {strategy.map((line) => (
               <li key={line} className="flex gap-2">
-                <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                <span
+                  aria-hidden="true"
+                  className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary"
+                />
                 <span>{line}</span>
               </li>
             ))}
             {target.prefer.map((line) => (
               <li key={line} className="flex gap-2">
-                <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                <span
+                  aria-hidden="true"
+                  className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary"
+                />
                 <span>{line}</span>
               </li>
             ))}
@@ -245,10 +257,18 @@ export function PlatformEngine({
             <table className="w-full min-w-[640px] text-left text-[12px]">
               <thead className="text-muted-foreground">
                 <tr>
-                  <th scope="col" className="pb-2 pr-3 font-medium">Feature</th>
-                  <th scope="col" className="pb-2 pr-3 font-medium">Limitation</th>
-                  <th scope="col" className="pb-2 pr-3 font-medium">Best available</th>
-                  <th scope="col" className="pb-2 font-medium">To enable fully</th>
+                  <th scope="col" className="pb-2 pr-3 font-medium">
+                    Feature
+                  </th>
+                  <th scope="col" className="pb-2 pr-3 font-medium">
+                    Limitation
+                  </th>
+                  <th scope="col" className="pb-2 pr-3 font-medium">
+                    Best available
+                  </th>
+                  <th scope="col" className="pb-2 font-medium">
+                    To enable fully
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -292,7 +312,9 @@ export function PlatformEngine({
           <p className="eyebrow">Quality bar (every platform)</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {QUALITY_TARGETS.map((item) => (
-              <Pill key={item} tone="signal">{item} 9+</Pill>
+              <Pill key={item} tone="signal">
+                {item} 9+
+              </Pill>
             ))}
           </div>
           <p className="mt-3 text-[12px] text-muted-foreground">
@@ -326,7 +348,9 @@ export function PlatformEngine({
                   />
                   <span className={checked ? "text-muted-foreground line-through" : ""}>
                     <span className="flex flex-wrap items-center gap-2">
-                      <Pill tone={item.severity === "blocker" ? "attention" : "info"}>{item.severity}</Pill>
+                      <Pill tone={item.severity === "blocker" ? "attention" : "info"}>
+                        {item.severity}
+                      </Pill>
                       <span className="font-medium">{item.area}</span>
                     </span>
                     <span className="mt-1 block">{item.task}</span>
@@ -356,7 +380,11 @@ export function PlatformEngine({
           type="button"
           variant="outline"
           onClick={() =>
-            download(`${base}-${platform}-spec.json`, JSON.stringify(spec, null, 2), "application/json")
+            download(
+              `${base}-${platform}-spec.json`,
+              JSON.stringify(spec, null, 2),
+              "application/json",
+            )
           }
         >
           <Download className="size-4" /> Download JSON spec

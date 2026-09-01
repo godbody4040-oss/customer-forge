@@ -25,7 +25,10 @@ export function TrialBadge() {
 export function ValueSplit() {
   return (
     <section className="mt-16" id="whats-included" aria-labelledby="whats-included-heading">
-      <h2 id="whats-included-heading" className="font-display text-[clamp(1.25rem,2.4vw,1.6rem)] font-semibold">
+      <h2
+        id="whats-included-heading"
+        className="font-display text-[clamp(1.25rem,2.4vw,1.6rem)] font-semibold"
+      >
         What you pay for, split clearly
       </h2>
       <div className="mt-6 grid items-stretch gap-4 md:grid-cols-2">
@@ -56,8 +59,8 @@ export function ValueSplit() {
             {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month Growth &amp; Management
           </h3>
           <p className="mt-2 text-[13px] text-muted-foreground">
-            Free for your first {GROWTH_SYSTEM.trialDays} days, then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
-            unless canceled.
+            Free for your first {GROWTH_SYSTEM.trialDays} days, then{" "}
+            {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month unless canceled.
           </p>
           <ul className="mt-5 space-y-2.5">
             {GROWTH_SYSTEM.monthlyIncludes.map((item) => (
@@ -69,7 +72,9 @@ export function ValueSplit() {
           </ul>
         </div>
       </div>
-      <p className="mt-4 text-[13px] font-medium text-foreground">Cancel anytime. No hidden fees.</p>
+      <p className="mt-4 text-[13px] font-medium text-foreground">
+        Cancel anytime. No hidden fees.
+      </p>
       <OfferLine className="mt-2 max-w-2xl" />
     </section>
   );
@@ -102,7 +107,10 @@ export function WhyRevora() {
   return (
     <section className="mt-16" id="why-revora" aria-labelledby="why-revora-heading">
       <p className="eyebrow">Why Revora</p>
-      <h2 id="why-revora-heading" className="mt-2 font-display text-[clamp(1.25rem,2.4vw,1.6rem)] font-semibold">
+      <h2
+        id="why-revora-heading"
+        className="mt-2 font-display text-[clamp(1.25rem,2.4vw,1.6rem)] font-semibold"
+      >
         Why businesses choose Revora
       </h2>
       <div className="mt-6 grid items-stretch gap-3 sm:grid-cols-2">
@@ -144,7 +152,10 @@ export function AfterYouStart() {
   return (
     <section className="mt-16" id="after-you-start" aria-labelledby="after-you-start-heading">
       <p className="eyebrow">Process</p>
-      <h2 id="after-you-start-heading" className="mt-2 font-display text-[clamp(1.25rem,2.4vw,1.6rem)] font-semibold">
+      <h2
+        id="after-you-start-heading"
+        className="mt-2 font-display text-[clamp(1.25rem,2.4vw,1.6rem)] font-semibold"
+      >
         What happens after you start
       </h2>
       <ol className="mt-6 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">

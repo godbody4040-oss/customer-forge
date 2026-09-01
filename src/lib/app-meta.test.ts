@@ -9,7 +9,8 @@ import {
 
 function tag(meta: typeof REVIEWS_META.meta, key: string) {
   const found = meta.find(
-    (entry) => ("name" in entry && entry.name === key) || ("property" in entry && entry.property === key),
+    (entry) =>
+      ("name" in entry && entry.name === key) || ("property" in entry && entry.property === key),
   );
   return found && "content" in found ? found.content : undefined;
 }
@@ -36,7 +37,9 @@ describe("/app/reviews search & social metadata", () => {
   });
 
   it("self-references canonical and og:url on the project domain", () => {
-    expect(links).toEqual([{ rel: "canonical", href: "https://revoragrowthsystems.com/app/reviews" }]);
+    expect(links).toEqual([
+      { rel: "canonical", href: "https://revoragrowthsystems.com/app/reviews" },
+    ]);
     expect(resolved.ogUrl).toBe("https://revoragrowthsystems.com/app/reviews");
     expect(tag(meta, "og:url")).toBe(resolved.canonical);
   });
@@ -75,7 +78,9 @@ describe("buildPrivateMeta fallbacks", () => {
 
   it("rejects relative or insecure images and upgrades the card when one is valid", () => {
     expect(buildPrivateMeta({ path: "/app/x", image: "/local.png" }).resolved.image).toBeNull();
-    expect(buildPrivateMeta({ path: "/app/x", image: "http://a.com/i.png" }).resolved.image).toBeNull();
+    expect(
+      buildPrivateMeta({ path: "/app/x", image: "http://a.com/i.png" }).resolved.image,
+    ).toBeNull();
     const ok = buildPrivateMeta({ path: "/app/x", image: "https://a.com/i.png" });
     expect(ok.resolved.image).toBe("https://a.com/i.png");
     expect(ok.resolved.twitterCard).toBe("summary_large_image");

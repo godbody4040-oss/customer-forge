@@ -1,7 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import type { ActivationResult, ProductionReadiness, ProductionStatus } from "@/lib/production.functions";
+import type {
+  ActivationResult,
+  ProductionReadiness,
+  ProductionStatus,
+} from "@/lib/production.functions";
 
 /* ------------------------------ environment ------------------------------- */
 
@@ -63,12 +67,11 @@ export function ProductionLaunchModal({
       aria-label="Launch your website"
       onClick={onClose}
     >
-      <div
-        className="panel w-full max-w-md p-5"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="panel w-full max-w-md p-5" onClick={(event) => event.stopPropagation()}>
         <p className="eyebrow">Ready to launch</p>
-        <h2 className="mt-1 font-display text-[20px] font-semibold">Your website is ready to go live</h2>
+        <h2 className="mt-1 font-display text-[20px] font-semibold">
+          Your website is ready to go live
+        </h2>
         <p className="mt-2 text-[13px] text-muted-foreground">
           {reason ??
             "You've built your website and customer-growth system. Complete your one-time setup to take it live."}
@@ -91,7 +94,9 @@ export function ProductionLaunchModal({
         </ul>
         <div className="mt-4 rounded-md border border-border bg-elevated p-3">
           <p className="text-[11px] text-muted-foreground">One-time setup</p>
-          <p className="font-display text-[24px] font-semibold text-primary">${GROWTH_SYSTEM.setupPrice}</p>
+          <p className="font-display text-[24px] font-semibold text-primary">
+            ${GROWTH_SYSTEM.setupPrice}
+          </p>
           <p className="mt-0.5 text-[11.5px] text-muted-foreground">
             Then ${GROWTH_SYSTEM.monthlyPrice}/month — your first month is free.
           </p>
@@ -105,8 +110,8 @@ export function ProductionLaunchModal({
           </Button>
         </div>
         <p className="mt-3 text-[11px] text-muted-foreground">
-          Nothing is lost or reset when you pay: the same website, pages, media, CRM, automations, SEO and
-          version history become your live system.
+          Nothing is lost or reset when you pay: the same website, pages, media, CRM, automations,
+          SEO and version history become your live system.
         </p>
       </div>
     </div>
@@ -216,10 +221,12 @@ export function ProductionSummaryCard({ status }: { status: ProductionStatus | u
     return (
       <section className="panel border-primary/40 bg-primary/5 p-4">
         <p className="eyebrow">Production — live</p>
-        <p className="mt-1 text-[13px] font-medium">Your system is live and working for your business.</p>
+        <p className="mt-1 text-[13px] font-medium">
+          Your system is live and working for your business.
+        </p>
         <p className="mt-1 text-[12px] text-muted-foreground">
-          Keep editing in draft, then publish changes when you're happy — your live site stays stable in
-          between.
+          Keep editing in draft, then publish changes when you're happy — your live site stays
+          stable in between.
         </p>
       </section>
     );
@@ -252,8 +259,8 @@ export function ProductionSummaryCard({ status }: { status: ProductionStatus | u
             <Link to="/get-started">Launch my website</Link>
           </Button>
           <span className="text-[11.5px] text-muted-foreground">
-            ${GROWTH_SYSTEM.setupPrice} one-time setup · then ${GROWTH_SYSTEM.monthlyPrice}/month, first month
-            free
+            ${GROWTH_SYSTEM.setupPrice} one-time setup · then ${GROWTH_SYSTEM.monthlyPrice}/month,
+            first month free
           </span>
         </div>
       </div>

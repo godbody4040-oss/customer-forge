@@ -23,9 +23,7 @@ const clean = (value: string | null | undefined): string | null => {
 };
 
 const expand = (hex: string) =>
-  hex.length === 4
-    ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
-    : hex.toLowerCase();
+  hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex.toLowerCase();
 
 const channels = (hex: string): [number, number, number] => {
   const full = expand(hex);

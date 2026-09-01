@@ -40,11 +40,15 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
         .select("generation")
         .eq("organization_id", orgId)
         .maybeSingle();
-      const brief = readBrief((settings.data?.generation as Record<string, unknown> | null)?.["brief"]);
+      const brief = readBrief(
+        (settings.data?.generation as Record<string, unknown> | null)?.["brief"],
+      );
       const facts = await gatherBriefFacts(supabase, orgId, brief?.missingFacts ?? []);
       const missing = requiredFactGaps(facts.factInput);
       if (missing.length)
-        throw new Error(`Revora still needs: ${missing.map((g) => g.label.toLowerCase()).join(", ")}.`);
+        throw new Error(
+          `Revora still needs: ${missing.map((g) => g.label.toLowerCase()).join(", ")}.`,
+        );
       if (!brief) throw new Error("Review Revora's understanding of your business first.");
       if (!brief.approved) throw new Error("Approve the brief and Revora will build from it.");
     }
@@ -59,7 +63,12 @@ export const runSiteGeneration = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (existing)
-      return { jobId: existing.id, status: existing.status, progress: existing.progress, queued: true };
+      return {
+        jobId: existing.id,
+        status: existing.status,
+        progress: existing.progress,
+        queued: true,
+      };
 
     const { data: job, error } = await supabase
       .from("generation_jobs")
@@ -130,19 +139,23 @@ export const pumpSiteEngineQueue = createServerFn({ method: "POST" })
 /** AI edit assistant: rewrites only the requested fields. */
 export const aiEditSiteCopy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { organizationId: string; instruction: string; fields: Record<string, string> }) => {
-    const organizationId = String(input?.organizationId ?? "");
-    if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
-    const instruction = String(input?.instruction ?? "").trim().slice(0, 400);
-    if (instruction.length < 4) throw new Error("Tell Revora what to change.");
-    const raw = input?.fields ?? {};
-    const fields: Record<string, string> = {};
-    for (const [key, value] of Object.entries(raw).slice(0, 10)) {
-      if (typeof value === "string" && value.trim()) fields[key] = value.slice(0, 4000);
-    }
-    if (!Object.keys(fields).length) throw new Error("There's no copy to rewrite yet.");
-    return { organizationId, instruction, fields };
-  })
+  .inputValidator(
+    (input: { organizationId: string; instruction: string; fields: Record<string, string> }) => {
+      const organizationId = String(input?.organizationId ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
+      const instruction = String(input?.instruction ?? "")
+        .trim()
+        .slice(0, 400);
+      if (instruction.length < 4) throw new Error("Tell Revora what to change.");
+      const raw = input?.fields ?? {};
+      const fields: Record<string, string> = {};
+      for (const [key, value] of Object.entries(raw).slice(0, 10)) {
+        if (typeof value === "string" && value.trim()) fields[key] = value.slice(0, 4000);
+      }
+      if (!Object.keys(fields).length) throw new Error("There's no copy to rewrite yet.");
+      return { organizationId, instruction, fields };
+    },
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
@@ -154,7 +167,11 @@ export const aiEditSiteCopy = createServerFn({ method: "POST" })
     const { rewriteCopyFields, COPY_MODEL } = await import("@/lib/site-engine.server");
 
     const [org, profile, services] = await Promise.all([
-      supabase.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
+      supabase
+        .from("organizations")
+        .select("name, industry, conversion_goal")
+        .eq("id", orgId)
+        .maybeSingle(),
       supabase.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       supabase
         .from("services")
@@ -204,7 +221,9 @@ export const aiEditSiteSections = createServerFn({ method: "POST" })
   .inputValidator((input: { organizationId: string; instruction: string }) => {
     const organizationId = String(input?.organizationId ?? "");
     if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
-    const instruction = String(input?.instruction ?? "").trim().slice(0, 400);
+    const instruction = String(input?.instruction ?? "")
+      .trim()
+      .slice(0, 400);
     if (instruction.length < 4) throw new Error("Tell Revora what to change.");
     return { organizationId, instruction };
   })
@@ -234,7 +253,8 @@ export const aiEditSiteSections = createServerFn({ method: "POST" })
         .limit(40),
     ]);
     if (!org.data) throw new Error("Workspace not found.");
-    if (!sections.data?.length) throw new Error("Build your website structure first, then ask for changes.");
+    if (!sections.data?.length)
+      throw new Error("Build your website structure first, then ask for changes.");
     const p = (profile.data ?? {}) as Record<string, unknown>;
 
     const result = await proposeSectionEdits(
@@ -310,7 +330,8 @@ export const analyzeSiteBrief = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const orgId = data.organizationId;
     const { gatherBriefFacts } = await import("@/lib/site-brief.server");
-    const { analyzeBusiness, fallbackBrief, AiGatewayError } = await import("@/lib/site-engine.server");
+    const { analyzeBusiness, fallbackBrief, AiGatewayError } =
+      await import("@/lib/site-engine.server");
     const { readBrief } = await import("@/lib/site-brief");
 
     const facts = await gatherBriefFacts(supabase, orgId);
@@ -336,10 +357,11 @@ export const analyzeSiteBrief = createServerFn({ method: "POST" })
     // A new analysis always needs re-approval, but the owner's answers stay.
     brief = { ...brief, approved: false, factAnswers: previous?.factAnswers ?? {} };
 
-    const { error } = await supabase.from("website_settings").upsert(
-      { organization_id: orgId, generation: { ...generation, brief } } as never,
-      { onConflict: "organization_id" },
-    );
+    const { error } = await supabase
+      .from("website_settings")
+      .upsert({ organization_id: orgId, generation: { ...generation, brief } } as never, {
+        onConflict: "organization_id",
+      });
     if (error) throw new Error(error.message);
 
     await supabase.from("ai_generations").insert({
@@ -376,10 +398,12 @@ export const saveSiteBrief = createServerFn({ method: "POST" })
     const generation = (settings.data?.generation ?? {}) as Record<string, unknown>;
     const brief = { ...parsed, approved: data.approved, source: parsed.source };
 
-    const { error } = await supabase.from("website_settings").upsert(
-      { organization_id: data.organizationId, generation: { ...generation, brief } } as never,
-      { onConflict: "organization_id" },
-    );
+    const { error } = await supabase
+      .from("website_settings")
+      .upsert(
+        { organization_id: data.organizationId, generation: { ...generation, brief } } as never,
+        { onConflict: "organization_id" },
+      );
     if (error) throw new Error(error.message);
     return { brief };
   });
@@ -394,7 +418,8 @@ export const saveMissingFacts = createServerFn({ method: "POST" })
   .inputValidator((input: { organizationId: string; answers: Record<string, string> }) => {
     const answers: Record<string, string> = {};
     for (const [key, value] of Object.entries(input?.answers ?? {}).slice(0, 20)) {
-      if (typeof value === "string" && value.trim()) answers[key.slice(0, 60)] = value.trim().slice(0, 600);
+      if (typeof value === "string" && value.trim())
+        answers[key.slice(0, 60)] = value.trim().slice(0, 600);
     }
     if (!Object.keys(answers).length) throw new Error("Fill in at least one answer.");
     return { organizationId: orgIdOf(input), answers };
@@ -421,7 +446,11 @@ export const saveMissingFacts = createServerFn({ method: "POST" })
       if (!value) continue; // an untouched box is not an answer, and never overwrites saved data
       const field = fieldByKey.get(key);
       if (field === "services_list") {
-        for (const line of value.split(/[\n,]/).map((l) => l.trim()).filter(Boolean)) serviceNames.push(line);
+        for (const line of value
+          .split(/[\n,]/)
+          .map((l) => l.trim())
+          .filter(Boolean))
+          serviceNames.push(line);
       } else if (field) profilePatch[field] = value;
       else context_answers[key] = value;
     }
@@ -429,7 +458,9 @@ export const saveMissingFacts = createServerFn({ method: "POST" })
     if (Object.keys(profilePatch).length) {
       const { error } = await supabase
         .from("business_profiles")
-        .upsert({ organization_id: orgId, ...profilePatch } as never, { onConflict: "organization_id" });
+        .upsert({ organization_id: orgId, ...profilePatch } as never, {
+          onConflict: "organization_id",
+        });
       if (error) throw new Error(error.message);
     }
 
@@ -444,7 +475,6 @@ export const saveMissingFacts = createServerFn({ method: "POST" })
       );
       if (error) throw new Error(error.message);
     }
-
 
     const settings = await supabase
       .from("website_settings")
@@ -485,8 +515,14 @@ export const getBuildReadiness = createServerFn({ method: "POST" })
       .select("generation")
       .eq("organization_id", data.organizationId)
       .maybeSingle();
-    const brief = readBrief((settings.data?.generation as Record<string, unknown> | null)?.["brief"]);
-    const facts = await gatherBriefFacts(context.supabase, data.organizationId, brief?.missingFacts ?? []);
+    const brief = readBrief(
+      (settings.data?.generation as Record<string, unknown> | null)?.["brief"],
+    );
+    const facts = await gatherBriefFacts(
+      context.supabase,
+      data.organizationId,
+      brief?.missingFacts ?? [],
+    );
     const gaps = factGaps(facts.factInput);
     const qa = captureQa(facts.qaInput);
     return {
@@ -592,7 +628,9 @@ export const runSiteEngineCheck = createServerFn({ method: "POST" })
     if (facts?.slug) {
       try {
         const origin = new URL(getRequest().url).origin;
-        const response = await fetch(`${origin}/s/${facts.slug}`, { headers: { accept: "text/html" } });
+        const response = await fetch(`${origin}/s/${facts.slug}`, {
+          headers: { accept: "text/html" },
+        });
         const html = await response.text();
         const headline = brief ? null : null;
         steps.push({

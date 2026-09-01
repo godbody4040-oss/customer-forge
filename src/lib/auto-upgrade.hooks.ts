@@ -35,7 +35,10 @@ async function snapshotForRollback(orgId: string, label: string) {
       .order("version", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase.from("website_pages").select("id, slug, title, kind, seo_title, seo_description").eq("organization_id", orgId),
+    supabase
+      .from("website_pages")
+      .select("id, slug, title, kind, seo_title, seo_description")
+      .eq("organization_id", orgId),
     supabase
       .from("website_sections")
       .select("id, page_id, kind, heading, subheading, body, sort_order, is_visible")
@@ -93,7 +96,9 @@ async function writeProposal(
     }
     await saveSettings({ seo });
   } else if (proposal.kind === "apply_cta") {
-    await saveSettings({ seo: { ...currentSeo, primary_cta_label: proposal.changes[0]?.after ?? null } });
+    await saveSettings({
+      seo: { ...currentSeo, primary_cta_label: proposal.changes[0]?.after ?? null },
+    });
   } else if (proposal.kind === "publish_site") {
     await saveSettings({
       publish_state: "published",
@@ -150,14 +155,18 @@ async function writeProposal(
  * Order is always: snapshot → apply → report the restore point. Nothing is
  * deleted, and the caller can undo with `useUndoUpgrade`.
  */
-export function useApplyUpgrade(organizationId: string | undefined, currentSeo: Record<string, unknown>) {
+export function useApplyUpgrade(
+  organizationId: string | undefined,
+  currentSeo: Record<string, unknown>,
+) {
   const queryClient = useQueryClient();
   const runEngine = useServerFn(runSiteGeneration);
 
   return useMutation({
     mutationFn: async (proposal: UpgradeProposal): Promise<AppliedUpgrade> => {
       const orgId = organizationId!;
-      if (!proposal.applyable) throw new Error(proposal.needs ?? "This upgrade can't be applied automatically yet.");
+      if (!proposal.applyable)
+        throw new Error(proposal.needs ?? "This upgrade can't be applied automatically yet.");
 
       const restore = await snapshotForRollback(orgId, `Before: ${proposal.title}`);
       await writeProposal(orgId, proposal, currentSeo, runEngine);
@@ -172,7 +181,9 @@ export function useApplyUpgrade(organizationId: string | undefined, currentSeo: 
     },
     onSuccess: (applied) => {
       toast.success(`Applied: ${applied.title}`, {
-        description: applied.version ? `Saved version ${applied.version} first — you can undo this.` : undefined,
+        description: applied.version
+          ? `Saved version ${applied.version} first — you can undo this.`
+          : undefined,
       });
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
@@ -200,7 +211,10 @@ export type BatchFixResult = {
  * reported honestly rather than silently dropped. Publishing is never included:
  * going live stays an explicit decision.
  */
-export function useBatchFix(organizationId: string | undefined, currentSeo: Record<string, unknown>) {
+export function useBatchFix(
+  organizationId: string | undefined,
+  currentSeo: Record<string, unknown>,
+) {
   const queryClient = useQueryClient();
   const runEngine = useServerFn(runSiteGeneration);
 
@@ -213,7 +227,9 @@ export function useBatchFix(organizationId: string | undefined, currentSeo: Reco
       label: string;
     }): Promise<BatchFixResult> => {
       const orgId = organizationId!;
-      const safe = proposals.filter((proposal) => proposal.applyable && proposal.kind !== "publish_site");
+      const safe = proposals.filter(
+        (proposal) => proposal.applyable && proposal.kind !== "publish_site",
+      );
       const skipped = proposals
         .filter((proposal) => !safe.includes(proposal))
         .map((proposal) => ({
@@ -260,14 +276,17 @@ export function useBatchFix(organizationId: string | undefined, currentSeo: Reco
       if (!result.applied.length && !result.failed.length) {
         toast.info("Nothing safe to apply automatically right now.");
       } else {
-        toast.success(`${result.applied.length} fix${result.applied.length === 1 ? "" : "es"} applied`, {
-          description: [
-            result.restore?.version ? `Version ${result.restore.version} saved first.` : null,
-            result.failed.length ? `${result.failed.length} couldn't be applied.` : null,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        });
+        toast.success(
+          `${result.applied.length} fix${result.applied.length === 1 ? "" : "es"} applied`,
+          {
+            description: [
+              result.restore?.version ? `Version ${result.restore.version} saved first.` : null,
+              result.failed.length ? `${result.failed.length} couldn't be applied.` : null,
+            ]
+              .filter(Boolean)
+              .join(" "),
+          },
+        );
       }
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
@@ -278,7 +297,6 @@ export function useBatchFix(organizationId: string | undefined, currentSeo: Reco
     onError: (error: Error) => toast.error(error.message || "Couldn't run that optimisation."),
   });
 }
-
 
 /** Restores the snapshot taken before an upgrade. */
 export function useUndoUpgrade(organizationId: string | undefined) {
@@ -297,7 +315,9 @@ export function useUndoUpgrade(organizationId: string | undefined) {
       if (!snapshot) throw new Error("That restore point is no longer available.");
       const stored = snapshot.pages as { settings_pages?: unknown } | null;
       const settingsPages =
-        stored && typeof stored === "object" && "settings_pages" in stored ? stored.settings_pages : snapshot.pages;
+        stored && typeof stored === "object" && "settings_pages" in stored
+          ? stored.settings_pages
+          : snapshot.pages;
       const { error: writeError } = await supabase.from("website_settings").upsert(
         {
           organization_id: orgId,

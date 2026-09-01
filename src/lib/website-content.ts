@@ -52,7 +52,6 @@ export type SectionKind =
   | "policy"
   | "custom";
 
-
 export type ContentComponent = {
   id: string;
   section_id: string;
@@ -90,8 +89,6 @@ export function safeLinkUrl(value: string | null | undefined): string | null {
   return null;
 }
 
-
-
 export type ContentSection = {
   id: string;
   page_id: string;
@@ -125,12 +122,42 @@ export type ContentPage = {
 
 /** Search and social fields a client can edit per page. */
 export const PAGE_SEO_FIELDS = [
-  { key: "seo_title", label: "Search title", help: "Shown as the clickable headline in Google. Keep it under 60 characters.", max: 70 },
-  { key: "seo_description", label: "Search description", help: "The summary under the title. Aim for 120-155 characters.", max: 170 },
-  { key: "seo_canonical", label: "Canonical URL", help: "The one true address for this page. Leave blank to use the page's own URL.", max: 300 },
-  { key: "og_title", label: "Share title", help: "Used when the page is shared on Facebook, LinkedIn or in a text message.", max: 90 },
-  { key: "og_description", label: "Share description", help: "The preview text shown with the share title.", max: 200 },
-  { key: "og_image_url", label: "Share image URL", help: "The image shown in link previews. 1200x630 works best.", max: 500 },
+  {
+    key: "seo_title",
+    label: "Search title",
+    help: "Shown as the clickable headline in Google. Keep it under 60 characters.",
+    max: 70,
+  },
+  {
+    key: "seo_description",
+    label: "Search description",
+    help: "The summary under the title. Aim for 120-155 characters.",
+    max: 170,
+  },
+  {
+    key: "seo_canonical",
+    label: "Canonical URL",
+    help: "The one true address for this page. Leave blank to use the page's own URL.",
+    max: 300,
+  },
+  {
+    key: "og_title",
+    label: "Share title",
+    help: "Used when the page is shared on Facebook, LinkedIn or in a text message.",
+    max: 90,
+  },
+  {
+    key: "og_description",
+    label: "Share description",
+    help: "The preview text shown with the share title.",
+    max: 200,
+  },
+  {
+    key: "og_image_url",
+    label: "Share image URL",
+    help: "The image shown in link previews. 1200x630 works best.",
+    max: 500,
+  },
 ] as const;
 
 export type PageSeoField = (typeof PAGE_SEO_FIELDS)[number]["key"];
@@ -150,34 +177,87 @@ export function readSectionSeo(settings: unknown): SectionSeo {
 }
 
 export function writeSectionSeo(settings: unknown, patch: SectionSeo): Record<string, unknown> {
-  const base = settings && typeof settings === "object" ? { ...(settings as Record<string, unknown>) } : {};
+  const base =
+    settings && typeof settings === "object" ? { ...(settings as Record<string, unknown>) } : {};
   base["seo"] = { ...readSectionSeo(settings), ...patch };
   return base;
 }
 
 /** Section types a business owner can add, in plain language. */
 export const SECTION_LIBRARY: { kind: SectionKind; label: string; help: string }[] = [
-  { kind: "hero", label: "Headline banner", help: "The first thing visitors read, with your main button." },
-  { kind: "trust_bar", label: "Trust strip", help: "Quick reassurance line: area covered, rating, response time." },
-  { kind: "intro", label: "Short introduction", help: "Two sentences on what you do and who you help." },
-  { kind: "services", label: "Services", help: "One card per service you offer, pulled from your service list." },
-  { kind: "service_detail", label: "Service detail", help: "The full write-up for one service, with its own button." },
-  { kind: "benefits", label: "Why choose us", help: "Short reasons to pick you — only ones you supplied." },
-  { kind: "process", label: "How it works", help: "The three or four steps from enquiry to job done." },
-  { kind: "stats", label: "Numbers", help: "Simple counts you can stand behind, like jobs completed." },
+  {
+    kind: "hero",
+    label: "Headline banner",
+    help: "The first thing visitors read, with your main button.",
+  },
+  {
+    kind: "trust_bar",
+    label: "Trust strip",
+    help: "Quick reassurance line: area covered, rating, response time.",
+  },
+  {
+    kind: "intro",
+    label: "Short introduction",
+    help: "Two sentences on what you do and who you help.",
+  },
+  {
+    kind: "services",
+    label: "Services",
+    help: "One card per service you offer, pulled from your service list.",
+  },
+  {
+    kind: "service_detail",
+    label: "Service detail",
+    help: "The full write-up for one service, with its own button.",
+  },
+  {
+    kind: "benefits",
+    label: "Why choose us",
+    help: "Short reasons to pick you — only ones you supplied.",
+  },
+  {
+    kind: "process",
+    label: "How it works",
+    help: "The three or four steps from enquiry to job done.",
+  },
+  {
+    kind: "stats",
+    label: "Numbers",
+    help: "Simple counts you can stand behind, like jobs completed.",
+  },
   { kind: "gallery", label: "Photos of your work", help: "Uses the photos in your media library." },
   { kind: "reviews", label: "Customer reviews", help: "Shows published reviews only." },
-  { kind: "guarantee", label: "Guarantee", help: "The promise you make — only what you actually offer." },
-  { kind: "offer", label: "Current offer", help: "A time-limited offer. Hidden until you write one." },
-  { kind: "lead_magnet", label: "Free guide / checklist", help: "Trades an email for something useful." },
+  {
+    kind: "guarantee",
+    label: "Guarantee",
+    help: "The promise you make — only what you actually offer.",
+  },
+  {
+    kind: "offer",
+    label: "Current offer",
+    help: "A time-limited offer. Hidden until you write one.",
+  },
+  {
+    kind: "lead_magnet",
+    label: "Free guide / checklist",
+    help: "Trades an email for something useful.",
+  },
   { kind: "area", label: "Area you serve", help: "Where you work, for local search." },
   { kind: "areas", label: "All service areas", help: "Links to every town or neighbourhood page." },
-  { kind: "faq", label: "Questions & answers", help: "Answers common questions before people call." },
+  {
+    kind: "faq",
+    label: "Questions & answers",
+    help: "Answers common questions before people call.",
+  },
   { kind: "pricing", label: "Pricing guide", help: "Starting prices so visitors self-qualify." },
   { kind: "quote", label: "Instant quote form", help: "The quote calculator that creates a lead." },
   { kind: "booking", label: "Booking form", help: "Lets visitors pick a service and time." },
   { kind: "cta", label: "Call to action", help: "A prompt to call, book or request a quote." },
-  { kind: "sticky_cta", label: "Sticky call bar", help: "Always-visible call and quote buttons on mobile." },
+  {
+    kind: "sticky_cta",
+    label: "Sticky call bar",
+    help: "Always-visible call and quote buttons on mobile.",
+  },
   { kind: "contact", label: "Contact & hours", help: "Phone, email and opening hours." },
   { kind: "policy", label: "Policy text", help: "Plain policy wording, like a privacy notice." },
   { kind: "custom", label: "Your own section", help: "A heading and text you write yourself." },
@@ -186,10 +266,26 @@ export const SECTION_LIBRARY: { kind: SectionKind; label: string; help: string }
 /** Page types Revora can lay out, in plain language. */
 export const PAGE_LIBRARY: { kind: PageKind; label: string; help: string }[] = [
   { kind: "home", label: "Home", help: "The main landing page with your strongest offer." },
-  { kind: "services", label: "Services hub", help: "Every service in one place, each linking to its own page." },
-  { kind: "service", label: "Single service page", help: "One page per service — this is what ranks locally." },
-  { kind: "area", label: "Service area page", help: "One page per town or neighbourhood you cover." },
-  { kind: "pricing", label: "Pricing & instant quote", help: "Starting prices plus the quote calculator." },
+  {
+    kind: "services",
+    label: "Services hub",
+    help: "Every service in one place, each linking to its own page.",
+  },
+  {
+    kind: "service",
+    label: "Single service page",
+    help: "One page per service — this is what ranks locally.",
+  },
+  {
+    kind: "area",
+    label: "Service area page",
+    help: "One page per town or neighbourhood you cover.",
+  },
+  {
+    kind: "pricing",
+    label: "Pricing & instant quote",
+    help: "Starting prices plus the quote calculator.",
+  },
   { kind: "book", label: "Book online", help: "A page dedicated to taking the booking." },
   { kind: "about", label: "About", help: "Who you are and why customers trust you." },
   { kind: "reviews", label: "Reviews", help: "Published customer reviews in one place." },
@@ -197,7 +293,11 @@ export const PAGE_LIBRARY: { kind: PageKind; label: string; help: string }[] = [
   { kind: "faq", label: "FAQ", help: "Answers that remove hesitation before calling." },
   { kind: "offers", label: "Offers", help: "Current promotions you write yourself." },
   { kind: "contact", label: "Contact", help: "Phone, email, hours and a form." },
-  { kind: "thanks", label: "Thank you", help: "Shown after a form is sent — used for ad tracking." },
+  {
+    kind: "thanks",
+    label: "Thank you",
+    help: "Shown after a form is sent — used for ad tracking.",
+  },
   { kind: "privacy", label: "Privacy notice", help: "Required by Google Ads and Meta Ads." },
   { kind: "custom", label: "Your own page", help: "Anything else you need." },
 ];
@@ -205,8 +305,8 @@ export const PAGE_LIBRARY: { kind: PageKind; label: string; help: string }[] = [
 export const sectionLabel = (kind: string) =>
   SECTION_LIBRARY.find((s) => s.kind === kind)?.label ?? "Section";
 
-export const pageLabel = (kind: string) => PAGE_LIBRARY.find((p) => p.kind === kind)?.label ?? "Page";
-
+export const pageLabel = (kind: string) =>
+  PAGE_LIBRARY.find((p) => p.kind === kind)?.label ?? "Page";
 
 /** Fields the AI assistant and the editor are allowed to change on a section. */
 export const SECTION_TEXT_FIELDS = ["heading", "subheading", "body"] as const;
@@ -229,7 +329,12 @@ export type BlueprintInput = {
   photoCount: number;
   reviewCount: number;
   ctaLabel: string;
-  services: { name: string; description?: string | null; price?: number | null; starting_price?: number | null }[];
+  services: {
+    name: string;
+    description?: string | null;
+    price?: number | null;
+    starting_price?: number | null;
+  }[];
   benefits: string[];
   faqs: { question: string; answer: string }[];
 };
@@ -282,7 +387,8 @@ export function splitAreas(serviceArea: string | null, city: string | null): str
     .map((part) => part.trim())
     .filter((part) => part.length > 1 && part.length < 60);
   const unique: string[] = [];
-  for (const part of parts) if (!unique.some((p) => p.toLowerCase() === part.toLowerCase())) unique.push(part);
+  for (const part of parts)
+    if (!unique.some((p) => p.toLowerCase() === part.toLowerCase())) unique.push(part);
   return unique.slice(0, 8);
 }
 
@@ -336,7 +442,11 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     variant: v.id,
     heading: v.heading("process"),
     subheading: "Three steps, no phone tag.",
-    components: v.processSteps.map((step) => ({ kind: "step", label: step.label, body: step.body })),
+    components: v.processSteps.map((step) => ({
+      kind: "step",
+      label: step.label,
+      body: step.body,
+    })),
   };
 
   const stickyCta: BlueprintSection = {
@@ -439,11 +549,18 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     home.push({
       kind: "faq",
       heading: v.heading("faq"),
-      components: input.faqs.slice(0, 8).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+      components: input.faqs
+        .slice(0, 8)
+        .map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
     });
   home.push({ kind: "quote", heading: v.heading("quote"), components: [] });
   home.push({ kind: "booking", heading: v.heading("booking"), components: [] });
-  home.push({ kind: "cta", variant: v.ctaVariant, heading: v.heading("cta"), components: captureButtons });
+  home.push({
+    kind: "cta",
+    variant: v.ctaVariant,
+    heading: v.heading("cta"),
+    components: captureButtons,
+  });
   if (input.phone || input.email || input.hasHours)
     home.push({ kind: "contact", heading: v.heading("contact") });
   home.push(stickyCta);
@@ -469,10 +586,21 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
       seo_title: area ? `Services — ${name}, ${area}` : `Services — ${name}`,
       seo_description: `Everything ${name} offers${area ? ` across ${area}` : ""}, with starting prices and instant quotes.`,
       sections: [
-        { kind: "hero", heading: "Our services", subheading: area ? `Available across ${area}` : null, components: captureButtons },
+        {
+          kind: "hero",
+          heading: "Our services",
+          subheading: area ? `Available across ${area}` : null,
+          components: captureButtons,
+        },
         { kind: "services", heading: "Choose what you need", components: serviceComponents },
         ...(priceComponents.length
-          ? [{ kind: "pricing" as SectionKind, heading: "Starting prices", components: priceComponents }]
+          ? [
+              {
+                kind: "pricing" as SectionKind,
+                heading: "Starting prices",
+                components: priceComponents,
+              },
+            ]
           : []),
         processSteps,
         { kind: "quote", heading: "Get your price", components: [] },
@@ -524,14 +652,20 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
             ],
           },
           processSteps,
-          ...(input.photoCount > 0 ? [{ kind: "gallery" as SectionKind, heading: "Recent work" }] : []),
-          ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "What customers say" }] : []),
+          ...(input.photoCount > 0
+            ? [{ kind: "gallery" as SectionKind, heading: "Recent work" }]
+            : []),
+          ...(input.reviewCount > 0
+            ? [{ kind: "reviews" as SectionKind, heading: "What customers say" }]
+            : []),
           ...(input.faqs.length
             ? [
                 {
                   kind: "faq" as SectionKind,
                   heading: "Common questions",
-                  components: input.faqs.slice(0, 5).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+                  components: input.faqs
+                    .slice(0, 5)
+                    .map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
                 },
               ]
             : []),
@@ -557,13 +691,23 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
           {
             kind: "hero",
             heading: `${trade} in ${town}`,
-            subheading: input.description ? (input.description.split(/(?<=\.)\s/)[0] ?? null) : null,
+            subheading: input.description
+              ? (input.description.split(/(?<=\.)\s/)[0] ?? null)
+              : null,
             components: captureButtons,
           },
           ...(serviceComponents.length
-            ? [{ kind: "services" as SectionKind, heading: `What we do in ${town}`, components: serviceComponents }]
+            ? [
+                {
+                  kind: "services" as SectionKind,
+                  heading: `What we do in ${town}`,
+                  components: serviceComponents,
+                },
+              ]
             : []),
-          ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "Local reviews" }] : []),
+          ...(input.reviewCount > 0
+            ? [{ kind: "reviews" as SectionKind, heading: "Local reviews" }]
+            : []),
           {
             kind: "area",
             heading: `Serving ${town}`,
@@ -586,9 +730,20 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     seo_title: area ? `Pricing — ${name}, ${area}` : `Pricing — ${name}`,
     seo_description: `What ${name} charges and how to get an exact price in a couple of minutes.`,
     sections: [
-      { kind: "hero", heading: "What it costs", subheading: "Straight answers, no sales calls.", components: [quoteButton] },
+      {
+        kind: "hero",
+        heading: "What it costs",
+        subheading: "Straight answers, no sales calls.",
+        components: [quoteButton],
+      },
       ...(priceComponents.length
-        ? [{ kind: "pricing" as SectionKind, heading: "Starting prices", components: priceComponents }]
+        ? [
+            {
+              kind: "pricing" as SectionKind,
+              heading: "Starting prices",
+              components: priceComponents,
+            },
+          ]
         : []),
       { kind: "quote", heading: "Get your instant price range", components: [] },
       ...(input.faqs.length
@@ -596,7 +751,9 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
             {
               kind: "faq" as SectionKind,
               heading: "Pricing questions",
-              components: input.faqs.slice(0, 6).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+              components: input.faqs
+                .slice(0, 6)
+                .map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
             },
           ]
         : []),
@@ -611,10 +768,17 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     seo_title: `Book ${name}${area ? ` — ${area}` : ""}`,
     seo_description: `Pick a service and a time that suits you. ${name} confirms quickly.`,
     sections: [
-      { kind: "hero", heading: `Book ${name}`, subheading: "Pick a service and a time — we confirm quickly.", components: [bookButton] },
+      {
+        kind: "hero",
+        heading: `Book ${name}`,
+        subheading: "Pick a service and a time — we confirm quickly.",
+        components: [bookButton],
+      },
       { kind: "booking", heading: "Choose your slot", components: [] },
       processSteps,
-      ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "What customers say" }] : []),
+      ...(input.reviewCount > 0
+        ? [{ kind: "reviews" as SectionKind, heading: "What customers say" }]
+        : []),
       stickyCta,
     ],
   });
@@ -638,7 +802,9 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
               },
             ]
           : []),
-        ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "Customer reviews" }] : []),
+        ...(input.reviewCount > 0
+          ? [{ kind: "reviews" as SectionKind, heading: "Customer reviews" }]
+          : []),
         { kind: "cta", heading: "Work with us", components: captureButtons },
         stickyCta,
       ],
@@ -686,7 +852,11 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
         {
           kind: "faq",
           heading: "Frequently asked",
-          components: input.faqs.map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
+          components: input.faqs.map((f) => ({
+            kind: "faq_item",
+            label: f.question,
+            body: f.answer,
+          })),
         },
         { kind: "cta", heading: "Still not sure?", components: captureButtons },
         stickyCta,
@@ -702,7 +872,12 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     seo_title: `Current offers — ${name}`,
     seo_description: `Live offers from ${name}. Written by the business, never invented.`,
     sections: [
-      { kind: "hero", heading: "Current offers", subheading: "Write your own — this page stays hidden until you do.", components: [quoteButton] },
+      {
+        kind: "hero",
+        heading: "Current offers",
+        subheading: "Write your own — this page stays hidden until you do.",
+        components: [quoteButton],
+      },
       {
         kind: "offer",
         heading: "Your offer headline",
@@ -721,7 +896,12 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     seo_title: `Contact ${name}`,
     seo_description: `Phone, email and hours for ${name}${area ? ` in ${area}` : ""}.`,
     sections: [
-      { kind: "hero", heading: "Contact us", subheading: area ? `Serving ${area}` : null, components: captureButtons },
+      {
+        kind: "hero",
+        heading: "Contact us",
+        subheading: area ? `Serving ${area}` : null,
+        components: captureButtons,
+      },
       { kind: "contact", heading: "How to reach us" },
       { kind: "quote", heading: "Prefer a written price?", components: [] },
       stickyCta,
@@ -739,10 +919,14 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
       {
         kind: "hero",
         heading: "Thanks — we've got it",
-        subheading: input.phone ? `Need us sooner? Call ${input.phone}.` : "We'll be in touch shortly.",
+        subheading: input.phone
+          ? `Need us sooner? Call ${input.phone}.`
+          : "We'll be in touch shortly.",
         components: callButton ? [callButton] : [],
       },
-      ...(input.reviewCount > 0 ? [{ kind: "reviews" as SectionKind, heading: "While you wait" }] : []),
+      ...(input.reviewCount > 0
+        ? [{ kind: "reviews" as SectionKind, heading: "While you wait" }]
+        : []),
     ],
   });
 
@@ -785,35 +969,197 @@ export type LeadEngineItem = {
   fix: string;
 };
 
-const CORE_PAGE_KINDS: { kind: PageKind; label: string; why: string; fix: string; weight: number }[] = [
-  { kind: "home", label: "Home page", why: "Your strongest offer, above the fold.", fix: "Run the builder to lay out your home page.", weight: 3 },
-  { kind: "services", label: "Services hub", why: "Lets visitors self-select what they need.", fix: "Add your services, then rebuild the structure.", weight: 2 },
-  { kind: "service", label: "A page per service", why: "Single-service pages are what rank for local searches.", fix: "Add each service separately so it gets its own page.", weight: 3 },
-  { kind: "area", label: "Service area pages", why: "One page per town captures 'near me' searches.", fix: "List the towns you cover, separated by commas.", weight: 2 },
-  { kind: "pricing", label: "Pricing page", why: "Price transparency filters out tyre-kickers.", fix: "Rebuild the structure to add the pricing page.", weight: 2 },
-  { kind: "book", label: "Booking page", why: "Gives ads and Google a place to send ready buyers.", fix: "Rebuild the structure to add the booking page.", weight: 2 },
-  { kind: "reviews", label: "Reviews page", why: "Proof is the cheapest conversion lift you have.", fix: "Collect and publish reviews.", weight: 2 },
-  { kind: "gallery", label: "Work gallery", why: "Photos of real jobs beat stock imagery every time.", fix: "Upload photos in the media library.", weight: 1 },
-  { kind: "faq", label: "FAQ page", why: "Answers objections before someone leaves.", fix: "Add questions and answers in the proof step.", weight: 1 },
-  { kind: "about", label: "About page", why: "Local buyers check who they're letting in the door.", fix: "Write a description of the business.", weight: 1 },
-  { kind: "contact", label: "Contact page", why: "Phone, email and hours in one obvious place.", fix: "Rebuild the structure to add the contact page.", weight: 2 },
-  { kind: "thanks", label: "Thank-you page", why: "Needed to track ad conversions properly.", fix: "Rebuild the structure to add the thank-you page.", weight: 1 },
-  { kind: "privacy", label: "Privacy notice", why: "Google and Meta ads require one.", fix: "Rebuild the structure to add the privacy notice.", weight: 1 },
+const CORE_PAGE_KINDS: {
+  kind: PageKind;
+  label: string;
+  why: string;
+  fix: string;
+  weight: number;
+}[] = [
+  {
+    kind: "home",
+    label: "Home page",
+    why: "Your strongest offer, above the fold.",
+    fix: "Run the builder to lay out your home page.",
+    weight: 3,
+  },
+  {
+    kind: "services",
+    label: "Services hub",
+    why: "Lets visitors self-select what they need.",
+    fix: "Add your services, then rebuild the structure.",
+    weight: 2,
+  },
+  {
+    kind: "service",
+    label: "A page per service",
+    why: "Single-service pages are what rank for local searches.",
+    fix: "Add each service separately so it gets its own page.",
+    weight: 3,
+  },
+  {
+    kind: "area",
+    label: "Service area pages",
+    why: "One page per town captures 'near me' searches.",
+    fix: "List the towns you cover, separated by commas.",
+    weight: 2,
+  },
+  {
+    kind: "pricing",
+    label: "Pricing page",
+    why: "Price transparency filters out tyre-kickers.",
+    fix: "Rebuild the structure to add the pricing page.",
+    weight: 2,
+  },
+  {
+    kind: "book",
+    label: "Booking page",
+    why: "Gives ads and Google a place to send ready buyers.",
+    fix: "Rebuild the structure to add the booking page.",
+    weight: 2,
+  },
+  {
+    kind: "reviews",
+    label: "Reviews page",
+    why: "Proof is the cheapest conversion lift you have.",
+    fix: "Collect and publish reviews.",
+    weight: 2,
+  },
+  {
+    kind: "gallery",
+    label: "Work gallery",
+    why: "Photos of real jobs beat stock imagery every time.",
+    fix: "Upload photos in the media library.",
+    weight: 1,
+  },
+  {
+    kind: "faq",
+    label: "FAQ page",
+    why: "Answers objections before someone leaves.",
+    fix: "Add questions and answers in the proof step.",
+    weight: 1,
+  },
+  {
+    kind: "about",
+    label: "About page",
+    why: "Local buyers check who they're letting in the door.",
+    fix: "Write a description of the business.",
+    weight: 1,
+  },
+  {
+    kind: "contact",
+    label: "Contact page",
+    why: "Phone, email and hours in one obvious place.",
+    fix: "Rebuild the structure to add the contact page.",
+    weight: 2,
+  },
+  {
+    kind: "thanks",
+    label: "Thank-you page",
+    why: "Needed to track ad conversions properly.",
+    fix: "Rebuild the structure to add the thank-you page.",
+    weight: 1,
+  },
+  {
+    kind: "privacy",
+    label: "Privacy notice",
+    why: "Google and Meta ads require one.",
+    fix: "Rebuild the structure to add the privacy notice.",
+    weight: 1,
+  },
 ];
 
-const CORE_SECTION_KINDS: { kind: SectionKind; label: string; why: string; fix: string; weight: number }[] = [
-  { kind: "quote", label: "Instant quote form", why: "Turns browsers into leads without a phone call.", fix: "Turn on your quote calculator.", weight: 3 },
-  { kind: "booking", label: "Booking form", why: "Captures people who already decided.", fix: "Make at least one service bookable.", weight: 3 },
-  { kind: "sticky_cta", label: "Sticky call bar", why: "Most local visitors are on a phone and want to tap once.", fix: "Rebuild the structure to add the sticky call bar.", weight: 2 },
-  { kind: "trust_bar", label: "Trust strip", why: "Reassurance in the first screen lifts enquiries.", fix: "Add your area, hours and phone number.", weight: 1 },
-  { kind: "process", label: "How it works", why: "Removes the fear of an unknown process.", fix: "Rebuild the structure to add the steps.", weight: 1 },
-  { kind: "reviews", label: "Reviews on key pages", why: "Proof next to the button converts best.", fix: "Publish a few reviews.", weight: 2 },
-  { kind: "pricing", label: "Starting prices", why: "Self-qualifies visitors before they enquire.", fix: "Add prices to your services.", weight: 1 },
-  { kind: "offer", label: "A live offer", why: "A reason to act today, not next month.", fix: "Write your offer in the offers block and show it.", weight: 2 },
-  { kind: "guarantee", label: "A guarantee", why: "Lowers the risk of choosing you.", fix: "Write the promise you stand behind and show it.", weight: 1 },
-  { kind: "gallery", label: "Photos of work", why: "Real work photos are the strongest visual proof.", fix: "Upload job photos.", weight: 1 },
-  { kind: "faq", label: "Questions answered", why: "Handles objections at the point of doubt.", fix: "Add FAQs.", weight: 1 },
-  { kind: "cta", label: "Repeated call to action", why: "Every page should end with the next step.", fix: "Rebuild the structure so each page ends with a CTA.", weight: 2 },
+const CORE_SECTION_KINDS: {
+  kind: SectionKind;
+  label: string;
+  why: string;
+  fix: string;
+  weight: number;
+}[] = [
+  {
+    kind: "quote",
+    label: "Instant quote form",
+    why: "Turns browsers into leads without a phone call.",
+    fix: "Turn on your quote calculator.",
+    weight: 3,
+  },
+  {
+    kind: "booking",
+    label: "Booking form",
+    why: "Captures people who already decided.",
+    fix: "Make at least one service bookable.",
+    weight: 3,
+  },
+  {
+    kind: "sticky_cta",
+    label: "Sticky call bar",
+    why: "Most local visitors are on a phone and want to tap once.",
+    fix: "Rebuild the structure to add the sticky call bar.",
+    weight: 2,
+  },
+  {
+    kind: "trust_bar",
+    label: "Trust strip",
+    why: "Reassurance in the first screen lifts enquiries.",
+    fix: "Add your area, hours and phone number.",
+    weight: 1,
+  },
+  {
+    kind: "process",
+    label: "How it works",
+    why: "Removes the fear of an unknown process.",
+    fix: "Rebuild the structure to add the steps.",
+    weight: 1,
+  },
+  {
+    kind: "reviews",
+    label: "Reviews on key pages",
+    why: "Proof next to the button converts best.",
+    fix: "Publish a few reviews.",
+    weight: 2,
+  },
+  {
+    kind: "pricing",
+    label: "Starting prices",
+    why: "Self-qualifies visitors before they enquire.",
+    fix: "Add prices to your services.",
+    weight: 1,
+  },
+  {
+    kind: "offer",
+    label: "A live offer",
+    why: "A reason to act today, not next month.",
+    fix: "Write your offer in the offers block and show it.",
+    weight: 2,
+  },
+  {
+    kind: "guarantee",
+    label: "A guarantee",
+    why: "Lowers the risk of choosing you.",
+    fix: "Write the promise you stand behind and show it.",
+    weight: 1,
+  },
+  {
+    kind: "gallery",
+    label: "Photos of work",
+    why: "Real work photos are the strongest visual proof.",
+    fix: "Upload job photos.",
+    weight: 1,
+  },
+  {
+    kind: "faq",
+    label: "Questions answered",
+    why: "Handles objections at the point of doubt.",
+    fix: "Add FAQs.",
+    weight: 1,
+  },
+  {
+    kind: "cta",
+    label: "Repeated call to action",
+    why: "Every page should end with the next step.",
+    fix: "Rebuild the structure so each page ends with a CTA.",
+    weight: 2,
+  },
 ];
 
 /**
@@ -859,7 +1205,6 @@ export function leadEngineAudit(pages: ContentPage[]): {
   };
 }
 
-
 /* ---------------------------------- QA ------------------------------------ */
 
 export type QaCheck = {
@@ -892,7 +1237,11 @@ export type QaInput = {
  * Pre-launch quality assurance. Blockers must pass before the site can be
  * published — publishing never reports success until these clear.
  */
-export function websiteQa(input: QaInput): { checks: QaCheck[]; blockers: QaCheck[]; passed: boolean } {
+export function websiteQa(input: QaInput): {
+  checks: QaCheck[];
+  blockers: QaCheck[];
+  passed: boolean;
+} {
   const checks: QaCheck[] = [
     {
       key: "name",
@@ -986,14 +1335,7 @@ export function websiteQa(input: QaInput): { checks: QaCheck[]; blockers: QaChec
 /* ------------------------------ Wizard steps ------------------------------ */
 
 export type WizardStepKey =
-  | "business"
-  | "services"
-  | "brand"
-  | "contact"
-  | "proof"
-  | "goals"
-  | "structure"
-  | "launch";
+  "business" | "services" | "brand" | "contact" | "proof" | "goals" | "structure" | "launch";
 
 export const WIZARD_STEPS: { key: WizardStepKey; title: string; help: string }[] = [
   { key: "business", title: "Your business", help: "Name, trade and what you do." },
@@ -1074,7 +1416,10 @@ export type ContentDiffRow = {
 const text = (value: string | null | undefined) => (value ?? "").trim();
 
 /** Section-by-section comparison between two saved structures. */
-export function diffContent(before: ContentSnapshot | null, after: ContentSnapshot | null): ContentDiffRow[] {
+export function diffContent(
+  before: ContentSnapshot | null,
+  after: ContentSnapshot | null,
+): ContentDiffRow[] {
   const rows: ContentDiffRow[] = [];
   const beforePages = before?.pages ?? [];
   const afterPages = after?.pages ?? [];
@@ -1087,14 +1432,26 @@ export function diffContent(before: ContentSnapshot | null, after: ContentSnapsh
     const pageName = afterPage.title || afterPage.slug;
 
     if (!beforePage) {
-      rows.push({ page: pageName, section: "Page", field: "page", before: "", after: pageName, change: "added" });
+      rows.push({
+        page: pageName,
+        section: "Page",
+        field: "page",
+        before: "",
+        after: pageName,
+        change: "added",
+      });
     } else {
       for (const field of ["title", "seo_title", "seo_description"] as const) {
         if (text(beforePage[field]) !== text(afterPage[field])) {
           rows.push({
             page: pageName,
             section: "Page settings",
-            field: field === "title" ? "Page name" : field === "seo_title" ? "Search title" : "Search description",
+            field:
+              field === "title"
+                ? "Page name"
+                : field === "seo_title"
+                  ? "Search title"
+                  : "Search description",
             before: text(beforePage[field]),
             after: text(afterPage[field]),
             change: "changed",
@@ -1103,7 +1460,9 @@ export function diffContent(before: ContentSnapshot | null, after: ContentSnapsh
       }
     }
 
-    const beforeSections = new Map((beforePage?.sections ?? []).map((section) => [section.id, section]));
+    const beforeSections = new Map(
+      (beforePage?.sections ?? []).map((section) => [section.id, section]),
+    );
     const afterSections = new Map(afterPage.sections.map((section) => [section.id, section]));
 
     for (const [id, afterSection] of afterSections) {
@@ -1171,7 +1530,14 @@ export function diffContent(before: ContentSnapshot | null, after: ContentSnapsh
   for (const [key, beforePage] of beforeMap) {
     if (!afterMap.has(key)) {
       const pageName = beforePage.title || beforePage.slug;
-      rows.push({ page: pageName, section: "Page", field: "page", before: pageName, after: "", change: "removed" });
+      rows.push({
+        page: pageName,
+        section: "Page",
+        field: "page",
+        before: pageName,
+        after: "",
+        change: "removed",
+      });
     }
   }
 

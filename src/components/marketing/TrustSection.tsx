@@ -1,5 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { Hammer, Link2, Rocket, TrendingUp, Lock, ShieldCheck, Server, FileCheck } from "lucide-react";
+import {
+  Hammer,
+  Link2,
+  Rocket,
+  TrendingUp,
+  Lock,
+  ShieldCheck,
+  Server,
+  FileCheck,
+} from "lucide-react";
 import { Panel, Pill } from "@/components/app/Bits";
 import { MAIL_SUBJECTS, REVORA, revoraMailto } from "@/lib/brand";
 
@@ -63,8 +72,8 @@ export function TrustSection() {
         Built for businesses that depend on customers.
       </h2>
       <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
-        Revora is a done-for-you system, not software you have to figure out. Here is exactly what we
-        do and how your business is protected.
+        Revora is a done-for-you system, not software you have to figure out. Here is exactly what
+        we do and how your business is protected.
       </p>
 
       <div className="mt-9 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -105,8 +114,8 @@ export function TrustSection() {
           </div>
           <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
             We publish results and testimonials only once they are real and verified with the
-            business owner. No stock logos, no invented numbers. Want to be one of the first? Talk to{" "}
-            {REVORA.founder.name} directly.
+            business owner. No stock logos, no invented numbers. Want to be one of the first? Talk
+            to {REVORA.founder.name} directly.
           </p>
         </div>
         <Link

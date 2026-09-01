@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupportMode } from "@/lib/support-mode";
 import type { AppRole } from "@/lib/domain";
 
-
 export type Session = Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"];
 
 export function useSession() {
@@ -33,13 +32,11 @@ export type Workspace = {
     is_suspended: boolean;
     conversion_goal: string | null;
     setup_paid_at: string | null;
-
   };
 };
 
 const ORG_FIELDS =
   "id, name, slug, industry, plan_id, subscription_status, trial_ends_at, created_at, onboarding_completed, onboarding_step, is_demo, is_suspended, conversion_goal, setup_paid_at";
-
 
 /** Current user's workspace (or the client workspace being supported) plus platform-admin flag. */
 export function useWorkspace() {
@@ -98,7 +95,6 @@ export function useWorkspace() {
     staleTime: 15_000,
   });
 }
-
 
 export const canManage = (role: AppRole | undefined) =>
   role === "owner" || role === "admin" || role === "manager";

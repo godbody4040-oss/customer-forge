@@ -82,7 +82,11 @@ async function api<T>(
   const parsed = text ? JSON.parse(text) : {};
   if (!response.ok) {
     const detail = parsed as { message?: string; name?: string };
-    throw new PayPalError(detail?.message ?? `PayPal request failed (${path})`, response.status, parsed);
+    throw new PayPalError(
+      detail?.message ?? `PayPal request failed (${path})`,
+      response.status,
+      parsed,
+    );
   }
   return parsed as T;
 }
@@ -92,7 +96,11 @@ export type PayPalOrder = {
   status: string;
   purchase_units?: {
     payments?: {
-      captures?: { id: string; status: string; amount?: { value: string; currency_code: string } }[];
+      captures?: {
+        id: string;
+        status: string;
+        amount?: { value: string; currency_code: string };
+      }[];
     };
   }[];
   payer?: { email_address?: string };
@@ -141,7 +149,10 @@ export async function createPayPalOrder(
 }
 
 /** Captures an approved order. Safe to retry: same request id, no double charge. */
-export async function capturePayPalOrder(config: PayPalConfig, orderId: string): Promise<PayPalOrder> {
+export async function capturePayPalOrder(
+  config: PayPalConfig,
+  orderId: string,
+): Promise<PayPalOrder> {
   return api<PayPalOrder>(config, `/v2/checkout/orders/${orderId}/capture`, {
     method: "POST",
     requestId: `capture-${orderId}`,
@@ -191,18 +202,22 @@ export async function verifyPayPalWebhook(
   if (required.some((name) => !headers.get(name))) return "FAILURE";
 
   try {
-    const result = await api<{ verification_status: string }>(config, "/v1/notifications/verify-webhook-signature", {
-      method: "POST",
-      body: {
-        auth_algo: headers.get("paypal-auth-algo"),
-        cert_url: headers.get("paypal-cert-url"),
-        transmission_id: headers.get("paypal-transmission-id"),
-        transmission_sig: headers.get("paypal-transmission-sig"),
-        transmission_time: headers.get("paypal-transmission-time"),
-        webhook_id: config.webhookId,
-        webhook_event: JSON.parse(rawBody),
+    const result = await api<{ verification_status: string }>(
+      config,
+      "/v1/notifications/verify-webhook-signature",
+      {
+        method: "POST",
+        body: {
+          auth_algo: headers.get("paypal-auth-algo"),
+          cert_url: headers.get("paypal-cert-url"),
+          transmission_id: headers.get("paypal-transmission-id"),
+          transmission_sig: headers.get("paypal-transmission-sig"),
+          transmission_time: headers.get("paypal-transmission-time"),
+          webhook_id: config.webhookId,
+          webhook_event: JSON.parse(rawBody),
+        },
       },
-    });
+    );
     return result.verification_status === "SUCCESS" ? "SUCCESS" : "FAILURE";
   } catch {
     return "FAILURE";

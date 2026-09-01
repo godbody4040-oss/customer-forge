@@ -45,11 +45,13 @@ export function AssistantShowcase() {
           Your whole build team, in one box
         </h2>
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-          Type what you want in normal words and the assistant does the work — new pages and sections, sharper
-          selling copy, quote and booking forms, search settings, colours and fonts, photos and video, plus
-          premium visuals like <span className="text-gold">animated star backgrounds</span>,{" "}
-          <span className="text-gold">3D floating sections</span>, frosted glass and gold glow. It always shows
-          you the plan first, you approve it, and every change is saved as a version you can roll back.
+          Type what you want in normal words and the assistant does the work — new pages and
+          sections, sharper selling copy, quote and booking forms, search settings, colours and
+          fonts, photos and video, plus premium visuals like{" "}
+          <span className="text-gold">animated star backgrounds</span>,{" "}
+          <span className="text-gold">3D floating sections</span>, frosted glass and gold glow. It
+          always shows you the plan first, you approve it, and every change is saved as a version
+          you can roll back.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {EXAMPLES.map((example) => (
@@ -66,7 +68,8 @@ export function AssistantShowcase() {
           ))}
         </div>
         <p className="mt-3 text-[11.5px] text-muted-foreground">
-          Tap an example to load it into the assistant, or write your own — nothing is applied until you approve it.
+          Tap an example to load it into the assistant, or write your own — nothing is applied until
+          you approve it.
         </p>
       </div>
     </section>

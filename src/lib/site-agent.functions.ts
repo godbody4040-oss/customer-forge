@@ -29,7 +29,8 @@ const orgIdOf = (input: { organizationId?: unknown }) => {
   return organizationId;
 };
 
-const str = (value: unknown, max: number) => (typeof value === "string" ? value.trim().slice(0, max) : "");
+const str = (value: unknown, max: number) =>
+  typeof value === "string" ? value.trim().slice(0, max) : "";
 
 type LoadedSite = {
   pages: {
@@ -134,7 +135,9 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
       const instruction = str(input?.instruction, PLAN_INSTRUCTION_LIMIT);
       const attachments = readAttachments(input?.attachments);
       if (instruction.length < 3 && !attachments.length)
-        throw new Error("Tell Revora what you'd like changed — type it, say it, or attach a photo or clip.");
+        throw new Error(
+          "Tell Revora what you'd like changed — type it, say it, or attach a photo or clip.",
+        );
       const history: AgentTurn[] = Array.isArray(input?.history)
         ? input.history
             .slice(-8)
@@ -169,11 +172,16 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
         .select("id", { count: "exact", head: true })
         .eq("organization_id", orgId)
         .eq("is_published", true),
-      supabase.from("media").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+      supabase
+        .from("media")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId),
     ]);
     if (!org.data) throw new Error("Workspace not found.");
     if (!site.pages.length)
-      throw new Error("Build your website structure first — then the assistant can change anything on it.");
+      throw new Error(
+        "Build your website structure first — then the assistant can change anything on it.",
+      );
 
     const p = (profile.data ?? {}) as Record<string, unknown>;
     const componentsBySection = new Map<string, LoadedSite["components"]>();
@@ -184,63 +192,75 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
     }
 
     const agentContext = {
-        business: {
-          name: org.data.name ?? "",
-          industry: org.data.industry ?? null,
-          tagline: (p["tagline"] as string) ?? null,
-          description: (p["description"] as string) ?? null,
-          city: (p["city"] as string) ?? null,
-          state: (p["state"] as string) ?? null,
-          serviceArea: (p["service_area"] as string) ?? null,
-          phone: (p["phone"] as string) ?? null,
-          email: (p["email"] as string) ?? null,
-          yearsInBusiness: (p["years_in_business"] as number) ?? null,
-          primaryColor: (p["primary_color"] as string) ?? null,
-          secondaryColor: (p["secondary_color"] as string) ?? null,
-          accentColor: (p["accent_color"] as string) ?? null,
-          fontPreference: (p["font_preference"] as string) ?? null,
-          services: (services.data ?? []).map((s) => ({
-            name: s.name,
-            price: s.price ?? null,
-            startingPrice: s.starting_price ?? null,
-          })),
-          publishedReviewCount: reviews.count ?? 0,
-          photoCount: media.count ?? 0,
-        },
-        pages: site.pages.map((page) => ({
-          id: page.id,
-          slug: page.slug,
-          title: page.title,
-          kind: page.kind,
-          is_visible: page.is_visible,
-          noindex: page.noindex,
-          seo_title: page.seo_title,
-          seo_description: page.seo_description,
-          sections: site.sections
-            .filter((section) => section.page_id === page.id)
-            .map((section) => ({
-              id: section.id,
-              kind: section.kind,
-              variant: section.variant,
-              is_visible: section.is_visible,
-              heading: section.heading,
-              subheading: section.subheading,
-              body: section.body,
-              components: (componentsBySection.get(section.id) ?? []).map((component) => ({
-                id: component.id,
-                kind: component.kind,
-                label: component.label,
-                body: component.body,
-                link_label: component.link_label,
-                link_url: component.link_url,
-              })),
-            })),
+      business: {
+        name: org.data.name ?? "",
+        industry: org.data.industry ?? null,
+        tagline: (p["tagline"] as string) ?? null,
+        description: (p["description"] as string) ?? null,
+        city: (p["city"] as string) ?? null,
+        state: (p["state"] as string) ?? null,
+        serviceArea: (p["service_area"] as string) ?? null,
+        phone: (p["phone"] as string) ?? null,
+        email: (p["email"] as string) ?? null,
+        yearsInBusiness: (p["years_in_business"] as number) ?? null,
+        primaryColor: (p["primary_color"] as string) ?? null,
+        secondaryColor: (p["secondary_color"] as string) ?? null,
+        accentColor: (p["accent_color"] as string) ?? null,
+        fontPreference: (p["font_preference"] as string) ?? null,
+        services: (services.data ?? []).map((s) => ({
+          name: s.name,
+          price: s.price ?? null,
+          startingPrice: s.starting_price ?? null,
         })),
-        sectionKinds: SECTION_LIBRARY.map((s) => s.kind),
-        pageKinds: PAGE_LIBRARY.map((p2) => p2.kind),
-        componentKinds: ["feature", "faq", "step", "stat", "card", "link", "button", "quote", "list_item", "image"],
+        publishedReviewCount: reviews.count ?? 0,
+        photoCount: media.count ?? 0,
+      },
+      pages: site.pages.map((page) => ({
+        id: page.id,
+        slug: page.slug,
+        title: page.title,
+        kind: page.kind,
+        is_visible: page.is_visible,
+        noindex: page.noindex,
+        seo_title: page.seo_title,
+        seo_description: page.seo_description,
+        sections: site.sections
+          .filter((section) => section.page_id === page.id)
+          .map((section) => ({
+            id: section.id,
+            kind: section.kind,
+            variant: section.variant,
+            is_visible: section.is_visible,
+            heading: section.heading,
+            subheading: section.subheading,
+            body: section.body,
+            components: (componentsBySection.get(section.id) ?? []).map((component) => ({
+              id: component.id,
+              kind: component.kind,
+              label: component.label,
+              body: component.body,
+              link_label: component.link_label,
+              link_url: component.link_url,
+            })),
+          })),
+      })),
+      sectionKinds: SECTION_LIBRARY.map((s) => s.kind),
+      pageKinds: PAGE_LIBRARY.map((p2) => p2.kind),
+      componentKinds: [
+        "feature",
+        "faq",
+        "step",
+        "stat",
+        "card",
+        "link",
+        "button",
+        "quote",
+        "list_item",
+        "image",
+      ],
     };
-    const instruction = data.instruction || "(see the attached file(s) — follow what they show or say)";
+    const instruction =
+      data.instruction || "(see the attached file(s) — follow what they show or say)";
 
     // The builder is included in the subscription, so no request may dead-end on
     // an AI provider limit. One quiet retry for transient busy/rate-limit
@@ -251,13 +271,23 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
       return planWithoutAi(instruction, agentContext, reason) as unknown as Record<string, unknown>;
     };
     try {
-      raw = (await planChanges(agentContext, instruction, data.history, data.attachments)) as Record<string, unknown>;
+      raw = (await planChanges(
+        agentContext,
+        instruction,
+        data.history,
+        data.attachments,
+      )) as Record<string, unknown>;
     } catch (error) {
       const status = (error as { status?: number } | null)?.status;
       if (status === 429 || status === 503) {
         try {
           await new Promise((resolve) => setTimeout(resolve, 1200));
-          raw = (await planChanges(agentContext, instruction, data.history, data.attachments)) as Record<string, unknown>;
+          raw = (await planChanges(
+            agentContext,
+            instruction,
+            data.history,
+            data.attachments,
+          )) as Record<string, unknown>;
         } catch {
           raw = await planOffline("AI writer busy");
         }
@@ -268,7 +298,6 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
       }
     }
 
-
     const actions = readActions(raw["actions"], {
       pageIds: new Set(site.pages.map((page) => page.id)),
       sectionIds: new Set(site.sections.map((section) => section.id)),
@@ -278,7 +307,12 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
     const steps = describeActions(actions, index, currentText);
 
     const list = (value: unknown) =>
-      Array.isArray(value) ? value.map((item) => str(item, 300)).filter(Boolean).slice(0, 6) : [];
+      Array.isArray(value)
+        ? value
+            .map((item) => str(item, 300))
+            .filter(Boolean)
+            .slice(0, 6)
+        : [];
 
     const plan = {
       reply: str(raw["reply"], 1500) || "Here's what I'll change.",
@@ -425,7 +459,11 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
         }
         case "delete_section":
           await run(action.type, () =>
-            supabase.from("website_sections").delete().eq("id", action.sectionId).eq("organization_id", orgId),
+            supabase
+              .from("website_sections")
+              .delete()
+              .eq("id", action.sectionId)
+              .eq("organization_id", orgId),
           );
           break;
         case "reorder_sections":
@@ -443,7 +481,8 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
           // Re-sanitize on write: link hrefs are rendered on the public site, so
           // only http(s)/mailto/tel/sms/relative targets may ever be persisted.
           const patch = { ...(action.patch as Record<string, unknown>) };
-          if ("link_url" in patch) patch["link_url"] = safeLinkUrl(patch["link_url"] as string | null);
+          if ("link_url" in patch)
+            patch["link_url"] = safeLinkUrl(patch["link_url"] as string | null);
           await run(action.type, () =>
             supabase
               .from("website_components")
@@ -469,7 +508,11 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
           break;
         case "delete_component":
           await run(action.type, () =>
-            supabase.from("website_components").delete().eq("id", action.componentId).eq("organization_id", orgId),
+            supabase
+              .from("website_components")
+              .delete()
+              .eq("id", action.componentId)
+              .eq("organization_id", orgId),
           );
           break;
         case "add_page":
@@ -494,7 +537,11 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
           break;
         case "delete_page":
           await run(action.type, () =>
-            supabase.from("website_pages").delete().eq("id", action.pageId).eq("organization_id", orgId),
+            supabase
+              .from("website_pages")
+              .delete()
+              .eq("id", action.pageId)
+              .eq("organization_id", orgId),
           );
           break;
         case "set_theme":
@@ -515,7 +562,9 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
             const generation = writeBackdrop(current?.["generation"] ?? null, action.backdrop);
             return supabase
               .from("website_settings")
-              .upsert({ organization_id: orgId, generation } as never, { onConflict: "organization_id" });
+              .upsert({ organization_id: orgId, generation } as never, {
+                onConflict: "organization_id",
+              });
           });
           break;
         case "set_section_effect":

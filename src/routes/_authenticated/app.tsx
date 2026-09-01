@@ -18,8 +18,6 @@ import {
   Shield,
   Sparkles,
   Star,
-
-
   Users,
   Wrench,
   X,
@@ -50,45 +48,149 @@ const NAV_GROUPS = [
   {
     group: "Overview",
     items: [
-      { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true, key: false, hint: "Today's leads, bookings and revenue at a glance" },
-      { to: "/app/command", label: "AI Command Center", icon: Sparkles, exact: false, key: true, hint: "Revora finds what's costing you work and fixes it" },
+      {
+        to: "/app",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        exact: true,
+        key: false,
+        hint: "Today's leads, bookings and revenue at a glance",
+      },
+      {
+        to: "/app/command",
+        label: "AI Command Center",
+        icon: Sparkles,
+        exact: false,
+        key: true,
+        hint: "Revora finds what's costing you work and fixes it",
+      },
     ],
   },
   {
     group: "Win the work",
     items: [
-      { to: "/app/website", label: "Website builder", icon: Globe, exact: false, key: true, hint: "Build the pages that turn visitors into enquiries" },
-      { to: "/app/launch", label: "Launch checklist", icon: Rocket, exact: false, key: true, hint: "Everything that must be true before you go live" },
-      { to: "/app/domain", label: "Domain & SSL", icon: Globe2, exact: false, key: false, hint: "Point your own web address at your site" },
+      {
+        to: "/app/website",
+        label: "Website builder",
+        icon: Globe,
+        exact: false,
+        key: true,
+        hint: "Build the pages that turn visitors into enquiries",
+      },
+      {
+        to: "/app/launch",
+        label: "Launch checklist",
+        icon: Rocket,
+        exact: false,
+        key: true,
+        hint: "Everything that must be true before you go live",
+      },
+      {
+        to: "/app/domain",
+        label: "Domain & SSL",
+        icon: Globe2,
+        exact: false,
+        key: false,
+        hint: "Point your own web address at your site",
+      },
     ],
   },
   {
     group: "Handle enquiries",
     items: [
-      { to: "/app/leads", label: "Leads & CRM", icon: Users, exact: false, key: true, hint: "Every enquiry, its stage and what happens next" },
-      { to: "/app/quotes", label: "Quote calculator", icon: Calculator, exact: false, key: false, hint: "Instant prices so people don't wait to hear back" },
-      { to: "/app/calendar", label: "Calendar & bookings", icon: CalendarDays, exact: false, key: false, hint: "Jobs booked straight into your diary" },
-      { to: "/app/automations", label: "Automations", icon: Zap, exact: false, key: false, hint: "Automatic follow-up so no lead goes cold" },
+      {
+        to: "/app/leads",
+        label: "Leads & CRM",
+        icon: Users,
+        exact: false,
+        key: true,
+        hint: "Every enquiry, its stage and what happens next",
+      },
+      {
+        to: "/app/quotes",
+        label: "Quote calculator",
+        icon: Calculator,
+        exact: false,
+        key: false,
+        hint: "Instant prices so people don't wait to hear back",
+      },
+      {
+        to: "/app/calendar",
+        label: "Calendar & bookings",
+        icon: CalendarDays,
+        exact: false,
+        key: false,
+        hint: "Jobs booked straight into your diary",
+      },
+      {
+        to: "/app/automations",
+        label: "Automations",
+        icon: Zap,
+        exact: false,
+        key: false,
+        hint: "Automatic follow-up so no lead goes cold",
+      },
     ],
   },
   {
     group: "Grow",
     items: [
-      { to: "/app/services", label: "Services", icon: Wrench, exact: false, key: false, hint: "What you sell, prices and what's bookable" },
-      { to: "/app/reviews", label: "Reviews", icon: Star, exact: false, key: false, hint: "Ask happy customers and show the proof" },
-      { to: "/app/campaigns", label: "Campaigns & QR", icon: QrCode, exact: false, key: false, hint: "Track where your enquiries come from" },
-      { to: "/app/analytics", label: "Analytics", icon: BarChart3, exact: false, key: false, hint: "Visitors, calls, forms and conversion" },
+      {
+        to: "/app/services",
+        label: "Services",
+        icon: Wrench,
+        exact: false,
+        key: false,
+        hint: "What you sell, prices and what's bookable",
+      },
+      {
+        to: "/app/reviews",
+        label: "Reviews",
+        icon: Star,
+        exact: false,
+        key: false,
+        hint: "Ask happy customers and show the proof",
+      },
+      {
+        to: "/app/campaigns",
+        label: "Campaigns & QR",
+        icon: QrCode,
+        exact: false,
+        key: false,
+        hint: "Track where your enquiries come from",
+      },
+      {
+        to: "/app/analytics",
+        label: "Analytics",
+        icon: BarChart3,
+        exact: false,
+        key: false,
+        hint: "Visitors, calls, forms and conversion",
+      },
     ],
   },
   {
     group: "Account",
     items: [
-      { to: "/app/billing", label: "Billing", icon: CreditCard, exact: false, key: false, hint: "Your plan, setup fee and invoices" },
-      { to: "/app/settings", label: "Settings", icon: Settings, exact: false, key: false, hint: "Business details, team and preferences" },
+      {
+        to: "/app/billing",
+        label: "Billing",
+        icon: CreditCard,
+        exact: false,
+        key: false,
+        hint: "Your plan, setup fee and invoices",
+      },
+      {
+        to: "/app/settings",
+        label: "Settings",
+        icon: Settings,
+        exact: false,
+        key: false,
+        hint: "Business details, team and preferences",
+      },
     ],
   },
 ] as const;
-
 
 function AppShell() {
   const { data, isLoading } = useWorkspace();
@@ -111,16 +213,19 @@ function AppShell() {
   const trialStillActive = Boolean(countdown && !countdown.expired);
 
   const paidAccess = Boolean(
-    org && (org.setup_paid_at || org.subscription_status === "active" || org.subscription_status === "past_due"),
+    org &&
+    (org.setup_paid_at ||
+      org.subscription_status === "active" ||
+      org.subscription_status === "past_due"),
   );
   const paymentRequired = Boolean(
     org &&
-      !org.is_demo &&
-      !billing?.active &&
-      !paidAccess &&
-      !trialStillActive &&
-      !data?.isSuperAdmin &&
-      !supporting,
+    !org.is_demo &&
+    !billing?.active &&
+    !paidAccess &&
+    !trialStillActive &&
+    !data?.isSuperAdmin &&
+    !supporting,
   );
   const paymentLocked = paymentRequired && !pathname.startsWith("/app/billing");
 
@@ -137,7 +242,6 @@ function AppShell() {
     void queryClient.invalidateQueries({ queryKey: ["workspace"] });
     void queryClient.invalidateQueries({ queryKey: ["billing_state", org.id] });
   }, [trialExpired, org?.id, queryClient]);
-
 
   // Close the mobile drawer on route change, on Escape, and lock page scroll
   // while it is open so it behaves like a real app drawer.
@@ -226,8 +330,6 @@ function AppShell() {
           ))}
         </nav>
 
-
-
         {org ? (
           <div className="mx-2.5 mt-2 rounded-md border border-border p-3">
             <p className="eyebrow">Your site</p>
@@ -276,8 +378,9 @@ function AppShell() {
             <p className="flex items-center gap-2 text-[12px]">
               <LifeBuoy className="size-4 text-accent" aria-hidden="true" />
               <span>
-                <strong>Support mode</strong> — you are working inside {supportMode.organizationName}. This
-                session started {dateLong(supportMode.startedAt)} and is recorded in the audit log.
+                <strong>Support mode</strong> — you are working inside{" "}
+                {supportMode.organizationName}. This session started{" "}
+                {dateLong(supportMode.startedAt)} and is recorded in the audit log.
               </span>
             </p>
             <Button
@@ -286,7 +389,10 @@ function AppShell() {
               onClick={async () => {
                 await endSupport({ data: { sessionId: supportMode.sessionId } });
                 writeSupportMode(null);
-                navigate({ to: "/admin/clients/$orgId", params: { orgId: supportMode.organizationId } });
+                navigate({
+                  to: "/admin/clients/$orgId",
+                  params: { orgId: supportMode.organizationId },
+                });
               }}
             >
               End support session
@@ -318,7 +424,6 @@ function AppShell() {
                     : "Loading…"}
               </p>
             </div>
-
           </div>
 
           <div className="flex items-center gap-2">
@@ -382,15 +487,21 @@ function AppShell() {
 
         <main className="mx-auto max-w-6xl px-4 py-6">
           {billingLoading && org ? (
-            <div className="py-12 text-center text-[13px] text-muted-foreground">Checking workspace access…</div>
+            <div className="py-12 text-center text-[13px] text-muted-foreground">
+              Checking workspace access…
+            </div>
           ) : paymentLocked ? (
             <div className="panel mx-auto mt-10 max-w-lg p-8 text-center">
               <p className="eyebrow">Access paused</p>
-              <h1 className="mt-2 font-display text-2xl font-bold">Activate your Revora Growth System</h1>
+              <h1 className="mt-2 font-display text-2xl font-bold">
+                Activate your Revora Growth System
+              </h1>
               <p className="mt-3 text-[14px] text-muted-foreground">
-                Your {GROWTH_SYSTEM.fullAccessTrialDays}-day free full-access trial has ended. Your website, leads, bookings, and settings are saved —
-                nothing is lost. Pay the {usd(GROWTH_SYSTEM.setupPrice)} one-time setup to restore full access; your first month of
-                the {usd(GROWTH_SYSTEM.monthlyPrice)}/month platform fee is free, then it continues at {usd(GROWTH_SYSTEM.monthlyPrice)}/month from month two unless canceled.
+                Your {GROWTH_SYSTEM.fullAccessTrialDays}-day free full-access trial has ended. Your
+                website, leads, bookings, and settings are saved — nothing is lost. Pay the{" "}
+                {usd(GROWTH_SYSTEM.setupPrice)} one-time setup to restore full access; your first
+                month of the {usd(GROWTH_SYSTEM.monthlyPrice)}/month platform fee is free, then it
+                continues at {usd(GROWTH_SYSTEM.monthlyPrice)}/month from month two unless canceled.
               </p>
 
               <Button asChild variant="signal" className="mt-6">
@@ -400,8 +511,15 @@ function AppShell() {
               </Button>
 
               <p className="mt-4 text-[12px] text-muted-foreground">
-                Questions? <a href="mailto:Revorabusiness0@gmail.com" className="text-primary hover:underline">Email support</a> or{" "}
-                <a href="tel:+19196226620" className="text-primary hover:underline">call (919) 622-6620</a>.
+                Questions?{" "}
+                <a href="mailto:Revorabusiness0@gmail.com" className="text-primary hover:underline">
+                  Email support
+                </a>{" "}
+                or{" "}
+                <a href="tel:+19196226620" className="text-primary hover:underline">
+                  call (919) 622-6620
+                </a>
+                .
               </p>
             </div>
           ) : (

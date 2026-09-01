@@ -38,7 +38,8 @@ export function TrafficMonitor({
   });
 
   const toggle = useMutation({
-    mutationFn: (enabled: boolean) => saveAlerts({ data: { organizationId: organizationId!, enabled } }),
+    mutationFn: (enabled: boolean) =>
+      saveAlerts({ data: { organizationId: organizationId!, enabled } }),
     onSuccess: (result) => {
       setAlerts(result.enabled);
       toast.success(result.enabled ? "Traffic alerts on" : "Traffic alerts off");
@@ -64,7 +65,11 @@ export function TrafficMonitor({
                 disabled={query.isFetching}
                 aria-label="Refresh traffic"
               >
-                {query.isFetching ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                {query.isFetching ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
               </Button>
             </div>
           }
@@ -103,7 +108,9 @@ export function TrafficMonitor({
                     {Math.abs(summary.changePct)}% vs previous
                   </span>
                 ) : (
-                  <span className="text-[11px] text-muted-foreground">No earlier period to compare</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    No earlier period to compare
+                  </span>
                 )}
               </Stat>
               <Stat label="People" value={summary.visitors} />
@@ -112,14 +119,19 @@ export function TrafficMonitor({
             </dl>
 
             <div className="mt-6 grid gap-5 lg:grid-cols-3">
-              <List title="Where they came from" rows={summary.sources} empty="No sources recorded yet." />
+              <List
+                title="Where they came from"
+                rows={summary.sources}
+                empty="No sources recorded yet."
+              />
               <List title="Most visited pages" rows={summary.pages} empty="No page views yet." />
               <List title="Device" rows={summary.devices} empty="No device data yet." />
             </div>
 
             {!summary.hasEnoughData ? (
               <p className="mt-5 text-[12px] text-muted-foreground">
-                Fewer than 20 visits in this period — treat the percentages as early signals rather than trends.
+                Fewer than 20 visits in this period — treat the percentages as early signals rather
+                than trends.
               </p>
             ) : null}
           </>
@@ -129,12 +141,16 @@ export function TrafficMonitor({
       <Panel>
         <SectionHeading
           eyebrow="Problems and fixes"
-          title={issues.length ? `${issues.length} thing${issues.length === 1 ? "" : "s"} to look at` : "Nothing needs attention"}
+          title={
+            issues.length
+              ? `${issues.length} thing${issues.length === 1 ? "" : "s"} to look at`
+              : "Nothing needs attention"
+          }
         />
         {issues.length === 0 ? (
           <p className="mt-4 text-[13px] text-muted-foreground">
-            Your site is published, capturing enquiries and serving securely. Revora keeps watching and tells you
-            the moment that changes.
+            Your site is published, capturing enquiries and serving securely. Revora keeps watching
+            and tells you the moment that changes.
           </p>
         ) : (
           <ul className="mt-4 space-y-2.5">
@@ -142,7 +158,11 @@ export function TrafficMonitor({
               <li key={issue.key} className="rounded-md border border-border p-3.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <Pill tone={severityTone(issue.severity) as "danger" | "attention" | "info"}>
-                    {issue.severity === "critical" ? "Fix now" : issue.severity === "warning" ? "Worth fixing" : "Note"}
+                    {issue.severity === "critical"
+                      ? "Fix now"
+                      : issue.severity === "warning"
+                        ? "Worth fixing"
+                        : "Note"}
                   </Pill>
                   <p className="text-[14px] font-medium">{issue.title}</p>
                 </div>
@@ -172,12 +192,15 @@ export function TrafficMonitor({
             />
           </div>
           {query.data?.checkedAt ? (
-            <p className="text-[11px] text-muted-foreground">Last checked {dateLong(query.data.checkedAt)}</p>
+            <p className="text-[11px] text-muted-foreground">
+              Last checked {dateLong(query.data.checkedAt)}
+            </p>
           ) : null}
         </div>
         {query.data?.notified ? (
           <p className="mt-2 text-[12px] text-muted-foreground">
-            {query.data.notified} alert{query.data.notified === 1 ? "" : "s"} added to your notifications.
+            {query.data.notified} alert{query.data.notified === 1 ? "" : "s"} added to your
+            notifications.
           </p>
         ) : null}
       </Panel>
@@ -185,7 +208,15 @@ export function TrafficMonitor({
   );
 }
 
-function Stat({ label, value, children }: { label: string; value: string | number; children?: React.ReactNode }) {
+function Stat({
+  label,
+  value,
+  children,
+}: {
+  label: string;
+  value: string | number;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="rounded-md border border-border p-3.5">
       <dt className="eyebrow">{label}</dt>

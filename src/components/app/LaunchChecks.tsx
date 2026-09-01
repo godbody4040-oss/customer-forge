@@ -4,11 +4,18 @@ import { Button } from "@/components/ui/button";
 import type { QaCheck } from "@/lib/website-content";
 import { revoraSubdomain } from "@/lib/website-plan";
 
-const STATE_LABELS: Record<string, { label: string; help: string; tone: "signal" | "attention" | "neutral" | "info" }> = {
+const STATE_LABELS: Record<
+  string,
+  { label: string; help: string; tone: "signal" | "attention" | "neutral" | "info" }
+> = {
   draft: { label: "Draft", help: "Only you can see this website.", tone: "neutral" },
   preview: { label: "Preview", help: "Ready for you to review before it goes live.", tone: "info" },
   published: { label: "Live", help: "Your website is publicly available.", tone: "signal" },
-  unpublished: { label: "Taken offline", help: "The website is hidden from visitors.", tone: "attention" },
+  unpublished: {
+    label: "Taken offline",
+    help: "The website is hidden from visitors.",
+    tone: "attention",
+  },
 };
 
 /**
@@ -69,7 +76,11 @@ export function LaunchChecks({
                 </Button>
               ) : (
                 <Button variant="signal" onClick={onPublish} disabled={isPublishing || !passed}>
-                  {isPublishing ? <Loader2 className="size-4 animate-spin" /> : <Globe className="size-4" />}
+                  {isPublishing ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Globe className="size-4" />
+                  )}
                   Publish my website
                 </Button>
               )
@@ -84,8 +95,8 @@ export function LaunchChecks({
           >
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>
-              {blockers.length} item{blockers.length === 1 ? "" : "s"} must be finished before Revora can publish
-              this website. Nothing is live until they pass.
+              {blockers.length} item{blockers.length === 1 ? "" : "s"} must be finished before
+              Revora can publish this website. Nothing is live until they pass.
             </span>
           </div>
         ) : null}
@@ -100,7 +111,11 @@ export function LaunchChecks({
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
               ) : (
                 <Circle
-                  className={check.severity === "blocker" ? "mt-0.5 size-4 shrink-0 text-accent" : "mt-0.5 size-4 shrink-0 text-muted-foreground"}
+                  className={
+                    check.severity === "blocker"
+                      ? "mt-0.5 size-4 shrink-0 text-accent"
+                      : "mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  }
                   aria-hidden="true"
                 />
               )}

@@ -40,9 +40,13 @@ function publicClient() {
 /** Everything a public business website needs, in one SSR-friendly read. */
 export const getPublicSite = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string; pageSlug?: string }) => {
-    const slug = String(input?.slug ?? "").trim().slice(0, 80);
+    const slug = String(input?.slug ?? "")
+      .trim()
+      .slice(0, 80);
     if (!/^[a-z0-9-]+$/.test(slug)) throw new Error("Invalid business address");
-    const raw = String(input?.pageSlug ?? "").trim().slice(0, 80);
+    const raw = String(input?.pageSlug ?? "")
+      .trim()
+      .slice(0, 80);
     if (raw && !/^[a-z0-9-]+$/.test(raw)) throw new Error("Invalid page address");
     return raw ? { slug, pageSlug: raw } : { slug };
   })
@@ -50,7 +54,6 @@ export const getPublicSite = createServerFn({ method: "GET" })
     const { loadSite } = await import("@/lib/public-site.server");
     return loadSite(data.slug, data.pageSlug ? { pageSlug: data.pageSlug } : undefined);
   });
-
 
 export type PublicSite = Awaited<ReturnType<typeof loadSite>>;
 
@@ -60,7 +63,9 @@ export type PublicSite = Awaited<ReturnType<typeof loadSite>>;
  */
 export const getPreviewSite = createServerFn({ method: "GET" })
   .inputValidator((input: { token: string }) => {
-    const token = String(input?.token ?? "").trim().slice(0, 120);
+    const token = String(input?.token ?? "")
+      .trim()
+      .slice(0, 120);
     if (!/^[A-Za-z0-9_-]{16,}$/.test(token)) throw new Error("Invalid preview link");
     return { token };
   })
@@ -68,7 +73,13 @@ export const getPreviewSite = createServerFn({ method: "GET" })
     const { loadSite, resolvePreviewToken } = await import("@/lib/public-site.server");
     const link = await resolvePreviewToken(data.token);
     if (!link.ok)
-      return { ok: false as const, reason: link.reason, site: null, expiresAt: null as string | null, label: null as string | null };
+      return {
+        ok: false as const,
+        reason: link.reason,
+        site: null,
+        expiresAt: null as string | null,
+        label: null as string | null,
+      };
     const site = await loadSite(link.slug, { allowUnpublished: true });
     if (!site)
       return {
@@ -111,7 +122,10 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       } | null;
       booking?: { startsAt: string; durationMinutes: number } | null;
     }) => {
-      const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+      const clean = (v: unknown, max: number) =>
+        String(v ?? "")
+          .trim()
+          .slice(0, max);
       const name = clean(input.name, 120);
       if (name.length < 2) throw new Error("Please enter your name.");
       const email = clean(input.email, 160);
@@ -198,24 +212,25 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       const starts = new Date(data.booking.startsAt);
       if (Number.isNaN(starts.getTime())) throw new Error("Pick a valid appointment time.");
       const ends = new Date(starts.getTime() + data.booking.durationMinutes * 60_000);
-      const { data: appointment } = await supabase.from("appointments").insert({
-        organization_id: orgId,
-        lead_id: lead.id,
-        service_id: data.serviceId || null,
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        starts_at: starts.toISOString(),
-        ends_at: ends.toISOString(),
-        status: "pending",
-        notes: data.message || null,
-      })
+      const { data: appointment } = await supabase
+        .from("appointments")
+        .insert({
+          organization_id: orgId,
+          lead_id: lead.id,
+          service_id: data.serviceId || null,
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          starts_at: starts.toISOString(),
+          ends_at: ends.toISOString(),
+          status: "pending",
+          notes: data.message || null,
+        })
         .select("id")
         .single();
       appointmentId = appointment?.id ?? null;
       await recordMilestone("first_booking");
     }
-
 
     // Origin event for the CRM timeline: every public submission is visible as
     // the first activity on the lead, with the channel it came from.
@@ -231,7 +246,8 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       organization_id: orgId,
       lead_id: lead.id,
       appointment_id: appointmentId,
-      kind: data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "form_submission",
+      kind:
+        data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "form_submission",
       body: [originBody, data.message ? `"${data.message}"` : null].filter(Boolean).join(" "),
       metadata: {
         source: data.source || "website",
@@ -253,7 +269,11 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     await supabase.from("notifications").insert({
       organization_id: orgId,
       title: titles[data.kind] ?? `New lead: ${data.name}`,
-      body: [data.serviceInterest, data.city, data.estimatedValue ? `$${data.estimatedValue} estimated` : null]
+      body: [
+        data.serviceInterest,
+        data.city,
+        data.estimatedValue ? `$${data.estimatedValue} estimated` : null,
+      ]
         .filter(Boolean)
         .join(" · "),
       kind: data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "lead",

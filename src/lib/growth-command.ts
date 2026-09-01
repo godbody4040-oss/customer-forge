@@ -13,7 +13,8 @@
  *   app can safely apply, or the exact screen that owns the change.
  */
 
-export type GrowthCategoryKey = "foundation" | "conversion" | "seo" | "trust" | "systems" | "growth";
+export type GrowthCategoryKey =
+  "foundation" | "conversion" | "seo" | "trust" | "systems" | "growth";
 
 export const GROWTH_CATEGORIES: { key: GrowthCategoryKey; label: string; blurb: string }[] = [
   { key: "foundation", label: "Business foundation", blurb: "The facts every page reuses." },
@@ -85,7 +86,11 @@ export const AUDIT_MIN_VISITS = 30;
 
 const text = (value: unknown) => typeof value === "string" && value.trim().length > 0;
 
-function severityOf(points: number, max: number, weight: "critical" | "warning" | "opportunity"): Severity {
+function severityOf(
+  points: number,
+  max: number,
+  weight: "critical" | "warning" | "opportunity",
+): Severity {
   if (points >= max) return "healthy";
   return weight;
 }
@@ -120,7 +125,8 @@ export function growthAudit(input: GrowthAuditInput) {
     category: "foundation",
     title: "Contact paths",
     evidence: `${text(input.phone) ? "Phone saved" : "No phone number"} · ${text(input.email) ? "email saved" : "no email"} · ${input.hoursSet ? "hours set" : "hours missing"}.`,
-    action: "Add your phone, email and opening hours — these power the call bar, forms and lead alerts.",
+    action:
+      "Add your phone, email and opening hours — these power the call bar, forms and lead alerts.",
     points: (text(input.phone) ? 6 : 0) + (text(input.email) ? 3 : 0) + (input.hoursSet ? 2 : 0),
     max: 11,
     weight: "critical",
@@ -132,7 +138,8 @@ export function growthAudit(input: GrowthAuditInput) {
     category: "foundation",
     title: "Service catalogue",
     evidence: `${input.servicesCount} service${input.servicesCount === 1 ? "" : "s"} listed, ${input.pricedServicesCount} with a price.`,
-    action: "List at least four services and publish a starting price on each — priced services convert best.",
+    action:
+      "List at least four services and publish a starting price on each — priced services convert best.",
     points: Math.min(input.servicesCount, 4) * 2 + (input.pricedServicesCount > 0 ? 3 : 0),
     max: 11,
     weight: "warning",
@@ -146,8 +153,11 @@ export function growthAudit(input: GrowthAuditInput) {
     evidence: input.pagesCount
       ? `${input.pagesCount} page${input.pagesCount === 1 ? "" : "s"} with ${input.visibleSections} visible section${input.visibleSections === 1 ? "" : "s"}.`
       : "No pages have been generated yet.",
-    action: "Run the Revora build so pages, sections, CTAs and SEO content are generated from your information.",
-    points: (input.pagesCount >= 4 ? 5 : input.pagesCount > 0 ? 2 : 0) + (input.visibleSections >= 8 ? 4 : input.visibleSections > 0 ? 2 : 0),
+    action:
+      "Run the Revora build so pages, sections, CTAs and SEO content are generated from your information.",
+    points:
+      (input.pagesCount >= 4 ? 5 : input.pagesCount > 0 ? 2 : 0) +
+      (input.visibleSections >= 8 ? 4 : input.visibleSections > 0 ? 2 : 0),
     max: 9,
     weight: "critical",
     autoFix: "generate_site",
@@ -166,7 +176,8 @@ export function growthAudit(input: GrowthAuditInput) {
       : text(input.copyPrimaryCta)
         ? `Revora drafted “${input.copyPrimaryCta}” but no primary button is set.`
         : "No primary button is set, so visitors have to guess what to do next.",
-    action: "Set one primary action — call, text, book or request a quote — and repeat it down the page.",
+    action:
+      "Set one primary action — call, text, book or request a quote — and repeat it down the page.",
     points: ctaSet ? 9 : 0,
     max: 9,
     weight: "critical",
@@ -179,7 +190,8 @@ export function growthAudit(input: GrowthAuditInput) {
     category: "conversion",
     title: "Lead capture",
     evidence: `${input.quoteFormCount} quote form${input.quoteFormCount === 1 ? "" : "s"} live · ${input.bookableCount} bookable service${input.bookableCount === 1 ? "" : "s"}.`,
-    action: "Turn on the instant quote calculator and make at least one service bookable so leads land in your CRM automatically.",
+    action:
+      "Turn on the instant quote calculator and make at least one service bookable so leads land in your CRM automatically.",
     points: (input.quoteFormCount > 0 ? 6 : 0) + (input.bookableCount > 0 ? 5 : 0),
     max: 11,
     weight: "critical",
@@ -193,7 +205,8 @@ export function growthAudit(input: GrowthAuditInput) {
     evidence: input.copyFaqCount
       ? `${input.copyFaqCount} FAQ${input.copyFaqCount === 1 ? "" : "s"} answer common questions before the enquiry.`
       : "There are no FAQs answering price, timing or coverage questions.",
-    action: "Publish at least four FAQs covering price, timing, coverage area and what happens after enquiry.",
+    action:
+      "Publish at least four FAQs covering price, timing, coverage area and what happens after enquiry.",
     points: Math.min(input.copyFaqCount, 4) * 1.5,
     max: 6,
     weight: "opportunity",
@@ -234,7 +247,9 @@ export function growthAudit(input: GrowthAuditInput) {
     key: "content",
     category: "seo",
     title: "AI-written content",
-    evidence: input.hasCopy ? "Local SEO copy has been generated for this business." : "No generated copy yet.",
+    evidence: input.hasCopy
+      ? "Local SEO copy has been generated for this business."
+      : "No generated copy yet.",
     action: "Run the Revora build to generate hero, service, area and about copy from your facts.",
     points: input.hasCopy ? 6 : 0,
     max: 6,
@@ -262,7 +277,8 @@ export function growthAudit(input: GrowthAuditInput) {
     category: "trust",
     title: "Reviews & social proof",
     evidence: `${input.reviewCount} review${input.reviewCount === 1 ? "" : "s"} collected.`,
-    action: "Send review requests to recent customers — Revora can ask automatically after each job.",
+    action:
+      "Send review requests to recent customers — Revora can ask automatically after each job.",
     points: Math.min(input.reviewCount, 5) * 1.6,
     max: 8,
     weight: "warning",
@@ -288,7 +304,9 @@ export function growthAudit(input: GrowthAuditInput) {
     key: "published",
     category: "systems",
     title: "Live website",
-    evidence: published ? "Your website is published and reachable by customers." : `Publish state: ${input.publishState ?? "draft"}.`,
+    evidence: published
+      ? "Your website is published and reachable by customers."
+      : `Publish state: ${input.publishState ?? "draft"}.`,
     action: "Publish the site so customers — and search engines — can reach it.",
     points: published ? 9 : 0,
     max: 9,
@@ -302,7 +320,9 @@ export function growthAudit(input: GrowthAuditInput) {
     key: "domain",
     category: "systems",
     title: "Custom domain",
-    evidence: domainLive ? "Your own domain is connected." : `Domain status: ${input.domainStatus ?? "not connected"}.`,
+    evidence: domainLive
+      ? "Your own domain is connected."
+      : `Domain status: ${input.domainStatus ?? "not connected"}.`,
     action: "Connect your own domain for credibility, or stay on the free address for now.",
     points: domainLive ? 4 : 0,
     max: 4,
@@ -317,7 +337,8 @@ export function growthAudit(input: GrowthAuditInput) {
     evidence: input.visitors
       ? `${input.visitors} visit${input.visitors === 1 ? "" : "s"} tracked in the last 30 days.`
       : "No visits tracked yet — nothing to measure.",
-    action: "Share the live link and QR code so Revora can measure visits, calls, quotes and bookings.",
+    action:
+      "Share the live link and QR code so Revora can measure visits, calls, quotes and bookings.",
     points: input.visitors > 0 ? 4 : 0,
     max: 4,
     weight: "opportunity",
@@ -334,7 +355,8 @@ export function growthAudit(input: GrowthAuditInput) {
         category: "growth",
         title: "Traffic isn't converting",
         evidence: `${input.visitors} visits and no enquiries yet.`,
-        action: "Move the quote block onto the first screen and repeat the main button after every second section.",
+        action:
+          "Move the quote block onto the first screen and repeat the main button after every second section.",
         points: 0,
         max: 6,
         weight: "critical",
@@ -411,10 +433,19 @@ export function growthAudit(input: GrowthAuditInput) {
     };
   });
 
-  const severityRank: Record<Severity, number> = { critical: 0, warning: 1, opportunity: 2, healthy: 3 };
+  const severityRank: Record<Severity, number> = {
+    critical: 0,
+    warning: 1,
+    opportunity: 2,
+    healthy: 3,
+  };
   const issues = f
     .filter((x) => x.severity !== "healthy")
-    .sort((a, b) => severityRank[a.severity] - severityRank[b.severity] || b.max - b.points - (a.max - a.points));
+    .sort(
+      (a, b) =>
+        severityRank[a.severity] - severityRank[b.severity] ||
+        b.max - b.points - (a.max - a.points),
+    );
   const wins = f.filter((x) => x.severity === "healthy");
 
   return { score, grade: grade(score), categories, findings: f, issues, wins };

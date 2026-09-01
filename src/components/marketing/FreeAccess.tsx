@@ -7,7 +7,6 @@ import { useExperiment } from "@/lib/experiments.hooks";
 import { START_FREE_COPY } from "@/lib/experiments";
 import { trackConversion } from "@/lib/conversion";
 
-
 /** The single destination for "try it free": create an account, then continue to setup. */
 export const FREE_ACCESS_TO = "/auth" as const;
 export const FREE_ACCESS_SEARCH = { mode: "signup", redirect: "/get-started" } as const;
@@ -25,7 +24,8 @@ export function FreeAccessButton({
 }) {
   // A/B test the primary button copy. An explicit label always wins.
   const variant = useExperiment("start_free_copy");
-  const tested = variant === "trial_days" ? FREE_ACCESS_LABEL : (START_FREE_COPY[variant] ?? FREE_ACCESS_LABEL);
+  const tested =
+    variant === "trial_days" ? FREE_ACCESS_LABEL : (START_FREE_COPY[variant] ?? FREE_ACCESS_LABEL);
   const text = label ?? tested;
 
   return (
@@ -39,7 +39,9 @@ export function FreeAccessButton({
         to={FREE_ACCESS_TO}
         search={FREE_ACCESS_SEARCH}
         onClick={() =>
-          trackConversion("cta_click", { metadata: { location: "free_access_button", copy: variant } })
+          trackConversion("cta_click", {
+            metadata: { location: "free_access_button", copy: variant },
+          })
         }
       >
         <Sparkles className="size-4" aria-hidden="true" />
@@ -49,7 +51,6 @@ export function FreeAccessButton({
     </Button>
   );
 }
-
 
 /** Compact gold banner that tells visitors the free access exists and how to get it. */
 export function FreeAccessBanner({ className = "" }: { className?: string }) {
@@ -65,8 +66,9 @@ export function FreeAccessBanner({ className = "" }: { className?: string }) {
           If it doesn't pay for itself, walk away — no card, no charge, no hard feelings.
         </p>
         <p className="mt-1 text-[12px] text-muted-foreground">
-          After your free days: <span className="gold-hl">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span>,
-          then your <span className="gold-hl">first month is free</span> before{" "}
+          After your free days:{" "}
+          <span className="gold-hl">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span>, then your{" "}
+          <span className="gold-hl">first month is free</span> before{" "}
           {usd(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
         </p>
       </div>
@@ -119,8 +121,11 @@ export function FreeAccessSection() {
           </Button>
         </div>
         <p className="mt-3 text-[12px] text-muted-foreground">
-          Already started? <Link to="/auth" className="gold-hl hover:underline">Sign in</Link> and pick
-          up exactly where you left off — your answers are saved.
+          Already started?{" "}
+          <Link to="/auth" className="gold-hl hover:underline">
+            Sign in
+          </Link>{" "}
+          and pick up exactly where you left off — your answers are saved.
         </p>
       </div>
       <ol className="grid gap-0 sm:grid-cols-2 lg:grid-cols-4">

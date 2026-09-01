@@ -1,5 +1,19 @@
 import { useState, type DragEvent } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical, Layers, Loader2, Plus, RefreshCw, Search, Sparkle, Target, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Layers,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkle,
+  Target,
+  Trash2,
+} from "lucide-react";
 import { askAssistant } from "@/lib/assistant-bridge";
 import { sectionGuide } from "@/lib/section-guide";
 import { EmptyState, Panel, Pill, SectionHeading } from "@/components/app/Bits";
@@ -70,8 +84,8 @@ export function WebsiteStructure({
           }
         />
         <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
-          Revora turns the details you entered into real pages and sections. Rebuilding pulls in your latest
-          services, photos and written content — you never re-type anything.
+          Revora turns the details you entered into real pages and sections. Rebuilding pulls in
+          your latest services, photos and written content — you never re-type anything.
         </p>
 
         {list.length ? (
@@ -83,7 +97,9 @@ export function WebsiteStructure({
                 onClick={() => setActiveSlug(p.slug)}
                 className={cn(
                   "cursor-pointer rounded-md border px-3 py-1.5 text-[13px] transition-colors",
-                  page?.id === p.id ? "border-primary bg-primary/5" : "border-border hover:bg-elevated",
+                  page?.id === p.id
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-elevated",
                 )}
               >
                 {p.title}
@@ -184,13 +200,19 @@ function PageSections({
             <div className="flex items-center gap-2">
               {canManage ? (
                 <span title="Drag to reorder">
-                  <GripVertical className="size-4 cursor-grab text-muted-foreground" aria-hidden="true" />
+                  <GripVertical
+                    className="size-4 cursor-grab text-muted-foreground"
+                    aria-hidden="true"
+                  />
                 </span>
               ) : null}
-              <Pill tone={section.is_visible ? "signal" : "neutral"}>{sectionLabel(section.kind)}</Pill>
+              <Pill tone={section.is_visible ? "signal" : "neutral"}>
+                {sectionLabel(section.kind)}
+              </Pill>
               {section.components.length ? (
                 <span className="text-[11px] text-muted-foreground">
-                  {section.components.length} item{section.components.length === 1 ? "" : "s"} from your data
+                  {section.components.length} item{section.components.length === 1 ? "" : "s"} from
+                  your data
                 </span>
               ) : null}
             </div>
@@ -201,7 +223,10 @@ function PageSections({
                   size="icon"
                   aria-label={section.is_visible ? "Hide section" : "Show section"}
                   onClick={() =>
-                    saveSection.mutate({ id: section.id, patch: { is_visible: !section.is_visible } })
+                    saveSection.mutate({
+                      id: section.id,
+                      patch: { is_visible: !section.is_visible },
+                    })
                   }
                 >
                   {section.is_visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
@@ -277,7 +302,9 @@ function PageSections({
                   placeholder={sectionGuide(section.kind).headingHint}
                   disabled={!canManage}
                 />
-                <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).headingHint}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {sectionGuide(section.kind).headingHint}
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={`s-${section.id}`}>Supporting line</Label>
@@ -288,7 +315,9 @@ function PageSections({
                   placeholder={sectionGuide(section.kind).subHint}
                   disabled={!canManage}
                 />
-                <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).subHint}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {sectionGuide(section.kind).subHint}
+                </p>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -301,7 +330,9 @@ function PageSections({
                 placeholder={sectionGuide(section.kind).bodyHint}
                 disabled={!canManage}
               />
-              <p className="text-[11px] text-muted-foreground">{sectionGuide(section.kind).bodyHint}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {sectionGuide(section.kind).bodyHint}
+              </p>
             </div>
             {canManage ? (
               <div className="flex flex-wrap gap-2">
@@ -323,8 +354,16 @@ function PageSections({
             ) : null}
           </form>
 
-          <SectionComponents section={section} organizationId={organizationId} canManage={canManage} />
-          <SectionSeoFields section={section} organizationId={organizationId} canManage={canManage} />
+          <SectionComponents
+            section={section}
+            organizationId={organizationId}
+            canManage={canManage}
+          />
+          <SectionSeoFields
+            section={section}
+            organizationId={organizationId}
+            canManage={canManage}
+          />
         </Panel>
       ))}
 
@@ -421,20 +460,23 @@ function SectionComponents({
             )}
           >
             {canManage ? (
-              <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground" aria-hidden="true" />
+              <GripVertical
+                className="size-4 shrink-0 cursor-grab text-muted-foreground"
+                aria-hidden="true"
+              />
             ) : null}
             <div className="min-w-0 flex-1">
               <p className="text-[13px]">{item.label ?? item.kind}</p>
-              {item.body ? (
-                <p className="text-[12px] text-muted-foreground">{item.body}</p>
-              ) : null}
+              {item.body ? <p className="text-[12px] text-muted-foreground">{item.body}</p> : null}
             </div>
             {canManage ? (
               <Button
                 variant="ghost"
                 size="icon"
                 aria-label={item.is_visible ? "Hide item" : "Show item"}
-                onClick={() => saveComponent.mutate({ id: item.id, patch: { is_visible: !item.is_visible } })}
+                onClick={() =>
+                  saveComponent.mutate({ id: item.id, patch: { is_visible: !item.is_visible } })
+                }
               >
                 {item.is_visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
               </Button>
@@ -478,7 +520,8 @@ function SectionSeoFields({
               patch: {
                 settings: writeSectionSeo(section.settings, {
                   anchor: String(form.get("anchor") ?? "").trim() || undefined,
-                  seo_heading_level: (String(form.get("level") ?? "h2") === "h3" ? "h3" : "h2") as "h2" | "h3",
+                  seo_heading_level: (String(form.get("level") ?? "h2") === "h3" ? "h3" : "h2") as
+                    "h2" | "h3",
                   include_in_schema: form.get("schema") === "on",
                   image_alt: String(form.get("alt") ?? "").trim() || undefined,
                 }),
@@ -488,7 +531,12 @@ function SectionSeoFields({
         >
           <div className="space-y-1.5">
             <Label htmlFor={`anchor-${section.id}`}>Link anchor</Label>
-            <Input id={`anchor-${section.id}`} name="anchor" defaultValue={seo.anchor ?? ""} placeholder="services" />
+            <Input
+              id={`anchor-${section.id}`}
+              name="anchor"
+              defaultValue={seo.anchor ?? ""}
+              placeholder="services"
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={`level-${section.id}`}>Heading level</Label>
@@ -589,7 +637,12 @@ function PageSeoPanel({
             ))}
           </div>
           <label className="flex items-center gap-2 text-[13px]">
-            <input type="checkbox" name="noindex" defaultChecked={page.noindex} disabled={!canManage} />
+            <input
+              type="checkbox"
+              name="noindex"
+              defaultChecked={page.noindex}
+              disabled={!canManage}
+            />
             Hide this page from search engines
           </label>
           {canManage ? (

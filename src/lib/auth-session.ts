@@ -97,7 +97,6 @@ export function clearSessionPolicy(): void {
   }
 }
 
-
 export function displayName(user: User | null): string {
   if (!user) return "";
   const meta = user.user_metadata as { full_name?: string; name?: string } | null;
@@ -111,9 +110,12 @@ export function displayName(user: User | null): string {
 export async function ensureProfile(user?: User | null): Promise<void> {
   const current = user ?? (await supabase.auth.getUser()).data.user;
   if (!current) return;
-  const meta = current.user_metadata as
-    | { full_name?: string; name?: string; avatar_url?: string; picture?: string }
-    | null;
+  const meta = current.user_metadata as {
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+    picture?: string;
+  } | null;
   await supabase.from("profiles").upsert(
     {
       id: current.id,

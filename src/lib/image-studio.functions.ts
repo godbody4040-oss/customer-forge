@@ -27,12 +27,16 @@ export const generateStudioImage = createServerFn({ method: "POST" })
     const input = (data ?? {}) as Record<string, unknown>;
     const organizationId = String(input["organizationId"] ?? "");
     if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
-    const prompt = String(input["prompt"] ?? "").trim().slice(0, 4000);
+    const prompt = String(input["prompt"] ?? "")
+      .trim()
+      .slice(0, 4000);
     if (prompt.length < 20) throw new Error("Image brief is too short");
     return {
       organizationId,
       prompt,
-      altText: String(input["altText"] ?? "").trim().slice(0, 200),
+      altText: String(input["altText"] ?? "")
+        .trim()
+        .slice(0, 200),
       category: String(input["category"] ?? "other").slice(0, 40),
       label: String(input["label"] ?? "revora-image").slice(0, 60),
     };
@@ -79,7 +83,9 @@ export const generateStudioImage = createServerFn({ method: "POST" })
       return { ok: false, message: rowError.message };
     }
 
-    const { data: signed } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 60 * 60);
+    const { data: signed } = await supabase.storage
+      .from(MEDIA_BUCKET)
+      .createSignedUrl(path, 60 * 60);
 
     return {
       ok: true,

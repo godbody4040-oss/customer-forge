@@ -35,7 +35,6 @@ export function trialEndsAtMs(org: TrialOrgFields | null | undefined): number | 
   return candidates.length ? Math.max(...candidates) : null;
 }
 
-
 export function isTrialActive(org: TrialOrgFields | null | undefined): boolean {
   if (!org) return false;
   // Any workspace inside its free-access window gets access, whatever the

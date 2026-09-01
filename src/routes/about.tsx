@@ -17,7 +17,7 @@ export const Route = createFileRoute("/about")({
       { property: "og:title", content: "About Revora" },
       {
         property: "og:description",
-content: `Revora is a business growth platform founded by ${REVORA.founder.name}.`,
+        content: `Revora is a business growth platform founded by ${REVORA.founder.name}.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -108,7 +108,8 @@ function About() {
               <p className="mt-1 text-[12px] text-muted-foreground">{REVORA.founder.role}</p>
               <p className="mt-4 text-[14px] leading-relaxed text-muted-foreground">
                 Revora was created with a simple goal: give businesses a better system for turning
-                online attention into real customers — without stitching five subscriptions together.
+                online attention into real customers — without stitching five subscriptions
+                together.
               </p>
             </Panel>
           </div>
@@ -124,4 +125,3 @@ function About() {
     </div>
   );
 }
-

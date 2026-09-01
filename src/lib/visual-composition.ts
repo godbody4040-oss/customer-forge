@@ -86,17 +86,52 @@ export type VisualComposition = {
 
 export const LAYER_LIBRARY: { kind: LayerKind; label: string; help: string; cost: number }[] = [
   { kind: "stars", label: "Starfield", help: "Drifting stars with depth.", cost: 1 },
-  { kind: "constellation", label: "Constellations", help: "Linked star points, quiet and technical.", cost: 1 },
-  { kind: "meteors", label: "Meteor trails", help: "Occasional light streaks falling across the page.", cost: 2 },
-  { kind: "particles", label: "Floating particles", help: "Fine motes suspended in the air.", cost: 2 },
-  { kind: "orbs", label: "Glowing orbs", help: "Soft spheres of light behind the content.", cost: 2 },
+  {
+    kind: "constellation",
+    label: "Constellations",
+    help: "Linked star points, quiet and technical.",
+    cost: 1,
+  },
+  {
+    kind: "meteors",
+    label: "Meteor trails",
+    help: "Occasional light streaks falling across the page.",
+    cost: 2,
+  },
+  {
+    kind: "particles",
+    label: "Floating particles",
+    help: "Fine motes suspended in the air.",
+    cost: 2,
+  },
+  {
+    kind: "orbs",
+    label: "Glowing orbs",
+    help: "Soft spheres of light behind the content.",
+    cost: 2,
+  },
   { kind: "rays", label: "Light rays", help: "Directional beams, cinematic and premium.", cost: 1 },
-  { kind: "spotlight", label: "Spotlight", help: "One wide beam that lifts the top of the page.", cost: 1 },
+  {
+    kind: "spotlight",
+    label: "Spotlight",
+    help: "One wide beam that lifts the top of the page.",
+    cost: 1,
+  },
   { kind: "aurora", label: "Aurora", help: "Slow bands of coloured light.", cost: 2 },
   { kind: "nebula", label: "Nebula", help: "Deep drifting colour clouds.", cost: 2 },
-  { kind: "mesh", label: "Mesh gradient", help: "Blended colour wash that shifts very slowly.", cost: 1 },
+  {
+    kind: "mesh",
+    label: "Mesh gradient",
+    help: "Blended colour wash that shifts very slowly.",
+    cost: 1,
+  },
   { kind: "grid", label: "Tech grid", help: "Faint engineered grid lines.", cost: 1 },
-  { kind: "blueprint", label: "Blueprint", help: "Technical drawing lines — trades and engineering.", cost: 1 },
+  {
+    kind: "blueprint",
+    label: "Blueprint",
+    help: "Technical drawing lines — trades and engineering.",
+    cost: 1,
+  },
   { kind: "streaks", label: "Light streaks", help: "Fast horizontal light trails.", cost: 2 },
   { kind: "waves", label: "Energy waves", help: "Rolling wave bands, calm and organic.", cost: 2 },
   { kind: "liquid", label: "Liquid motion", help: "Slow water-like movement.", cost: 2 },
@@ -106,7 +141,12 @@ export const LAYER_LIBRARY: { kind: LayerKind; label: string; help: string; cost
   { kind: "holo", label: "Holographic sheen", help: "Iridescent shift across the page.", cost: 2 },
   { kind: "metal", label: "Metallic / chrome", help: "Brushed metal light sweep.", cost: 1 },
   { kind: "texture", label: "Texture", help: "Paper, concrete, marble or fabric grain.", cost: 1 },
-  { kind: "pattern", label: "Editorial pattern", help: "Repeating geometry for magazine energy.", cost: 1 },
+  {
+    kind: "pattern",
+    label: "Editorial pattern",
+    help: "Repeating geometry for magazine energy.",
+    cost: 1,
+  },
   { kind: "vignette", label: "Vignette", help: "Darkened edges that focus the centre.", cost: 1 },
 ];
 
@@ -155,13 +195,19 @@ export function safeLayers(value: unknown): VisualLayer[] {
       speed: clamp(entry["speed"], 0, 100, 40),
       scale: clamp(entry["scale"], 0, 100, 50),
       opacity: clamp(entry["opacity"], 0, 100, 55),
-      palette: PALETTES.includes(entry["palette"] as LayerPalette) ? (entry["palette"] as LayerPalette) : "brand",
-      motion: MOTIONS.includes(entry["motion"] as LayerMotion) ? (entry["motion"] as LayerMotion) : "drift",
+      palette: PALETTES.includes(entry["palette"] as LayerPalette)
+        ? (entry["palette"] as LayerPalette)
+        : "brand",
+      motion: MOTIONS.includes(entry["motion"] as LayerMotion)
+        ? (entry["motion"] as LayerMotion)
+        : "drift",
       parallax: clamp(entry["parallax"], 0, 100, 30),
       interaction: INTERACTIONS.includes(entry["interaction"] as LayerInteraction)
         ? (entry["interaction"] as LayerInteraction)
         : "none",
-      mobile: MOBILES.includes(entry["mobile"] as LayerMobile) ? (entry["mobile"] as LayerMobile) : "simplify",
+      mobile: MOBILES.includes(entry["mobile"] as LayerMobile)
+        ? (entry["mobile"] as LayerMobile)
+        : "simplify",
     });
   }
 
@@ -185,11 +231,16 @@ export function safeComposition(value: unknown): VisualComposition | null {
   return {
     id: typeof entry["id"] === "string" ? entry["id"].slice(0, 60) : `comp-${signature(layers)}`,
     name: typeof entry["name"] === "string" ? entry["name"].slice(0, 60) : "Custom visual",
-    summary: typeof entry["summary"] === "string" ? entry["summary"].slice(0, 240) : describeComposition(layers),
+    summary:
+      typeof entry["summary"] === "string"
+        ? entry["summary"].slice(0, 240)
+        : describeComposition(layers),
     layers,
     intensity: clamp(entry["intensity"], 10, 100, 65),
     origin:
-      origin === "prompt" || origin === "command" || origin === "auto" || origin === "manual" ? origin : "manual",
+      origin === "prompt" || origin === "command" || origin === "auto" || origin === "manual"
+        ? origin
+        : "manual",
   };
 }
 
@@ -201,10 +252,13 @@ export function readComposition(generation: unknown): VisualComposition | null {
 
 /** Merges a composition (or `null` to clear it) into a `generation` blob. */
 export function writeComposition(generation: unknown, composition: VisualComposition | null) {
-  const base = (generation && typeof generation === "object" ? generation : {}) as Record<string, unknown>;
-  const effects = (base["effects"] && typeof base["effects"] === "object"
-    ? base["effects"]
-    : {}) as Record<string, unknown>;
+  const base = (generation && typeof generation === "object" ? generation : {}) as Record<
+    string,
+    unknown
+  >;
+  const effects = (
+    base["effects"] && typeof base["effects"] === "object" ? base["effects"] : {}
+  ) as Record<string, unknown>;
   const next = { ...effects };
   if (composition) next["composition"] = composition;
   else delete next["composition"];
@@ -363,7 +417,10 @@ const RECIPES: Recipe[] = [
     match: /marble|stone|concrete|wood|fabric|paper|texture|grain/,
     name: "Material",
     summary: "A real material surface behind the page instead of flat colour.",
-    layers: [layer("texture", { opacity: 40, motion: "still" }), layer("vignette", { opacity: 35, motion: "still" })],
+    layers: [
+      layer("texture", { opacity: 40, motion: "still" }),
+      layer("vignette", { opacity: 35, motion: "still" }),
+    ],
   },
   {
     match: /aurora|northern light/,
@@ -438,7 +495,12 @@ const MODIFIERS: Modifier[] = [
   {
     match: /slow|calm|gentle|subtle|soft|quiet/,
     note: "slower and softer",
-    apply: (l) => map(l, (x) => ({ ...x, speed: Math.round(x.speed * 0.5), opacity: Math.round(x.opacity * 0.8) })),
+    apply: (l) =>
+      map(l, (x) => ({
+        ...x,
+        speed: Math.round(x.speed * 0.5),
+        opacity: Math.round(x.opacity * 0.8),
+      })),
   },
   {
     match: /fast|quick|energetic|lively|dynamic/,
@@ -453,7 +515,8 @@ const MODIFIERS: Modifier[] = [
   {
     match: /brighter|lighter|airy/,
     note: "brighter",
-    apply: (l) => map(l, (x) => ({ ...x, opacity: Math.min(100, x.opacity + 12), palette: "accent" })),
+    apply: (l) =>
+      map(l, (x) => ({ ...x, opacity: Math.min(100, x.opacity + 12), palette: "accent" })),
   },
   {
     match: /dark|deep|moody|black/,
@@ -471,7 +534,10 @@ const MODIFIERS: Modifier[] = [
     apply: (l) =>
       l.map((x, i) =>
         i === 0
-          ? { ...x, interaction: (x.interaction === "scroll" ? "both" : "cursor") as LayerInteraction }
+          ? {
+              ...x,
+              interaction: (x.interaction === "scroll" ? "both" : "cursor") as LayerInteraction,
+            }
           : x,
       ),
   },
@@ -503,12 +569,19 @@ const MODIFIERS: Modifier[] = [
 ];
 
 const slug = (value: string) =>
-  value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "visual";
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "visual";
 
 /** Short stable fingerprint of a layer stack — used for ids and originality. */
 export function signature(layers: VisualLayer[]): string {
   const text = layers
-    .map((l) => `${l.kind}:${Math.round(l.density / 10)}${Math.round(l.speed / 10)}${l.palette}${l.motion}`)
+    .map(
+      (l) =>
+        `${l.kind}:${Math.round(l.density / 10)}${Math.round(l.speed / 10)}${l.palette}${l.motion}`,
+    )
     .sort()
     .join("|");
   let out = 2166136261;
@@ -535,7 +608,9 @@ export function compositionPreview(composition: VisualComposition): string[] {
     ...composition.layers.map(
       (l) =>
         `${layerLabel(l.kind)} — ${l.density}% density, ${l.speed}% speed, ${l.opacity}% strength${
-          l.interaction === "none" ? "" : `, follows ${l.interaction === "both" ? "cursor and scroll" : l.interaction}`
+          l.interaction === "none"
+            ? ""
+            : `, follows ${l.interaction === "both" ? "cursor and scroll" : l.interaction}`
         }${l.mobile === "off" ? ", desktop only" : l.mobile === "simplify" ? ", simplified on phones" : ""}`,
     ),
     `Overall strength ${composition.intensity}% · ${composition.layers.length} layer${
@@ -548,7 +623,10 @@ export function compositionPreview(composition: VisualComposition): string[] {
 
 const INDUSTRY_SEED: { match: RegExp; recipe: string }[] = [
   { match: /auto|detail|car|vehicle|mechanic|tint|wrap/, recipe: "cinematic" },
-  { match: /solar|smart|security|ev|energy|automation|it|tech|network|camera/, recipe: "futuristic" },
+  {
+    match: /solar|smart|security|ev|energy|automation|it|tech|network|camera/,
+    recipe: "futuristic",
+  },
   { match: /roof|remodel|construct|concrete|weld|contract|build/, recipe: "blueprint" },
   { match: /clean|wash|maid|janitor|pressure/, recipe: "underwater" },
   { match: /law|account|financ|consult|advis|insur/, recipe: "editorial" },
@@ -560,7 +638,10 @@ const INDUSTRY_SEED: { match: RegExp; recipe: string }[] = [
 ];
 
 /** What this business should start from before anyone types a word. */
-export function seedPromptFor(industry: string | null | undefined, services: { name: string }[]): string {
+export function seedPromptFor(
+  industry: string | null | undefined,
+  services: { name: string }[],
+): string {
   const text = `${industry ?? ""} ${services.map((s) => s.name).join(" ")}`.toLowerCase();
   return INDUSTRY_SEED.find((entry) => entry.match.test(text))?.recipe ?? "luxury";
 }
@@ -593,8 +674,9 @@ export function interpretVisualPrompt(input: {
   const base = matched.length
     ? matched
     : [
-        RECIPES.find((recipe) => recipe.match.test(seedPromptFor(input.industry, input.services ?? []))) ??
-          RECIPES[0]!,
+        RECIPES.find((recipe) =>
+          recipe.match.test(seedPromptFor(input.industry, input.services ?? [])),
+        ) ?? RECIPES[0]!,
       ];
 
   // Combining recipes is what makes the engine open-ended: "cinematic space
@@ -615,7 +697,10 @@ export function interpretVisualPrompt(input: {
   }
 
   const safe = safeLayers(layers);
-  const name = base.map((recipe) => recipe.name).slice(0, 2).join(" + ");
+  const name = base
+    .map((recipe) => recipe.name)
+    .slice(0, 2)
+    .join(" + ");
   const summary = invented
     ? `An original concept built for this business: ${describeComposition(safe)}`
     : base[0]!.summary;
@@ -630,7 +715,11 @@ export function interpretVisualPrompt(input: {
       name,
       summary,
       layers: safe,
-      intensity: /subtle|slow|minimal|quiet/.test(prompt) ? 45 : /strong|intense|bold|dramatic/.test(prompt) ? 85 : 65,
+      intensity: /subtle|slow|minimal|quiet/.test(prompt)
+        ? 45
+        : /strong|intense|bold|dramatic/.test(prompt)
+          ? 85
+          : 65,
       origin: input.origin ?? "prompt",
     },
   };
@@ -647,15 +736,60 @@ export const CREATIVE_COMMANDS: CreativeCommand[] = [
     prompt: "",
     help: "Revora reads this business and invents a concept it hasn't used before.",
   },
-  { id: "surprise", label: "Surprise me", prompt: "", help: "A random original direction that still fits the brand." },
-  { id: "magical", label: "Make it magical", prompt: "magical sparkling floating light", help: "Light motes and glow." },
-  { id: "cinematic", label: "Make it cinematic", prompt: "cinematic dramatic light and fog", help: "Film-set lighting." },
-  { id: "futuristic", label: "Make it futuristic", prompt: "futuristic control centre data grid", help: "Tech energy." },
-  { id: "luxury", label: "Make it luxury", prompt: "quiet luxury gold light premium", help: "Expensive restraint." },
-  { id: "bold", label: "Make it bold", prompt: "bold high contrast fast streaks", help: "Loud and confident." },
-  { id: "minimal", label: "Make it minimal", prompt: "minimal clean quiet", help: "Almost no decoration." },
-  { id: "human", label: "Make it more human", prompt: "warm friendly human soft", help: "Family-business warmth." },
-  { id: "premium", label: "Make it more premium", prompt: "premium luxury slow subtle depth", help: "Perceived value." },
+  {
+    id: "surprise",
+    label: "Surprise me",
+    prompt: "",
+    help: "A random original direction that still fits the brand.",
+  },
+  {
+    id: "magical",
+    label: "Make it magical",
+    prompt: "magical sparkling floating light",
+    help: "Light motes and glow.",
+  },
+  {
+    id: "cinematic",
+    label: "Make it cinematic",
+    prompt: "cinematic dramatic light and fog",
+    help: "Film-set lighting.",
+  },
+  {
+    id: "futuristic",
+    label: "Make it futuristic",
+    prompt: "futuristic control centre data grid",
+    help: "Tech energy.",
+  },
+  {
+    id: "luxury",
+    label: "Make it luxury",
+    prompt: "quiet luxury gold light premium",
+    help: "Expensive restraint.",
+  },
+  {
+    id: "bold",
+    label: "Make it bold",
+    prompt: "bold high contrast fast streaks",
+    help: "Loud and confident.",
+  },
+  {
+    id: "minimal",
+    label: "Make it minimal",
+    prompt: "minimal clean quiet",
+    help: "Almost no decoration.",
+  },
+  {
+    id: "human",
+    label: "Make it more human",
+    prompt: "warm friendly human soft",
+    help: "Family-business warmth.",
+  },
+  {
+    id: "premium",
+    label: "Make it more premium",
+    prompt: "premium luxury slow subtle depth",
+    help: "Perceived value.",
+  },
   {
     id: "interactive",
     label: "Make it more interactive",
@@ -766,7 +900,11 @@ export function originalityScore(
   score = Math.max(5, Math.min(100, score));
 
   if (score >= 80) {
-    return { score, verdict: "Distinctive", advice: "This look is this business's own. Keep it and build on it." };
+    return {
+      score,
+      verdict: "Distinctive",
+      advice: "This look is this business's own. Keep it and build on it.",
+    };
   }
   if (score >= 55) {
     return {
@@ -797,10 +935,16 @@ export function reviewComposition(composition: VisualComposition): DirectorNote[
   const cost = composition.layers.reduce((sum, l) => sum + layerCost(l), 0);
 
   if (composition.layers.length >= 3 && composition.intensity > 80) {
-    notes.push({ tone: "warn", message: "Strong and layered — check your headline still reads instantly." });
+    notes.push({
+      tone: "warn",
+      message: "Strong and layered — check your headline still reads instantly.",
+    });
   }
   if (strong >= 2) {
-    notes.push({ tone: "warn", message: "Two heavy layers compete with your text. Lowering one usually looks better." });
+    notes.push({
+      tone: "warn",
+      message: "Two heavy layers compete with your text. Lowering one usually looks better.",
+    });
   }
   if (fast) {
     notes.push({ tone: "warn", message: "Fast motion can pull attention off your main button." });
@@ -809,7 +953,10 @@ export function reviewComposition(composition: VisualComposition): DirectorNote[
     notes.push({ tone: "ok", message: "Light on performance — this will stay fast on phones." });
   }
   if (!notes.length) {
-    notes.push({ tone: "ok", message: "Balanced: enough character to be memorable, quiet enough to convert." });
+    notes.push({
+      tone: "ok",
+      message: "Balanced: enough character to be memorable, quiet enough to convert.",
+    });
   }
   return notes;
 }

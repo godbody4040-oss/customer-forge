@@ -72,7 +72,13 @@ export function pageInsights(events: OptimizerEvent[]): PageInsight[] {
     .map(([path, row]) => {
       const rate = row.views ? row.actions / row.views : 0;
       const verdict: PageInsight["verdict"] =
-        row.views < MIN_VIEWS ? "insufficient" : rate >= 0.06 ? "strong" : rate >= 0.02 ? "average" : "weak";
+        row.views < MIN_VIEWS
+          ? "insufficient"
+          : rate >= 0.06
+            ? "strong"
+            : rate >= 0.02
+              ? "average"
+              : "weak";
       return { path, views: row.views, actions: row.actions, rate, verdict };
     })
     .sort((a, b) => b.views - a.views);
@@ -84,7 +90,10 @@ const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
  * Turns real performance into specific changes to the CTA, the form fields and
  * where the quote/booking block sits.
  */
-export function optimizerActions(input: OptimizerInput): { pages: PageInsight[]; actions: OptimizerAction[] } {
+export function optimizerActions(input: OptimizerInput): {
+  pages: PageInsight[];
+  actions: OptimizerAction[];
+} {
   const pages = pageInsights(input.events);
   const actions: OptimizerAction[] = [];
   const count = (type: string) => input.events.filter((e) => e.event_type === type).length;
@@ -95,7 +104,9 @@ export function optimizerActions(input: OptimizerInput): { pages: PageInsight[];
   const bookingStarts = count("booking_start");
   const submits = count("form_submit");
   const calls = count("call_click");
-  const mobileViews = input.events.filter((e) => e.event_type === "page_view" && e.device === "mobile").length;
+  const mobileViews = input.events.filter(
+    (e) => e.event_type === "page_view" && e.device === "mobile",
+  ).length;
 
   if (views < MIN_VIEWS) {
     return {
@@ -105,7 +116,8 @@ export function optimizerActions(input: OptimizerInput): { pages: PageInsight[];
           key: "need-data",
           title: "Not enough visits to optimise yet",
           evidence: `${views} page view${views === 1 ? "" : "s"} recorded — Revora waits for ${MIN_VIEWS} before changing anything.`,
-          action: "Share your website link, QR code and Google Business Profile to bring in visits.",
+          action:
+            "Share your website link, QR code and Google Business Profile to bring in visits.",
           to: "/app/launch",
           impact: "medium",
         },
@@ -172,7 +184,8 @@ export function optimizerActions(input: OptimizerInput): { pages: PageInsight[];
       key: "mobile-form",
       title: "Your form is long for a mobile audience",
       evidence: `${pct(mobileViews / views)} of visits are on a phone and your form asks ${input.quoteFormQuestions} questions.`,
-      action: "Keep four fields on mobile — service, location, timing and phone — and ask the rest by reply.",
+      action:
+        "Keep four fields on mobile — service, location, timing and phone — and ask the rest by reply.",
       to: "/app/quotes",
       impact: "medium",
     });

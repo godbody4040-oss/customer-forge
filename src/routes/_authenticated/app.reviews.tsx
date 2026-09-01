@@ -26,14 +26,15 @@ export const Route = createFileRoute("/_authenticated/app/reviews")({
   component: ReviewsPage,
 });
 
-
 function Stars({ rating }: { rating: number }) {
   return (
     <span className="flex items-center gap-0.5" aria-label={`${rating} out of 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={i < rating ? "size-3.5 fill-accent text-accent" : "size-3.5 text-muted-foreground"}
+          className={
+            i < rating ? "size-3.5 fill-accent text-accent" : "size-3.5 text-muted-foreground"
+          }
           aria-hidden="true"
         />
       ))}
@@ -50,9 +51,11 @@ function ReviewsPage() {
   const appointments = useAppointments(orgId);
   const setPublished = useSetReviewPublished(orgId);
   const request = useRequestReview(orgId);
-  const [asking, setAsking] = useState<{ name: string; recipient: string; channel: "email" | "sms" } | null>(
-    null,
-  );
+  const [asking, setAsking] = useState<{
+    name: string;
+    recipient: string;
+    channel: "email" | "sms";
+  } | null>(null);
 
   const reviewLink = profile.data?.review_link ?? null;
   const rows = reviews.data ?? [];
@@ -106,7 +109,8 @@ function ReviewsPage() {
         <div className="min-w-0">
           <p className="text-[13px] font-medium">Public review link</p>
           <p className="truncate text-[12px] text-muted-foreground">
-            {reviewLink || "Add your Google review link in Settings so requests send customers to the right place."}
+            {reviewLink ||
+              "Add your Google review link in Settings so requests send customers to the right place."}
           </p>
         </div>
         {reviewLink ? (
@@ -136,7 +140,9 @@ function ReviewsPage() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-[13px]">{appointment.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{relative(appointment.starts_at)}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {relative(appointment.starts_at)}
+                  </p>
                 </div>
                 <Button
                   variant="ghost"
@@ -173,7 +179,9 @@ function ReviewsPage() {
                   <p className="truncate text-[14px] font-medium">{review.author_name}</p>
                   <div className="mt-1 flex items-center gap-2">
                     <Stars rating={Number(review.rating ?? 0)} />
-                    <span className="text-[11px] text-muted-foreground">{relative(review.created_at)}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {relative(review.created_at)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -187,13 +195,19 @@ function ReviewsPage() {
                       setPublished.mutate({ id: review.id, published: !review.is_published })
                     }
                   >
-                    {review.is_published ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    {review.is_published ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
                     {review.is_published ? "Hide" : "Publish"}
                   </Button>
                 </div>
               </div>
               {review.comment ? (
-                <p className="text-[13px] leading-relaxed text-muted-foreground">{review.comment}</p>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  {review.comment}
+                </p>
               ) : null}
               {review.private_feedback ? (
                 <p className="rounded-lg border border-border bg-elevated px-3 py-2 text-[12px] text-muted-foreground">
@@ -206,8 +220,6 @@ function ReviewsPage() {
       )}
 
       <MetaPreview meta={REVIEWS_META} label="/app/reviews" />
-
-
 
       <Dialog open={!!asking} onOpenChange={(open) => !open && setAsking(null)}>
         <DialogContent>

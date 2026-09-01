@@ -42,7 +42,15 @@ function Row({
   );
 }
 
-function ScreenShell({ title, chip, children }: { title: string; chip: string; children: React.ReactNode }) {
+function ScreenShell({
+  title,
+  chip,
+  children,
+}: {
+  title: string;
+  chip: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="panel-inset overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-border bg-elevated px-3.5 py-2.5">

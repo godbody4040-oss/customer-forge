@@ -96,7 +96,8 @@ export function auditStructure(input: StructureAuditInput) {
       key: `thin-${page.id}`,
       title: "Thin page",
       detail: `${page.title} has ${sections.length} visible section${sections.length === 1 ? "" : "s"}.`,
-      action: "Add proof, service detail and a closing call to action — thin pages rank and convert poorly.",
+      action:
+        "Add proof, service detail and a closing call to action — thin pages rank and convert poorly.",
       severity: "warning",
       weight: 3,
       upgrade: "rebuild_site",
@@ -112,21 +113,27 @@ export function auditStructure(input: StructureAuditInput) {
       upgrade: "rebuild_site",
     });
 
-    check(kinds.has("cta") || kinds.has("sticky_cta") || [...kinds].some((k) => CAPTURE_SECTIONS.has(k)), {
-      key: `no-cta-${page.id}`,
-      title: "Dead-end page",
-      detail: `${page.title} has no call to action or capture block, so a visitor who reaches the bottom has nowhere to go.`,
-      action: "Add a closing call-to-action section to this page.",
-      severity: "critical",
-      weight: 4,
-      upgrade: "add_cta_section",
-    });
+    check(
+      kinds.has("cta") ||
+        kinds.has("sticky_cta") ||
+        [...kinds].some((k) => CAPTURE_SECTIONS.has(k)),
+      {
+        key: `no-cta-${page.id}`,
+        title: "Dead-end page",
+        detail: `${page.title} has no call to action or capture block, so a visitor who reaches the bottom has nowhere to go.`,
+        action: "Add a closing call-to-action section to this page.",
+        severity: "critical",
+        weight: 4,
+        upgrade: "add_cta_section",
+      },
+    );
 
     check(filled(page.seo_title) && filled(page.seo_description), {
       key: `page-seo-${page.id}`,
       title: "Missing page SEO",
       detail: `${page.title} ${filled(page.seo_title) ? "has no search description" : "has no search title"}.`,
-      action: "Give this page its own search title and description mentioning the service and area.",
+      action:
+        "Give this page its own search title and description mentioning the service and area.",
       severity: "warning",
       weight: 3,
       upgrade: "page_seo",
@@ -150,29 +157,38 @@ export function auditStructure(input: StructureAuditInput) {
   }
 
   /* whole-site structure checks */
-  const siteCheck = (ok: boolean, finding: Omit<AuditIssue, "points" | "max" | "scope"> & { weight: number }) => {
+  const siteCheck = (
+    ok: boolean,
+    finding: Omit<AuditIssue, "points" | "max" | "scope"> & { weight: number },
+  ) => {
     const { weight, ...rest } = finding;
     if (!ok) issues.push({ ...rest, scope: "Site", points: 0, max: weight });
   };
 
-  siteCheck([...allKinds].some((kind) => CAPTURE_SECTIONS.has(kind)), {
-    key: "no-capture",
-    title: "Nothing captures a lead",
-    detail: "No quote, booking or contact block is visible anywhere on the site.",
-    action: "Add a quote or booking section so enquiries reach your CRM automatically.",
-    severity: "critical",
-    weight: 6,
-    upgrade: "add_capture_section",
-  });
+  siteCheck(
+    [...allKinds].some((kind) => CAPTURE_SECTIONS.has(kind)),
+    {
+      key: "no-capture",
+      title: "Nothing captures a lead",
+      detail: "No quote, booking or contact block is visible anywhere on the site.",
+      action: "Add a quote or booking section so enquiries reach your CRM automatically.",
+      severity: "critical",
+      weight: 6,
+      upgrade: "add_capture_section",
+    },
+  );
 
-  siteCheck([...allKinds].some((kind) => TRUST_SECTIONS.has(kind)), {
-    key: "no-trust",
-    title: "No proof on the site",
-    detail: "No reviews, guarantee, stats or gallery sections are visible.",
-    action: "Add reviews or a guarantee block — strangers need proof before they act.",
-    severity: "warning",
-    weight: 4,
-  });
+  siteCheck(
+    [...allKinds].some((kind) => TRUST_SECTIONS.has(kind)),
+    {
+      key: "no-trust",
+      title: "No proof on the site",
+      detail: "No reviews, guarantee, stats or gallery sections are visible.",
+      action: "Add reviews or a guarantee block — strangers need proof before they act.",
+      severity: "warning",
+      weight: 4,
+    },
+  );
 
   siteCheck(allKinds.has("faq"), {
     key: "no-faq",
@@ -234,7 +250,12 @@ export type LivePageResult = {
 const between = (html: string, re: RegExp) => re.exec(html)?.[1]?.trim() ?? null;
 
 /** Reads the served HTML of one page and reports what a customer/crawler gets. */
-export function auditLiveHtml(path: string, url: string, status: number, html: string): LivePageResult {
+export function auditLiveHtml(
+  path: string,
+  url: string,
+  status: number,
+  html: string,
+): LivePageResult {
   const bodyText = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -286,24 +307,31 @@ export function auditLiveHtml(path: string, url: string, status: number, html: s
   add(!!observed.title && observed.title.length <= 60, {
     key: `live-title-${path}`,
     title: observed.title ? "Search title too long" : "No search title",
-    detail: observed.title ? `${observed.title.length} characters — Google truncates near 60.` : "The served page has no title tag.",
+    detail: observed.title
+      ? `${observed.title.length} characters — Google truncates near 60.`
+      : "The served page has no title tag.",
     action: "Set a page title under 60 characters that names the service and town.",
     severity: "warning",
     weight: 3,
     upgrade: "page_seo",
   });
 
-  add(!!observed.description && observed.description.length >= 60 && observed.description.length <= 160, {
-    key: `live-desc-${path}`,
-    title: observed.description ? "Search description off length" : "No search description",
-    detail: observed.description
-      ? `${observed.description.length} characters — aim for 60 to 160.`
-      : "Google will invent its own snippet.",
-    action: "Write a 60–160 character description with the service, area and main action.",
-    severity: "warning",
-    weight: 3,
-    upgrade: "page_seo",
-  });
+  add(
+    !!observed.description &&
+      observed.description.length >= 60 &&
+      observed.description.length <= 160,
+    {
+      key: `live-desc-${path}`,
+      title: observed.description ? "Search description off length" : "No search description",
+      detail: observed.description
+        ? `${observed.description.length} characters — aim for 60 to 160.`
+        : "Google will invent its own snippet.",
+      action: "Write a 60–160 character description with the service, area and main action.",
+      severity: "warning",
+      weight: 3,
+      upgrade: "page_seo",
+    },
+  );
 
   add(observed.h1Count === 1, {
     key: `live-h1-${path}`,

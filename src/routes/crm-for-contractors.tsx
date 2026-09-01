@@ -1,5 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarCheck, FileText, MessageSquare, PhoneCall, Star, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  FileText,
+  MessageSquare,
+  PhoneCall,
+  Star,
+  Users,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
 import { GROWTH_SYSTEM } from "@/lib/offer";
@@ -89,8 +97,8 @@ function ContractorCrmPage() {
         </h1>
         <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
           Most contractor CRMs assume leads are already coming in. Revora builds the website that
-          produces the enquiry, then runs the lead through quote, follow-up, booking and review — one
-          system instead of a site, a CRM and three apps that do not talk to each other.
+          produces the enquiry, then runs the lead through quote, follow-up, booking and review —
+          one system instead of a site, a CRM and three apps that do not talk to each other.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">

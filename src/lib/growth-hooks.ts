@@ -83,7 +83,10 @@ export function useSaveCampaign(organizationId: string | undefined) {
     }) => {
       const payload = { ...input, organization_id: organizationId! };
       const { error } = input.id
-        ? await supabase.from("campaigns").update(payload as never).eq("id", input.id)
+        ? await supabase
+            .from("campaigns")
+            .update(payload as never)
+            .eq("id", input.id)
         : await supabase.from("campaigns").insert(payload as never);
       if (error) throw error;
     },

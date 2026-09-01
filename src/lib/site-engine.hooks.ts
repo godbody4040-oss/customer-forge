@@ -3,7 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { aiEditSiteCopy, pumpSiteEngineQueue, runSiteGeneration } from "@/lib/site-engine.functions";
+import {
+  aiEditSiteCopy,
+  pumpSiteEngineQueue,
+  runSiteGeneration,
+} from "@/lib/site-engine.functions";
 
 /** Latest build job for the workspace; polls while a build is running. */
 export function useLatestGenerationJob(organizationId: string | undefined) {
@@ -61,7 +65,9 @@ export function useRunSiteEngine(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
     },
     onSuccess: () => {
-      toast.message("Build queued", { description: "Revora is building your website — progress updates below." });
+      toast.message("Build queued", {
+        description: "Revora is building your website — progress updates below.",
+      });
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -72,7 +78,6 @@ export function useRunSiteEngine(organizationId: string | undefined) {
     },
   });
 }
-
 
 export function useAiCopyEdit(organizationId: string | undefined) {
   const edit = useServerFn(aiEditSiteCopy);
@@ -176,7 +181,9 @@ export function useRestoreWebsiteVersion(organizationId: string | undefined) {
 
       const stored = snapshot.pages as { settings_pages?: unknown } | null;
       const settingsPages =
-        stored && typeof stored === "object" && "settings_pages" in stored ? stored.settings_pages : snapshot.pages;
+        stored && typeof stored === "object" && "settings_pages" in stored
+          ? stored.settings_pages
+          : snapshot.pages;
 
       const { error } = await supabase.from("website_settings").upsert(
         {
@@ -212,18 +219,36 @@ export function useScoreFacts(organizationId: string | undefined) {
       const orgId = organizationId!;
       const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
       const [services, media, reviews, social, forms, events, leads, bookings] = await Promise.all([
-        supabase.from("services").select("price, starting_price, bookable").eq("organization_id", orgId).eq("is_active", true),
-        supabase.from("media").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
-        supabase.from("reviews").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+        supabase
+          .from("services")
+          .select("price, starting_price, bookable")
+          .eq("organization_id", orgId)
+          .eq("is_active", true),
+        supabase
+          .from("media")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId),
+        supabase
+          .from("reviews")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId),
         supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-        supabase.from("quote_forms").select("id", { count: "exact", head: true }).eq("organization_id", orgId).eq("is_active", true),
+        supabase
+          .from("quote_forms")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .eq("is_active", true),
         supabase
           .from("analytics_events")
           .select("event_type")
           .eq("organization_id", orgId)
           .gte("created_at", since)
           .limit(20000),
-        supabase.from("leads").select("id", { count: "exact", head: true }).eq("organization_id", orgId).gte("created_at", since),
+        supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .gte("created_at", since),
         supabase
           .from("appointments")
           .select("id", { count: "exact", head: true })
@@ -233,9 +258,14 @@ export function useScoreFacts(organizationId: string | undefined) {
 
       const rows = services.data ?? [];
       const s = (social.data ?? {}) as Record<string, unknown>;
-      const socialLinks = ["instagram", "facebook", "tiktok", "youtube", "google_business", "linkedin"].filter(
-        (k) => typeof s[k] === "string" && String(s[k]).trim(),
-      ).length;
+      const socialLinks = [
+        "instagram",
+        "facebook",
+        "tiktok",
+        "youtube",
+        "google_business",
+        "linkedin",
+      ].filter((k) => typeof s[k] === "string" && String(s[k]).trim()).length;
       const eventRows = events.data ?? [];
       const countOf = (type: string) => eventRows.filter((e) => e.event_type === type).length;
 
@@ -303,7 +333,9 @@ export function useSaveBrief(organizationId: string | undefined) {
   const save = useServerFn(saveSiteBrief);
   return useMutation({
     mutationFn: async (vars: { brief: SiteBrief; approved: boolean }) =>
-      save({ data: { organizationId: organizationId!, brief: vars.brief, approved: vars.approved } }),
+      save({
+        data: { organizationId: organizationId!, brief: vars.brief, approved: vars.approved },
+      }),
     onSuccess: (_r, vars) => {
       toast.success(vars.approved ? "Brief approved — Revora can build from it." : "Brief saved.");
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });

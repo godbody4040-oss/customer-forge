@@ -21,8 +21,10 @@ export const MONTHLY_AMOUNT = 100;
 /** Price lookup key -> plan mapping. Only one plan exists. */
 export function planFromPriceId(priceId: string | null | undefined) {
   if (!priceId) return null;
-  if (priceId === MONTHLY_PRICE_KEY) return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
-  if (priceId === SETUP_PRICE_KEY) return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
+  if (priceId === MONTHLY_PRICE_KEY)
+    return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
+  if (priceId === SETUP_PRICE_KEY)
+    return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
   return null;
 }
 
@@ -30,7 +32,6 @@ export function planFromPriceId(priceId: string | null | undefined) {
 export function priceIdFor(planId: string): string | null {
   return planId === GROWTH_PLAN_ID ? MONTHLY_PRICE_KEY : null;
 }
-
 
 export function resolvePriceKey(price: {
   lookup_key?: string | null;
@@ -87,7 +88,9 @@ export async function syncStripeSubscription(
     price_id: priceKey,
     environment: env,
     provider_customer_id:
-      typeof subscription?.customer === "string" ? subscription.customer : (subscription?.customer?.id ?? null),
+      typeof subscription?.customer === "string"
+        ? subscription.customer
+        : (subscription?.customer?.id ?? null),
     provider_subscription_id: subscription?.id ?? null,
     cancel_at_period_end: Boolean(subscription?.cancel_at_period_end),
     current_period_start: periodStart,
@@ -100,7 +103,8 @@ export async function syncStripeSubscription(
     .from("subscriptions")
     .upsert(record, { onConflict: "organization_id,payment_provider,environment" });
 
-  const orgStatus = status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
+  const orgStatus =
+    status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
   await admin
     .from("organizations")
     .update({

@@ -38,8 +38,8 @@ function Industries() {
         </h1>
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
           A detailer sells with before-and-after proof. A stylist sells with a portfolio and an open
-          calendar. A roofer sells with trust and a fast quote. Your template starts where your trade
-          actually converts.
+          calendar. A roofer sells with trust and a fast quote. Your template starts where your
+          trade actually converts.
         </p>
 
         <section className="mt-12">
@@ -97,9 +97,7 @@ function Industries() {
             </p>
           </div>
           <Button asChild variant="signal">
-            <Link to="/get-started">
-              Get started
-            </Link>
+            <Link to="/get-started">Get started</Link>
           </Button>
         </div>
       </main>

@@ -11,4 +11,7 @@ export const parseStripeEnvironment = (value: unknown): StripeEnv => {
   throw new Error("Invalid payment environment");
 };
 
-export const cleanText = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
+export const cleanText = (value: unknown, max: number) =>
+  String(value ?? "")
+    .trim()
+    .slice(0, max);

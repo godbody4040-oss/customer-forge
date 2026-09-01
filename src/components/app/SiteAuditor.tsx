@@ -19,8 +19,19 @@ import type { AuditIssue, LivePageResult } from "@/lib/site-audit";
 import { auditScore } from "@/lib/site-audit";
 import { summarizeProposals, type UpgradeProposal } from "@/lib/auto-upgrade";
 import type { AppliedUpgrade } from "@/lib/auto-upgrade.hooks";
-import { builderLink, criticalFirst, fixTargets, gapTargets, type FixTarget } from "@/lib/issue-fix";
-import { ctaLadder, type ConversionContext, type ConversionGap, type ConversionGoal } from "@/lib/conversion-engine";
+import {
+  builderLink,
+  criticalFirst,
+  fixTargets,
+  gapTargets,
+  type FixTarget,
+} from "@/lib/issue-fix";
+import {
+  ctaLadder,
+  type ConversionContext,
+  type ConversionGap,
+  type ConversionGoal,
+} from "@/lib/conversion-engine";
 
 const TONE = { critical: "danger", warning: "attention", opportunity: "info" } as const;
 
@@ -91,7 +102,8 @@ function FixCard({
           </div>
           {target.proposalId ? (
             <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <RotateCcw className="size-3" aria-hidden="true" /> A restore point is saved first, so this can be undone.
+              <RotateCcw className="size-3" aria-hidden="true" /> A restore point is saved first, so
+              this can be undone.
             </p>
           ) : (
             <p className="text-[11px] text-muted-foreground">
@@ -138,7 +150,6 @@ function FixList({
   );
 }
 
-
 export function SiteAuditor({
   structureIssues,
   pageScores,
@@ -180,16 +191,24 @@ export function SiteAuditor({
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const liveIssues = useMemo(() => (live ?? []).flatMap((page) => page.issues), [live]);
-  const allIssues = useMemo(() => [...structureIssues, ...liveIssues], [structureIssues, liveIssues]);
+  const allIssues = useMemo(
+    () => [...structureIssues, ...liveIssues],
+    [structureIssues, liveIssues],
+  );
   const score = auditScore(allIssues, 60);
   const summary = summarizeProposals(proposals);
   const ladder = ctaLadder(goal, conversionCtx);
 
-  const structureTargets = useMemo(() => fixTargets(structureIssues, proposals), [structureIssues, proposals]);
+  const structureTargets = useMemo(
+    () => fixTargets(structureIssues, proposals),
+    [structureIssues, proposals],
+  );
   const liveTargets = useMemo(() => fixTargets(liveIssues, proposals), [liveIssues, proposals]);
   const gapCards = useMemo(() => gapTargets(conversionGaps), [conversionGaps]);
   const criticalCount = allIssues.filter((issue) => issue.severity === "critical").length;
-  const autoFixable = proposals.filter((proposal) => proposal.applyable && proposal.kind !== "publish_site").length;
+  const autoFixable = proposals.filter(
+    (proposal) => proposal.applyable && proposal.kind !== "publish_site",
+  ).length;
 
   const fixOne = (proposalId: string) => {
     const proposal = proposals.find((item) => item.id === proposalId);
@@ -206,11 +225,14 @@ export function SiteAuditor({
             </p>
             <p className="mt-2 font-display text-2xl font-semibold">
               <span className="tnum">{score}</span>
-              <span className="text-[14px] font-normal text-muted-foreground">/100 page quality</span>
+              <span className="text-[14px] font-normal text-muted-foreground">
+                /100 page quality
+              </span>
             </p>
             <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
-              Structure is scanned from your saved pages. Run the live scan to check the HTML your customers and Google
-              actually receive. Every finding below opens the exact place that fixes it.
+              Structure is scanned from your saved pages. Run the live scan to check the HTML your
+              customers and Google actually receive. Every finding below opens the exact place that
+              fixes it.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -218,7 +240,11 @@ export function SiteAuditor({
               {allIssues.length} finding{allIssues.length === 1 ? "" : "s"}
             </Pill>
             <Button size="sm" variant="outline" onClick={onScanLive} disabled={isScanning}>
-              {isScanning ? <Loader2 className="size-4 animate-spin" /> : <ScanSearch className="size-4" />}
+              {isScanning ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ScanSearch className="size-4" />
+              )}
               Scan live pages
             </Button>
           </div>
@@ -232,7 +258,11 @@ export function SiteAuditor({
               disabled={!canManage || !autoFixable || isBatchRunning}
               onClick={() => onBatchFix("critical")}
             >
-              {isBatchRunning ? <Loader2 className="size-4 animate-spin" /> : <Wrench className="size-4" />}
+              {isBatchRunning ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Wrench className="size-4" />
+              )}
               Fix all critical issues
             </Button>
             <Button
@@ -255,9 +285,17 @@ export function SiteAuditor({
         {pageScores.length ? (
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {pageScores.map((page) => (
-              <div key={page.pageId} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2">
+              <div
+                key={page.pageId}
+                className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+              >
                 <p className="truncate text-[12px]">{page.title}</p>
-                <span className={cn("tnum text-[12px]", page.score >= 75 ? "text-primary" : "text-accent")}>
+                <span
+                  className={cn(
+                    "tnum text-[12px]",
+                    page.score >= 75 ? "text-primary" : "text-accent",
+                  )}
+                >
                   {page.score}%
                 </span>
               </div>
@@ -266,14 +304,14 @@ export function SiteAuditor({
         ) : null}
       </section>
 
-
       <section className="panel p-0">
         <div className="border-b border-border px-3.5 py-3">
           <p className="eyebrow flex items-center gap-2">
             <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" /> Conversion engine
           </p>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Your site is built around one goal, with backup paths for visitors who convert differently.
+            Your site is built around one goal, with backup paths for visitors who convert
+            differently.
           </p>
           <ol className="mt-3 flex flex-wrap items-center gap-1.5">
             {ladder.map((step, index) => (
@@ -307,20 +345,26 @@ export function SiteAuditor({
           onFixAutomatically={fixOne}
           emptyLabel="Every conversion path for your goal is wired up."
         />
-
       </section>
 
       <section className="panel p-0">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3.5 py-3">
           <div className="min-w-0">
             <p className="eyebrow flex items-center gap-2">
-              <ClipboardCheck className="size-3.5 text-primary" aria-hidden="true" /> Auto-upgrade proposals
+              <ClipboardCheck className="size-3.5 text-primary" aria-hidden="true" /> Auto-upgrade
+              proposals
             </p>
-            <p className="mt-1 text-[12px] text-muted-foreground">{summary.headline} Nothing is applied without your approval.</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {summary.headline} Nothing is applied without your approval.
+            </p>
           </div>
           {lastApplied?.versionId ? (
             <Button size="sm" variant="outline" onClick={onUndo} disabled={isUndoing}>
-              {isUndoing ? <Loader2 className="size-4 animate-spin" /> : <Undo2 className="size-4" />}
+              {isUndoing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Undo2 className="size-4" />
+              )}
               Undo “{lastApplied.title}”
             </Button>
           ) : null}
@@ -344,7 +388,11 @@ export function SiteAuditor({
                       {proposal.needs ? <p className="mt-1 text-[12px]">{proposal.needs}</p> : null}
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => setOpenId(open ? null : proposal.id)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setOpenId(open ? null : proposal.id)}
+                      >
                         {open ? "Hide changes" : `Show changes (${proposal.changes.length})`}
                       </Button>
                       <Button
@@ -375,8 +423,8 @@ export function SiteAuditor({
                         </li>
                       ))}
                       <li className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <RotateCcw className="size-3" aria-hidden="true" /> A restore point is saved before this is
-                        applied, so it can be undone.
+                        <RotateCcw className="size-3" aria-hidden="true" /> A restore point is saved
+                        before this is applied, so it can be undone.
                       </li>
                     </ul>
                   ) : null}
@@ -386,7 +434,8 @@ export function SiteAuditor({
           </ul>
         ) : (
           <p className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
-            <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> No upgrades needed right now.
+            <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> No upgrades needed
+            right now.
           </p>
         )}
       </section>
@@ -401,7 +450,6 @@ export function SiteAuditor({
           busyProposalId={applyingId}
           onFixAutomatically={fixOne}
         />
-
       </section>
 
       <section className="panel p-0">
@@ -413,10 +461,14 @@ export function SiteAuditor({
           <>
             <ul className="divide-y divide-border">
               {live.map((page) => (
-                <li key={page.path} className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5">
+                <li
+                  key={page.path}
+                  className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5"
+                >
                   <p className="truncate text-[12px]">{page.path}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    HTTP {page.status} · {page.observed.wordCount} words · {page.observed.telLinks} call link
+                    HTTP {page.status} · {page.observed.wordCount} words · {page.observed.telLinks}{" "}
+                    call link
                     {page.observed.telLinks === 1 ? "" : "s"} · {page.observed.forms} form
                     {page.observed.forms === 1 ? "" : "s"}
                   </p>
@@ -430,7 +482,6 @@ export function SiteAuditor({
                 busyProposalId={applyingId}
                 onFixAutomatically={fixOne}
               />
-
             </div>
           </>
         ) : (

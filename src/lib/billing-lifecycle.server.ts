@@ -21,11 +21,16 @@ const planLabel = (planId?: string | null) =>
 
 const money = (cents: number | null | undefined, currency = "usd") =>
   typeof cents === "number"
-    ? new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100)
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency.toUpperCase(),
+      }).format(cents / 100)
     : undefined;
 
 const fmtDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : undefined;
+  iso
+    ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : undefined;
 
 /** True when this lifecycle action was already performed (idempotency marker). */
 async function alreadyRan(admin: Admin, marker: string): Promise<boolean> {
@@ -39,7 +44,12 @@ async function alreadyRan(admin: Admin, marker: string): Promise<boolean> {
   return Boolean(data);
 }
 
-async function markRan(admin: Admin, organizationId: string, marker: string, metadata: Record<string, unknown>) {
+async function markRan(
+  admin: Admin,
+  organizationId: string,
+  marker: string,
+  metadata: Record<string, unknown>,
+) {
   await admin.from("audit_logs").insert({
     organization_id: organizationId,
     action: "billing.lifecycle",
@@ -64,7 +74,11 @@ async function ownerContact(admin: Admin, organizationId: string) {
 }
 
 async function orgName(admin: Admin, organizationId: string) {
-  const { data } = await admin.from("organizations").select("name").eq("id", organizationId).maybeSingle();
+  const { data } = await admin
+    .from("organizations")
+    .select("name")
+    .eq("id", organizationId)
+    .maybeSingle();
   return data?.name ?? "your business";
 }
 

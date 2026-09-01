@@ -60,7 +60,9 @@ export function renderTemplate(template: string | null | undefined, ctx: Automat
     first_name: (ctx.lead?.name ?? ctx.appointment?.name ?? "there").split(" ")[0] ?? "there",
     business_name: ctx.businessName ?? "us",
     service: ctx.lead?.service_interest ?? "your service",
-    price: ctx.lead?.estimated_value ? `$${Math.round(Number(ctx.lead.estimated_value))}` : "your estimate",
+    price: ctx.lead?.estimated_value
+      ? `$${Math.round(Number(ctx.lead.estimated_value))}`
+      : "your estimate",
     appointment_date: starts ? starts.toLocaleDateString() : "",
     appointment_time: starts
       ? starts.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
@@ -193,14 +195,14 @@ export async function processDueRuns(
     // No delivery transport available here: leave it queued for the server pass.
     if (isMessage && !options.deliver) continue;
 
-    const outcome = isMessage
-      ? await options.deliver!(run)
-      : ({ ok: true } as { ok: true });
+    const outcome = isMessage ? await options.deliver!(run) : ({ ok: true } as { ok: true });
 
     if (!outcome.ok && outcome.retry) {
       // Transient: push it out and try again on the next pass.
       const delaySeconds =
-        "retryAfterSeconds" in outcome && outcome.retryAfterSeconds ? outcome.retryAfterSeconds : 60;
+        "retryAfterSeconds" in outcome && outcome.retryAfterSeconds
+          ? outcome.retryAfterSeconds
+          : 60;
       await client
         .from("automation_runs")
         .update({

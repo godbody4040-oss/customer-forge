@@ -23,8 +23,12 @@ export function CustomerJourney() {
             <span className="tnum font-display text-[12px] font-semibold text-primary">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <h3 className="mt-2 font-display text-[14px] leading-snug font-semibold">{item.step}</h3>
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">{item.body}</p>
+            <h3 className="mt-2 font-display text-[14px] leading-snug font-semibold">
+              {item.step}
+            </h3>
+            <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
+              {item.body}
+            </p>
           </Panel>
           {index < JOURNEY.length - 1 ? (
             <ArrowDown

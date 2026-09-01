@@ -109,29 +109,73 @@ export const PLATFORMS: PlatformProfile[] = [
     id: "lovable",
     label: "Lovable",
     kind: "fullstack-code",
-    summary: "Full-stack React + TypeScript with a managed backend, auth, storage and server functions.",
+    summary:
+      "Full-stack React + TypeScript with a managed backend, auth, storage and server functions.",
     caps: on([
-      "react", "vite", "typescript", "tailwind", "customCss", "customJs", "components",
-      "serverCode", "apiRoutes", "database", "auth", "uploads", "cms", "forms", "webhooks",
-      "payments", "email", "sms", "analytics", "seoControls", "structuredData", "integrations",
-      "codeExport", "customDomain",
+      "react",
+      "vite",
+      "typescript",
+      "tailwind",
+      "customCss",
+      "customJs",
+      "components",
+      "serverCode",
+      "apiRoutes",
+      "database",
+      "auth",
+      "uploads",
+      "cms",
+      "forms",
+      "webhooks",
+      "payments",
+      "email",
+      "sms",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "codeExport",
+      "customDomain",
     ]),
     prefer: [
       "TypeScript React components with a single source of truth for business data",
       "Server functions for anything holding a secret; row-level security on every table",
       "Route-level metadata plus JSON-LD generated from real records",
     ],
-    avoid: ["Second routers or page frameworks", "Client-side secrets", "Mock data behind real-looking buttons"],
+    avoid: [
+      "Second routers or page frameworks",
+      "Client-side secrets",
+      "Mock data behind real-looking buttons",
+    ],
   },
   {
     id: "bolt",
     label: "Bolt.new",
     kind: "fullstack-code",
-    summary: "Browser-based Vite/React app stack; backend and integrations come from services you connect.",
+    summary:
+      "Browser-based Vite/React app stack; backend and integrations come from services you connect.",
     caps: on([
-      "react", "vite", "typescript", "tailwind", "customCss", "customJs", "components",
-      "serverCode", "apiRoutes", "database", "auth", "forms", "webhooks", "payments",
-      "email", "analytics", "seoControls", "structuredData", "integrations", "codeExport", "customDomain",
+      "react",
+      "vite",
+      "typescript",
+      "tailwind",
+      "customCss",
+      "customJs",
+      "components",
+      "serverCode",
+      "apiRoutes",
+      "database",
+      "auth",
+      "forms",
+      "webhooks",
+      "payments",
+      "email",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "codeExport",
+      "customDomain",
     ]),
     prefer: [
       "Vite + React + TypeScript with modular utilities",
@@ -146,9 +190,30 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "fullstack-code",
     summary: "Full runtime with server, database, secrets and deployment available.",
     caps: on([
-      "react", "nextjs", "vite", "typescript", "tailwind", "customCss", "customJs", "components",
-      "serverCode", "apiRoutes", "database", "auth", "uploads", "forms", "webhooks", "payments",
-      "email", "sms", "analytics", "seoControls", "structuredData", "integrations", "codeExport", "customDomain",
+      "react",
+      "nextjs",
+      "vite",
+      "typescript",
+      "tailwind",
+      "customCss",
+      "customJs",
+      "components",
+      "serverCode",
+      "apiRoutes",
+      "database",
+      "auth",
+      "uploads",
+      "forms",
+      "webhooks",
+      "payments",
+      "email",
+      "sms",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "codeExport",
+      "customDomain",
     ]),
     prefer: [
       "One server process serving the site and its API routes",
@@ -163,16 +228,32 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "frontend-code",
     summary: "Clean Next.js/React frontend generation; backend services are attached separately.",
     caps: on([
-      "react", "nextjs", "typescript", "tailwind", "customCss", "customJs", "components",
-      "serverCode", "apiRoutes", "forms", "seoControls", "structuredData", "integrations",
-      "codeExport", "customDomain", "analytics",
+      "react",
+      "nextjs",
+      "typescript",
+      "tailwind",
+      "customCss",
+      "customJs",
+      "components",
+      "serverCode",
+      "apiRoutes",
+      "forms",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "codeExport",
+      "customDomain",
+      "analytics",
     ]),
     prefer: [
       "Next.js App Router with server components for content and route metadata",
       "Typed props and a shared business-data module consumed by every page",
       "Route handlers for form submission once a backend is connected",
     ],
-    avoid: ["Pretending a database exists before one is connected", "Client components for static content"],
+    avoid: [
+      "Pretending a database exists before one is connected",
+      "Client components for static content",
+    ],
   },
   {
     id: "base44",
@@ -180,9 +261,22 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "fullstack-code",
     summary: "App platform with native data entities, auth and workflow capabilities.",
     caps: on([
-      "react", "typescript", "customCss", "components", "serverCode", "database", "auth",
-      "uploads", "cms", "forms", "webhooks", "email", "analytics", "seoControls",
-      "integrations", "customDomain",
+      "react",
+      "typescript",
+      "customCss",
+      "components",
+      "serverCode",
+      "database",
+      "auth",
+      "uploads",
+      "cms",
+      "forms",
+      "webhooks",
+      "email",
+      "analytics",
+      "seoControls",
+      "integrations",
+      "customDomain",
     ]),
     prefer: [
       "Native entities for leads, bookings, services and reviews",
@@ -197,8 +291,17 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "visual-cms",
     summary: "Design-first visual builder with CMS collections, interactions and native forms.",
     caps: on([
-      "react", "customCss", "customJs", "components", "cms", "forms", "analytics",
-      "seoControls", "structuredData", "integrations", "customDomain",
+      "react",
+      "customCss",
+      "customJs",
+      "components",
+      "cms",
+      "forms",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "customDomain",
     ]),
     prefer: [
       "CMS collections for services, service areas, reviews and FAQs",
@@ -213,8 +316,18 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "visual-cms",
     summary: "Semantic visual builder with CMS collections, strong SEO controls and native forms.",
     caps: on([
-      "customCss", "customJs", "components", "cms", "forms", "webhooks", "payments",
-      "analytics", "seoControls", "structuredData", "integrations", "customDomain",
+      "customCss",
+      "customJs",
+      "components",
+      "cms",
+      "forms",
+      "webhooks",
+      "payments",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "customDomain",
     ]),
     prefer: [
       "Collections + collection pages for services and service areas",
@@ -229,8 +342,20 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "visual-cms",
     summary: "Business-suite builder: native CMS, bookings, forms, automations and SEO panel.",
     caps: on([
-      "customCss", "customJs", "components", "cms", "forms", "webhooks", "payments",
-      "email", "sms", "analytics", "seoControls", "structuredData", "integrations", "customDomain",
+      "customCss",
+      "customJs",
+      "components",
+      "cms",
+      "forms",
+      "webhooks",
+      "payments",
+      "email",
+      "sms",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "customDomain",
     ]),
     prefer: [
       "Wix Bookings for real appointments and Wix Forms for quote requests",
@@ -245,8 +370,17 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "visual-cms",
     summary: "Section-based builder with commerce, scheduling, forms and code injection.",
     caps: on([
-      "customCss", "customJs", "cms", "forms", "payments", "email", "analytics",
-      "seoControls", "structuredData", "integrations", "customDomain",
+      "customCss",
+      "customJs",
+      "cms",
+      "forms",
+      "payments",
+      "email",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "customDomain",
     ]),
     prefer: [
       "Native sections and blog/collection items for services and reviews",
@@ -261,8 +395,15 @@ export const PLATFORMS: PlatformProfile[] = [
     kind: "ai-site-builder",
     summary: "Template-driven AI builder with HTML/CSS/JS-level customisation and native forms.",
     caps: on([
-      "customCss", "customJs", "forms", "email", "analytics", "seoControls",
-      "structuredData", "integrations", "customDomain",
+      "customCss",
+      "customJs",
+      "forms",
+      "email",
+      "analytics",
+      "seoControls",
+      "structuredData",
+      "integrations",
+      "customDomain",
     ]),
     prefer: [
       "Semantic HTML5 sections, CSS variables for tokens, small vanilla JS modules",
@@ -276,7 +417,8 @@ export const PLATFORMS: PlatformProfile[] = [
 export const platformProfile = (id: PlatformId): PlatformProfile =>
   PLATFORMS.find((p) => p.id === id) ?? PLATFORMS[0]!;
 
-export const supports = (profile: PlatformProfile, key: CapabilityKey) => profile.caps[key] === true;
+export const supports = (profile: PlatformProfile, key: CapabilityKey) =>
+  profile.caps[key] === true;
 
 /** Stack decision derived from the capability matrix, not from assumptions. */
 export function stackStrategy(profile: PlatformProfile): string[] {
@@ -394,8 +536,17 @@ export function limitationReport(profile: PlatformProfile): LimitationRow[] {
 export const RESPONSIVE_BREAKPOINTS = [320, 375, 390, 430, 768, 1024, 1280, 1440, 1920];
 
 export const QUALITY_TARGETS = [
-  "Design", "UX", "Mobile", "Desktop", "Functionality", "SEO",
-  "Performance", "Accessibility", "Conversion", "Security", "Content",
+  "Design",
+  "UX",
+  "Mobile",
+  "Desktop",
+  "Functionality",
+  "SEO",
+  "Performance",
+  "Accessibility",
+  "Conversion",
+  "Security",
+  "Content",
 ];
 
 export type DesignTokens = {
@@ -436,7 +587,13 @@ export function designTokens(input: {
       { name: "Caption", size: "0.75rem", weight: "500" },
     ],
     spacing: {
-      xs: "4px", sm: "8px", md: "16px", lg: "24px", xl: "40px", "2xl": "64px", "3xl": "96px",
+      xs: "4px",
+      sm: "8px",
+      md: "16px",
+      lg: "24px",
+      xl: "40px",
+      "2xl": "64px",
+      "3xl": "96px",
     },
   };
 }
@@ -466,7 +623,12 @@ export type PortableSpecInput = {
     website?: string | null;
     reviewLink?: string | null;
   };
-  services: { name: string; description?: string | null; price?: number | null; bookable?: boolean }[];
+  services: {
+    name: string;
+    description?: string | null;
+    price?: number | null;
+    bookable?: boolean;
+  }[];
   seo: { title?: string | null; description?: string | null; headline?: string | null };
   pages: ContentPage[];
   tokens: DesignTokens;
@@ -644,7 +806,11 @@ export function detectPlatform(input?: {
   const generator = (input?.generator ?? "").toLowerCase();
   const globals = (input?.globals ?? []).map((g) => g.toLowerCase());
   const signals: string[] = [];
-  const hit = (platform: PlatformId, signal: string, confidence: PlatformDetection["confidence"]) => {
+  const hit = (
+    platform: PlatformId,
+    signal: string,
+    confidence: PlatformDetection["confidence"],
+  ) => {
     signals.push(signal);
     return { platform, confidence, signals };
   };
@@ -703,7 +869,10 @@ export function detectPlatform(input?: {
   return {
     platform: "lovable",
     confidence: "low",
-    signals: [...signals, "Falling back to the full-stack code strategy — override if that is wrong"],
+    signals: [
+      ...signals,
+      "Falling back to the full-stack code strategy — override if that is wrong",
+    ],
   };
 }
 
@@ -712,8 +881,11 @@ export function detectPlatformFromBrowser(): PlatformDetection {
   if (typeof window === "undefined") {
     return { platform: "lovable", confidence: "low", signals: ["No browser context"] };
   }
-  const generator = document.querySelector('meta[name="generator"]')?.getAttribute("content") ?? null;
-  const globals = Object.keys(window).filter((key) => key.startsWith("__") || /wix|webflow|squarespace|framer|replit/i.test(key));
+  const generator =
+    document.querySelector('meta[name="generator"]')?.getAttribute("content") ?? null;
+  const globals = Object.keys(window).filter(
+    (key) => key.startsWith("__") || /wix|webflow|squarespace|framer|replit/i.test(key),
+  );
   return detectPlatform({ host: window.location.hostname, generator, globals });
 }
 
@@ -795,7 +967,13 @@ export type NormalizedSpec = {
     siteTitle: string | null;
     siteDescription: string | null;
     headline: string | null;
-    pages: { slug: string; title: string | null; description: string | null; canonical: string | null; noindex: boolean }[];
+    pages: {
+      slug: string;
+      title: string | null;
+      description: string | null;
+      canonical: string | null;
+      noindex: boolean;
+    }[];
   };
   services: {
     id: string;
@@ -806,7 +984,13 @@ export type NormalizedSpec = {
     journeyStage: JourneyStage;
   }[];
   journey: Record<JourneyStage, { pages: string[]; sections: string[] }>;
-  captureFlows: { page: string; section: string; kind: string; ctaLabels: string[]; destination: string | null }[];
+  captureFlows: {
+    page: string;
+    section: string;
+    kind: string;
+    ctaLabels: string[];
+    destination: string | null;
+  }[];
   pages: {
     slug: string;
     path: string;
@@ -824,7 +1008,13 @@ export type NormalizedSpec = {
       heading: string | null;
       subheading: string | null;
       body: string | null;
-      components: { id: string; kind: string; label: string | null; body: string | null; link: string | null }[];
+      components: {
+        id: string;
+        kind: string;
+        label: string | null;
+        body: string | null;
+        link: string | null;
+      }[];
     }[];
   }[];
   limitations: LimitationRow[];
@@ -832,7 +1022,10 @@ export type NormalizedSpec = {
 };
 
 const slugId = (value: string, fallback: string) =>
-  (value || fallback).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback;
+  (value || fallback)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || fallback;
 
 /**
  * Normalizes the portable spec into one stable, platform-agnostic schema so the
@@ -1060,7 +1253,9 @@ export function auditChecklist(spec: NormalizedSpec): AuditItem[] {
     id: "journey",
     area: "Customer journey",
     task: "Confirm every stage is present: attract → convince → convert → confirm.",
-    test: `Walk the rebuilt site as a visitor: ${(["attract", "convince", "convert", "confirm"] as JourneyStage[])
+    test: `Walk the rebuilt site as a visitor: ${(
+      ["attract", "convince", "convert", "confirm"] as JourneyStage[]
+    )
       .map((stage) => `${stage} (${spec.journey[stage].sections.length})`)
       .join(" → ")}.`,
     severity: "required",

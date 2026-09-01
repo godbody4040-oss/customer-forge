@@ -54,7 +54,17 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
     ctaEffect: "gold_glow",
     formEffect: "glass",
     bodyEffect: "rise",
-    affinity: ["roof", "remodel", "landscap", "interior", "design", "law", "dental", "med", "real estate"],
+    affinity: [
+      "roof",
+      "remodel",
+      "landscap",
+      "interior",
+      "design",
+      "law",
+      "dental",
+      "med",
+      "real estate",
+    ],
   },
   {
     id: "modern-clean",
@@ -88,7 +98,17 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
     ctaEffect: "gold_glow",
     formEffect: "glass",
     bodyEffect: "rise",
-    affinity: ["tow", "emergency", "restoration", "demolition", "concrete", "weld", "auto", "mechanic", "pest"],
+    affinity: [
+      "tow",
+      "emergency",
+      "restoration",
+      "demolition",
+      "concrete",
+      "weld",
+      "auto",
+      "mechanic",
+      "pest",
+    ],
   },
   {
     id: "minimal-quiet",
@@ -122,7 +142,17 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
     ctaEffect: "gold_glow",
     formEffect: "glass",
     bodyEffect: "parallax_slow",
-    affinity: ["solar", "smart", "security", "ev", "energy", "automation", "audio", "camera", "network"],
+    affinity: [
+      "solar",
+      "smart",
+      "security",
+      "ev",
+      "energy",
+      "automation",
+      "audio",
+      "camera",
+      "network",
+    ],
   },
   {
     id: "night-sky",
@@ -156,7 +186,15 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
     ctaEffect: "gold_glow",
     formEffect: "glass",
     bodyEffect: "rise",
-    affinity: ["commercial", "industrial", "facilit", "janitor", "logistic", "construct", "engineer"],
+    affinity: [
+      "commercial",
+      "industrial",
+      "facilit",
+      "janitor",
+      "logistic",
+      "construct",
+      "engineer",
+    ],
   },
   {
     id: "warm-craft",
@@ -173,7 +211,17 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
     ctaEffect: "gold_glow",
     formEffect: "glass",
     bodyEffect: "rise",
-    affinity: ["bake", "florist", "salon", "groom", "child", "care", "farm", "carpent", "furniture"],
+    affinity: [
+      "bake",
+      "florist",
+      "salon",
+      "groom",
+      "child",
+      "care",
+      "farm",
+      "carpent",
+      "furniture",
+    ],
   },
   {
     id: "editorial",
@@ -364,7 +412,6 @@ export const DESIGN_DIRECTIONS: DesignDirection[] = [
   },
 ];
 
-
 const hash = (value: string) => {
   let out = 2166136261;
   for (let i = 0; i < value.length; i += 1) {
@@ -402,12 +449,17 @@ export function recommendDirections(input: {
       ? DESIGN_DIRECTIONS
       : DESIGN_DIRECTIONS.filter((direction) => directionTone(direction) === input.tone);
 
-  const scored = pool.map((direction, index) => {
-    const matches = direction.affinity.filter((word) => words.includes(word)).length;
-    const jitter = (hash(`${direction.id}:${seed}`) % 100) / 100;
-    const current = input.currentFont && direction.font.toLowerCase() === input.currentFont.toLowerCase() ? 0.4 : 0;
-    return { direction, score: matches * 2 + jitter + current, index };
-  }).sort((a, b) => b.score - a.score || a.index - b.index);
+  const scored = pool
+    .map((direction, index) => {
+      const matches = direction.affinity.filter((word) => words.includes(word)).length;
+      const jitter = (hash(`${direction.id}:${seed}`) % 100) / 100;
+      const current =
+        input.currentFont && direction.font.toLowerCase() === input.currentFont.toLowerCase()
+          ? 0.4
+          : 0;
+      return { direction, score: matches * 2 + jitter + current, index };
+    })
+    .sort((a, b) => b.score - a.score || a.index - b.index);
 
   return scored.slice(0, input.count ?? 4).map((entry) => entry.direction);
 }

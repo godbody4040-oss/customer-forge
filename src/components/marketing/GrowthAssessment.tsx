@@ -42,9 +42,30 @@ const NUMBERS: {
   max: number;
   step: number;
 }[] = [
-  { key: "leadsPerMonth", label: "Leads per month", hint: "Calls, forms, DMs, referrals", min: 0, max: 500, step: 5 },
-  { key: "averageJobValue", label: "Average job value ($)", hint: "What one customer is typically worth", min: 25, max: 20000, step: 25 },
-  { key: "closeRate", label: "Booking rate (%)", hint: "Share of leads that become paying jobs", min: 1, max: 100, step: 1 },
+  {
+    key: "leadsPerMonth",
+    label: "Leads per month",
+    hint: "Calls, forms, DMs, referrals",
+    min: 0,
+    max: 500,
+    step: 5,
+  },
+  {
+    key: "averageJobValue",
+    label: "Average job value ($)",
+    hint: "What one customer is typically worth",
+    min: 25,
+    max: 20000,
+    step: 25,
+  },
+  {
+    key: "closeRate",
+    label: "Booking rate (%)",
+    hint: "Share of leads that become paying jobs",
+    min: 1,
+    max: 100,
+    step: 1,
+  },
 ];
 
 export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" | "audit" }) {
@@ -77,10 +98,14 @@ export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" 
         email: answers.email,
         metadata: { score: result.score, band: result.band, gaps: result.gaps.length },
       });
-      document.getElementById("assessment-result")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document
+        .getElementById("assessment-result")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      setMessage(
+        error instanceof Error ? error.message : "Something went wrong. Please try again.",
+      );
     }
   };
 
@@ -293,9 +318,9 @@ export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" 
           </p>
           <p className="mt-1.5 text-[13px] text-muted-foreground">
             About {currency(result.missedRevenueYearly)} a year — roughly{" "}
-            <span className="text-foreground">{result.recoverableCustomers} customers/month</span> at
-            your own job value and booking rate, based on the {result.leakagePercent}% of leads the
-            gaps below tend to absorb.
+            <span className="text-foreground">{result.recoverableCustomers} customers/month</span>{" "}
+            at your own job value and booking rate, based on the {result.leakagePercent}% of leads
+            the gaps below tend to absorb.
           </p>
           <p className="mt-3 text-[11.5px] leading-relaxed text-muted-foreground">
             Arithmetic on the numbers you entered. An estimate for planning — not a guarantee of
@@ -313,7 +338,9 @@ export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" 
             {result.gaps.slice(0, 6).map((gap) => (
               <li key={gap.key} className="border-b border-border/70 pb-3 last:border-0 last:pb-0">
                 <p className="text-[13px] font-medium">{gap.title}</p>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{gap.cost}</p>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
+                  {gap.cost}
+                </p>
                 <p className="mt-1.5 text-[12.5px] leading-relaxed">
                   <span className="gold-hl">Revora fixes it:</span> {gap.fix}
                 </p>
@@ -339,8 +366,8 @@ export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" 
             Want Revora to close these gaps for you?
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-            Start with 3 free days of full access — build your site, capture leads and see the system
-            running before you pay anything.
+            Start with 3 free days of full access — build your site, capture leads and see the
+            system running before you pay anything.
           </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
             <FreeAccessButton size="default" />

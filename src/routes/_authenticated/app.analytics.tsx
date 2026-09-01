@@ -114,7 +114,9 @@ function AnalyticsPage() {
               onClick={() => setDays(Number(range.value))}
               className={cn(
                 "cursor-pointer rounded-full border px-3 py-1 text-[12px]",
-                days === Number(range.value) ? "border-primary text-primary" : "border-border text-muted-foreground",
+                days === Number(range.value)
+                  ? "border-primary text-primary"
+                  : "border-border text-muted-foreground",
               )}
             >
               {range.label}
@@ -126,7 +128,12 @@ function AnalyticsPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard label="Visitors" value={String(model.views)} hint="page views" />
         <MetricCard label="Leads" value={String(model.leads)} tone="signal" hint="captured" />
-        <MetricCard label="Bookings" value={String(model.bookings)} tone="signal" hint="scheduled" />
+        <MetricCard
+          label="Bookings"
+          value={String(model.bookings)}
+          tone="signal"
+          hint="scheduled"
+        />
         <MetricCard
           label="Conversion"
           value={`${model.conversion.toFixed(1)}%`}
@@ -212,7 +219,10 @@ function AnalyticsPage() {
 
       <TrafficMonitor
         organizationId={orgId}
-        alertsEnabled={(settingsQuery.data as { traffic_alerts_enabled?: boolean | null } | undefined)?.traffic_alerts_enabled !== false}
+        alertsEnabled={
+          (settingsQuery.data as { traffic_alerts_enabled?: boolean | null } | undefined)
+            ?.traffic_alerts_enabled !== false
+        }
         canManage={canManage(ws?.workspace?.role ?? "viewer")}
       />
 

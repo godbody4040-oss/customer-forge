@@ -3,7 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Receipt } from "lucide-react";
-import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import {
+  EmptyState,
+  LoadingRows,
+  MetricCard,
+  Panel,
+  Pill,
+  SectionHeading,
+} from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAllPayments, usePaymentConfig, usePaymentEvents } from "@/lib/payments.hooks";
@@ -14,7 +21,10 @@ export const Route = createFileRoute("/_authenticated/admin/payments")({
   head: () => ({
     meta: [
       { title: "Payments — Revora admin" },
-      { name: "description", content: "Verified PayPal transactions across every Revora client workspace." },
+      {
+        name: "description",
+        content: "Verified PayPal transactions across every Revora client workspace.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -25,7 +35,11 @@ const money = (amount: number, currency = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 
 const STATUS_TONE = (status: string) =>
-  status === "completed" ? "signal" : status === "failed" || status === "disputed" ? "danger" : "neutral";
+  status === "completed"
+    ? "signal"
+    : status === "failed" || status === "disputed"
+      ? "danger"
+      : "neutral";
 
 function AdminPayments() {
   const { data: ws } = useWorkspace();
@@ -50,7 +64,11 @@ function AdminPayments() {
   }, [rows]);
 
   if (!isSuperAdmin) {
-    return <p className="text-[13px] text-muted-foreground">This area is limited to Revora platform administrators.</p>;
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        This area is limited to Revora platform administrators.
+      </p>
+    );
   }
 
   const open = rows.find((p) => p.id === openId) ?? null;
@@ -92,10 +110,19 @@ function AdminPayments() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <MetricCard label="Gross collected" value={money(stats.gross)} hint={`${stats.count} confirmed`} tone="signal" />
+        <MetricCard
+          label="Gross collected"
+          value={money(stats.gross)}
+          hint={`${stats.count} confirmed`}
+          tone="signal"
+        />
         <MetricCard label="Refunded" value={money(stats.refunded)} />
         <MetricCard label="Net revenue" value={money(stats.net)} />
-        <MetricCard label="Failed attempts" value={String(stats.failed)} tone={stats.failed ? "attention" : "neutral"} />
+        <MetricCard
+          label="Failed attempts"
+          value={String(stats.failed)}
+          tone={stats.failed ? "attention" : "neutral"}
+        />
       </div>
 
       <Panel className="p-5">
@@ -127,19 +154,28 @@ function AdminPayments() {
               <tbody>
                 {rows.map((payment) => {
                   const orgName =
-                    (payment as { organizations?: { name?: string | null } | null }).organizations?.name ?? "—";
+                    (payment as { organizations?: { name?: string | null } | null }).organizations
+                      ?.name ?? "—";
                   return (
                     <tr key={payment.id} className="border-t border-border">
                       <td className="py-2.5 pr-3 whitespace-nowrap">
                         {new Date(payment.completed_at ?? payment.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-2.5 pr-3">{orgName}</td>
-                      <td className="py-2.5 pr-3">{payment.description ?? payment.product_id ?? "Revora service"}</td>
-                      <td className="tnum py-2.5 pr-3">{money(Number(payment.amount), payment.currency)}</td>
                       <td className="py-2.5 pr-3">
-                        <Pill tone={STATUS_TONE(payment.status)}>{payment.status.replace("_", " ")}</Pill>
+                        {payment.description ?? payment.product_id ?? "Revora service"}
                       </td>
-                      <td className="py-2.5 pr-3 text-[11px] uppercase text-muted-foreground">{payment.environment}</td>
+                      <td className="tnum py-2.5 pr-3">
+                        {money(Number(payment.amount), payment.currency)}
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <Pill tone={STATUS_TONE(payment.status)}>
+                          {payment.status.replace("_", " ")}
+                        </Pill>
+                      </td>
+                      <td className="py-2.5 pr-3 text-[11px] uppercase text-muted-foreground">
+                        {payment.environment}
+                      </td>
                       <td className="py-2.5 text-right">
                         <Button
                           variant="outline"
@@ -197,7 +233,9 @@ function AdminPayments() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-[12px] text-muted-foreground">No verified webhook events for this payment yet.</p>
+              <p className="mt-2 text-[12px] text-muted-foreground">
+                No verified webhook events for this payment yet.
+              </p>
             )}
           </div>
 
@@ -205,7 +243,8 @@ function AdminPayments() {
             <div className="mt-5 border-t border-border pt-4">
               <p className="text-[13px] font-medium">Issue refund through PayPal</p>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Leave the amount blank for a full refund. The status shown afterwards comes from PayPal.
+                Leave the amount blank for a full refund. The status shown afterwards comes from
+                PayPal.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Input
