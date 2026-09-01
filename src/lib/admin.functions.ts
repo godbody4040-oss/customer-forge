@@ -521,3 +521,80 @@ export const setClientPublishState = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/**
+ * Per-workspace monthly business report: revenue actually collected, leads,
+ * bookings and website traffic for every client workspace.
+ *
+ * Super-admin only. Reads through supabaseAdmin because this is deliberately a
+ * cross-tenant view — the only place in Revora where that is correct.
+ */
+export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { months?: number } | undefined) => ({
+    months: Math.max(1, Math.min(24, Math.trunc(Number(input?.months ?? 6)) || 6)),
+  }))
+  .handler(async ({ data, context }) => {
+    const { assertSuperAdmin } = await import("@/lib/admin.server");
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { buildMonthlyReport, recentMonths, windowStart } = await import(
+      "@/lib/monthly-report"
+    );
+
+    const months = recentMonths(data.months);
+    const since = windowStart(months);
+
+    const [payments, leads, bookings, traffic, orgs, sites] = await Promise.all([
+      supabaseAdmin
+        .from("payments")
+        .select("organization_id, amount, status, refunded_amount, completed_at, created_at")
+        .gte("created_at", since),
+      supabaseAdmin.from("leads").select("organization_id, created_at").gte("created_at", since),
+      supabaseAdmin
+        .from("appointments")
+        .select("organization_id, created_at")
+        .gte("created_at", since),
+      supabaseAdmin
+        .from("analytics_events")
+        .select("organization_id, created_at, session_id, event_type")
+        .eq("event_type", "page_view")
+        .gte("created_at", since),
+      supabaseAdmin
+        .from("organizations")
+        .select("id, name, slug, industry, subscription_status, is_suspended, is_demo, created_at"),
+      supabaseAdmin.from("website_settings").select("organization_id, publish_state, domain"),
+    ]);
+
+    const report = buildMonthlyReport({
+      months,
+      payments: payments.data ?? [],
+      leads: leads.data ?? [],
+      bookings: bookings.data ?? [],
+      traffic: traffic.data ?? [],
+    });
+
+    const orgRows = orgs.data ?? [];
+    const siteRows = sites.data ?? [];
+    const workspaces = Object.fromEntries(
+      orgRows.map((org) => {
+        const site = siteRows.find((s) => s.organization_id === org.id);
+        return [
+          org.id,
+          {
+            name: org.name,
+            slug: org.slug,
+            industry: org.industry,
+            status: org.subscription_status,
+            suspended: org.is_suspended,
+            demo: org.is_demo,
+            createdAt: org.created_at,
+            publishState: site?.publish_state ?? null,
+            domain: site?.domain ?? null,
+          },
+        ];
+      }),
+    );
+
+    return { ...report, workspaces, generatedAt: new Date().toISOString() };
+  });
