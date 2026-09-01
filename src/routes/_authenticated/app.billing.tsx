@@ -11,6 +11,7 @@ import { useBillingState } from "@/lib/stripe.hooks";
 import { createBillingPortalSession } from "@/lib/stripe.functions";
 import { getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { BUILDER_INCLUDED_DETAIL, BUILDER_INCLUDED_LABEL } from "@/lib/access-state";
 import { useWorkspace } from "@/lib/use-tenant";
 import { canManage } from "@/lib/use-tenant";
 import { REVORA } from "@/lib/brand";
