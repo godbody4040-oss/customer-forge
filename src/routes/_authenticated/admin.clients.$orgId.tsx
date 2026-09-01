@@ -29,6 +29,7 @@ import { usePlans } from "@/lib/queries";
 import { DOMAIN_STATES, PUBLISH_STATES, readiness } from "@/lib/readiness";
 import { writeSupportMode } from "@/lib/support-mode";
 import { currency, dateShort, dateLong, number } from "@/lib/format";
+import { Sparkline } from "@/components/demo/DemoCharts";
 
 export const Route = createFileRoute("/_authenticated/admin/clients/$orgId")({
   head: () => ({
@@ -197,6 +198,71 @@ function ClientDetail() {
         <MetricCard label="Bookings" value={number(data.appointments.length)} />
         <MetricCard label="Site views (30d)" value={number(data.views30d)} />
       </div>
+
+      {/* Workspace usage */}
+      <Panel className="space-y-4">
+        <SectionHeading
+          eyebrow="Usage"
+          title="What this client is actually using"
+          action={<Pill tone="neutral">Last 30 days</Pill>}
+        />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard label="Website pages" value={number(data.usage.pages.length)} />
+          <MetricCard label="New leads (30d)" value={number(data.usage.leads30d)} tone="info" />
+          <MetricCard
+            label="Upcoming bookings"
+            value={number(data.usage.bookingsUpcoming)}
+            hint={`${number(data.usage.bookingsTotal)} all time`}
+          />
+          <MetricCard
+            label="Quote requests"
+            value={number(data.usage.quoteRequests30d)}
+            hint={`${number(data.usage.quoteRequestsTotal)} all time`}
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              Site visits trend
+            </p>
+            <Sparkline values={data.usage.visitSeries} />
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Leads trend</p>
+            <Sparkline values={data.usage.leadSeries} tone="info" />
+          </div>
+        </div>
+        {data.usage.pages.length ? (
+          <ul className="divide-y divide-border border-t border-border text-[13px]">
+            {data.usage.pages.map((page) => (
+              <li key={page.id} className="flex items-center justify-between gap-2 py-2">
+                <span>
+                  {page.title}
+                  <span className="ml-1.5 text-[11px] text-muted-foreground">/{page.slug}</span>
+                </span>
+                <span className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  {number(page.sections)} sections
+                  <Pill tone={page.is_visible ? "signal" : "neutral"}>
+                    {page.is_visible ? "Visible" : "Hidden"}
+                  </Pill>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[12px] text-muted-foreground">
+            This client has not built any website pages yet.
+          </p>
+        )}
+        {data.usage.versions.length ? (
+          <p className="text-[11px] text-muted-foreground">
+            Latest saved version v{data.usage.versions[0]!.version}
+            {data.usage.versions[0]!.published_at
+              ? ` · published ${dateShort(data.usage.versions[0]!.published_at)}`
+              : " · not published yet"}
+          </p>
+        ) : null}
+      </Panel>
 
       {/* Launch checklist */}
       <Panel className="space-y-3">

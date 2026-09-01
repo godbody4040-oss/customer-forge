@@ -178,6 +178,7 @@ export const getClientDetail = createServerFn({ method: "GET" })
     const id = data.organizationId;
     const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
 
+    const dayKey = (value: string) => new Date(value).toISOString().slice(0, 10);
     const [
       org,
       profile,
@@ -185,6 +186,10 @@ export const getClientDetail = createServerFn({ method: "GET" })
       social,
       services,
       media,
+      pages,
+      sectionRows,
+      versions,
+      quoteRequests,
       forms,
       leads,
       appts,
@@ -199,6 +204,23 @@ export const getClientDetail = createServerFn({ method: "GET" })
       supabaseAdmin.from("social_profiles").select("*").eq("organization_id", id).maybeSingle(),
       supabaseAdmin.from("services").select("*").eq("organization_id", id).order("sort_order"),
       supabaseAdmin.from("media").select("id, url").eq("organization_id", id),
+      supabaseAdmin
+        .from("website_pages")
+        .select("id, slug, title, kind, is_visible")
+        .eq("organization_id", id)
+        .order("sort_order"),
+      supabaseAdmin.from("website_sections").select("id, page_id").eq("organization_id", id),
+      supabaseAdmin
+        .from("website_versions")
+        .select("id, version, label, published_at, created_at")
+        .eq("organization_id", id)
+        .order("version", { ascending: false })
+        .limit(5),
+      supabaseAdmin
+        .from("quote_requests")
+        .select("id, created_at")
+        .eq("organization_id", id)
+        .limit(5000),
       supabaseAdmin.from("quote_forms").select("id, is_active").eq("organization_id", id),
       supabaseAdmin.from("leads").select("id, status, created_at").eq("organization_id", id),
       supabaseAdmin.from("appointments").select("id, status, starts_at").eq("organization_id", id),
@@ -234,6 +256,46 @@ export const getClientDetail = createServerFn({ method: "GET" })
       leads: leads.data ?? [],
       appointments: appts.data ?? [],
       analyticsCount: (events.data ?? []).length,
+      usage: (() => {
+        const eventRows = events.data ?? [];
+        const leadRows = leads.data ?? [];
+        const apptRows = appts.data ?? [];
+        const days = Array.from({ length: 30 }, (_, i) =>
+          new Date(Date.now() - (29 - i) * 86_400_000).toISOString().slice(0, 10),
+        );
+        const visitsByDay = new Map<string, number>();
+        for (const row of eventRows) {
+          if (row.event_type !== "page_view") continue;
+          const key = dayKey(row.created_at);
+          visitsByDay.set(key, (visitsByDay.get(key) ?? 0) + 1);
+        }
+        const leadsByDay = new Map<string, number>();
+        for (const row of leadRows) {
+          const key = dayKey(row.created_at);
+          leadsByDay.set(key, (leadsByDay.get(key) ?? 0) + 1);
+        }
+        const now = Date.now();
+        return {
+          pages: (pages.data ?? []).map((page) => ({
+            ...page,
+            sections: (sectionRows.data ?? []).filter((s) => s.page_id === page.id).length,
+          })),
+          versions: versions.data ?? [],
+          quoteRequests30d: (quoteRequests.data ?? []).filter(
+            (row) => new Date(row.created_at).getTime() >= now - 30 * 86_400_000,
+          ).length,
+          quoteRequestsTotal: (quoteRequests.data ?? []).length,
+          leads30d: leadRows.filter(
+            (row) => new Date(row.created_at).getTime() >= now - 30 * 86_400_000,
+          ).length,
+          bookingsUpcoming: apptRows.filter(
+            (row) => new Date(row.starts_at).getTime() >= now && row.status !== "cancelled",
+          ).length,
+          bookingsTotal: apptRows.length,
+          visitSeries: days.map((day) => visitsByDay.get(day) ?? 0),
+          leadSeries: days.map((day) => leadsByDay.get(day) ?? 0),
+        };
+      })(),
       views30d: (events.data ?? []).filter((e) => e.event_type === "page_view").length,
       team: team.data ?? [],
       subscription: sub.data,
@@ -597,4 +659,143 @@ export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
     );
 
     return { ...report, workspaces, generatedAt: new Date().toISOString() };
+  });
+
+/** The offer rates the platform is currently selling on, for the admin pricing page. */
+export const getOfferConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertSuperAdmin } = await import("@/lib/admin.server");
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { GROWTH_SYSTEM } = await import("@/lib/offer");
+
+    const { data } = await supabaseAdmin
+      .from("offer_config")
+      .select("*")
+      .eq("id", "growth_system")
+      .maybeSingle();
+
+    const environments: Array<{
+      environment: "live" | "sandbox";
+      setupAmount: number | null;
+      monthlyAmount: number | null;
+      reachable: boolean;
+    }> = [];
+
+    for (const environment of ["live", "sandbox"] as const) {
+      try {
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const stripe = createStripeClient(environment === "live" ? "live" : "sandbox");
+        const found = await stripe.prices.list({
+          lookup_keys: [GROWTH_SYSTEM.setupPriceKey, GROWTH_SYSTEM.monthlyPriceKey],
+          active: true,
+          limit: 10,
+        });
+        const pick = (key: string) => {
+          const price = found.data.find((p) => p.lookup_key === key);
+          return typeof price?.unit_amount === "number" ? price.unit_amount / 100 : null;
+        };
+        environments.push({
+          environment,
+          setupAmount: pick(GROWTH_SYSTEM.setupPriceKey),
+          monthlyAmount: pick(GROWTH_SYSTEM.monthlyPriceKey),
+          reachable: true,
+        });
+      } catch {
+        environments.push({
+          environment,
+          setupAmount: null,
+          monthlyAmount: null,
+          reachable: false,
+        });
+      }
+    }
+
+    return {
+      setupPrice: Number(data?.setup_price ?? GROWTH_SYSTEM.setupPrice),
+      monthlyPrice: Number(data?.monthly_price ?? GROWTH_SYSTEM.monthlyPrice),
+      updatedAt: data?.updated_at ?? null,
+      codeSetupPrice: GROWTH_SYSTEM.setupPrice,
+      codeMonthlyPrice: GROWTH_SYSTEM.monthlyPrice,
+      environments,
+    };
+  });
+
+/**
+ * Changes what Revora charges: rewrites both Stripe prices behind the stable
+ * lookup keys and stores the new rates, so checkout, verification and the admin
+ * views all move together. Super admin only.
+ */
+export const updateOfferRates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { setupPrice: number; monthlyPrice: number }) => input)
+  .handler(async ({ data, context }) => {
+    const { assertSuperAdmin } = await import("@/lib/admin.server");
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { GROWTH_SYSTEM, parseOfferRates } = await import("@/lib/offer");
+    const rates = parseOfferRates(data);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+
+    const notes: string[] = [];
+
+    for (const environment of ["live", "sandbox"] as const) {
+      try {
+        const stripe = createStripeClient(environment);
+        const existing = await stripe.prices.list({
+          lookup_keys: [GROWTH_SYSTEM.setupPriceKey, GROWTH_SYSTEM.monthlyPriceKey],
+          active: true,
+          limit: 10,
+        });
+
+        const rewrite = async (key: string, amount: number, monthly: boolean) => {
+          const current = existing.data.find((p) => p.lookup_key === key);
+          const product =
+            typeof current?.product === "string" ? current.product : current?.product?.id;
+          if (!product) {
+            notes.push(`${environment}: ${key} is not set up yet, so it was left untouched.`);
+            return;
+          }
+          if (current && current.unit_amount === Math.round(amount * 100)) return;
+          await stripe.prices.create({
+            product,
+            currency: "usd",
+            unit_amount: Math.round(amount * 100),
+            lookup_key: key,
+            transfer_lookup_key: true,
+            ...(monthly ? { recurring: { interval: "month" as const } } : {}),
+          });
+          if (current) await stripe.prices.update(current.id, { active: false });
+          notes.push(`${environment}: ${key} now charges $${amount}.`);
+        };
+
+        await rewrite(GROWTH_SYSTEM.setupPriceKey, rates.setupPrice, false);
+        await rewrite(GROWTH_SYSTEM.monthlyPriceKey, rates.monthlyPrice, true);
+      } catch (error) {
+        notes.push(`${environment}: not updated — ${getStripeErrorMessage(error)}`);
+      }
+    }
+
+    const { error } = await supabaseAdmin.from("offer_config").upsert(
+      {
+        id: "growth_system",
+        setup_price: rates.setupPrice,
+        monthly_price: rates.monthlyPrice,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    );
+    if (error) throw new Error("The new rates could not be saved. Nothing was changed.");
+
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: context.userId,
+      action: "offer.rates_updated",
+      entity: "offer_config",
+      entity_id: "growth_system",
+      metadata: { ...rates, notes },
+    });
+
+    return { ...rates, notes };
   });
