@@ -15,6 +15,7 @@ import { siteThemeStyle } from "@/lib/site-theme";
 import { readComposition } from "@/lib/visual-composition";
 import { readBackdrop } from "@/lib/site-effects";
 import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-site.functions";
+import { styleSheet } from "@/lib/site-style";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
 
@@ -206,4 +207,15 @@ export function SiteNav({ site, current }: { site: NonNullable<PublicSite>; curr
       </ul>
     </nav>
   );
+}
+
+/**
+ * Publishes the per-block responsive overrides as a real stylesheet. Every
+ * declaration comes from the validated style model and every selector is a
+ * checked block id, so nothing a client typed can inject CSS here.
+ */
+function ResponsiveStyles({ sections }: { sections: { id: string; settings: unknown }[] }) {
+  const css = styleSheet(sections.map((section) => ({ id: section.id, settings: section.settings })));
+  if (!css) return null;
+  return <style>{css}</style>;
 }
