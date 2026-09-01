@@ -190,3 +190,73 @@ export function ProductionReadinessPanel({
     </section>
   );
 }
+
+/* ---------------------------- dashboard summary --------------------------- */
+
+const TRIAL_INCLUDES = [
+  "Website builder",
+  "AI tools",
+  "CRM",
+  "Lead generation",
+  "Booking",
+  "Automation",
+  "SEO",
+  "Analytics",
+  "Preview",
+  "Testing",
+];
+
+/**
+ * Dashboard view of where this workspace stands: full build access now,
+ * production launch after setup. Deliberately not a paywall on every screen.
+ */
+export function ProductionSummaryCard({ status }: { status: ProductionStatus | undefined }) {
+  if (!status) return null;
+  if (status.environment === "production")
+    return (
+      <section className="panel border-primary/40 bg-primary/5 p-4">
+        <p className="eyebrow">Production — live</p>
+        <p className="mt-1 text-[13px] font-medium">Your system is live and working for your business.</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          Keep editing in draft, then publish changes when you're happy — your live site stays stable in
+          between.
+        </p>
+      </section>
+    );
+
+  return (
+    <section className="panel p-4">
+      <p className="eyebrow">
+        {status.accountStatus === "expired" ? "Access ended — work saved" : "3-day free access"}
+      </p>
+      <h3 className="mt-1 font-display text-[17px] font-semibold">Build your system</h3>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {TRIAL_INCLUDES.map((item) => (
+          <span
+            key={item}
+            className="rounded-full border border-border bg-elevated px-2 py-0.5 text-[11px]"
+          >
+            ✓ {item}
+          </span>
+        ))}
+      </div>
+      <div className="mt-3 rounded-md border border-accent/30 bg-accent/5 p-3">
+        <p className="text-[12.5px] font-medium">🔒 Production launch</p>
+        <p className="mt-0.5 text-[12px] text-muted-foreground">
+          {status.accountStatus === "expired"
+            ? "Your website and configuration are saved. Complete setup to continue and launch."
+            : "Your complete system can be launched after setup."}
+        </p>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <Button asChild size="sm" variant="signal">
+            <Link to="/get-started">Launch my website</Link>
+          </Button>
+          <span className="text-[11.5px] text-muted-foreground">
+            ${GROWTH_SYSTEM.setupPrice} one-time setup · then ${GROWTH_SYSTEM.monthlyPrice}/month, first month
+            free
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}

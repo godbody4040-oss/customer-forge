@@ -11,6 +11,8 @@ import {
   KeyLabel,
 } from "@/components/app/Bits";
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
+import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
+import { useProductionStatus } from "@/lib/production.hooks";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -318,6 +320,8 @@ function Dashboard() {
         </div>
       </div>
 
+
+      <ProductionSummaryCard status={production} />
 
       <OnboardingJourney />
 
