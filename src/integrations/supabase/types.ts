@@ -3088,6 +3088,18 @@ export type Database = {
     }
     Functions: {
       is_safe_link_url: { Args: { value: string }; Returns: boolean }
+      org_team_members: {
+        Args: { _organization_id: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"
