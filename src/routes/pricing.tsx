@@ -75,6 +75,17 @@ function Pricing() {
   // A/B test: which pricing arrangement converts better.
   const layout = useExperiment("pricing_layout");
   const split = layout === "split";
+  // Shown prices come from the same live offer record checkout validates
+  // against, so this page can never advertise a price Stripe won't charge.
+  const ratesFn = useServerFn(getPublicOfferRates);
+  const rates = useQuery({
+    queryKey: ["public-offer-rates"],
+    queryFn: () => ratesFn({}),
+    staleTime: 5 * 60 * 1000,
+  });
+  const setupPrice = rates.data?.setupPrice ?? GROWTH_SYSTEM.setupPrice;
+  const monthlyPrice = rates.data?.monthlyPrice ?? GROWTH_SYSTEM.monthlyPrice;
+
 
   return (
     <div className="min-h-screen bg-background">
