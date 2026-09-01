@@ -3100,6 +3100,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      revora_reserved_subdomains: { Args: never; Returns: string[] }
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"

@@ -1,3 +1,4 @@
+import { loadTenantPage, tenantPageHead, TenantOrMarketing } from "@/lib/tenant-page";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,7 +26,10 @@ const INTERESTS = [
 ] as const;
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
+  // On a client's own web address this path is THEIR page, not Revora's.
+  loader: () => loadTenantPage("contact"),
+  head: ({ loaderData }) =>
+    tenantPageHead(loaderData ?? null) ?? ({
     meta: [
       { title: "Contact Revora — Build your customer growth system" },
       {
@@ -44,8 +48,18 @@ export const Route = createFileRoute("/contact")({
     ],
     links: [canonicalLink("/contact")],
   }),
-  component: Contact,
+  component: ContactRoute,
 });
+
+/** Revora's page on Revora's address; the client's page on a client address. */
+function ContactRoute() {
+  const tenant = Route.useLoaderData();
+  return (
+    <TenantOrMarketing tenant={tenant}>
+      <Contact />
+    </TenantOrMarketing>
+  );
+}
 
 function Contact() {
   const [sent, setSent] = useState(false);

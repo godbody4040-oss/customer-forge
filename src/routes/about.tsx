@@ -1,3 +1,4 @@
+import { loadTenantPage, tenantPageHead, TenantOrMarketing } from "@/lib/tenant-page";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
@@ -6,7 +7,10 @@ import { REVORA } from "@/lib/brand";
 import { canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
+  // On a client's own web address this path is THEIR page, not Revora's.
+  loader: () => loadTenantPage("about"),
+  head: ({ loaderData }) =>
+    tenantPageHead(loaderData ?? null) ?? ({
     meta: [
       { title: "About Revora — Built to help businesses grow" },
       {
@@ -25,8 +29,18 @@ export const Route = createFileRoute("/about")({
     ],
     links: [canonicalLink("/about")],
   }),
-  component: About,
+  component: AboutRoute,
 });
+
+/** Revora's page on Revora's address; the client's page on a client address. */
+function AboutRoute() {
+  const tenant = Route.useLoaderData();
+  return (
+    <TenantOrMarketing tenant={tenant}>
+      <About />
+    </TenantOrMarketing>
+  );
+}
 
 const PILLARS = [
   {

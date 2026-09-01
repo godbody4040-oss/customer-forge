@@ -29,6 +29,8 @@ import {
 } from "@/lib/domain-setup";
 import { DOMAIN_STATES } from "@/lib/readiness";
 import { revoraSubdomain } from "@/lib/website-plan";
+import { RevoraAddressCard } from "@/components/app/RevoraAddressCard";
+import { revoraHost } from "@/lib/revora-address";
 import { dateLong } from "@/lib/format";
 
 type Availability = { domain: string; state: "available" | "taken" | "unknown" | "invalid" };
@@ -68,6 +70,7 @@ export function DomainCenter({
         dns_ok?: boolean | null;
         ssl_ok?: boolean | null;
         publish_state?: string | null;
+        subdomain?: string | null;
       }
     | null
     | undefined;
@@ -128,11 +131,18 @@ export function DomainCenter({
 
   return (
     <div className="space-y-6">
-      {/* Where the site lives today */}
+      {/* FREE REVORA ADDRESS — always included, never blocked on a purchase */}
+      <RevoraAddressCard
+        organizationId={organizationId}
+        settings={settings}
+        canManage={canManage}
+      />
+
+      {/* CUSTOM DOMAIN — optional, and only ever active once verified */}
       <Panel className="space-y-4 p-5">
         <SectionHeading
-          eyebrow="Your web address"
-          title={connected || revoraSubdomain(slug ?? "")}
+          eyebrow="Optional — your own domain"
+          title={connected || "No custom domain connected"}
           action={
             <Pill tone={DOMAIN_STATES[status]?.tone ?? "neutral"}>
               {DOMAIN_STATES[status]?.label ?? status}
@@ -141,24 +151,24 @@ export function DomainCenter({
         />
         <p className="text-[13px] text-muted-foreground">{DOMAIN_STATES[status]?.help}</p>
         <div className="grid gap-2 sm:grid-cols-2">
-          <div className="rounded-md border border-border/60 p-3">
+          <div className="rounded-md border border-primary/40 bg-primary/5 p-3">
             <p className="text-[12px] font-medium">Free Revora address</p>
             <p className="mt-1 font-mono text-[12px] text-muted-foreground">
-              {revoraSubdomain(slug ?? "")}
+              {revoraHost(settings?.subdomain) ?? revoraSubdomain(slug ?? "")}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Always included. It keeps working even after your own domain goes live.
+              Included with your website. It keeps working even after your own domain goes live.
             </p>
           </div>
           <div className="rounded-md border border-border/60 p-3">
-            <p className="text-[12px] font-medium">Your own domain</p>
+            <p className="text-[12px] font-medium">Your own domain (optional)</p>
             <p className="mt-1 font-mono text-[12px] text-muted-foreground">
               {connected || "Not connected yet"}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {connected && dnsOk && sslOk
-                ? "Live and secured with HTTPS."
-                : "Visitors stay on the Revora address until DNS and HTTPS both pass."}
+                ? "Verified and live with HTTPS."
+                : "It only goes live after DNS and HTTPS both pass — until then your free Revora address serves the site."}
             </p>
           </div>
         </div>
@@ -180,6 +190,7 @@ export function DomainCenter({
           ))}
         </ol>
       </Panel>
+
 
       {/* Buy a new domain */}
       <Panel className="space-y-4 p-5">

@@ -1,3 +1,4 @@
+import { loadTenantPage, tenantPageHead, TenantOrMarketing } from "@/lib/tenant-page";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ShieldCheck } from "lucide-react";
 import { FreeAccessBanner } from "@/components/marketing/FreeAccess";
@@ -20,7 +21,10 @@ import { useExperiment } from "@/lib/experiments.hooks";
 import { trackConversion } from "@/lib/conversion";
 
 export const Route = createFileRoute("/pricing")({
-  head: () => ({
+  // On a client's own web address this path is THEIR page, not Revora's.
+  loader: () => loadTenantPage("pricing"),
+  head: ({ loaderData }) =>
+    tenantPageHead(loaderData ?? null) ?? ({
     meta: [
       { title: "Pricing — Revora Growth System | $750 setup + $100/mo" },
       {
@@ -52,8 +56,18 @@ export const Route = createFileRoute("/pricing")({
       },
     ],
   }),
-  component: Pricing,
+  component: PricingRoute,
 });
+
+/** Revora's page on Revora's address; the client's page on a client address. */
+function PricingRoute() {
+  const tenant = Route.useLoaderData();
+  return (
+    <TenantOrMarketing tenant={tenant}>
+      <Pricing />
+    </TenantOrMarketing>
+  );
+}
 
 const FAQ = [
   {

@@ -36,9 +36,56 @@ import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import { GROWTH_SYSTEM_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
 import { VisualComposition } from "@/components/site/VisualComposition";
 import { HOMEPAGE_COMPOSITION } from "@/lib/homepage-concept";
+import { getHostSite } from "@/lib/host-site.functions";
+import { isPossibleTenantHost } from "@/lib/revora-address";
+import { PublicSiteView } from "@/routes/s.$slug";
+
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  /**
+   * The home address is shared: on Revora's own domain it is the marketing
+   * site, and on a client's address — their free `name.revoragrowthsystems.com`
+   * or a verified custom domain — it is that client's published website.
+   */
+  loader: async () => {
+    if (typeof window !== "undefined" && !isPossibleTenantHost(window.location.hostname)) {
+      return null;
+    }
+    try {
+      const response = await getHostSite({ data: {} });
+      return response?.result ?? null;
+    } catch {
+      return null;
+    }
+  },
+  head: ({ loaderData }) =>
+    loaderData
+      ? {
+          meta: [
+            { title: `${loaderData.site.org.name}`.slice(0, 60) },
+            {
+              name: "description",
+              content: (
+                loaderData.site.profile?.tagline ||
+                `${loaderData.site.org.name} — services, prices and online booking.`
+              ).slice(0, 158),
+            },
+            { property: "og:title", content: loaderData.site.org.name },
+            {
+              property: "og:description",
+              content: (
+                loaderData.site.profile?.tagline ||
+                `${loaderData.site.org.name} — services, prices and online booking.`
+              ).slice(0, 158),
+            },
+            { property: "og:type", content: "website" },
+            { property: "og:url", content: `https://${loaderData.host}/` },
+            { name: "twitter:card", content: "summary_large_image" },
+          ],
+          links: [{ rel: "canonical", href: `https://${loaderData.host}/` }],
+        }
+      : ({
+
     meta: [
       { title: "Revora — The AI Growth System That Books Local Jobs 24/7" },
       {
@@ -72,9 +119,17 @@ export const Route = createFileRoute("/")({
         }),
       },
     ],
-  }),
-  component: Landing,
+  } as const),
+  component: HomeRoute,
 });
+
+/** Client website on a client host, Revora's sales site on Revora's host. */
+function HomeRoute() {
+  const hostSite = Route.useLoaderData();
+  if (hostSite?.site) return <PublicSiteView site={hostSite.site} />;
+  return <Landing />;
+}
+
 
 const PROBLEMS = [
   {

@@ -8,12 +8,14 @@
  */
 import { publicClient, publicOrganization } from "@/lib/public-site.server";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
+import {
+  REVORA_OWN_HOSTS,
+  isRevoraOwnHost,
+  normalizeHost,
+  revoraSubdomainFromHost,
+} from "@/lib/revora-address";
 
-export const REVORA_HOSTS = [
-  "revoragrowthsystems.com",
-  "www.revoragrowthsystems.com",
-  "customer-forge.lovable.app",
-];
+export const REVORA_HOSTS = REVORA_OWN_HOSTS;
 
 export type HostSite = {
   slug: string;
@@ -22,9 +24,76 @@ export type HostSite = {
   noindex: boolean;
 };
 
-function normalise(host: string) {
-  return host.toLowerCase().split(":")[0]!.replace(/\.$/, "");
+export type TenantHost = {
+  organizationId: string;
+  slug: string;
+  /** Which address the visitor arrived on. */
+  via: "revora" | "custom";
+  host: string;
+};
+
+/**
+ * Resolves which organization owns an incoming host.
+ *
+ * - A Revora subdomain always resolves (it is included with the website).
+ * - A custom domain only resolves once DNS **and** HTTPS have been verified, so
+ *   a half-configured domain can never serve a client's site over a broken
+ *   certificate — the free Revora address stays the working address.
+ *
+ * One host maps to exactly one organization (the subdomain column is unique),
+ * which is what keeps one client's host from ever reaching another's website.
+ */
+export async function resolveTenantHost(rawHost: string | null): Promise<TenantHost | null> {
+  if (!rawHost) return null;
+  const host = normalizeHost(rawHost);
+  if (!host || isRevoraOwnHost(host)) return null;
+
+  // Address settings are private, so the lookup runs with server credentials on
+  // the server only. It returns nothing but the owning workspace, and callers
+  // still go through the published-only site reader.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const bare = host.replace(/^www\./, "");
+  const subdomain = revoraSubdomainFromHost(host);
+
+  const { data: rows } = await supabaseAdmin
+    .from("website_settings")
+    .select("organization_id, custom_domain, subdomain, dns_ok, ssl_ok")
+    .or(
+      [
+        ...(subdomain ? [`subdomain.eq.${subdomain}`] : []),
+        `custom_domain.eq.${host}`,
+        `custom_domain.eq.${bare}`,
+      ].join(","),
+    )
+    .limit(3);
+
+  const ordered = [...(rows ?? [])].sort((a, b) => {
+    const aRevora = !!subdomain && a.subdomain === subdomain ? 0 : 1;
+    const bRevora = !!subdomain && b.subdomain === subdomain ? 0 : 1;
+    return aRevora - bRevora;
+  });
+
+  for (const row of ordered) {
+    if (!row.organization_id) continue;
+    const viaRevora = !!subdomain && row.subdomain === subdomain;
+    const viaCustom =
+      !viaRevora &&
+      (row.custom_domain?.toLowerCase() === host || row.custom_domain?.toLowerCase() === bare) &&
+      !!row.dns_ok &&
+      !!row.ssl_ok;
+    if (!viaRevora && !viaCustom) continue;
+    const org = await publicOrganization({ id: row.organization_id });
+    if (!org?.slug) continue;
+    return {
+      organizationId: row.organization_id,
+      slug: org.slug,
+      via: viaRevora ? "revora" : "custom",
+      host,
+    };
+  }
+  return null;
 }
+
 
 /**
  * Returns the published tenant that owns this host, or null when the host is
@@ -34,55 +103,26 @@ export async function resolveHostSite(
   rawHost: string | null,
   protocol = "https",
 ): Promise<HostSite | null> {
-  if (!rawHost) return null;
-  const host = normalise(rawHost);
-  if (!host || host.startsWith("localhost") || host.startsWith("127.0.0.1")) return null;
-  if (
-    REVORA_HOSTS.includes(host) ||
-    host.endsWith("lovable.app") ||
-    host.endsWith("lovableproject.com")
-  ) {
-    return null;
-  }
+  const tenant = await resolveTenantHost(rawHost);
+  if (!tenant) return null;
 
   const supabase = publicClient();
-  const bare = host.replace(/^www\./, "");
-  const subdomain = host.endsWith(".revoragrowthsystems.com")
-    ? host.slice(0, -".revoragrowthsystems.com".length)
-    : null;
-
-  const { data: settings } = await supabase
-    .from("website_settings")
-    .select("organization_id, custom_domain, subdomain, seo")
-    .or(
-      [
-        `custom_domain.eq.${host}`,
-        `custom_domain.eq.${bare}`,
-        ...(subdomain ? [`subdomain.eq.${subdomain}`] : []),
-      ].join(","),
-    )
-    .limit(1)
-    .maybeSingle();
-  if (!settings?.organization_id) return null;
-
-  const org = await publicOrganization({ id: settings.organization_id });
-  if (!org?.slug) return null;
-
   const { data: pages } = await supabase
     .from("website_pages")
     .select("slug, updated_at, noindex")
-    .eq("organization_id", settings.organization_id)
+    .eq("organization_id", tenant.organizationId)
     .order("sort_order", { ascending: true });
 
   return {
-    slug: org.slug,
-    origin: `${protocol}://${host}`,
+    slug: tenant.slug,
+    origin: `${protocol}://${tenant.host}`,
     noindex: false,
     pages: (pages ?? [])
       .filter((p) => !p.noindex)
       .map((p) => ({ slug: p.slug, updatedAt: p.updated_at ?? null })),
   };
 }
+
 
 /** Absolute URLs for a tenant site, or for Revora's own marketing pages. */
 export function sitemapUrls(site: HostSite | null, origin: string) {
