@@ -22,9 +22,12 @@ import { readCopy } from "@/lib/site-engine";
 export const Route = createFileRoute("/s/$slug/$page")({
   loader: async ({ params }) => {
     const site = await getPublicSite({ data: { slug: params.slug, pageSlug: params.page } });
-    if (!site || !site.content) throw notFound();
+    // A page with no visible sections would render blank for a real visitor —
+    // treat it as not published yet rather than serving an empty page.
+    if (!site || !site.content || site.content.sections.length === 0) throw notFound();
     return site;
   },
+
   head: ({ loaderData, params }) => {
     if (!loaderData?.content) {
       return { meta: [{ title: "Page not found" }, { name: "robots", content: "noindex" }] };
