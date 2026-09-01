@@ -250,7 +250,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       break;
     }
     default:
-      console.log("[payments:webhook] unhandled event", event.type);
+      // Unhandled event types are acknowledged without side effects.
+      break;
   }
 }
 
