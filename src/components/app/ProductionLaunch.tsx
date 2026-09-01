@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { GROWTH_SYSTEM } from "@/lib/offer";
+import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import type { ActivationResult, ProductionReadiness, ProductionStatus } from "@/lib/production.functions";
 
 /* ------------------------------ environment ------------------------------- */
@@ -30,7 +30,7 @@ export function EnvironmentBanner({ status }: { status: ProductionStatus | undef
           <p className="mt-1 max-w-2xl text-[12px] text-muted-foreground">
             {live
               ? "Edits you make now stay in draft until you publish them, so the live site never changes underneath your customers."
-              : "Build, configure and test everything — website, AI tools, CRM, quotes, booking, automations, SEO and analytics. Publishing to a live address and activating your domain become available once your one-time $750 setup is confirmed."}
+              : `Build, configure and test everything — website, AI tools, CRM, quotes, booking, automations, SEO and analytics. Publishing to a live address and activating your domain become available once your one-time ${usd(GROWTH_SYSTEM.setupPrice)} setup is confirmed.`}
           </p>
         </div>
         {!live ? (

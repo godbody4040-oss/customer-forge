@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 
 /**
  * Revora production activation.
@@ -111,7 +112,7 @@ export const getProductionStatus = createServerFn({ method: "POST" })
         ? "This workspace is suspended."
         : unlocked
           ? "Production is unlocked."
-          : "Complete your one-time $750 setup to launch your website.",
+          : `Complete your one-time ${usd(GROWTH_SYSTEM.setupPrice)} setup to launch your website.`,
       liveSince: settings?.last_published_at ?? null,
       publishState: settings?.publish_state ?? "draft",
     };
@@ -167,8 +168,8 @@ async function gatherReadiness(
       label: "Setup payment verified",
       ok: unlocked,
       detail: unlocked
-        ? "Your $750 setup is confirmed."
-        : "Production stays locked until the $750 setup payment is confirmed by the payment provider.",
+        ? `Your ${usd(GROWTH_SYSTEM.setupPrice)} setup is confirmed.`
+        : `Production stays locked until the ${usd(GROWTH_SYSTEM.setupPrice)} setup payment is confirmed by the payment provider.`,
     },
     {
       key: "business",
@@ -277,7 +278,7 @@ export const activateProduction = createServerFn({ method: "POST" })
       return {
         activated: false,
         reason:
-          "Complete your one-time $750 setup to publish your website, connect your domain and go live. Everything you've built stays saved.",
+          `Complete your one-time ${usd(GROWTH_SYSTEM.setupPrice)} setup to publish your website, connect your domain and go live. Everything you've built stays saved.`,
         version: null,
         publishState: "draft",
         readiness,
@@ -343,7 +344,7 @@ export const activateProduction = createServerFn({ method: "POST" })
       await audit("DEPLOYMENT_FAILED", { message: publishError.message });
       throw new Error(
         publishError.message.includes("PRODUCTION_LOCKED")
-          ? "Complete your one-time $750 setup to launch this website."
+          ? `Complete your one-time ${usd(GROWTH_SYSTEM.setupPrice)} setup to launch this website.`
           : "We couldn't take the website live. Nothing was lost — try again in a moment.",
       );
     }
