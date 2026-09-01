@@ -154,6 +154,9 @@ export function SitePageView({
           <SiteNav site={site} current={page.slug} />
         </header>
 
+        {/* Tablet and phone overrides the client set in the visual builder. */}
+        <ResponsiveStyles sections={site.content!.sections} />
+
         {site.content!.sections.map((section) => (
           <SiteSection key={section.id} site={site} section={section} />
         ))}
