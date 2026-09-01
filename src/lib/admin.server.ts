@@ -112,10 +112,13 @@ export const requiredDnsRecords = (domain: string) => [
  * handshake and return a real response from that hostname.
  */
 export async function checkDomain(
-  domain: string,
+  rawDomain: string,
   opts: { proxied?: boolean } = {},
 ): Promise<DomainCheck> {
-  if (domain && !isFetchableHostname(normalizeDomain(domain)))
+  // Work from the normalized hostname everywhere below, so the value that is
+  // validated is the exact value that is later resolved and fetched.
+  const domain = normalizeDomain(rawDomain ?? "");
+  if (domain && !isFetchableHostname(domain))
     return {
       status: "error",
       detail: "That address isn't a valid public domain name, so it can't be checked.",
@@ -133,6 +136,7 @@ export async function checkDomain(
     };
 
   const records = emptyRecords();
+
 
   try {
     const [aRes, cnameRes, txtRes] = await Promise.all([
