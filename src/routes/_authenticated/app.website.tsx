@@ -484,7 +484,9 @@ function WebsitePage() {
 
   return (
     <>
-      <BuilderShell
+      <BuilderHistoryProvider organizationId={orgId}>
+        <BuilderShell
+
         projectName={org?.name ? `${org.name} · website` : "Your website"}
         statusLabel={
           publishState === "published"
