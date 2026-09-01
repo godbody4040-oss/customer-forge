@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useBusinessProfile, useServices, useWebsiteSettings } from "@/lib/queries";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { useWorkspace } from "@/lib/use-tenant";
-import { revoraUrl } from "@/lib/revora-address";
+import { revoraHost, revoraUrl } from "@/lib/revora-address";
 
 export const Route = createFileRoute("/_authenticated/my/start")({
   head: () => ({
