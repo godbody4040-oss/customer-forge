@@ -232,8 +232,9 @@ export const getClientDetail = createServerFn({ method: "GET" })
         .limit(20000),
       supabaseAdmin
         .from("memberships")
-        .select("id, role, user_id, profiles(full_name, email)")
+        .select("id, role, user_id")
         .eq("organization_id", id),
+
       supabaseAdmin.from("subscriptions").select("*").eq("organization_id", id).maybeSingle(),
       supabaseAdmin
         .from("support_sessions")
