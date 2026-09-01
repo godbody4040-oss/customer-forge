@@ -21,7 +21,14 @@ export const Route = createFileRoute("/$")({
       throw notFound();
     }
     const response = await getHostSite({ data: { pageSlug } });
+    console.log("DBG host page", pageSlug, {
+      tenant: response?.tenant,
+      hasResult: !!response?.result,
+      hasContent: !!response?.result?.site?.content,
+      sections: response?.result?.site?.content?.sections?.length ?? null,
+    });
     if (!response?.result?.site?.content) throw notFound();
+
     return response.result;
   },
   head: ({ loaderData }) => {
