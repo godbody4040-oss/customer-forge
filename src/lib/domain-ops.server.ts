@@ -6,7 +6,7 @@
  * client their domain is working when it isn't.
  */
 import { canonicalHost, type EmailForwardProvider, type HostPreference } from "@/lib/domain-ops";
-import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server";
+import { guardedFetch as sharedGuardedFetch } from "@/lib/net-guard.server";
 
 type DnsAnswer = { name: string; type: number; data: string };
 
@@ -36,24 +36,22 @@ export type HopResult = {
 /**
  * SSRF guard for every outbound probe: only public DNS names, resolving to
  * globally routable addresses, over http(s), are ever fetched. Redirects are
- * never followed automatically, so a public host can't bounce us inward.
+ * never followed automatically, so a public host can't bounce us inward, and
+ * embedded credentials (`https://public.example@169.254.169.254/`) are refused.
  */
 async function guardedFetch(url: string): Promise<Response> {
-  const parsed = new URL(url);
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
-    throw new Error("Unsupported address");
-  if (!isFetchableHostname(parsed.hostname)) throw new Error("Not a public domain");
-  const [a, aaaa] = await Promise.all([
-    dnsQuery(parsed.hostname, "A").catch(() => [] as DnsAnswer[]),
-    dnsQuery(parsed.hostname, "AAAA").catch(() => [] as DnsAnswer[]),
-  ]);
-  const addresses = [
-    ...a.filter((r) => r.type === 1).map((r) => r.data),
-    ...aaaa.filter((r) => r.type === 28).map((r) => r.data),
-  ];
-  if (!areAddressesPublic(addresses)) throw new Error("Not a public address");
-  return fetch(url, { method: "GET", redirect: "manual" });
+  return sharedGuardedFetch(url, { method: "GET" }, async (hostname) => {
+    const [a, aaaa] = await Promise.all([
+      dnsQuery(hostname, "A").catch(() => [] as DnsAnswer[]),
+      dnsQuery(hostname, "AAAA").catch(() => [] as DnsAnswer[]),
+    ]);
+    return [
+      ...a.filter((r) => r.type === 1).map((r) => r.data.trim()),
+      ...aaaa.filter((r) => r.type === 28).map((r) => r.data.trim()),
+    ];
+  });
 }
+
 
 async function probe(url: string): Promise<HopResult> {
   try {

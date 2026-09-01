@@ -2,7 +2,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NewClientInput } from "@/lib/admin-types";
 import { seedQuoteCalculator } from "@/lib/quote-seed";
-import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server";
+import { areAddressesPublic, guardedFetch, isFetchableHostname } from "@/lib/net-guard.server";
 
 /** Where clients point their domain. Both records are checked automatically. */
 export const DOMAIN_TARGET = "revoragrowthsystems.com";
@@ -112,10 +112,13 @@ export const requiredDnsRecords = (domain: string) => [
  * handshake and return a real response from that hostname.
  */
 export async function checkDomain(
-  domain: string,
+  rawDomain: string,
   opts: { proxied?: boolean } = {},
 ): Promise<DomainCheck> {
-  if (domain && !isFetchableHostname(normalizeDomain(domain)))
+  // Work from the normalized hostname everywhere below, so the value that is
+  // validated is the exact value that is later resolved and fetched.
+  const domain = normalizeDomain(rawDomain ?? "");
+  if (domain && !isFetchableHostname(domain))
     return {
       status: "error",
       detail: "That address isn't a valid public domain name, so it can't be checked.",
@@ -133,6 +136,7 @@ export async function checkDomain(
     };
 
   const records = emptyRecords();
+
 
   try {
     const [aRes, cnameRes, txtRes] = await Promise.all([
@@ -196,10 +200,27 @@ export async function checkDomain(
       };
     }
 
-    // Now prove HTTPS actually works on that hostname.
+    // Now prove HTTPS actually works on that hostname. The probe re-validates
+    // the URL and every resolved address, so it can never reach a private,
+    // loopback or metadata endpoint (SSRF guard).
     try {
-      const res = await fetch(`https://${domain}/`, { method: "GET", redirect: "manual" });
-records.httpsStatus = res.status;
+      const res = await guardedFetch(
+        `https://${domain}/`,
+
+        { method: "GET" },
+        async (hostname) => {
+          const [a, aaaa] = await Promise.all([
+            dnsQuery(hostname, "A").catch(() => [] as DnsAnswer[]),
+            dnsQuery(hostname, "AAAA").catch(() => [] as DnsAnswer[]),
+          ]);
+          return [
+            ...a.filter((r) => r.type === 1).map((r) => r.data.trim()),
+            ...aaaa.filter((r) => r.type === 28).map((r) => r.data.trim()),
+          ];
+        },
+      );
+      records.httpsStatus = res.status;
+
       // Through a reverse proxy a 404 means the Worker/route isn't serving the
       // app yet, so "live" requires a real success response (or a deliberate
       // redirect, such as to a client's own custom domain).
