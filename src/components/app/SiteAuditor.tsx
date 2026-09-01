@@ -8,42 +8,136 @@ import {
   RotateCcw,
   ScanSearch,
   ShieldCheck,
+  Sparkles,
   Undo2,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { cn } from "@/lib/utils";
 import type { AuditIssue, LivePageResult } from "@/lib/site-audit";
-import { auditScore, sortIssues } from "@/lib/site-audit";
+import { auditScore } from "@/lib/site-audit";
 import { summarizeProposals, type UpgradeProposal } from "@/lib/auto-upgrade";
 import type { AppliedUpgrade } from "@/lib/auto-upgrade.hooks";
+import { builderLink, criticalFirst, fixTargets, gapTargets, type FixTarget } from "@/lib/issue-fix";
 import { ctaLadder, type ConversionContext, type ConversionGap, type ConversionGoal } from "@/lib/conversion-engine";
 
 const TONE = { critical: "danger", warning: "attention", opportunity: "info" } as const;
 
-function IssueList({ issues }: { issues: AuditIssue[] }) {
-  if (!issues.length)
+/**
+ * One finding, made actionable. Expanding it explains what is wrong, why it
+ * matters and the recommended fix, then offers the automatic fix (when Revora
+ * can do it without inventing facts) and a direct link to the exact builder
+ * area that owns it.
+ */
+function FixCard({
+  target,
+  canManage,
+  busy,
+  onFixAutomatically,
+}: {
+  target: FixTarget;
+  canManage: boolean;
+  busy: boolean;
+  onFixAutomatically: (proposalId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <li className="px-3.5 py-3">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer flex-wrap items-center gap-2 text-left"
+      >
+        <Pill tone={TONE[target.severity]}>{target.severity}</Pill>
+        <span className="text-[13px] font-medium">{target.title}</span>
+        <span className="text-[11px] text-muted-foreground">{target.scope}</span>
+        <span className="ml-auto text-[11px] text-primary">{open ? "Hide" : "Fix this"}</span>
+      </button>
+
+      {open ? (
+        <div className="mt-3 space-y-2 rounded-md border border-border p-3 text-[12px]">
+          <p>
+            <span className="font-medium">What is wrong: </span>
+            <span className="text-muted-foreground">{target.whatIsWrong}</span>
+          </p>
+          <p>
+            <span className="font-medium">Why it matters: </span>
+            <span className="text-muted-foreground">{target.whyItMatters}</span>
+          </p>
+          <p>
+            <span className="font-medium">Recommended fix: </span>
+            <span className="text-muted-foreground">{target.recommendedFix}</span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {target.proposalId ? (
+              <Button
+                size="sm"
+                variant="signal"
+                disabled={!canManage || busy}
+                onClick={() => onFixAutomatically(target.proposalId!)}
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Wrench className="size-4" />}
+                Fix automatically
+              </Button>
+            ) : null}
+            <Button size="sm" variant="outline" asChild>
+              <Link to={builderLink(target.area).to} search={builderLink(target.area).search}>
+                Fix manually in {target.areaLabel}
+                <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+          {target.proposalId ? (
+            <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <RotateCcw className="size-3" aria-hidden="true" /> A restore point is saved first, so this can be undone.
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              This one needs a real business fact from you — Revora will not invent it.
+            </p>
+          )}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+function FixList({
+  targets,
+  canManage,
+  busyProposalId,
+  onFixAutomatically,
+  emptyLabel = "No issues found here.",
+}: {
+  targets: FixTarget[];
+  canManage: boolean;
+  busyProposalId: string | null;
+  onFixAutomatically: (proposalId: string) => void;
+  emptyLabel?: string;
+}) {
+  if (!targets.length)
     return (
       <p className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
-        <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> No issues found here.
+        <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> {emptyLabel}
       </p>
     );
   return (
     <ul className="divide-y divide-border">
-      {sortIssues(issues).map((issue) => (
-        <li key={`${issue.key}-${issue.scope}`} className="px-3.5 py-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Pill tone={TONE[issue.severity]}>{issue.severity}</Pill>
-            <p className="text-[13px] font-medium">{issue.title}</p>
-            <span className="text-[11px] text-muted-foreground">{issue.scope}</span>
-          </div>
-          <p className="mt-1 text-[12px] text-muted-foreground">{issue.detail}</p>
-          <p className="mt-1 text-[12px]">{issue.action}</p>
-        </li>
+      {criticalFirst(targets).map((target) => (
+        <FixCard
+          key={target.issueKey}
+          target={target}
+          canManage={canManage}
+          busy={!!target.proposalId && busyProposalId === target.proposalId}
+          onFixAutomatically={onFixAutomatically}
+        />
       ))}
     </ul>
   );
 }
+
 
 export function SiteAuditor({
   structureIssues,
@@ -59,9 +153,11 @@ export function SiteAuditor({
   applyingId,
   lastApplied,
   isUndoing,
+  isBatchRunning,
   onScanLive,
   onApply,
   onUndo,
+  onBatchFix,
 }: {
   structureIssues: AuditIssue[];
   pageScores: { pageId: string; title: string; score: number }[];
@@ -76,9 +172,11 @@ export function SiteAuditor({
   applyingId: string | null;
   lastApplied: AppliedUpgrade | null;
   isUndoing: boolean;
+  isBatchRunning?: boolean;
   onScanLive: () => void;
   onApply: (proposal: UpgradeProposal) => void;
   onUndo: () => void;
+  onBatchFix?: (mode: "critical" | "all") => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const liveIssues = useMemo(() => (live ?? []).flatMap((page) => page.issues), [live]);
@@ -86,6 +184,17 @@ export function SiteAuditor({
   const score = auditScore(allIssues, 60);
   const summary = summarizeProposals(proposals);
   const ladder = ctaLadder(goal, conversionCtx);
+
+  const structureTargets = useMemo(() => fixTargets(structureIssues, proposals), [structureIssues, proposals]);
+  const liveTargets = useMemo(() => fixTargets(liveIssues, proposals), [liveIssues, proposals]);
+  const gapCards = useMemo(() => gapTargets(conversionGaps), [conversionGaps]);
+  const criticalCount = allIssues.filter((issue) => issue.severity === "critical").length;
+  const autoFixable = proposals.filter((proposal) => proposal.applyable && proposal.kind !== "publish_site").length;
+
+  const fixOne = (proposalId: string) => {
+    const proposal = proposals.find((item) => item.id === proposalId);
+    if (proposal) onApply(proposal);
+  };
 
   return (
     <div className="space-y-6">
@@ -101,11 +210,11 @@ export function SiteAuditor({
             </p>
             <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
               Structure is scanned from your saved pages. Run the live scan to check the HTML your customers and Google
-              actually receive.
+              actually receive. Every finding below opens the exact place that fixes it.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Pill tone={allIssues.some((i) => i.severity === "critical") ? "danger" : "signal"}>
+            <Pill tone={criticalCount ? "danger" : "signal"}>
               {allIssues.length} finding{allIssues.length === 1 ? "" : "s"}
             </Pill>
             <Button size="sm" variant="outline" onClick={onScanLive} disabled={isScanning}>
@@ -114,6 +223,34 @@ export function SiteAuditor({
             </Button>
           </div>
         </div>
+
+        {onBatchFix ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-md border border-border p-3">
+            <Button
+              size="sm"
+              variant="signal"
+              disabled={!canManage || !autoFixable || isBatchRunning}
+              onClick={() => onBatchFix("critical")}
+            >
+              {isBatchRunning ? <Loader2 className="size-4 animate-spin" /> : <Wrench className="size-4" />}
+              Fix all critical issues
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!canManage || !autoFixable || isBatchRunning}
+              onClick={() => onBatchFix("all")}
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              Optimise entire website
+            </Button>
+            <p className="text-[11px] text-muted-foreground">
+              {autoFixable
+                ? `${autoFixable} safe change${autoFixable === 1 ? "" : "s"} available. One restore point is saved first; publishing stays your decision.`
+                : "Nothing can be fixed automatically right now — the remaining findings need a business fact from you."}
+            </p>
+          </div>
+        ) : null}
 
         {pageScores.length ? (
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -128,6 +265,7 @@ export function SiteAuditor({
           </div>
         ) : null}
       </section>
+
 
       <section className="panel p-0">
         <div className="border-b border-border px-3.5 py-3">
@@ -162,25 +300,14 @@ export function SiteAuditor({
             ))}
           </ol>
         </div>
-        <ul className="divide-y divide-border">
-          {conversionGaps.length ? (
-            conversionGaps.map((gap) => (
-              <li key={gap.key} className="px-3.5 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Pill tone={TONE[gap.severity]}>{gap.severity}</Pill>
-                  <p className="text-[13px] font-medium">{gap.title}</p>
-                </div>
-                <p className="mt-1 text-[12px] text-muted-foreground">{gap.detail}</p>
-                <p className="mt-1 text-[12px]">{gap.action}</p>
-              </li>
-            ))
-          ) : (
-            <li className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
-              <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> Every conversion path for your goal is
-              wired up.
-            </li>
-          )}
-        </ul>
+        <FixList
+          targets={gapCards}
+          canManage={canManage}
+          busyProposalId={applyingId}
+          onFixAutomatically={fixOne}
+          emptyLabel="Every conversion path for your goal is wired up."
+        />
+
       </section>
 
       <section className="panel p-0">
@@ -268,7 +395,13 @@ export function SiteAuditor({
         <div className="border-b border-border px-3.5 py-3">
           <p className="eyebrow">Structure findings</p>
         </div>
-        <IssueList issues={structureIssues} />
+        <FixList
+          targets={structureTargets}
+          canManage={canManage}
+          busyProposalId={applyingId}
+          onFixAutomatically={fixOne}
+        />
+
       </section>
 
       <section className="panel p-0">
@@ -291,7 +424,13 @@ export function SiteAuditor({
               ))}
             </ul>
             <div className="border-t border-border">
-              <IssueList issues={liveIssues} />
+              <FixList
+                targets={liveTargets}
+                canManage={canManage}
+                busyProposalId={applyingId}
+                onFixAutomatically={fixOne}
+              />
+
             </div>
           </>
         ) : (

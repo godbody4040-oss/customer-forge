@@ -24,10 +24,12 @@ import { conversionGaps, normalizeGoal, type ConversionContext } from "@/lib/con
 import { proposeUpgrades, type UpgradeProposal } from "@/lib/auto-upgrade";
 import {
   useApplyUpgrade,
+  useBatchFix,
   useUndoUpgrade,
   useLiveAudit,
   type AppliedUpgrade,
 } from "@/lib/auto-upgrade.hooks";
+
 import type { IntakeValues } from "@/lib/intake-map";
 
 export const Route = createFileRoute("/_authenticated/app/command")({
@@ -173,6 +175,8 @@ function CommandCenterPage() {
   const liveAudit = useLiveAudit(orgId);
   const applyUpgrade = useApplyUpgrade(orgId, seo as unknown as Record<string, unknown>);
   const undoUpgrade = useUndoUpgrade(orgId);
+  const batchFix = useBatchFix(orgId, seo as unknown as Record<string, unknown>);
+
   const [live, setLive] = useState<LivePageResult[] | null>(null);
   const [liveNote, setLiveNote] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
@@ -193,6 +197,27 @@ function CommandCenterPage() {
       setApplyingId(null);
     }
   };
+
+  /**
+   * "Fix all critical issues" / "Optimise entire website". One checkpoint, then
+   * every safe change in order, then the affected pages are re-scanned so the
+   * score and the finding list reflect the new state.
+   */
+  const runBatch = async (mode: "critical" | "all") => {
+    if (!manage) return;
+    const criticalKinds = new Set(
+      structure.issues.filter((issue) => issue.severity === "critical").map((issue) => issue.upgrade),
+    );
+    const selected =
+      mode === "critical" ? proposals.filter((proposal) => criticalKinds.has(proposal.kind)) : proposals;
+    const result = await batchFix.mutateAsync({
+      proposals: selected,
+      label: mode === "critical" ? "Fix all critical issues" : "Optimise entire website",
+    });
+    if (result.restore) setLastApplied(result.restore);
+    if (live) await scanLive();
+  };
+
 
   /* ------------------------------ One-input intake ---------------------------- */
 
@@ -309,8 +334,11 @@ function CommandCenterPage() {
         applyingId={applyingId}
         lastApplied={lastApplied}
         isUndoing={undoUpgrade.isPending}
+        isBatchRunning={batchFix.isPending}
         onScanLive={() => void scanLive()}
         onApply={(proposal) => void runUpgrade(proposal)}
+        onBatchFix={(mode) => void runBatch(mode)}
+
         onUndo={() => {
           if (lastApplied) void undoUpgrade.mutateAsync(lastApplied).then(() => setLastApplied(null));
         }}
