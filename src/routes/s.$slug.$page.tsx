@@ -52,6 +52,7 @@ export const Route = createFileRoute("/s/$slug/$page")({
         { property: "og:description", content: page.og_description || description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: url },
+        { property: "og:site_name", content: name },
         { name: "twitter:card", content: "summary_large_image" },
         ...(shareImage && shareImage.startsWith("https://")
           ? [
