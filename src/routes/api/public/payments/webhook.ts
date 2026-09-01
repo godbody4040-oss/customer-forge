@@ -140,7 +140,11 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         await recordStripeTransaction(admin, {
           organizationId,
           stripeId: `setup:${String(object?.id ?? "")}`,
-          amount: Number(md["setupAmount"] ?? 750),
+          // Trust the amount Stripe actually charged, not request metadata.
+          amount:
+            typeof object?.amount_total === "number"
+              ? Number(object.amount_total) / 100
+              : Number(md["setupAmount"] ?? 0),
           currency: String(object?.currency ?? "usd"),
           description: "Revora Growth System setup fee",
           status: "completed",
