@@ -438,10 +438,11 @@ function WebsitePage() {
             <PortalAccess organizationId={orgId} canManage={manage} />
           </Disclosure>
 
-          <Disclosure label="Fix what needs attention" hint="Buttons, forms and links on your pages">
+          <Disclosure label="Advanced" hint="Buttons, forms, links, reports and platform checks">
             <InteractionHealth pages={pages ?? []} onFix={() => goTo("build")} />
           </Disclosure>
-          <Disclosure label="Reports & checks" hint="Review, build report and platform checks">
+          <Disclosure label="Advanced reports & checks" hint="Review, build report and platform checks">
+
             <WebsiteReview
               organizationId={orgId}
               slug={org?.slug}
