@@ -265,7 +265,12 @@ function Dashboard() {
     { done: !!profileQuery.data?.description, label: "Write your About section", to: "/app/website" },
     { done: !!org?.conversion_goal, label: "Pick your main conversion goal", to: "/app/settings" },
   ];
+  const peak = stats.trend.reduce(
+    (best, b) => (b.count > best.count ? b : best),
+    stats.trend[0] ?? { start: Date.now(), count: 0 },
+  );
   const remaining = checklist.filter((c) => !c.done);
+
 
   if (leadsQuery.isLoading || !orgId) return <LoadingRows rows={5} />;
 
