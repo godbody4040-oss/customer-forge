@@ -482,6 +482,8 @@ export type Database = {
           hours: Json
           id: string
           logo_url: string | null
+          notification_email: string | null
+          notify_on_lead: boolean
           organization_id: string
           owner_email: string | null
           owner_name: string | null
@@ -514,6 +516,8 @@ export type Database = {
           hours?: Json
           id?: string
           logo_url?: string | null
+          notification_email?: string | null
+          notify_on_lead?: boolean
           organization_id: string
           owner_email?: string | null
           owner_name?: string | null
@@ -546,6 +550,8 @@ export type Database = {
           hours?: Json
           id?: string
           logo_url?: string | null
+          notification_email?: string | null
+          notify_on_lead?: boolean
           organization_id?: string
           owner_email?: string | null
           owner_name?: string | null
@@ -903,6 +909,54 @@ export type Database = {
           },
           {
             foreignKeyName: "lead_activities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_alert_log: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string | null
+          organization_id: string
+          reason: string | null
+          recipient: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          organization_id: string
+          reason?: string | null
+          recipient: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          organization_id?: string
+          reason?: string | null
+          recipient?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_alert_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_alert_log_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "public_organizations"

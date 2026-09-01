@@ -6,6 +6,12 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
+    // A client who signed up through a portal link may land here after
+    // confirming their email. Finish the join they started instead of
+    // dropping them into an empty workspace.
+    const pending =
+      typeof window === "undefined" ? null : window.localStorage.getItem("revora.portal_code");
+    if (pending) throw redirect({ to: "/portal", search: { code: pending } });
     return { user: data.user };
   },
   component: () => <Outlet />,

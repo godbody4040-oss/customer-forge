@@ -17,10 +17,12 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { checkDomainAvailability, saveOwnDomain } from "@/lib/domain.functions";
+import { checkDomainAvailability, recheckDomain, saveOwnDomain } from "@/lib/domain.functions";
 import {
   DNS_HELP,
+  DOMAIN_FAQ,
   DOMAIN_STEPS,
+  REGISTRAR_GUIDES,
   REGISTRARS,
   dnsRows,
   domainSuggestions,
@@ -79,11 +81,20 @@ export function DomainCenter({
   const queryClient = useQueryClient();
   const saveFn = useServerFn(saveOwnDomain);
   const availabilityFn = useServerFn(checkDomainAvailability);
+  const recheckFn = useServerFn(recheckDomain);
 
   const connected = settings?.custom_domain ?? "";
   const [input, setInput] = useState(connected);
   const [idea, setIdea] = useState("");
   const [results, setResults] = useState<Availability[]>([]);
+  const [registrar, setRegistrar] = useState("godaddy");
+  const [lastCheck, setLastCheck] = useState<{
+    dnsOk: boolean;
+    sslOk: boolean;
+    detail: string;
+    seen: string[];
+    expected: string;
+  } | null>(null);
 
   const status = settings?.domain_status ?? "not_connected";
   const dnsOk = !!settings?.dns_ok;
@@ -100,6 +111,24 @@ export function DomainCenter({
       saveFn({ data: { organizationId: organizationId!, domain: value } }),
     onSuccess: (result) => {
       toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
+        description: result.detail,
+      });
+      void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const recheck = useMutation({
+    mutationFn: () => recheckFn({ data: { organizationId: organizationId! } }),
+    onSuccess: (result) => {
+      setLastCheck({
+        dnsOk: result.dnsOk,
+        sslOk: result.sslOk,
+        detail: result.detail,
+        seen: result.seen,
+        expected: result.expected,
+      });
+      toast.message(result.live ? "Domain verified" : "Not verified yet", {
         description: result.detail,
       });
       void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
@@ -386,16 +415,100 @@ export function DomainCenter({
         ) : null}
       </Panel>
 
+      {/* STEP-BY-STEP GUIDE — written for an owner who has never touched DNS */}
+      <Panel className="space-y-4 p-5">
+        <SectionHeading
+          eyebrow="Step-by-step guide"
+          title="How to point your domain at your website"
+          action={
+            <Pill tone={dnsOk && sslOk ? "signal" : connected ? "attention" : "neutral"}>
+              {dnsOk && sslOk ? "Verified" : connected ? "Waiting on DNS" : "Not started"}
+            </Pill>
+          }
+        />
+        <ol className="space-y-2 text-[13px]">
+          {[
+            "Save your domain in Revora (the box above). Nothing goes offline when you do this.",
+            "Open your registrar — the company you bought the domain from — and find its DNS screen.",
+            "Add the two A records shown below, exactly as written.",
+            "Come back here and press Check now. We look up your domain live and tell you the truth.",
+            "Once DNS and HTTPS both pass, publish (or re-publish) and your domain serves your site.",
+          ].map((step, index) => (
+            <li key={index} className="flex gap-2">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">
+                {index + 1}
+              </span>
+              <span className="text-muted-foreground">{step}</span>
+            </li>
+          ))}
+        </ol>
+
+        <div>
+          <p className="eyebrow mb-2">Instructions for your registrar</p>
+          <div className="flex flex-wrap gap-1.5">
+            {REGISTRAR_GUIDES.map((guide) => (
+              <button
+                key={guide.id}
+                type="button"
+                aria-pressed={registrar === guide.id}
+                onClick={() => setRegistrar(guide.id)}
+                className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] transition-colors ${
+                  registrar === guide.id
+                    ? "border-primary/60 bg-primary/10 text-foreground"
+                    : "border-border text-muted-foreground hover:bg-elevated"
+                }`}
+              >
+                {guide.name}
+              </button>
+            ))}
+          </div>
+          <ol className="mt-3 space-y-1.5">
+            {(REGISTRAR_GUIDES.find((g) => g.id === registrar) ?? REGISTRAR_GUIDES[0])!.steps.map(
+              (step, index) => (
+                <li key={index} className="text-[12px] text-muted-foreground">
+                  <span className="font-medium text-foreground">{index + 1}.</span> {step}
+                </li>
+              ),
+            )}
+          </ol>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {DOMAIN_FAQ.map((item) => (
+            <div key={item.q} className="rounded-md border border-border/60 p-3">
+              <p className="text-[12px] font-medium">{item.q}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
       {/* DNS records + verified status */}
+
       {connected ? (
         <Panel className="space-y-4 p-5">
           <SectionHeading
             eyebrow="Step 3"
             title="Add these two records at your registrar"
             action={
-              <Pill tone={dnsOk ? "signal" : "attention"}>
-                {dnsOk ? "DNS resolving here" : "Waiting on DNS"}
-              </Pill>
+              <div className="flex items-center gap-2">
+                <Pill tone={dnsOk ? "signal" : "attention"}>
+                  {dnsOk ? "DNS resolving here" : "Waiting on DNS"}
+                </Pill>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={recheck.isPending}
+                  onClick={() => recheck.mutate()}
+                >
+                  {recheck.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="size-3.5" />
+                  )}
+                  Check now
+                </Button>
+              </div>
             }
           />
           <div className="overflow-x-auto">
@@ -470,6 +583,16 @@ export function DomainCenter({
             <p className="text-[12px] text-accent">
               Your domain is ready. Publish your website and it will serve at {connected}.
             </p>
+          ) : null}
+          {lastCheck ? (
+            <div className="rounded-md border border-border/60 p-3">
+              <p className="text-[12px] font-medium">Live lookup result</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{lastCheck.detail}</p>
+              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                expected {lastCheck.expected} · found{" "}
+                {lastCheck.seen.length ? lastCheck.seen.join(", ") : "nothing yet"}
+              </p>
+            </div>
           ) : null}
           {settings?.domain_checked_at ? (
             <p className="text-[11px] text-muted-foreground">

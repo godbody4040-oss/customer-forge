@@ -160,3 +160,103 @@ export const DOMAIN_STEPS = [
   },
   { id: "live", title: "Go live", detail: "Publish your website and your domain serves it." },
 ] as const;
+
+/**
+ * Registrar-specific, click-by-click instructions. Written for an owner who has
+ * never touched DNS: exactly where to click and exactly what to type.
+ */
+export const REGISTRAR_GUIDES: {
+  id: string;
+  name: string;
+  steps: string[];
+}[] = [
+  {
+    id: "godaddy",
+    name: "GoDaddy",
+    steps: [
+      "Sign in at godaddy.com and open My Products.",
+      "Find your domain and click DNS (or Manage DNS).",
+      "If an A record named @ already exists, click the pencil to edit it instead of adding a new one.",
+      "Set Type A, Name @, Value 185.158.133.1, TTL 1 hour, then Save.",
+      "Click Add, choose Type A, Name www, Value 185.158.133.1, then Save.",
+      "Delete any other A record or CNAME for @ or www — two answers keep the site offline.",
+    ],
+  },
+  {
+    id: "namecheap",
+    name: "Namecheap",
+    steps: [
+      "Sign in and open Domain List, then click Manage next to your domain.",
+      "Open the Advanced DNS tab.",
+      "Remove the default 'Parking page' / URL redirect records for @ and www.",
+      "Add New Record → A Record, Host @, Value 185.158.133.1, TTL Automatic.",
+      "Add New Record → A Record, Host www, Value 185.158.133.1, TTL Automatic.",
+      "Save all changes with the green checkmarks.",
+    ],
+  },
+  {
+    id: "cloudflare",
+    name: "Cloudflare",
+    steps: [
+      "Sign in, open Websites and pick your domain.",
+      "Open DNS → Records.",
+      "Add record → A, Name @, IPv4 address 185.158.133.1.",
+      "Add record → A, Name www, IPv4 address 185.158.133.1.",
+      "Set Proxy status to DNS only (grey cloud) for both records.",
+      "Save. Delete any older A/CNAME record for @ or www.",
+    ],
+  },
+  {
+    id: "squarespace",
+    name: "Squarespace / Google Domains",
+    steps: [
+      "Sign in and open Domains, then your domain.",
+      "Click DNS → DNS Settings → Custom records.",
+      "Add Host @, Type A, Data 185.158.133.1.",
+      "Add Host www, Type A, Data 185.158.133.1.",
+      "Remove any existing A or CNAME rows for @ and www, then Save.",
+    ],
+  },
+  {
+    id: "porkbun",
+    name: "Porkbun",
+    steps: [
+      "Sign in and open Domain Management.",
+      "Click the DNS icon next to your domain.",
+      "Delete the default ALIAS/CNAME records for the bare domain and www.",
+      "Add Type A, Host blank, Answer 185.158.133.1.",
+      "Add Type A, Host www, Answer 185.158.133.1.",
+    ],
+  },
+  {
+    id: "wix",
+    name: "Wix",
+    steps: [
+      "Sign in and open Domains from your dashboard.",
+      "Click your domain → Advanced → Edit DNS.",
+      "Under A (Host) set the value to 185.158.133.1.",
+      "Under CNAME (Aliases) delete the www row, then add an A record for www pointing to 185.158.133.1.",
+      "Save changes.",
+    ],
+  },
+];
+
+/** Plain-English answers to what owners ask while they wait. */
+export const DOMAIN_FAQ: { q: string; a: string }[] = [
+  {
+    q: "Will my site go down while I do this?",
+    a: "No. Your free Revora address keeps serving the live site the entire time. Your own domain only takes over after both checks below pass.",
+  },
+  {
+    q: "How long does it take?",
+    a: "Usually 5–60 minutes after you save the records. Some registrars take up to 48 hours to publish the change worldwide.",
+  },
+  {
+    q: "Do I need to buy an SSL certificate?",
+    a: "No. HTTPS is issued automatically and renews itself once DNS points here.",
+  },
+  {
+    q: "What about my email on this domain?",
+    a: "Leave your MX and TXT records exactly as they are. Only the A records for @ and www change, so email keeps working.",
+  },
+];

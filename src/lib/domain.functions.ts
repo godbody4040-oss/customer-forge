@@ -105,3 +105,62 @@ export const checkDomainAvailability = createServerFn({ method: "POST" })
     const results = await Promise.all(data.domains.map(lookup));
     return { results, checkedAt: new Date().toISOString() };
   });
+
+/**
+ * Re-run the live DNS + HTTPS verification for the domain already saved on this
+ * workspace, and report which individual records resolve. Status is only ever
+ * derived from a real lookup — nothing is assumed from what the owner typed.
+ */
+export const recheckDomain = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string }) => ({
+    organizationId: String(input?.organizationId ?? ""),
+  }))
+  .handler(async ({ data, context }) => {
+    const { checkDomain, DOMAIN_A_RECORD } = await import("@/lib/admin.server");
+
+    const { data: settings, error } = await context.supabase
+      .from("website_settings")
+      .select("organization_id, custom_domain")
+      .eq("organization_id", data.organizationId)
+      .maybeSingle();
+    if (error || !settings) throw new Error("You don't have access to that workspace.");
+
+    const domain = settings.custom_domain ?? "";
+    if (!domain) throw new Error("No custom domain is connected yet.");
+
+    const check = await checkDomain(domain);
+    await context.supabase
+      .from("website_settings")
+      .update({
+        domain_status: check.status,
+        domain_error:
+          check.status === "error" || check.status === "dns_pending" ? check.detail : null,
+        domain_checked_at: new Date().toISOString(),
+        domain_verified: check.dnsOk,
+        ssl_active: check.sslOk,
+        dns_ok: check.dnsOk,
+        ssl_ok: check.sslOk,
+        domain_records: check.records,
+      })
+      .eq("organization_id", data.organizationId);
+
+    const records = (check.records ?? {}) as {
+      a?: string[];
+      cname?: string[];
+      aMatches?: boolean;
+      cnameMatches?: boolean;
+    };
+    return {
+      domain,
+      status: check.status,
+      detail: check.detail,
+      dnsOk: check.dnsOk,
+      sslOk: check.sslOk,
+      live: check.dnsOk && check.sslOk,
+      expected: DOMAIN_A_RECORD,
+      seen: [...(records.a ?? []), ...(records.cname ?? [])],
+      rootOk: !!(records.aMatches || records.cnameMatches),
+      checkedAt: new Date().toISOString(),
+    };
+  });
