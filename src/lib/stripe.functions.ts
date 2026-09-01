@@ -217,7 +217,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
           },
         },
         payment_method_collection: "always" as const,
-        saved_payment_method_options: { payment_method_save: "enabled" as const },
+        
 
       };
 
