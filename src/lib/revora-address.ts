@@ -3,7 +3,7 @@
  *
  * Every client website is included with a free address on Revora's own domain:
  *
- *   clientname.revoragrowthsystems.com
+ *   clientname.revoraweb.site
  *
  * It is handed out automatically, it is unique per organization, it never
  * expires, and it keeps working after a client connects a domain of their own.

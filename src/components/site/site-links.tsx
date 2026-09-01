@@ -2,7 +2,7 @@
  * Public website links.
  *
  * A client website is reachable two ways: on the client's own address
- * (`name.revoragrowthsystems.com` or their domain), where pages live at `/about`,
+ * (`name.revoraweb.site` or their domain), where pages live at `/about`,
  * and inside the builder preview at `/s/<slug>/about`. Visitors must never see
  * builder-shaped URLs on their own address, so every in-site link goes through
  * this component and picks the right shape for the address being served.
