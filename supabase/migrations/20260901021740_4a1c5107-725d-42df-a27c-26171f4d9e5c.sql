@@ -1,0 +1,11 @@
+CREATE INDEX IF NOT EXISTS idx_automation_steps_org ON public.automation_steps (organization_id);
+CREATE INDEX IF NOT EXISTS idx_lead_activities_org ON public.lead_activities (organization_id);
+CREATE INDEX IF NOT EXISTS idx_payment_events_org ON public.payment_events (organization_id);
+CREATE INDEX IF NOT EXISTS idx_quote_addons_org ON public.quote_addons (organization_id);
+CREATE INDEX IF NOT EXISTS idx_quote_options_org ON public.quote_options (organization_id);
+CREATE INDEX IF NOT EXISTS idx_quote_questions_org ON public.quote_questions (organization_id);
+CREATE INDEX IF NOT EXISTS idx_website_components_org ON public.website_components (organization_id);
+CREATE INDEX IF NOT EXISTS idx_website_sections_org ON public.website_sections (organization_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_lead ON public.appointments (lead_id);
+CREATE INDEX IF NOT EXISTS idx_automation_runs_lead ON public.automation_runs (lead_id);
+CREATE INDEX IF NOT EXISTS idx_quote_requests_lead ON public.quote_requests (lead_id);
