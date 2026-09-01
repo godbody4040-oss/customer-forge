@@ -284,16 +284,18 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     // "sent" always means a provider accepted the message.
     const { data: profile } = await supabase
       .from("business_profiles")
-      .select("email, owner_email")
+      .select("email, owner_email, notification_email, notify_on_lead")
       .eq("organization_id", orgId)
       .maybeSingle();
+    const { alertRecipient } = await import("@/lib/notifications.functions");
     const ownerEmail = profile?.email || profile?.owner_email || null;
+    const alertEmail = alertRecipient((profile ?? {}) as Record<string, never>);
 
     const { deliverRun, sendLeadAlert } = await import("@/lib/messaging.server");
 
-    if (ownerEmail) {
+    if (alertEmail) {
       const alert = await sendLeadAlert(
-        ownerEmail,
+        alertEmail,
         {
           businessName: org.name,
           kind: titles[data.kind]?.split(":")[0] ?? "New lead",
@@ -313,8 +315,17 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         // One alert per lead, even if the submit is retried.
         `lead-alert-${lead.id}`,
       );
+      const { logAlertDelivery } = await import("@/lib/notifications.server");
+      await logAlertDelivery(null, {
+        organizationId: orgId,
+        leadId: lead.id,
+        recipient: alertEmail,
+        kind: data.kind,
+        result: alert,
+      });
       if (!alert.ok) console.warn("lead alert not delivered", alert.reason);
     }
+
 
     const { enqueueAutomations } = await import("@/lib/automation-engine");
     await enqueueAutomations(

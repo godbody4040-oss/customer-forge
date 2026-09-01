@@ -12,6 +12,7 @@ import { initials, dateShort } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { MemberControls, TeamInvites } from "@/components/app/TeamInvites";
 import { PortalAccess } from "@/components/app/PortalAccess";
+import { LeadNotifications } from "@/components/app/LeadNotifications";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({
@@ -169,6 +170,9 @@ function SettingsPage() {
           <PortalAccess organizationId={orgId} canManage={canManage} />
         </div>
       </Panel>
+
+      <LeadNotifications organizationId={orgId} canManage={canManage} />
+
     </div>
   );
 }
