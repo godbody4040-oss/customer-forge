@@ -55,7 +55,7 @@ function PortalApp() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => signOut.mutate()}
+            onClick={() => void signOut()}
             aria-label="Sign out"
             className="cursor-pointer"
           >
