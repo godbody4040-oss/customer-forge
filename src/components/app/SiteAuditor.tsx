@@ -153,9 +153,11 @@ export function SiteAuditor({
   applyingId,
   lastApplied,
   isUndoing,
+  isBatchRunning,
   onScanLive,
   onApply,
   onUndo,
+  onBatchFix,
 }: {
   structureIssues: AuditIssue[];
   pageScores: { pageId: string; title: string; score: number }[];
@@ -170,9 +172,11 @@ export function SiteAuditor({
   applyingId: string | null;
   lastApplied: AppliedUpgrade | null;
   isUndoing: boolean;
+  isBatchRunning?: boolean;
   onScanLive: () => void;
   onApply: (proposal: UpgradeProposal) => void;
   onUndo: () => void;
+  onBatchFix?: (mode: "critical" | "all") => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const liveIssues = useMemo(() => (live ?? []).flatMap((page) => page.issues), [live]);
@@ -180,6 +184,17 @@ export function SiteAuditor({
   const score = auditScore(allIssues, 60);
   const summary = summarizeProposals(proposals);
   const ladder = ctaLadder(goal, conversionCtx);
+
+  const structureTargets = useMemo(() => fixTargets(structureIssues, proposals), [structureIssues, proposals]);
+  const liveTargets = useMemo(() => fixTargets(liveIssues, proposals), [liveIssues, proposals]);
+  const gapCards = useMemo(() => gapTargets(conversionGaps), [conversionGaps]);
+  const criticalCount = allIssues.filter((issue) => issue.severity === "critical").length;
+  const autoFixable = proposals.filter((proposal) => proposal.applyable && proposal.kind !== "publish_site").length;
+
+  const fixOne = (proposalId: string) => {
+    const proposal = proposals.find((item) => item.id === proposalId);
+    if (proposal) onApply(proposal);
+  };
 
   return (
     <div className="space-y-6">
@@ -195,11 +210,11 @@ export function SiteAuditor({
             </p>
             <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
               Structure is scanned from your saved pages. Run the live scan to check the HTML your customers and Google
-              actually receive.
+              actually receive. Every finding below opens the exact place that fixes it.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Pill tone={allIssues.some((i) => i.severity === "critical") ? "danger" : "signal"}>
+            <Pill tone={criticalCount ? "danger" : "signal"}>
               {allIssues.length} finding{allIssues.length === 1 ? "" : "s"}
             </Pill>
             <Button size="sm" variant="outline" onClick={onScanLive} disabled={isScanning}>
@@ -208,6 +223,34 @@ export function SiteAuditor({
             </Button>
           </div>
         </div>
+
+        {onBatchFix ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-md border border-border p-3">
+            <Button
+              size="sm"
+              variant="signal"
+              disabled={!canManage || !autoFixable || isBatchRunning}
+              onClick={() => onBatchFix("critical")}
+            >
+              {isBatchRunning ? <Loader2 className="size-4 animate-spin" /> : <Wrench className="size-4" />}
+              Fix all critical issues
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!canManage || !autoFixable || isBatchRunning}
+              onClick={() => onBatchFix("all")}
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              Optimise entire website
+            </Button>
+            <p className="text-[11px] text-muted-foreground">
+              {autoFixable
+                ? `${autoFixable} safe change${autoFixable === 1 ? "" : "s"} available. One restore point is saved first; publishing stays your decision.`
+                : "Nothing can be fixed automatically right now — the remaining findings need a business fact from you."}
+            </p>
+          </div>
+        ) : null}
 
         {pageScores.length ? (
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -222,6 +265,7 @@ export function SiteAuditor({
           </div>
         ) : null}
       </section>
+
 
       <section className="panel p-0">
         <div className="border-b border-border px-3.5 py-3">
