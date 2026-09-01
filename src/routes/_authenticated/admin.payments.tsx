@@ -13,7 +13,7 @@ import {
 } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAllPayments, usePaymentConfig, usePaymentEvents } from "@/lib/payments.hooks";
+import { useAllPayments, usePaymentEvents } from "@/lib/payments.hooks";
 import { refundPayment } from "@/lib/payments.functions";
 import { useWorkspace } from "@/lib/use-tenant";
 
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin/payments")({
       { title: "Payments — Revora admin" },
       {
         name: "description",
-        content: "Verified PayPal transactions across every Revora client workspace.",
+        content: "Verified Stripe transactions across every Revora client workspace.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -45,7 +45,6 @@ function AdminPayments() {
   const { data: ws } = useWorkspace();
   const isSuperAdmin = !!ws?.isSuperAdmin;
   const { data: payments, isLoading } = useAllPayments(isSuperAdmin);
-  const { data: config } = usePaymentConfig();
   const [openId, setOpenId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -81,7 +80,7 @@ function AdminPayments() {
       data: value === null ? { paymentId: open.id } : { paymentId: open.id, amount: value },
     });
     if (result.ok) {
-      setMessage(`PayPal confirmed the refund. Payment is now ${result.status.replace("_", " ")}.`);
+      setMessage(`Stripe confirmed the refund. Payment is now ${result.status.replace("_", " ")}.`);
       setAmount("");
       setNote("");
       void queryClient.invalidateQueries({ queryKey: ["payments", "all"] });
@@ -97,16 +96,7 @@ function AdminPayments() {
           <p className="eyebrow">Payments</p>
           <h1 className="mt-1 font-display text-[24px] font-semibold">Verified transactions</h1>
         </div>
-        {config ? (
-          <Pill tone={config.configured && config.environment === "live" ? "signal" : "neutral"}>
-            {!config.configured
-              ? "PayPal not configured"
-              : config.environment === "live"
-                ? "PayPal live"
-                : "PayPal sandbox"}
-            {config.configured && !config.webhookConfigured ? " · webhook missing" : ""}
-          </Pill>
-        ) : null}
+        <Pill tone="neutral">Stripe</Pill>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4">
@@ -202,12 +192,8 @@ function AdminPayments() {
           <SectionHeading eyebrow="Transaction" title={open.description ?? "Payment detail"} />
           <dl className="mt-4 grid gap-2 text-[13px] sm:grid-cols-2">
             <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">PayPal order</dt>
-              <dd className="font-mono text-[11px]">{open.paypal_order_id ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Capture</dt>
-              <dd className="font-mono text-[11px]">{open.paypal_capture_id ?? "—"}</dd>
+              <dt className="text-muted-foreground">Environment</dt>
+              <dd className="font-mono text-[11px]">{open.environment}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">Customer email</dt>
@@ -241,10 +227,10 @@ function AdminPayments() {
 
           {open.status === "completed" || open.status === "partially_refunded" ? (
             <div className="mt-5 border-t border-border pt-4">
-              <p className="text-[13px] font-medium">Issue refund through PayPal</p>
+              <p className="text-[13px] font-medium">Issue refund through Stripe</p>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 Leave the amount blank for a full refund. The status shown afterwards comes from
-                PayPal.
+                Stripe.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Input
