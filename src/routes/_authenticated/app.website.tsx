@@ -19,6 +19,12 @@ import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
 import { WebsiteProject } from "@/components/app/WebsiteProject";
+import {
+  EnvironmentBanner,
+  ProductionLaunchModal,
+  ProductionReadinessPanel,
+} from "@/components/app/ProductionLaunch";
+import { useLaunchFlow, useProductionReadiness, useProductionStatus } from "@/lib/production.hooks";
 import { AssistantShowcase } from "@/components/app/AssistantShowcase";
 import { EffectStudio } from "@/components/app/EffectStudio";
 import { ImageStudio } from "@/components/app/ImageStudio";
@@ -79,6 +85,11 @@ function WebsitePage() {
   const manage = canManage(ws?.workspace?.role ?? "viewer");
   const [jump, setJump] = useState<{ step: WizardStepKey; anchor?: string; nonce: number } | null>(null);
   const requiredCount = (readiness?.requiredGaps ?? []).length;
+
+  // One server-verified launch path for every publish button on this page.
+  const { data: production } = useProductionStatus(orgId);
+  const { data: productionReadiness } = useProductionReadiness(orgId);
+  const launchFlow = useLaunchFlow(orgId);
 
   const servicesCount = facts.data?.servicesCount ?? (services ?? []).length;
   const pricedCount = facts.data?.pricedServicesCount ?? 0;
@@ -152,6 +163,8 @@ function WebsitePage() {
         ) : null}
       </div>
 
+      <EnvironmentBanner status={production} />
+
       <WebsiteProject
         organizationId={orgId}
         businessName={org?.name ?? null}
@@ -219,14 +232,10 @@ function WebsitePage() {
         canManage={manage}
         hasSections={visibleSections > 0}
         publishState={settings?.publish_state ?? "draft"}
-        isPublishing={saveSettings.isPending}
+        isPublishing={launchFlow.isLaunching || saveSettings.isPending}
         onPublishNow={() => {
           trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
-          saveSettings.mutate({
-            publish_state: "published",
-            published: true,
-            last_published_at: new Date().toISOString(),
-          });
+          launchFlow.launch();
         }}
 
       />
@@ -352,6 +361,14 @@ function WebsitePage() {
 
         launchSlot={
           <div className="space-y-6">
+            <ProductionReadinessPanel
+              readiness={productionReadiness}
+              status={production}
+              onLaunch={launchFlow.launch}
+              isLaunching={launchFlow.isLaunching}
+              canManage={manage}
+              result={launchFlow.result}
+            />
             <RevoraScorePanel
               score={siteScore.score}
               factors={siteScore.factors}
@@ -373,15 +390,8 @@ function WebsitePage() {
               lastPublishedAt={settings?.last_published_at ?? null}
               slug={org?.slug}
               canManage={manage}
-              isPublishing={saveSettings.isPending}
-              onPublish={() => {
-                if (!qa.passed) return;
-                saveSettings.mutate({
-                  publish_state: "published",
-                  published: true,
-                  last_published_at: new Date().toISOString(),
-                });
-              }}
+              isPublishing={launchFlow.isLaunching || saveSettings.isPending}
+              onPublish={() => launchFlow.launch()}
               onUnpublish={() =>
                 saveSettings.mutate({ publish_state: "unpublished", published: false })
               }
@@ -407,17 +417,17 @@ function WebsitePage() {
               pages={pages ?? []}
               publishState={settings?.publish_state ?? "draft"}
               canManage={manage}
-              isPublishing={saveSettings.isPending}
-              onPublish={() =>
-                saveSettings.mutate({
-                  publish_state: "published",
-                  published: true,
-                  last_published_at: new Date().toISOString(),
-                })
-              }
+              isPublishing={launchFlow.isLaunching || saveSettings.isPending}
+              onPublish={() => launchFlow.launch()}
             />
           </div>
         }
+      />
+
+      <ProductionLaunchModal
+        open={launchFlow.lockedOpen}
+        onClose={launchFlow.closeLocked}
+        reason={launchFlow.result?.reason ?? null}
       />
     </div>
   );
