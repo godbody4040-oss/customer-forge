@@ -116,8 +116,8 @@ function CampaignsPage() {
   const siteOrigin = useMemo(() => {
     const custom = settings.data?.custom_domain;
     if (custom && settings.data?.domain_verified) return `https://${custom}`;
-    if (settings.data?.subdomain)
-      return `https://${settings.data.subdomain}.revoragrowthsystems.com`;
+    const free = revoraUrl(settings.data?.subdomain);
+    if (free && settings.data?.revora_host_ok) return free;
     if (typeof window !== "undefined" && org?.slug)
       return `${window.location.origin}/s/${org.slug}`;
     return org?.slug ? `/s/${org.slug}` : "";
