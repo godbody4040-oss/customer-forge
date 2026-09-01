@@ -424,7 +424,13 @@ export function SiteAuditor({
               ))}
             </ul>
             <div className="border-t border-border">
-              <IssueList issues={liveIssues} />
+              <FixList
+                targets={liveTargets}
+                canManage={canManage}
+                busyProposalId={applyingId}
+                onFixAutomatically={fixOne}
+              />
+
             </div>
           </>
         ) : (
