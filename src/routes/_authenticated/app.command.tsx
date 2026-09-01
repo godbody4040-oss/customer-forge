@@ -334,8 +334,11 @@ function CommandCenterPage() {
         applyingId={applyingId}
         lastApplied={lastApplied}
         isUndoing={undoUpgrade.isPending}
+        isBatchRunning={batchFix.isPending}
         onScanLive={() => void scanLive()}
         onApply={(proposal) => void runUpgrade(proposal)}
+        onBatchFix={(mode) => void runBatch(mode)}
+
         onUndo={() => {
           if (lastApplied) void undoUpgrade.mutateAsync(lastApplied).then(() => setLastApplied(null));
         }}
