@@ -7,9 +7,9 @@
  * reads can only be written by verified payment webhooks / platform admins.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isTrialActive } from "@/lib/trial";
+import { resolveAccess, type AccountState } from "@/lib/access-state";
 
-export type Entitlement = { allowed: boolean; reason: string };
+export type Entitlement = { allowed: boolean; reason: string; state: AccountState | "DEMO" };
 
 export async function orgEntitlement(
   supabase: SupabaseClient,
@@ -17,22 +17,20 @@ export async function orgEntitlement(
 ): Promise<Entitlement> {
   const { data: org, error } = await supabase
     .from("organizations")
-    .select("id, is_demo, is_suspended, subscription_status, trial_ends_at, created_at, setup_paid_at")
+    .select(
+      "id, is_demo, is_suspended, subscription_status, trial_ends_at, created_at, setup_paid_at, setup_payment_status",
+    )
     .eq("id", organizationId)
     .maybeSingle();
-  if (error || !org) return { allowed: false, reason: "We couldn't verify your workspace." };
-  if (org.is_suspended) return { allowed: false, reason: "This workspace is suspended." };
-  if (org.is_demo) return { allowed: true, reason: "demo" };
+  if (error || !org)
+    return { allowed: false, reason: "We couldn't verify your workspace.", state: "EXPIRED" };
+  if (org.is_demo) return { allowed: true, reason: "demo", state: "DEMO" };
 
-  const trialActive = isTrialActive(org as never);
-  const paidStatus = org.subscription_status === "active" || org.subscription_status === "past_due";
-  if (trialActive || paidStatus || org.setup_paid_at) return { allowed: true, reason: "entitled" };
-
-  return {
-    allowed: false,
-    reason: "Your free access has ended. Complete the $750 setup payment to keep using your system.",
-  };
+  // Builder usage itself is never metered: access is the only gate.
+  const access = resolveAccess(org as never);
+  return { allowed: access.allowed, reason: access.reason, state: access.state };
 }
+
 
 /** Throws a plain, user-safe error when the workspace isn't entitled. */
 export async function assertOrgEntitled(supabase: SupabaseClient, organizationId: string) {
