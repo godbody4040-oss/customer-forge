@@ -7,6 +7,7 @@
  * Styles live inside the existing `settings` JSONB column, which means they
  * persist, autosave, undo/redo and publish through the normal content path.
  */
+import type * as React from "react";
 import { safeLinkUrl } from "@/lib/website-content";
 
 export const FONT_FAMILIES = ["inherit", "display", "sans", "serif", "mono"] as const;
