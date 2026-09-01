@@ -1,7 +1,7 @@
 /**
  * Serves a client website from the hostname the visitor typed.
  *
- * `clientname.revoragrowthsystems.com` (the free Revora address) and a verified
+ * `clientname.revoraweb.site` (the free Revora address) and a verified
  * custom domain both land on the same published website, with no redirect and
  * no path prefix. Anything unpublished stays private: the loader reuses the
  * published-only reader, so drafts return nothing here.

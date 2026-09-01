@@ -1,7 +1,7 @@
 /**
  * FREE REVORA ADDRESS panel.
  *
- * Included with every website: `yourname.revoragrowthsystems.com`, secured with
+ * Included with every website: `yourname.revoraweb.site`, secured with
  * HTTPS, live the moment the site is published. It is deliberately presented
  * apart from a CUSTOM DOMAIN so an owner always knows which address is which,
  * and that they never need to buy a domain to launch.
