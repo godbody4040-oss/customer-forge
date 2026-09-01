@@ -1,6 +1,8 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import {
+  BarChart3,
   Building2,
+
   ClipboardList,
   CreditCard,
   Globe2,
