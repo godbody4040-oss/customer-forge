@@ -322,9 +322,12 @@ function Dashboard() {
       </div>
 
 
+      <StatusCenter organizationId={orgId} />
+
       <ProductionSummaryCard status={production} />
 
       <OnboardingJourney />
+
 
 
 
