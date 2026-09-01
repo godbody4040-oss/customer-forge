@@ -11,6 +11,7 @@ import { ROLES } from "@/lib/domain";
 import { initials, dateShort } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { MemberControls, TeamInvites } from "@/components/app/TeamInvites";
+import { PortalAccess } from "@/components/app/PortalAccess";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({
