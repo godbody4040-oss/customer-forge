@@ -56,9 +56,9 @@ import { websiteQa, type WizardStepKey } from "@/lib/website-content";
 
 export const Route = createFileRoute("/_authenticated/app/website")({
   // Deep links from audit findings land on the exact builder area that fixes them.
-  validateSearch: (search: Record<string, unknown>) => ({
-    section: typeof search["section"] === "string" ? (search["section"] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { section?: string } =>
+    typeof search["section"] === "string" ? { section: search["section"] as string } : {},
+
   head: () => ({
     meta: [
       { title: "Website builder — Revora" },
