@@ -47,7 +47,6 @@ function UndoRedo() {
   );
 }
 
-
 export type BuilderSection = {
   key: string;
   label: string;
@@ -149,7 +148,6 @@ export function BuilderShell({
             <UndoRedo />
             {actions}
           </div>
-
         </div>
       </div>
 

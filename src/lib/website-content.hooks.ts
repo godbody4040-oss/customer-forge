@@ -275,7 +275,6 @@ export function useSavePage(organizationId: string | undefined) {
   });
 }
 
-
 export function useMoveSection(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
   return useMutation({
