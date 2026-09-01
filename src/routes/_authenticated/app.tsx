@@ -41,6 +41,9 @@ import { useTrialCountdown } from "@/lib/trial-clock";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/app")({
+  head: () => ({
+    meta: [{ title: "Workspace — Revora" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AppShell,
 });
 

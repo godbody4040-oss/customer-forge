@@ -31,6 +31,9 @@ import { writeSupportMode } from "@/lib/support-mode";
 import { currency, dateShort, dateLong, number } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/clients/$orgId")({
+  head: () => ({
+    meta: [{ title: "Client workspace — Revora admin" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: ClientDetail,
 });
 

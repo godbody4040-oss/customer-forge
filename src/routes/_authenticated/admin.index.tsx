@@ -18,6 +18,9 @@ import { currency, dateShort, number } from "@/lib/format";
 import { REVORA } from "@/lib/brand";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({
+    meta: [{ title: "Admin — Revora" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AdminOverview,
 });
 

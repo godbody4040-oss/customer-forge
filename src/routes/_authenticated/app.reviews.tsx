@@ -22,6 +22,9 @@ import { REVIEWS_META } from "@/lib/app-meta";
 import { MetaPreview } from "@/components/app/MetaPreview";
 
 export const Route = createFileRoute("/_authenticated/app/reviews")({
+  head: () => ({
+    meta: [{ title: "Reviews — Revora" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   head: () => ({ meta: REVIEWS_META.meta, links: REVIEWS_META.links }),
   component: ReviewsPage,
 });

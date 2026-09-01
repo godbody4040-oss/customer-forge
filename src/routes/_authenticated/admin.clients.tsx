@@ -12,6 +12,9 @@ import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
 import { currency, dateShort, number } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/clients")({
+  head: () => ({
+    meta: [{ title: "Clients — Revora admin" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AdminClients,
 });
 

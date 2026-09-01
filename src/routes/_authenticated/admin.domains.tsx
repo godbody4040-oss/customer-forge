@@ -10,6 +10,9 @@ import { DOMAIN_STATES } from "@/lib/readiness";
 import { dateLong } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/domains")({
+  head: () => ({
+    meta: [{ title: "Domains — Revora admin" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AdminDomains,
 });
 

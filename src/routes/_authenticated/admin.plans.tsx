@@ -7,6 +7,9 @@ import { GROWTH_SYSTEM } from "@/lib/offer";
 import { currency, number } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/plans")({
+  head: () => ({
+    meta: [{ title: "Plans — Revora admin" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AdminPlans,
 });
 
