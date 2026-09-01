@@ -8,7 +8,10 @@
  * Run against the dev server (default) or any deployment:
  *   E2E_BASE_URL=https://customer-forge.lovable.app bunx vitest run src/lib/flows.e2e.test.ts
  *
- * The suite skips itself when no server is reachable, so unit runs stay green.
+ * Reachability behaviour: in CI (or whenever E2E_REQUIRE_SERVER=1) an
+ * unreachable server FAILS the suite, so a silent skip can never be mistaken
+ * for a passing production check. In local unit runs it skips so `vitest run`
+ * stays green without a dev server.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 
