@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
 import { auditLiveSite } from "@/lib/site-audit.functions";
 import type { UpgradeProposal } from "@/lib/auto-upgrade";
@@ -11,7 +12,7 @@ export function useLiveAudit(organizationId: string | undefined) {
   const run = useServerFn(auditLiveSite);
   return useMutation({
     mutationFn: async () => run({ data: { organizationId: organizationId! } }),
-    onError: (error: Error) => toast.error(error.message || "Couldn't scan your live pages."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't scan your live pages.")),
   });
 }
 
@@ -191,7 +192,7 @@ export function useApplyUpgrade(
       void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't apply that upgrade."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't apply that upgrade.")),
   });
 }
 
@@ -294,7 +295,7 @@ export function useBatchFix(
       void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't run that optimisation."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't run that optimisation.")),
   });
 }
 
@@ -336,7 +337,7 @@ export function useUndoUpgrade(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't roll that change back."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't roll that change back.")),
   });
 }
 

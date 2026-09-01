@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import {
   CheckCircle2,
   Circle,
@@ -35,7 +36,12 @@ import { RevoraAddressCard } from "@/components/app/RevoraAddressCard";
 import { revoraHost } from "@/lib/revora-address";
 import { dateLong } from "@/lib/format";
 
-type Availability = { domain: string; state: "available" | "taken" | "unknown" | "invalid" };
+type Availability = {
+  domain: string;
+  state: "available" | "taken" | "unknown" | "invalid";
+  reason?: string | null;
+};
+
 
 function copy(value: string, label: string) {
   void navigator.clipboard?.writeText(value).then(
@@ -87,6 +93,8 @@ export function DomainCenter({
   const [input, setInput] = useState(connected);
   const [idea, setIdea] = useState("");
   const [results, setResults] = useState<Availability[]>([]);
+  const [lookupIssue, setLookupIssue] = useState<string | null>(null);
+
   const [registrar, setRegistrar] = useState("godaddy");
   const [lastCheck, setLastCheck] = useState<{
     dnsOk: boolean;
@@ -115,7 +123,7 @@ export function DomainCenter({
       });
       void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const recheck = useMutation({
@@ -133,14 +141,19 @@ export function DomainCenter({
       });
       void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const availability = useMutation({
     mutationFn: (domains: string[]) => availabilityFn({ data: { domains } }),
-    onSuccess: (data) => setResults(data.results as Availability[]),
-    onError: (error: Error) => toast.error(error.message),
+    onSuccess: (data) => {
+      setResults(data.results as Availability[]);
+      setLookupIssue(data.unavailable ? (data.reason ?? "The domain registry didn't answer.") : null);
+    },
+    onError: () =>
+      setLookupIssue("We couldn't check availability right now. Please try again in a moment."),
   });
+
 
   const stepDone: Record<string, boolean> = {
     choose: !!connected,
@@ -253,7 +266,30 @@ export function DomainCenter({
           </Button>
         </div>
 
-        {!results.length ? (
+        {lookupIssue ? (
+          <div className="space-y-2 rounded-md border border-border/60 bg-elevated/40 p-4">
+            <p className="text-[13px] font-medium">Availability couldn't be verified right now.</p>
+            <p className="text-[12px] text-muted-foreground">{lookupIssue}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="signal"
+                disabled={availability.isPending}
+                onClick={() => availability.mutate(ideaTargets())}
+              >
+                {availability.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+                Try again
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <a href="#connect-own-domain">Connect a domain you already own</a>
+              </Button>
+            </div>
+          </div>
+        ) : !results.length ? (
           <div className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <button
@@ -268,72 +304,75 @@ export function DomainCenter({
           </div>
         ) : (
           <div className="space-y-2">
-            {results.map((result) => (
-              <div
-                key={result.domain}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/60 p-3"
-              >
-                <div className="flex items-center gap-2">
-                  <Globe className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                  <span className="font-mono text-[12px]">{result.domain}</span>
-                  <Pill
-                    tone={
-                      result.state === "available"
-                        ? "signal"
+            {results
+              // A name we genuinely couldn't check is never listed as a result —
+              // showing a column of "couldn't confirm" rows tells the owner nothing.
+              .filter((result) => result.state !== "unknown")
+              .map((result) => (
+                <div
+                  key={result.domain}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/60 p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <Globe className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                    <span className="font-mono text-[12px]">{result.domain}</span>
+                    <Pill
+                      tone={
+                        result.state === "available"
+                          ? "signal"
+                          : result.state === "taken"
+                            ? "neutral"
+                            : "attention"
+                      }
+                    >
+                      {result.state === "available"
+                        ? "Looks available"
                         : result.state === "taken"
-                          ? "neutral"
-                          : "attention"
-                    }
-                  >
-                    {result.state === "available"
-                      ? "Looks available"
-                      : result.state === "taken"
-                        ? "Already registered"
-                        : result.state === "invalid"
-                          ? "Not a valid name"
-                          : "Couldn't confirm"}
-                  </Pill>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {result.state === "available" ? (
-                    <>
-                      {REGISTRARS.slice(0, 3).map((r) => (
-                        <Button key={r.id} size="sm" variant="outline" asChild>
-                          <a
-                            href={r.search(result.domain)}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                          >
-                            {r.name.split(" ")[0]} <ExternalLink className="size-3.5" />
-                          </a>
+                          ? "Already registered"
+                          : "Not a valid name"}
+                    </Pill>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.state === "available" ? (
+                      <>
+                        {REGISTRARS.slice(0, 3).map((r) => (
+                          <Button key={r.id} size="sm" variant="outline" asChild>
+                            <a
+                              href={r.search(result.domain)}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                            >
+                              {r.name.split(" ")[0]} <ExternalLink className="size-3.5" />
+                            </a>
+                          </Button>
+                        ))}
+                        <Button
+                          size="sm"
+                          variant="signal"
+                          disabled={!canManage || save.isPending}
+                          onClick={() => {
+                            setInput(result.domain);
+                            save.mutate(result.domain);
+                          }}
+                        >
+                          Use this
                         </Button>
-                      ))}
-                      <Button
-                        size="sm"
-                        variant="signal"
-                        disabled={!canManage || save.isPending}
-                        onClick={() => {
-                          setInput(result.domain);
-                          save.mutate(result.domain);
-                        }}
-                      >
-                        Use this
-                      </Button>
-                    </>
-                  ) : result.state === "taken" ? (
-                    <span className="text-[11px] text-muted-foreground">
-                      Try a different word or ending
-                    </span>
-                  ) : null}
+                      </>
+                    ) : result.state === "taken" ? (
+                      <span className="text-[11px] text-muted-foreground">
+                        Try a different word or ending
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
             <p className="text-[11px] text-muted-foreground">
               Availability is a strong hint from the registry directory — the registrar's checkout
               is the final word on price and availability.
             </p>
           </div>
         )}
+
 
         <div className="grid gap-2 sm:grid-cols-2">
           {REGISTRARS.map((r) => (
@@ -357,7 +396,8 @@ export function DomainCenter({
       </Panel>
 
       {/* Connect a domain you own */}
-      <Panel className="space-y-4 p-5">
+      <Panel id="connect-own-domain" className="scroll-mt-24 space-y-4 p-5">
+
         <SectionHeading eyebrow="Connect a domain" title="Use a domain you already own" />
         <p className="text-[13px] text-muted-foreground">
           Save it here first. We keep checking your DNS in the background and only report it live

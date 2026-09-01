@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { ArrowLeft, CheckCircle2, Circle, ExternalLink, LifeBuoy, RefreshCw } from "lucide-react";
 import {
   ErrorNote,
@@ -71,7 +72,7 @@ function ClientDetail() {
       toast.success("Client updated.");
       await refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const domainMutation = useMutation({
@@ -82,7 +83,7 @@ function ClientDetail() {
       });
       await refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const verifyMutation = useMutation({
@@ -93,7 +94,7 @@ function ClientDetail() {
       });
       await refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const publishMutation = useMutation({
@@ -102,7 +103,7 @@ function ClientDetail() {
       toast.success("Publishing state updated.");
       await refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const supportMutation = useMutation({
@@ -118,7 +119,7 @@ function ClientDetail() {
       queryClient.clear();
       navigate({ to: "/app" });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const endMutation = useMutation({
@@ -127,7 +128,7 @@ function ClientDetail() {
       toast.success("Support session closed.");
       await refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   if (detail.isLoading) return <LoadingRows rows={5} />;

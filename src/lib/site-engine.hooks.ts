@@ -3,6 +3,7 @@ import { nextPublishState } from "@/lib/publish-state";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
 import {
   aiEditSiteCopy,
@@ -75,7 +76,7 @@ export function useRunSiteEngine(organizationId: string | undefined) {
     },
     onError: (error: Error) => {
       void queryClient.invalidateQueries({ queryKey: ["generation_job", organizationId] });
-      toast.error(error.message || "The build couldn't be queued. You can retry.");
+      toast.error(friendlyError(error, "The build couldn't be queued. You can retry."));
     },
   });
 }
@@ -85,7 +86,7 @@ export function useAiCopyEdit(organizationId: string | undefined) {
   return useMutation({
     mutationFn: async (vars: { instruction: string; fields: Record<string, string> }) =>
       edit({ data: { organizationId: organizationId!, ...vars } }),
-    onError: (error: Error) => toast.error(error.message || "Couldn't rewrite that copy."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't rewrite that copy.")),
   });
 }
 
@@ -161,7 +162,7 @@ export function useSnapshotWebsiteVersion(organizationId: string | undefined) {
       toast.success(`Saved as version ${version}.`);
       void queryClient.invalidateQueries({ queryKey: ["website_versions", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save this version."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save this version.")),
   });
 }
 
@@ -206,7 +207,7 @@ export function useRestoreWebsiteVersion(organizationId: string | undefined) {
       toast.success(`Version ${version} restored into your draft. Review, then publish.`);
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't restore that version."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't restore that version.")),
   });
 }
 
@@ -326,7 +327,7 @@ export function useAnalyzeBrief(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["build_readiness", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't analyse your business."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't analyse your business.")),
   });
 }
 
@@ -343,7 +344,7 @@ export function useSaveBrief(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["build_readiness", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save the brief."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save the brief.")),
   });
 }
 
@@ -359,7 +360,7 @@ export function useSaveMissingFacts(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
       void queryClient.invalidateQueries({ queryKey: ["build_readiness", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save your answers."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save your answers.")),
   });
 }
 
@@ -368,6 +369,6 @@ export function useSiteEngineCheck(organizationId: string | undefined) {
   const check = useServerFn(runSiteEngineCheck);
   return useMutation({
     mutationFn: async () => check({ data: { organizationId: organizationId! } }),
-    onError: (error: Error) => toast.error(error.message || "The system check couldn't run."),
+    onError: (error: Error) => toast.error(friendlyError(error, "The system check couldn't run.")),
   });
 }

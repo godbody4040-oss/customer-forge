@@ -24,6 +24,8 @@ export type ReadinessInput = {
         template?: string | null;
         seo?: unknown;
         custom_domain?: string | null;
+        subdomain?: string | null;
+
         domain_status?: string | null;
         publish_state?: string | null;
         published?: boolean | null;
@@ -120,12 +122,19 @@ export function readiness(input: ReadinessInput) {
       to: "/app/website",
     },
     {
+      // A workspace always gets a free Revora web address, so this item tracks
+      // "the site has a working address" — it must not sit permanently
+      // incomplete just because the owner hasn't bought a domain of their own.
       key: "domain",
-      label: "Domain",
-      done: s?.domain_status === "connected" || s?.domain_status === "ssl_active",
-      fix: "Connect your own domain, or launch on your free web address first.",
+      label: "Web address",
+      done:
+        hasText(s?.subdomain) ||
+        s?.domain_status === "connected" ||
+        s?.domain_status === "ssl_active",
+      fix: "Pick your free Revora web address, or connect a domain you own.",
       to: "/app/launch",
     },
+
     {
       key: "analytics",
       label: "Analytics",
@@ -157,31 +166,32 @@ export const DOMAIN_STATES: Record<
     help: "No custom domain has been added yet. The site runs on its free web address.",
   },
   dns_pending: {
-    label: "DNS pending",
+    label: "DNS setup required",
     tone: "attention",
-    help: "The domain is saved but its DNS records don't point here yet.",
+    help: "Your domain is saved. Add the records below at your domain provider, then press Check now.",
   },
   verifying: {
-    label: "Verifying",
+    label: "Checking DNS",
     tone: "info",
-    help: "DNS changes were spotted and are being confirmed. This can take up to 48 hours.",
+    help: "We spotted your changes and are confirming them. Domain changes can take a few hours to spread.",
   },
   connected: {
-    label: "Connected",
+    label: "DNS detected — securing",
     tone: "signal",
-    help: "DNS points to the site. The security certificate is being issued.",
+    help: "Your domain points here. We're issuing the security certificate now.",
   },
   ssl_active: {
-    label: "SSL active",
+    label: "Live",
     tone: "signal",
-    help: "The domain is live over a secure connection.",
+    help: "Your domain is live and secure.",
   },
   error: {
-    label: "Error",
+    label: "Needs attention",
     tone: "danger",
-    help: "Something is wrong with the DNS setup. Review the details and re-check.",
+    help: "Your domain isn't pointing here yet. Check the records below, then press Check now.",
   },
 };
+
 
 export const PUBLISH_STATES: Record<
   string,

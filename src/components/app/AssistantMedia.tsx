@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Film, ImagePlus, Loader2, Mic, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { summarizeClipChapters, transcribeVoiceCommand } from "@/lib/site-agent.functions";
@@ -74,7 +75,7 @@ export function AssistantMedia({
       if (result.text) onTranscript(result.text);
       else toast.error(result.message || "I couldn't hear anything in that recording.");
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't transcribe that recording."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't transcribe that recording.")),
   });
 
   useEffect(() => {

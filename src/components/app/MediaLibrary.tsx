@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Loader2, Star, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
@@ -147,7 +148,7 @@ export function MediaLibrary({
       toast.success("Photo removed.");
       invalidate();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const rows = mediaQuery.data ?? [];

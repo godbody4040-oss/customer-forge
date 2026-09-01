@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import {
   activateProduction,
   checkProductionReadiness,
@@ -57,7 +58,7 @@ export function useLaunchFlow(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["production-readiness"] });
       void queryClient.invalidateQueries({ queryKey: ["website_versions"] });
     },
-    onError: (error: Error) => toast.error(error.message || "We couldn't take the website live."),
+    onError: (error: Error) => toast.error(friendlyError(error, "We couldn't take the website live.")),
   });
 
   const launch = useCallback(() => {

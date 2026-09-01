@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import {
   ArrowRightLeft,
   CheckCircle2,
@@ -193,7 +194,7 @@ export function DomainOperations({
       toast.success("Address settings saved");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const certMutation = useMutation({
@@ -202,7 +203,7 @@ export function DomainOperations({
       toast[result.sslOk ? "success" : "message"](result.detail ?? "Checked.");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const startMutation = useMutation({
@@ -212,7 +213,7 @@ export function DomainOperations({
       toast.success("Transfer prepared — your current address stays live.");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const finishMutation = useMutation({
@@ -222,7 +223,7 @@ export function DomainOperations({
       else toast.error(result.transfer.detail ?? "Cutover cancelled — nothing changed.");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const rollbackMutation = useMutation({
@@ -231,7 +232,7 @@ export function DomainOperations({
       toast.success("Rolled back to your previous address.");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const emailSaveMutation = useMutation({
@@ -241,7 +242,7 @@ export function DomainOperations({
       toast.success("Saved. Add the records, then verify.");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const emailVerifyMutation = useMutation({
@@ -250,7 +251,7 @@ export function DomainOperations({
       toast[result.active ? "success" : "message"](result.detail ?? "Checked.");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const reportMutation = useMutation({
@@ -260,7 +261,7 @@ export function DomainOperations({
       toast.success("Search visibility report updated");
       refresh();
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const ssl = sslState({

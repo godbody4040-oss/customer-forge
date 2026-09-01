@@ -2,6 +2,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,7 +152,7 @@ export function TeamInvites({
       });
       queryClient.invalidateQueries({ queryKey: ["team_invitations", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const cancelInvite = useMutation({
@@ -165,7 +166,7 @@ export function TeamInvites({
       toast.success("Invite cancelled");
       queryClient.invalidateQueries({ queryKey: ["team_invitations", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   if (!canManage) {

@@ -50,10 +50,18 @@ export const Route = createFileRoute("/industries/$slug")({
   },
   head: ({ match }) => {
     const industry = (match.context as { industry?: (typeof INDUSTRIES)[number] }).industry;
-    const name = industry?.name ?? "Local Services";
+    // An unknown industry is a 404: never advertise it with a real title,
+    // canonical URL or business schema, or search engines will index it.
+    if (!industry) {
+      return {
+        meta: [{ title: "Page not found — Revora" }, { name: "robots", content: "noindex" }],
+      };
+    }
+    const name = industry.name;
     const title = `Websites & lead generation for ${name.toLowerCase()} — Revora`;
     const description = `Revora builds ${name.toLowerCase()} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up. ${usdExact(GROWTH_SYSTEM.setupPrice)} setup, then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.`;
     return {
+
       meta: [
         { title },
         { name: "description", content: description },
@@ -90,16 +98,17 @@ export const Route = createFileRoute("/industries/$slug")({
               priceSpecification: [
                 {
                   "@type": "PriceSpecification",
-                  price: 750,
+                  price: GROWTH_SYSTEM.setupPrice,
                   priceCurrency: "USD",
                   description: "One-time setup",
                 },
                 {
                   "@type": "UnitPriceSpecification",
-                  price: 100,
+                  price: GROWTH_SYSTEM.monthlyPrice,
                   priceCurrency: "USD",
                   unitText: "MONTH",
                 },
+
               ],
             },
           }),

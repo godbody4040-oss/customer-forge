@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { CheckCircle2, Circle, ExternalLink, RefreshCw } from "lucide-react";
 import { LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,8 @@ import {
 } from "@/lib/queries";
 import { reviewStateMeta, revoraSubdomain } from "@/lib/website-plan";
 import { saveOwnDomain } from "@/lib/domain.functions";
+import { revoraUrl } from "@/lib/revora-address";
+
 import { DOMAIN_STATES, PUBLISH_STATES, readiness } from "@/lib/readiness";
 import { dateLong, number } from "@/lib/format";
 import { canManage } from "@/lib/domain";
@@ -74,7 +77,7 @@ function Launch() {
       });
       await queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   if (loadingProfile || !orgId) return <LoadingRows rows={5} />;
@@ -92,9 +95,14 @@ function Launch() {
 
   const domainStatus = settings?.domain_status ?? "not_connected";
   const publishState = settings?.publish_state ?? "draft";
-  const siteUrl = settings?.custom_domain
-    ? `https://${settings.custom_domain}`
-    : `/s/${org?.slug ?? ""}`;
+  // The live address an owner should share: their own domain once it is verified
+  // and secure, otherwise the free Revora address included with the website.
+  const siteUrl =
+    settings?.custom_domain && settings?.dns_ok && settings?.ssl_ok
+      ? `https://${settings.custom_domain}`
+      : (revoraUrl(settings?.subdomain) ?? `/s/${org?.slug ?? ""}`);
+
+
 
   const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
   const reviewMeta = reviewStateMeta(reviewState);
@@ -114,7 +122,7 @@ function Launch() {
       },
       {
         onSuccess: () => toast.success(`Website ${PUBLISH_STATES[state]?.label.toLowerCase()}.`),
-        onError: (error: Error) => toast.error(error.message),
+        onError: (error: Error) => toast.error(friendlyError(error)),
       },
     );
   };

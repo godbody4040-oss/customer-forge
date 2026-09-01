@@ -7,6 +7,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Campaign = {
@@ -94,7 +95,7 @@ export function useSaveCampaign(organizationId: string | undefined) {
       toast.success("Campaign saved.");
       void queryClient.invalidateQueries({ queryKey: ["campaigns", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that campaign."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that campaign.")),
   });
 }
 
@@ -109,7 +110,7 @@ export function useDeleteCampaign(organizationId: string | undefined) {
       toast.success("Campaign removed.");
       void queryClient.invalidateQueries({ queryKey: ["campaigns", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't remove that campaign."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that campaign.")),
   });
 }
 
@@ -126,7 +127,7 @@ export function useSetReviewPublished(organizationId: string | undefined) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["reviews", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update that review."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update that review.")),
   });
 }
 
@@ -165,6 +166,6 @@ export function useRequestReview(organizationId: string | undefined) {
       toast.success("Review request queued.");
       void queryClient.invalidateQueries({ queryKey: ["automation_runs", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't queue that review request."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't queue that review request.")),
   });
 }

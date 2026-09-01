@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Copy, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Button } from "@/components/ui/button";
 import { getPortalCode, setPortalCode } from "@/lib/portal.functions";
 
@@ -49,7 +50,7 @@ export function PortalAccess({
       queryClient.setQueryData(["portal-code", organizationId], code);
       toast.success(code ? "Portal link ready to share." : "Self-serve joining turned off.");
     },
-    onError: (error: Error) => toast.error(error.message || "Could not update portal access."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Could not update portal access.")),
   });
 
   const code = codeQuery.data ?? null;
