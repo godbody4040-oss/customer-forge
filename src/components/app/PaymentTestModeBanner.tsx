@@ -17,5 +17,11 @@ export function PaymentTestModeBanner() {
       </div>
     );
   }
-  return null;
+  return (
+    <div className="rounded-md border border-border bg-elevated px-4 py-2 text-[12px] text-muted-foreground">
+      Secure live checkout — your card is charged for real by Stripe. Setup is a one-time payment and
+      the monthly plan starts after your free first month.
+    </div>
+  );
 }
+

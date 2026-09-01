@@ -13,6 +13,8 @@ import {
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
 import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
 import { StatusCenter } from "@/components/app/StatusCenter";
+import { ClientWebsiteSummary } from "@/components/app/ClientWebsiteSummary";
+
 
 import { useProductionStatus } from "@/lib/production.hooks";
 
@@ -337,7 +339,16 @@ function Dashboard() {
 
       <StatusCenter organizationId={orgId} />
 
+      <ClientWebsiteSummary
+        organizationId={orgId}
+        slug={org?.slug ?? null}
+        leads={leads.length}
+        bookings={appts.filter((a) => a.status !== "cancelled").length}
+        visits={events.filter((e) => e.event_type === "page_view").length}
+      />
+
       <ProductionSummaryCard status={production} />
+
 
       <OnboardingJourney />
 
