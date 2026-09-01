@@ -1,17 +1,34 @@
 /**
  * Visual builder canvas.
  *
- * A live, click-to-edit view of the selected page: sections render as the
- * visitor will see them (heading / subheading / body / items), clicking any
- * element selects it, text is edited inline in place, and the right-side
- * inspector exposes the rest of that element's settings. A device switcher
- * renders the same canvas at phone, tablet and desktop widths.
+ * A live, click-to-edit view of the selected page. Sections render as the
+ * visitor will see them, clicking any element selects it, text is edited inline
+ * in place, a layers panel mirrors the real page tree, sections and elements can
+ * be dragged into a new order, and the right-side inspector exposes the rest of
+ * the selected element's settings. A device switcher renders the same canvas at
+ * phone, tablet and desktop widths.
  *
  * Everything writes through the existing content mutations, so undo/redo,
- * autosave invalidation and link-safety rules all still apply.
+ * autosave invalidation and link-safety rules all still apply. Deleting a
+ * section or an element keeps the removed row in memory so the client can put it
+ * straight back.
  */
 import * as React from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Monitor, Smartphone, Tablet, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Layers,
+  Monitor,
+  Plus,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,32 +39,62 @@ import {
   type ContentSection,
 } from "@/lib/website-content";
 import {
+  useAddComponent,
+  useDeleteComponent,
   useDeleteSection,
+  useDuplicateComponent,
+  useDuplicateSection,
   useMoveSection,
+  useReorderComponents,
+  useReorderSections,
+  useRestoreComponent,
+  useRestoreSection,
   useSaveComponent,
   useSaveSection,
 } from "@/lib/website-content.hooks";
+import {
+  COMPONENT_LIBRARY,
+  breadcrumb,
+  elementLabel,
+  layers,
+  orderedComponents,
+  orderedSections,
+  reorder,
+  type Selection,
+} from "@/lib/builder-tree";
 import { cn } from "@/lib/utils";
 import {
   ALIGNMENTS,
+  BORDER_WIDTHS,
   BUTTON_SIZES,
   BUTTON_STYLES,
+  COLUMNS,
+  DEVICES,
+  DEVICE_META,
   FONT_FAMILIES,
   FONT_WEIGHTS,
-  LAYOUTS,
-  LAYOUT_CLASS,
+  LETTER_SPACINGS,
   LINE_HEIGHTS,
+  MAX_WIDTHS,
   OBJECT_FITS,
-  SPACING,
+  OPACITIES,
+  OVERLAYS,
+  RADII,
+  SHADOWS,
+  SPACES,
   TEXT_SIZES,
+  TEXT_TRANSFORMS,
   blockCss,
   buttonClasses,
   buttonCss,
-  paddingClass,
+  clearDeviceLayer,
+  isOverridden,
+  itemsCss,
   readBlockStyle,
-  textClasses,
   writeBlockStyle,
   type BlockStyle,
+  type Device,
+  type StyleKey,
 } from "@/lib/site-style";
 
 /** Alt text lives in the component's settings JSONB; always read it as text. */
@@ -59,18 +106,19 @@ function readAlt(settings: unknown): string {
   return "";
 }
 
-type Device = "mobile" | "tablet" | "desktop";
+const DEVICE_ICON: Record<Device, typeof Monitor> = {
+  desktop: Monitor,
+  tablet: Tablet,
+  mobile: Smartphone,
+};
 
-const DEVICES: { key: Device; label: string; width: number; icon: typeof Monitor }[] = [
-  { key: "mobile", label: "Phone", width: 390, icon: Smartphone },
-  { key: "tablet", label: "Tablet", width: 768, icon: Tablet },
-  { key: "desktop", label: "Desktop", width: 1180, icon: Monitor },
-];
+/** Where a dragged row would land relative to the row it is hovering over. */
+type DropHint = { id: string; position: "before" | "after" } | null;
 
-type Selection =
-  | { type: "section"; sectionId: string }
-  | { type: "component"; sectionId: string; componentId: string }
-  | null;
+function dropPosition(event: React.DragEvent<HTMLElement>): "before" | "after" {
+  const box = event.currentTarget.getBoundingClientRect();
+  return event.clientY < box.top + box.height / 2 ? "before" : "after";
+}
 
 /** contentEditable text that saves on blur and never injects markup. */
 function InlineText({
@@ -130,21 +178,56 @@ function ItemCard({
   item,
   selected,
   editable,
+  dragging,
+  hint,
   onSelect,
   onCommit,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  actions,
+  device,
 }: {
   item: ContentComponent;
   selected: boolean;
   editable: boolean;
+  dragging: boolean;
+  hint: "before" | "after" | null;
   onSelect: () => void;
   onCommit: (patch: Record<string, unknown>) => void;
+  onDragStart: () => void;
+  onDragOver: (position: "before" | "after") => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
+  actions?: React.ReactNode;
+  /** Which device tier to preview this element at. */
+  device: Device;
 }) {
-  const style = readBlockStyle(item.settings);
+  const style = readBlockStyle(item.settings, device);
   return (
     <div
-      style={blockCss(style)}
       role="button"
       tabIndex={0}
+      draggable={editable}
+      onDragStart={(event) => {
+        event.stopPropagation();
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDragOver={(event) => {
+        if (!editable) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDragOver(dropPosition(event));
+      }}
+      onDrop={(event) => {
+        if (!editable) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDrop();
+      }}
+      onDragEnd={onDragEnd}
       onClick={(event) => {
         event.stopPropagation();
         onSelect();
@@ -152,10 +235,15 @@ function ItemCard({
       onKeyDown={(event) => {
         if (event.key === "Enter") onSelect();
       }}
+      style={blockCss(style)}
       className={cn(
-        "rounded-lg border p-3 text-left transition-colors",
+        "relative rounded-lg border p-3 text-left transition-colors",
         selected ? "border-primary bg-primary/5" : "border-border/70 hover:border-primary/40",
         !item.is_visible && "opacity-50",
+        style.hidden === true && "opacity-40 outline-1 outline-dashed outline-border",
+        dragging && "opacity-40",
+        hint === "before" && "ring-2 ring-primary/70 ring-offset-1",
+        hint === "after" && "ring-2 ring-primary/70 ring-offset-1",
       )}
     >
       {item.media_url ? (
@@ -164,14 +252,14 @@ function ItemCard({
           alt={readAlt(item.settings)}
           loading="lazy"
           className="mb-2 h-28 w-full rounded-md"
-          style={{ objectFit: style.objectFit }}
+          style={{ objectFit: style.objectFit ?? "cover" }}
         />
       ) : null}
       <InlineText
         value={item.label ?? ""}
         placeholder="Item title"
         editable={editable}
-        className={cn("font-medium", textClasses(style))}
+        className="font-medium"
         onCommit={(label) => onCommit({ label })}
       />
       <InlineText
@@ -186,6 +274,7 @@ function ItemCard({
           {item.link_label}
         </span>
       ) : null}
+      {selected && actions ? <div className="mt-2 flex flex-wrap gap-1">{actions}</div> : null}
     </div>
   );
 }
@@ -202,29 +291,48 @@ export function BuilderCanvas({
   const [pageId, setPageId] = React.useState<string | null>(null);
   const [device, setDevice] = React.useState<Device>("desktop");
   const [selection, setSelection] = React.useState<Selection>(null);
+  const [showLayers, setShowLayers] = React.useState(true);
+  const [addKind, setAddKind] = React.useState(COMPONENT_LIBRARY[0]!.kind);
+  const [dragId, setDragId] = React.useState<string | null>(null);
+  const [hint, setHint] = React.useState<DropHint>(null);
+  const [undoable, setUndoable] = React.useState<
+    { kind: "section"; row: ContentSection } | { kind: "component"; row: ContentComponent } | null
+  >(null);
 
   const saveSection = useSaveSection(organizationId);
   const saveComponent = useSaveComponent(organizationId);
   const moveSection = useMoveSection(organizationId);
   const deleteSection = useDeleteSection(organizationId);
+  const reorderSections = useReorderSections(organizationId);
+  const reorderComponents = useReorderComponents(organizationId);
+  const duplicateSection = useDuplicateSection(organizationId);
+  const restoreSection = useRestoreSection(organizationId);
+  const addComponent = useAddComponent(organizationId);
+  const duplicateComponent = useDuplicateComponent(organizationId);
+  const deleteComponent = useDeleteComponent(organizationId);
+  const restoreComponent = useRestoreComponent(organizationId);
 
   const ordered = React.useMemo(
     () => [...pages].sort((a, b) => a.sort_order - b.sort_order),
     [pages],
   );
   const page = ordered.find((p) => p.id === pageId) ?? ordered[0] ?? null;
-  const sections = React.useMemo(
-    () => (page ? [...page.sections].sort((a, b) => a.sort_order - b.sort_order) : []),
-    [page],
-  );
+  const sections = React.useMemo(() => (page ? orderedSections(page) : []), [page]);
 
-  const selectedSection: ContentSection | null = selection
-    ? (sections.find((s) => s.id === selection.sectionId) ?? null)
+  const selectedSectionId =
+    selection && selection.type !== "page" ? selection.sectionId : (null as string | null);
+  const selectedSection: ContentSection | null = selectedSectionId
+    ? (sections.find((s) => s.id === selectedSectionId) ?? null)
     : null;
   const selectedComponent: ContentComponent | null =
     selection?.type === "component" && selectedSection
       ? (selectedSection.components.find((c) => c.id === selection.componentId) ?? null)
       : null;
+
+  const clearDrag = () => {
+    setDragId(null);
+    setHint(null);
+  };
 
   if (!page) {
     return (
@@ -238,7 +346,9 @@ export function BuilderCanvas({
     );
   }
 
-  const width = DEVICES.find((d) => d.key === device)!.width;
+  const width = DEVICE_META[device].width;
+  const trail = breadcrumb(page, selectedSection, selectedComponent);
+  const layerNodes = layers(page);
 
   const move = (index: number, direction: -1 | 1) => {
     const a = sections[index];
@@ -247,6 +357,54 @@ export function BuilderCanvas({
     moveSection.mutate({
       a: { id: a.id, sort_order: a.sort_order },
       b: { id: b.id, sort_order: b.sort_order },
+    });
+  };
+
+  /** Applies a section drag, or an element drag inside its own section. */
+  const commitDrag = (overId: string, position: "before" | "after") => {
+    if (!dragId || dragId === overId) return clearDrag();
+    const sectionIds = sections.map((s) => s.id);
+    if (sectionIds.includes(dragId) && sectionIds.includes(overId)) {
+      const next = reorder(sectionIds, dragId, overId, position);
+      if (next !== sectionIds) reorderSections.mutate(next);
+      return clearDrag();
+    }
+    const owner = sections.find((s) => s.components.some((c) => c.id === dragId));
+    if (owner && owner.components.some((c) => c.id === overId)) {
+      const ids = orderedComponents(owner).map((c) => c.id);
+      const next = reorder(ids, dragId, overId, position);
+      if (next !== ids) reorderComponents.mutate(next);
+    }
+    clearDrag();
+  };
+
+  const removeSection = (section: ContentSection) => {
+    setUndoable({ kind: "section", row: section });
+    deleteSection.mutate(section.id);
+    setSelection(null);
+  };
+
+  const removeComponent = (component: ContentComponent) => {
+    setUndoable({ kind: "component", row: component });
+    deleteComponent.mutate(component);
+    setSelection({ type: "section", pageId: page.id, sectionId: component.section_id });
+  };
+
+  const undo = () => {
+    if (!undoable) return;
+    if (undoable.kind === "section") restoreSection.mutate(undoable.row);
+    else restoreComponent.mutate(undoable.row);
+    setUndoable(null);
+  };
+
+  const addElement = (section: ContentSection) => {
+    const preset = COMPONENT_LIBRARY.find((entry) => entry.kind === addKind);
+    if (!preset) return;
+    addComponent.mutate({
+      sectionId: section.id,
+      kind: preset.kind,
+      sortOrder: section.components.length,
+      values: preset.defaults ?? {},
     });
   };
 
@@ -269,28 +427,109 @@ export function BuilderCanvas({
           ))}
         </select>
 
+        <Button
+          size="sm"
+          variant={showLayers ? "secondary" : "outline"}
+          onClick={() => setShowLayers((open) => !open)}
+          aria-pressed={showLayers}
+        >
+          <Layers className="mr-1.5 size-3.5" aria-hidden /> Layers
+        </Button>
+
+        {undoable ? (
+          <Button size="sm" variant="outline" onClick={undo}>
+            <Undo2 className="mr-1.5 size-3.5" aria-hidden /> Undo delete
+          </Button>
+        ) : null}
+
         <div className="ml-auto flex items-center gap-1">
-          {DEVICES.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => setDevice(option.key)}
-              aria-pressed={device === option.key}
-              title={`${option.label} preview`}
-              className={cn(
-                "grid size-8 place-items-center rounded-md border transition-colors",
-                device === option.key
-                  ? "border-primary text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <option.icon className="size-4" aria-hidden />
-            </button>
-          ))}
+          {DEVICES.map((option) => {
+            const Icon = DEVICE_ICON[option];
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setDevice(option)}
+                aria-pressed={device === option}
+                title={`${DEVICE_META[option].label} preview`}
+                className={cn(
+                  "grid size-8 place-items-center rounded-md border transition-colors",
+                  device === option
+                    ? "border-primary text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4" aria-hidden />
+              </button>
+            );
+          })}
         </div>
       </header>
 
-      <div className="grid gap-0 lg:grid-cols-[1fr_300px]">
+      {trail.length ? (
+        <nav
+          aria-label="Selected element"
+          className="flex flex-wrap items-center gap-1 border-b border-border/70 px-3 py-1.5 text-[11px] text-muted-foreground"
+        >
+          {trail.map((crumb, index) => (
+            <span key={`${crumb}-${index}`} className="flex items-center gap-1">
+              {index > 0 ? <span aria-hidden>→</span> : null}
+              <span className={index === trail.length - 1 ? "text-foreground" : undefined}>
+                {crumb}
+              </span>
+            </span>
+          ))}
+        </nav>
+      ) : null}
+
+      <div
+        className={cn(
+          "grid gap-0",
+          showLayers ? "lg:grid-cols-[220px_1fr_300px]" : "lg:grid-cols-[1fr_300px]",
+        )}
+      >
+        {/* Layers */}
+        {showLayers ? (
+          <aside className="max-h-[70vh] overflow-auto border-b border-border bg-card/30 p-2 lg:border-r lg:border-b-0">
+            <p className="px-1 pb-1 text-[11px] tracking-wide text-muted-foreground uppercase">
+              Page structure
+            </p>
+            {layerNodes.length === 0 ? (
+              <p className="px-1 text-[12px] text-muted-foreground">No sections yet.</p>
+            ) : null}
+            <ul className="space-y-0.5">
+              {layerNodes.map((node) => {
+                const active =
+                  node.selection.type === "component"
+                    ? selection?.type === "component" && selection.componentId === node.id
+                    : selection?.type === "section" && selection.sectionId === node.id;
+                return (
+                  <li key={node.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelection(node.selection)}
+                      className={cn(
+                        "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-[12px] transition-colors",
+                        node.depth === 1 && "pl-5 text-muted-foreground",
+                        active ? "bg-primary/10 text-primary" : "hover:bg-muted/60",
+                        !node.visible && "opacity-50",
+                      )}
+                    >
+                      <span className="truncate">{node.label}</span>
+                      {node.children ? (
+                        <span className="ml-auto text-[10px] text-muted-foreground">
+                          {node.children}
+                        </span>
+                      ) : null}
+                      {!node.visible ? <EyeOff className="size-3" aria-hidden /> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        ) : null}
+
         {/* Canvas */}
         <div
           className="max-h-[70vh] overflow-auto bg-background/40 p-4"
@@ -307,32 +546,57 @@ export function BuilderCanvas({
             ) : null}
 
             {sections.map((section, index) => {
-              const isSelected = selection?.sectionId === section.id;
+              const isSelected = selectedSectionId === section.id;
+              const sectionHint = hint?.id === section.id ? hint.position : null;
+              const sectionStyle = readBlockStyle(section.settings, device);
               return (
                 <div
                   key={section.id}
                   role="button"
                   tabIndex={0}
+                  draggable={canManage}
+                  onDragStart={(event) => {
+                    event.dataTransfer.effectAllowed = "move";
+                    setDragId(section.id);
+                  }}
+                  onDragOver={(event) => {
+                    if (!canManage || !dragId) return;
+                    event.preventDefault();
+                    setHint({ id: section.id, position: dropPosition(event) });
+                  }}
+                  onDrop={(event) => {
+                    if (!canManage) return;
+                    event.preventDefault();
+                    commitDrag(section.id, dropPosition(event));
+                  }}
+                  onDragEnd={clearDrag}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelection({ type: "section", sectionId: section.id });
+                    setSelection({ type: "section", pageId: page.id, sectionId: section.id });
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter")
-                      setSelection({ type: "section", sectionId: section.id });
+                      setSelection({ type: "section", pageId: page.id, sectionId: section.id });
                   }}
-                  style={blockCss(readBlockStyle(section.settings))}
+                  style={blockCss(sectionStyle)}
                   className={cn(
-                    "rounded-xl border bg-card text-left transition-colors",
-                    paddingClass(readBlockStyle(section.settings)),
+                    "rounded-xl border bg-card p-4 text-left transition-colors",
                     isSelected
                       ? "border-primary ring-1 ring-primary/40"
                       : "border-border hover:border-primary/40",
                     !section.is_visible && "opacity-50",
+                    sectionStyle.hidden === true &&
+                      "opacity-40 outline-1 outline-dashed outline-border",
+                    dragId === section.id && "opacity-40",
+                    sectionHint === "before" && "border-t-2 border-t-primary",
+                    sectionHint === "after" && "border-b-2 border-b-primary",
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] tracking-wide text-muted-foreground uppercase">
+                    <span className="flex items-center gap-1 text-[11px] tracking-wide text-muted-foreground uppercase">
+                      {canManage ? (
+                        <GripVertical className="size-3.5 cursor-grab" aria-hidden />
+                      ) : null}
                       {sectionLabel(section.kind)}
                     </span>
                     {!section.is_visible ? (
@@ -344,10 +608,7 @@ export function BuilderCanvas({
                     value={section.heading ?? ""}
                     placeholder="Add a headline"
                     editable={canManage}
-                    className={cn(
-                      "mt-2 font-display text-[18px] leading-snug font-semibold",
-                      textClasses(readBlockStyle(section.settings)),
-                    )}
+                    className="mt-2 font-display text-[18px] leading-snug font-semibold"
                     onCommit={(heading) =>
                       saveSection.mutate({ id: section.id, patch: { heading } })
                     }
@@ -373,58 +634,139 @@ export function BuilderCanvas({
                     <div
                       className={cn(
                         "mt-3 grid gap-2",
-                        device === "mobile"
-                          ? "grid-cols-1"
-                          : LAYOUT_CLASS[readBlockStyle(section.settings).layout] ||
-                              "sm:grid-cols-2",
+                        sectionStyle.columns === null &&
+                          (device === "mobile" ? "grid-cols-1" : "sm:grid-cols-2"),
                       )}
+                      style={itemsCss(sectionStyle)}
                     >
-                      {[...section.components]
-                        .sort((a, b) => a.sort_order - b.sort_order)
-                        .map((item) => (
-                          <ItemCard
-                            key={item.id}
-                            item={item}
-                            editable={canManage}
-                            selected={
-                              selection?.type === "component" && selection.componentId === item.id
-                            }
-                            onSelect={() =>
-                              setSelection({
-                                type: "component",
-                                sectionId: section.id,
-                                componentId: item.id,
-                              })
-                            }
-                            onCommit={(patch) => saveComponent.mutate({ id: item.id, patch })}
-                          />
-                        ))}
+                      {orderedComponents(section).map((item) => (
+                        <ItemCard
+                          key={item.id}
+                          item={item}
+                          device={device}
+                          editable={canManage}
+                          dragging={dragId === item.id}
+                          hint={hint?.id === item.id ? hint.position : null}
+                          selected={
+                            selection?.type === "component" && selection.componentId === item.id
+                          }
+                          onSelect={() =>
+                            setSelection({
+                              type: "component",
+                              pageId: page.id,
+                              sectionId: section.id,
+                              componentId: item.id,
+                            })
+                          }
+                          onCommit={(patch) => saveComponent.mutate({ id: item.id, patch })}
+                          onDragStart={() => setDragId(item.id)}
+                          onDragOver={(position) => setHint({ id: item.id, position })}
+                          onDrop={() => commitDrag(item.id, hint?.position ?? "after")}
+                          onDragEnd={clearDrag}
+                          actions={
+                            canManage ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title={`Duplicate ${elementLabel(item)}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    duplicateComponent.mutate(item);
+                                  }}
+                                >
+                                  <Copy className="size-3.5" aria-hidden />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title={item.is_visible ? "Hide element" : "Show element"}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    saveComponent.mutate({
+                                      id: item.id,
+                                      patch: { is_visible: !item.is_visible },
+                                    });
+                                  }}
+                                >
+                                  {item.is_visible ? (
+                                    <EyeOff className="size-3.5" aria-hidden />
+                                  ) : (
+                                    <Eye className="size-3.5" aria-hidden />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  title="Delete element"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    removeComponent(item);
+                                  }}
+                                >
+                                  <Trash2 className="size-3.5" aria-hidden />
+                                </Button>
+                              </>
+                            ) : null
+                          }
+                        />
+                      ))}
                     </div>
                   ) : null}
 
                   {isSelected && canManage ? (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
+                    <div
+                      className="mt-3 flex flex-wrap items-center gap-1.5"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <Button
                         size="sm"
                         variant="outline"
+                        title="Move section up"
                         disabled={index === 0}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          move(index, -1);
-                        }}
+                        onClick={() => move(index, -1)}
                       >
                         <ArrowUp className="size-3.5" aria-hidden />
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
+                        title="Move section down"
                         disabled={index === sections.length - 1}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          move(index, 1);
-                        }}
+                        onClick={() => move(index, 1)}
                       >
                         <ArrowDown className="size-3.5" aria-hidden />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Duplicate section"
+                        onClick={() => duplicateSection.mutate(section)}
+                      >
+                        <Copy className="size-3.5" aria-hidden />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Delete section"
+                        onClick={() => removeSection(section)}
+                      >
+                        <Trash2 className="size-3.5" aria-hidden />
+                      </Button>
+                      <select
+                        aria-label="Element to add"
+                        value={addKind}
+                        onChange={(event) => setAddKind(event.target.value)}
+                        className="h-8 rounded-md border border-border bg-background px-2 text-[12px]"
+                      >
+                        {COMPONENT_LIBRARY.map((entry) => (
+                          <option key={entry.kind} value={entry.kind}>
+                            {entry.label}
+                          </option>
+                        ))}
+                      </select>
+                      <Button size="sm" variant="secondary" onClick={() => addElement(section)}>
+                        <Plus className="mr-1.5 size-3.5" aria-hidden /> Add
                       </Button>
                     </div>
                   ) : null}
@@ -440,14 +782,14 @@ export function BuilderCanvas({
             <>
               <p className="text-[13px] font-medium">Nothing selected</p>
               <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                Click any section or card on the canvas. Text edits happen right in place; the rest
-                of its settings appear here.
+                Click any section or card on the canvas, or pick one from the layers list. Text edits
+                happen right in place; the rest of its settings appear here.
               </p>
             </>
           ) : selectedComponent ? (
             <div className="space-y-3">
               <div>
-                <p className="text-[13px] font-medium">Item settings</p>
+                <p className="text-[13px] font-medium">{elementLabel(selectedComponent)}</p>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
                   In {sectionLabel(selectedSection.kind)}
                 </p>
@@ -515,36 +857,63 @@ export function BuilderCanvas({
               </Field>
               <StyleControls
                 scope="component"
-                style={readBlockStyle(selectedComponent.settings)}
+                device={device}
+                settings={selectedComponent.settings}
                 disabled={!canManage}
                 onChange={(patch) =>
                   saveComponent.mutate({
                     id: selectedComponent.id,
-                    patch: { settings: writeBlockStyle(selectedComponent.settings, patch) },
+                    patch: {
+                      settings: writeBlockStyle(selectedComponent.settings, patch, device),
+                    },
+                  })
+                }
+                onResetDevice={() =>
+                  saveComponent.mutate({
+                    id: selectedComponent.id,
+                    patch: { settings: clearDeviceLayer(selectedComponent.settings, device) },
                   })
                 }
               />
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!canManage}
-                onClick={() =>
-                  saveComponent.mutate({
-                    id: selectedComponent.id,
-                    patch: { is_visible: !selectedComponent.is_visible },
-                  })
-                }
-              >
-                {selectedComponent.is_visible ? (
-                  <>
-                    <EyeOff className="mr-1.5 size-3.5" aria-hidden /> Hide item
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-1.5 size-3.5" aria-hidden /> Show item
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!canManage}
+                  onClick={() =>
+                    saveComponent.mutate({
+                      id: selectedComponent.id,
+                      patch: { is_visible: !selectedComponent.is_visible },
+                    })
+                  }
+                >
+                  {selectedComponent.is_visible ? (
+                    <>
+                      <EyeOff className="mr-1.5 size-3.5" aria-hidden /> Hide item
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="mr-1.5 size-3.5" aria-hidden /> Show item
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!canManage}
+                  onClick={() => duplicateComponent.mutate(selectedComponent)}
+                >
+                  <Copy className="mr-1.5 size-3.5" aria-hidden /> Duplicate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!canManage}
+                  onClick={() => removeComponent(selectedComponent)}
+                >
+                  <Trash2 className="mr-1.5 size-3.5" aria-hidden /> Delete
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -587,12 +956,19 @@ export function BuilderCanvas({
               </Field>
               <StyleControls
                 scope="section"
-                style={readBlockStyle(selectedSection.settings)}
+                device={device}
+                settings={selectedSection.settings}
                 disabled={!canManage}
                 onChange={(patch) =>
                   saveSection.mutate({
                     id: selectedSection.id,
-                    patch: { settings: writeBlockStyle(selectedSection.settings, patch) },
+                    patch: { settings: writeBlockStyle(selectedSection.settings, patch, device) },
+                  })
+                }
+                onResetDevice={() =>
+                  saveSection.mutate({
+                    id: selectedSection.id,
+                    patch: { settings: clearDeviceLayer(selectedSection.settings, device) },
                   })
                 }
               />
@@ -620,17 +996,26 @@ export function BuilderCanvas({
                 </Button>
                 <Button
                   size="sm"
+                  variant="outline"
+                  disabled={!canManage}
+                  onClick={() => duplicateSection.mutate(selectedSection)}
+                >
+                  <Copy className="mr-1.5 size-3.5" aria-hidden /> Duplicate
+                </Button>
+                <Button
+                  size="sm"
                   variant="ghost"
                   disabled={!canManage}
-                  onClick={() => {
-                    if (!window.confirm("Remove this section from the page?")) return;
-                    deleteSection.mutate(selectedSection.id);
-                    setSelection(null);
-                  }}
+                  onClick={() => removeSection(selectedSection)}
                 >
                   <Trash2 className="mr-1.5 size-3.5" aria-hidden /> Remove
                 </Button>
               </div>
+              {undoable ? (
+                <Button size="sm" variant="outline" onClick={undo}>
+                  <Undo2 className="mr-1.5 size-3.5" aria-hidden /> Undo last delete
+                </Button>
+              ) : null}
             </div>
           )}
         </aside>
@@ -657,86 +1042,154 @@ function Field({
   );
 }
 
-/** Closed-list visual controls. Every option maps to a validated style value. */
+/**
+ * Closed-list visual controls for the selected block.
+ *
+ * Every control writes into the current device layer, so a client can style
+ * desktop once and then tune phone or tablet without touching the other tiers.
+ * A dot marks any property this device overrides, and one button clears the
+ * whole device layer back to inheriting desktop.
+ */
 function StyleControls({
   scope,
-  style,
+  device,
+  settings,
   disabled,
   onChange,
+  onResetDevice,
 }: {
   scope: "section" | "component";
-  style: BlockStyle;
+  device: Device;
+  settings: unknown;
   disabled: boolean;
-  onChange: (patch: Partial<BlockStyle>) => void;
+  onChange: (patch: Partial<Record<StyleKey, unknown>>) => void;
+  onResetDevice: () => void;
 }) {
-  const select = <K extends keyof BlockStyle>(
-    label: string,
-    key: K,
-    options: readonly string[],
+  const style = readBlockStyle(settings, device);
+  const overridden = (key: StyleKey) => isOverridden(settings, device, key);
+
+  const label = (text: string, key: StyleKey) => (
+    <span className="flex items-center gap-1">
+      {text}
+      {overridden(key) ? (
+        <span
+          className="size-1.5 rounded-full bg-primary"
+          title={`Set for ${DEVICE_META[device].label.toLowerCase()} only`}
+        />
+      ) : null}
+    </span>
+  );
+
+  /** A closed option list. Empty value means "inherit / not set". */
+  const choose = (
+    text: string,
+    key: StyleKey,
+    options: readonly (string | number)[],
+    format: (value: string | number) => string = String,
   ) => (
-    <Field label={label} key={String(key)}>
+    <label className="block" key={key}>
+      <span className="text-[12px] text-muted-foreground">{label(text, key)}</span>
       <select
-        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[13px]"
-        value={String(style[key] ?? "")}
+        className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2 text-[13px]"
+        value={style[key] === null ? "" : String(style[key])}
         disabled={disabled}
-        onChange={(event) => onChange({ [key]: event.target.value } as Partial<BlockStyle>)}
+        onChange={(event) => onChange({ [key]: event.target.value || null })}
       >
+        <option value="">Default</option>
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={String(option)} value={String(option)}>
+            {format(option)}
           </option>
         ))}
       </select>
-    </Field>
+    </label>
   );
 
-  const color = (
-    label: string,
-    key: "textColor" | "bgColor" | "buttonTextColor" | "buttonBgColor",
-  ) => (
-    <Field label={label} key={key}>
-      <span className="flex items-center gap-2">
+  const color = (text: string, key: StyleKey) => (
+    <label className="block" key={key}>
+      <span className="text-[12px] text-muted-foreground">{label(text, key)}</span>
+      <span className="mt-1 flex items-center gap-2">
         <input
           type="color"
           className="h-9 w-12 rounded-md border border-border bg-background"
-          value={style[key] ?? "#000000"}
+          value={(style[key] as string | null) ?? "#000000"}
           disabled={disabled}
-          onChange={(event) => onChange({ [key]: event.target.value } as Partial<BlockStyle>)}
-          aria-label={label}
+          onChange={(event) => onChange({ [key]: event.target.value })}
+          aria-label={text}
         />
         <Button
           size="sm"
           variant="ghost"
-          disabled={disabled || !style[key]}
-          onClick={() => onChange({ [key]: null } as Partial<BlockStyle>)}
+          disabled={disabled || style[key] === null}
+          onClick={() => onChange({ [key]: null })}
         >
           Clear
         </Button>
       </span>
-    </Field>
+    </label>
   );
+
+  const px = (value: string | number) => `${value}px`;
 
   return (
     <div className="space-y-3 border-t border-border pt-3">
-      <p className="text-[12px] font-medium">Design</p>
-      <div className="grid grid-cols-2 gap-2">
-        {select("Font", "font", FONT_FAMILIES)}
-        {select("Text size", "size", TEXT_SIZES)}
-        {select("Weight", "weight", FONT_WEIGHTS)}
-        {select("Alignment", "align", ALIGNMENTS)}
-        {select("Line height", "lineHeight", LINE_HEIGHTS)}
-        {scope === "section" ? select("Padding", "padding", SPACING) : null}
-        {scope === "section" ? select("Card layout", "layout", LAYOUTS) : null}
-        {scope === "component" ? select("Image fit", "objectFit", OBJECT_FITS) : null}
-        {scope === "component" ? select("Button style", "buttonStyle", BUTTON_STYLES) : null}
-        {scope === "component" ? select("Button size", "buttonSize", BUTTON_SIZES) : null}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[12px] font-medium">Design · {DEVICE_META[device].label}</p>
+        {device !== "desktop" ? (
+          <Button size="sm" variant="ghost" disabled={disabled} onClick={onResetDevice}>
+            Reset {DEVICE_META[device].label.toLowerCase()}
+          </Button>
+        ) : null}
       </div>
+      {device !== "desktop" ? (
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          Changes here apply on {DEVICE_META[device].label.toLowerCase()} screens only. Anything left
+          on Default follows your desktop design.
+        </p>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-2">
+        {choose("Font", "font", FONT_FAMILIES)}
+        {choose("Text size", "size", TEXT_SIZES, px)}
+        {choose("Weight", "weight", FONT_WEIGHTS)}
+        {choose("Alignment", "align", ALIGNMENTS)}
+        {choose("Line height", "lineHeight", LINE_HEIGHTS)}
+        {choose("Letter spacing", "letterSpacing", LETTER_SPACINGS, (v) => `${v}em`)}
+        {choose("Capitalisation", "textTransform", TEXT_TRANSFORMS)}
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
         {color("Text colour", "textColor")}
         {color("Background", "bgColor")}
         {scope === "component" ? color("Button text", "buttonTextColor") : null}
         {scope === "component" ? color("Button fill", "buttonBgColor") : null}
+        {choose("Border colour", "borderColor", [])}
       </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {choose("Space above", "padTop", SPACES, px)}
+        {choose("Space below", "padBottom", SPACES, px)}
+        {choose("Space left", "padLeft", SPACES, px)}
+        {choose("Space right", "padRight", SPACES, px)}
+        {choose("Gap before block", "marginTop", SPACES, px)}
+        {choose("Gap after block", "marginBottom", SPACES, px)}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {scope === "section" ? choose("Columns", "columns", COLUMNS) : null}
+        {scope === "section" ? choose("Column gap", "gap", SPACES, px) : null}
+        {scope === "section" ? choose("Content width", "maxWidth", MAX_WIDTHS, px) : null}
+        {scope === "section" ? choose("Content position", "contentAlign", ALIGNMENTS) : null}
+        {choose("Corner rounding", "radius", RADII, (v) => (v === 999 ? "Pill" : `${v}px`))}
+        {choose("Border width", "borderWidth", BORDER_WIDTHS, px)}
+        {choose("Shadow", "shadow", SHADOWS)}
+        {choose("Opacity", "opacity", OPACITIES, (v) => `${v}%`)}
+        {scope === "section" ? choose("Image darkening", "overlay", OVERLAYS, (v) => `${v}%`) : null}
+        {scope === "component" ? choose("Image fit", "objectFit", OBJECT_FITS) : null}
+        {scope === "component" ? choose("Button style", "buttonStyle", BUTTON_STYLES) : null}
+        {scope === "component" ? choose("Button size", "buttonSize", BUTTON_SIZES) : null}
+      </div>
+
       {scope === "section" ? (
         <Field label="Background image" hint="An https image link; leave empty for none">
           <Input
@@ -747,6 +1200,16 @@ function StyleControls({
           />
         </Field>
       ) : null}
+
+      <label className="flex items-center gap-2 text-[12px]">
+        <input
+          type="checkbox"
+          checked={style.hidden === true}
+          disabled={disabled}
+          onChange={(event) => onChange({ hidden: event.target.checked ? true : null })}
+        />
+        {label(`Hide on ${DEVICE_META[device].label.toLowerCase()}`, "hidden")}
+      </label>
     </div>
   );
 }
