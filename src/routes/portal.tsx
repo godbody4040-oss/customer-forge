@@ -174,7 +174,7 @@ function PortalPage() {
                   You're in — welcome to <span className="font-medium">{joined}</span>.
                 </p>
                 <Button asChild variant="signal" className="mt-4 w-full">
-                  <Link to="/app">Open your portal</Link>
+                  <Link to="/my">Open your portal</Link>
                 </Button>
               </div>
             ) : (
