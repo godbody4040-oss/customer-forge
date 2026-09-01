@@ -20,6 +20,7 @@ import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -121,6 +122,11 @@ const IndustriesRoute = IndustriesRouteImport.update({
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
   id: '/manifest.webmanifest',
   path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -448,6 +455,7 @@ export interface FileRoutesByTo {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -508,6 +516,7 @@ export interface FileRoutesById {
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -570,6 +579,7 @@ export interface FileRouteTypes {
     | '/growth-assessment'
     | '/industries'
     | '/manifest.webmanifest'
+    | '/portal'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -628,6 +638,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/manifest.webmanifest'
+    | '/portal'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -687,6 +698,7 @@ export interface FileRouteTypes {
     | '/growth-assessment'
     | '/industries'
     | '/manifest.webmanifest'
+    | '/portal'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -749,6 +761,7 @@ export interface RootRouteChildren {
   GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
+  PortalRoute: typeof PortalRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -844,6 +857,13 @@ declare module '@tanstack/react-router' {
       path: '/manifest.webmanifest'
       fullPath: '/manifest.webmanifest'
       preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1326,6 +1346,7 @@ const rootRouteChildren: RootRouteChildren = {
   GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
+  PortalRoute: PortalRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,

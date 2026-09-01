@@ -1309,6 +1309,7 @@ export type Database = {
           onboarding_completed: boolean
           onboarding_step: number
           plan_id: string | null
+          portal_code: string | null
           setup_checkout_session_id: string | null
           setup_paid_at: string | null
           setup_payment_status: string
@@ -1331,6 +1332,7 @@ export type Database = {
           onboarding_completed?: boolean
           onboarding_step?: number
           plan_id?: string | null
+          portal_code?: string | null
           setup_checkout_session_id?: string | null
           setup_paid_at?: string | null
           setup_payment_status?: string
@@ -1353,6 +1355,7 @@ export type Database = {
           onboarding_completed?: boolean
           onboarding_step?: number
           plan_id?: string | null
+          portal_code?: string | null
           setup_checkout_session_id?: string | null
           setup_paid_at?: string | null
           setup_payment_status?: string

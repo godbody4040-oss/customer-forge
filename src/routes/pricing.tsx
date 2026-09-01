@@ -194,6 +194,20 @@ function Pricing() {
           </dl>
         </section>
 
+        <section className="panel card-lift mt-16 p-6">
+          <p className="eyebrow">Already a client?</p>
+          <h2 className="mt-1 font-display text-[18px] font-semibold">
+            Join your client portal
+          </h2>
+          <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+            Your website, leads, bookings, quotes and reporting in one login. Create your account
+            and join your workspace yourself with the portal code you were given.
+          </p>
+          <Button asChild variant="outline" className="mt-4">
+            <Link to="/portal">Open the client portal</Link>
+          </Button>
+        </section>
+
         <section className="mt-16">
           <SalesCTA />
         </section>
