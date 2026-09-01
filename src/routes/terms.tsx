@@ -47,7 +47,7 @@ function TermsPage() {
       body: [
         `${usd(GROWTH_SYSTEM.setupPrice)} one-time setup covers implementation, customization and launch of your system. It is charged when you choose to proceed after (or during) the trial.`,
         `The platform fee is ${usd(GROWTH_SYSTEM.monthlyPrice)}/month. Your first month is free: the first monthly charge occurs 30 days after setup (month two) and recurs monthly until canceled.`,
-        "Payments are processed by Stripe or PayPal. Taxes, if applicable, are added at checkout. Failed payments may suspend access until resolved.",
+        "Payments are processed by Stripe. Taxes, if applicable, are added at checkout. Failed payments may suspend access until resolved.",
       ],
     },
     {

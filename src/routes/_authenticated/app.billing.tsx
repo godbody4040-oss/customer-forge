@@ -10,11 +10,9 @@ import {
   SectionHeading,
 } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { PayPalCheckout } from "@/components/app/PayPalCheckout";
 import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
 import {
-  usePaymentConfig,
   usePaymentProducts,
   usePayments,
   type PaymentProduct,
@@ -60,20 +58,16 @@ const STATUS_LABEL: Record<string, string> = {
   disputed: "Disputed",
 };
 
-function paymentReference(payment: {
-  paypal_capture_id: string | null;
-  paypal_order_id: string | null;
-  metadata: unknown;
-}) {
-  if (payment.paypal_capture_id) return payment.paypal_capture_id;
-  if (payment.paypal_order_id) return payment.paypal_order_id;
+function paymentReference(payment: { metadata: unknown }) {
   if (
     payment.metadata &&
     typeof payment.metadata === "object" &&
     !Array.isArray(payment.metadata)
   ) {
-    const stripeId = (payment.metadata as Record<string, unknown>)["stripe_id"];
-    if (typeof stripeId === "string") return stripeId;
+    const meta = payment.metadata as Record<string, unknown>;
+    for (const key of ["stripe_payment_intent", "stripe_session_id", "stripe_id"]) {
+      if (typeof meta[key] === "string") return meta[key] as string;
+    }
   }
   return "—";
 }
@@ -85,9 +79,7 @@ function BillingPage() {
   const manage = canManage(ws?.workspace?.role ?? "viewer");
   const { data: products, isLoading: loadingProducts } = usePaymentProducts();
   const { data: payments, isLoading: loadingPayments } = usePayments(orgId);
-  const { data: config } = usePaymentConfig();
   const { data: billing } = useBillingState(orgId);
-  const [selected, setSelected] = useState<PaymentProduct | null>(null);
   const [cardService, setCardService] = useState<PaymentProduct | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
   const queryClient = useQueryClient();
@@ -154,7 +146,6 @@ function BillingPage() {
           <Pill tone="neutral">
             Card payments {billing?.environment === "sandbox" ? "test" : "live"}
           </Pill>
-          {config?.configured ? <Pill tone="neutral">PayPal {config.environment}</Pill> : null}
         </div>
       </div>
 
@@ -164,8 +155,8 @@ function BillingPage() {
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
           <p className="font-medium">Your last payment did not go through.</p>
           <p className="mt-1">
-            Update your card to keep your workspace active — access continues while the payment
-            provider retries.
+            Update your card to keep your workspace active — access continues while Stripe
+            retries the payment.
           </p>
           <Button
             variant="outline"
@@ -340,19 +331,6 @@ function BillingPage() {
         />
       ) : null}
 
-      {selected && orgId ? (
-        <PayPalCheckout
-          organizationId={orgId}
-          product={selected}
-          onPaid={() => {
-            void queryClient.invalidateQueries({ queryKey: ["payments", orgId] });
-            void queryClient.invalidateQueries({ queryKey: ["workspace"] });
-            void queryClient.invalidateQueries({ queryKey: ["notifications", orgId] });
-          }}
-          onClose={() => setSelected(null)}
-        />
-      ) : null}
-
       {services.length > 0 ? (
         <Panel className="p-5">
           <SectionHeading eyebrow="Services" title="Revora services" />
@@ -384,16 +362,6 @@ function BillingPage() {
                     >
                       <CreditCard className="size-4" /> Pay by card
                     </Button>
-                    {config?.configured ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={!manage}
-                        onClick={() => setSelected(product)}
-                      >
-                        Pay with PayPal
-                      </Button>
-                    ) : null}
                   </div>
                   {!cardsReady ? (
                     <p className="mt-2 text-[11px] text-destructive">
@@ -410,7 +378,7 @@ function BillingPage() {
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
         <p className="mt-3 text-[13px] text-muted-foreground">
-          One-off services above are charged once by card (or PayPal where available). Software
+          One-off services above are charged once by card. Software
           plans are billed as a subscription and can be changed or cancelled at any time. Questions:{" "}
           {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
         </p>

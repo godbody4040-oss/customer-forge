@@ -1,16 +1,15 @@
 /**
- * Server-only payment bookkeeping: records verified PayPal results, applies
+ * Server-only payment bookkeeping: records verified Stripe results, applies
  * entitlements exactly once, and writes activity + notifications.
- * Payment status is only ever derived from PayPal responses — never the client.
+ * Stripe is the only payment processor, and payment status is only ever
+ * derived from verified Stripe webhook events — never from the client.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { mapOrderStatus, type PayPalOrder } from "@/lib/paypal.server";
 import { REVORA } from "@/lib/brand";
 
 type Admin = SupabaseClient<Database>;
 type PaymentRow = Database["public"]["Tables"]["payments"]["Row"];
-type PaymentStatus = Database["public"]["Enums"]["payment_status"];
 
 export async function adminClient(): Promise<Admin> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -26,57 +25,21 @@ export function logPaymentError(scope: string, detail: Record<string, unknown>) 
   console.error(`[payments:${scope}]`, JSON.stringify({ ...detail, at: new Date().toISOString() }));
 }
 
-export function captureFromOrder(order: PayPalOrder) {
-  const capture = order.purchase_units?.[0]?.payments?.captures?.[0];
-  return capture ? { id: capture.id, status: capture.status, amount: capture.amount } : null;
-}
-
 /**
- * Applies the verified result of an order to its payment row. Idempotent:
- * a payment already marked completed is never re-fulfilled.
+ * Resolves the Stripe object a refund should be issued against. Stripe stores
+ * the payment intent on the payment row's metadata when a checkout session or
+ * invoice completes; the charge id is accepted as a fallback.
  */
-export async function recordOrderResult(
-  admin: Admin,
+export function stripeChargeRef(
   payment: PaymentRow,
-  order: PayPalOrder,
-): Promise<{ payment: PaymentRow; fulfilled: boolean }> {
-  const capture = captureFromOrder(order);
-  const status = (
-    capture?.status === "COMPLETED"
-      ? "completed"
-      : capture?.status === "DECLINED"
-        ? "failed"
-        : mapOrderStatus(order.status)
-  ) as PaymentStatus;
-
-  const alreadyDone = payment.status === "completed" && payment.entitlement_applied;
-  const patch: Database["public"]["Tables"]["payments"]["Update"] = {
-    status,
-    paypal_capture_id: capture?.id ?? payment.paypal_capture_id,
-    customer_email: order.payer?.email_address ?? payment.customer_email,
-    completed_at:
-      status === "completed"
-        ? (payment.completed_at ?? new Date().toISOString())
-        : payment.completed_at,
-    failure_reason: status === "failed" ? (capture?.status ?? "Capture declined") : null,
-  };
-
-  const { data: updated } = await admin
-    .from("payments")
-    .update(patch)
-    .eq("id", payment.id)
-    .select("*")
-    .single();
-
-  const row = (updated ?? payment) as PaymentRow;
-  if (status !== "completed" || alreadyDone) {
-    if (status === "failed") await logPaymentActivity(admin, row, "failed");
-    return { payment: row, fulfilled: false };
-  }
-
-  await applyEntitlement(admin, row);
-  await logPaymentActivity(admin, row, "completed");
-  return { payment: row, fulfilled: true };
+): { kind: "payment_intent" | "charge"; id: string } | null {
+  const meta = (payment.metadata ?? {}) as Record<string, unknown>;
+  const intent = meta["stripe_payment_intent"];
+  if (typeof intent === "string" && intent.startsWith("pi_"))
+    return { kind: "payment_intent", id: intent };
+  const charge = meta["stripe_charge_id"];
+  if (typeof charge === "string" && charge.startsWith("ch_")) return { kind: "charge", id: charge };
+  return null;
 }
 
 /** Activates whatever the customer paid for. Guarded by entitlement_applied. */
@@ -144,8 +107,6 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
     amount: payment.amount,
     status: "paid",
     provider_invoice_id:
-      payment.paypal_capture_id ??
-      payment.paypal_order_id ??
       (typeof meta["stripe_payment_intent"] === "string" ? meta["stripe_payment_intent"] : null) ??
       (typeof meta["stripe_session_id"] === "string" ? meta["stripe_session_id"] : null),
     period_start: payment.period_start,
@@ -163,7 +124,7 @@ export async function logPaymentActivity(
 ) {
   const label = payment.description ?? payment.product_id ?? "Revora service";
   const amount = money(Number(payment.amount), payment.currency);
-  const providerLabel = payment.payment_provider === "stripe" ? "card" : "PayPal";
+  const providerLabel = "card";
 
   const notice =
     kind === "completed"
@@ -186,7 +147,7 @@ export async function logPaymentActivity(
             }
           : {
               title: "Refund processed",
-              body: `${label} — refund issued via PayPal.`,
+              body: `${label} — refund issued to the original payment method.`,
               tone: "info",
             };
 
@@ -210,8 +171,7 @@ export async function logPaymentActivity(
       product_id: payment.product_id,
       provider: payment.payment_provider,
       environment: payment.environment,
-      paypal_order_id: payment.paypal_order_id,
-      paypal_capture_id: payment.paypal_capture_id,
+      stripe_reference: stripeChargeRef(payment)?.id ?? null,
       admin_contact: REVORA.email,
     },
   });
