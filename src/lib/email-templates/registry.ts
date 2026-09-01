@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import InviteEmail from "./invite";
 import { template as automationMessageTemplate } from "./automation-message";
 import { template as leadAlertTemplate } from "./lead-alert";
 import { template as growthAssessmentTemplate } from "./growth-assessment";
@@ -45,4 +46,15 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   "lifecycle-setup-reminder": lifecycleSetupReminderTemplate,
   "lifecycle-booking-followup": lifecycleBookingFollowUpTemplate,
   "lifecycle-winback": lifecycleWinbackTemplate,
+  "team-invite": {
+    component: InviteEmail,
+    subject: (data: Record<string, any>) =>
+      `You've been invited to ${(data?.["siteName"] as string) || "Revora"}`,
+    displayName: "Team invite",
+    previewData: {
+      siteName: "Elite Mobile Detailing",
+      siteUrl: "https://revoragrowthsystems.com",
+      confirmationUrl: "https://revoragrowthsystems.com/invite/example-token",
+    },
+  },
 };

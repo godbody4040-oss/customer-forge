@@ -10,6 +10,7 @@ import { useSession, useWorkspace } from "@/lib/use-tenant";
 import { ROLES } from "@/lib/domain";
 import { initials, dateShort } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
+import { MemberControls, TeamInvites } from "@/components/app/TeamInvites";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   head: () => ({
@@ -139,30 +140,26 @@ function SettingsPage() {
                 <Pill tone={member.role === "owner" ? "signal" : "neutral"}>
                   {ROLES.find((r) => r.value === member.role)?.label ?? member.role}
                 </Pill>
+                {canManage && orgId ? (
+                  <MemberControls
+                    membershipId={member.id}
+                    organizationId={orgId}
+                    role={member.role}
+                    isSelf={member.user_id === session?.user.id}
+                  />
+                ) : null}
               </li>
             );
           })}
         </ul>
-        {canManage ? (
-          <div className="mt-4 border-t border-border pt-4">
-            <p className="text-[12px] text-muted-foreground">
-              Need another set of hands? Ask your teammate to sign up with their email, then send us
-              their address and we'll attach them to this workspace.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3"
-              onClick={() =>
-                toast.info("Invites are coming next", {
-                  description: "For now, teammates who sign up can be added to your workspace.",
-                })
-              }
-            >
-              Invite teammate
-            </Button>
-          </div>
-        ) : null}
+        <div className="mt-5 border-t border-border pt-5">
+          <p className="eyebrow">Invite teammates</p>
+          <p className="mt-1 mb-4 text-[12px] text-muted-foreground">
+            Send a secure invite link by email. Invites expire after 14 days and can be cancelled
+            any time.
+          </p>
+          <TeamInvites organizationId={orgId} canManage={canManage} />
+        </div>
       </Panel>
     </div>
   );
