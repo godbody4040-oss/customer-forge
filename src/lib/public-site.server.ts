@@ -331,7 +331,10 @@ export async function loadSite(
     gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
     quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     content: currentPage ? { page: currentPage, sections: sectionsWithComponents } : null,
-    nav: (navRows ?? []).filter((row) => !row.noindex || row.kind !== "thanks"),
+    nav: (navRows ?? [])
+      .filter((row) => !row.noindex || row.kind !== "thanks")
+      .filter((row) => populatedPages.has(row.id as string) || row.kind === "home"),
+
     pageFound: options?.pageSlug ? !!currentPage : true,
 
     publishState: gate?.publish_state ?? "draft",
