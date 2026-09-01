@@ -95,7 +95,12 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
       slug: org.slug,
       via: viaRevora ? "revora" : "custom",
       host,
+      redirectHost:
+        viaRevora && row.custom_domain && row.dns_ok && row.ssl_ok
+          ? normalizeHost(row.custom_domain)
+          : null,
     };
+
   }
   return null;
 }
