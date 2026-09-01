@@ -401,7 +401,7 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { organizationId: string; returnUrl?: string; environment: StripeEnv }) => ({
       organizationId: parseWorkspaceId(input?.organizationId),
-      returnUrl: input?.returnUrl ? String(input.returnUrl).slice(0, 500) : undefined,
+      returnUrl: input?.returnUrl ? parseReturnUrl(input.returnUrl) : undefined,
       environment: parseStripeEnvironment(input?.environment),
     }),
   )
