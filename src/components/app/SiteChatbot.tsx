@@ -111,15 +111,17 @@ const [autoApply, setAutoApply] = useState(true);
   const chosen = useMemo(() => (plan?.steps ?? []).filter((step) => !skipped.has(step.key)), [plan, skipped]);
 
   const propose = useMutation({
-    mutationFn: (input: { text: string; attachments: AgentAttachment[] }) =>
-      ask({
+    mutationFn: (input: { text: string; attachments: AgentAttachment[] }) => {
+      setLastRequest(input);
+      return ask({
         data: {
           organizationId: organizationId!,
           instruction: input.text,
           history,
           attachments: input.attachments,
         },
-      }),
+      });
+    },
     onSuccess: (result) => {
       const steps = result.steps as AgentStep[];
       const next = { summary: result.summary, steps, questions: result.questions, notes: result.notes };
@@ -130,12 +132,19 @@ const [autoApply, setAutoApply] = useState(true);
       const safe = steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
       if (autoApply && canManage && safe) apply.mutate(steps);
     },
-    onError: (error: Error) =>
+    // Nothing here is charged or metered, so a failure is never a paywall: the
+    // site is left exactly as it was and the same request can be retried.
+    onError: () =>
       setMessages((prior) => [
         ...prior,
-        { role: "assistant", content: error.message || "I couldn't work that out. Try rewording it." },
+        {
+          role: "assistant",
+          content:
+            "Revora couldn't complete that change yet. Your website has been left exactly as it was — retry below, or reword the request.",
+        },
       ]),
   });
+
 
   const apply = useMutation({
     mutationFn: (steps?: AgentStep[]) =>
