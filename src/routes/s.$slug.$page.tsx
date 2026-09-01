@@ -4,6 +4,7 @@
  * anything else the builder laid out. Each one carries its own metadata and its
  * own lead-capture blocks.
  */
+import { SitePageLink } from "@/components/site/site-links";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -129,12 +130,12 @@ export function SitePageView({
       <div className="relative z-[1]">
         <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5">
-            <Link to="/s/$slug" params={{ slug: org.slug }} className="min-w-0">
+            <SitePageLink slug={org.slug} className="min-w-0">
               <p className="truncate font-display text-[16px] font-semibold">{org.name}</p>
               {profile?.city ? (
                 <p className="text-[11px] text-muted-foreground">{profile.city}</p>
               ) : null}
-            </Link>
+            </SitePageLink>
             <div className="flex items-center gap-2">
               {profile?.phone ? (
                 <Button asChild variant="outline" size="sm">
@@ -186,25 +187,24 @@ export function SiteNav({ site, current }: { site: NonNullable<PublicSite>; curr
     <nav aria-label="Site pages" className="border-t border-border">
       <ul className="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-4 py-2.5 text-[12px]">
         <li>
-          <Link
-            to="/s/$slug"
-            params={{ slug: site.org.slug }}
+          <SitePageLink
+            slug={site.org.slug}
             className="whitespace-nowrap text-muted-foreground hover:text-foreground"
           >
             Home
-          </Link>
+          </SitePageLink>
         </li>
         {pages.map((p) => (
           <li key={p.slug}>
-            <Link
-              to="/s/$slug/$page"
-              params={{ slug: site.org.slug, page: p.slug }}
+            <SitePageLink
+              slug={site.org.slug}
+              page={p.slug}
               className={`whitespace-nowrap hover:text-foreground ${
                 current === p.slug ? "text-foreground" : "text-muted-foreground"
               }`}
             >
               {p.title}
-            </Link>
+            </SitePageLink>
           </li>
         ))}
       </ul>

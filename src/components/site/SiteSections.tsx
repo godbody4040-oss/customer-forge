@@ -7,6 +7,7 @@
  */
 import { blockCss, readBlockStyle } from "@/lib/site-style";
 import { Link } from "@tanstack/react-router";
+import { SitePageLink } from "@/components/site/site-links";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
@@ -62,9 +63,9 @@ function SectionButtons({ site, components }: { site: Site; components: Componen
         return (
           <Button key={button.id} asChild variant={index === 0 ? "signal" : "outline"} size="lg">
             {internal ? (
-              <Link to="/s/$slug/$page" params={{ slug: site.org.slug, page: href.slice(1) }}>
+              <SitePageLink slug={site.org.slug} page={href.slice(1)}>
                 {button.label}
-              </Link>
+              </SitePageLink>
             ) : (
               <a href={href}>{button.label}</a>
             )}
@@ -196,13 +197,13 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                   </p>
                 ) : null}
                 {item.href?.startsWith("/") ? (
-                  <Link
-                    to="/s/$slug/$page"
-                    params={{ slug: org.slug, page: item.href.slice(1) }}
+                  <SitePageLink
+                    slug={org.slug}
+                    page={item.href.slice(1)}
                     className="mt-3 text-[12px] text-primary underline"
                   >
-                    {item.href === "#" ? "See details" : "See details"}
-                  </Link>
+                    See details
+                  </SitePageLink>
                 ) : null}
               </li>
             ))}
@@ -397,13 +398,13 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
             {links.map((link) => (
               <li key={link.id}>
                 {safeLinkUrl(link.link_url)?.startsWith("/") ? (
-                  <Link
-                    to="/s/$slug/$page"
-                    params={{ slug: org.slug, page: safeLinkUrl(link.link_url)!.slice(1) }}
+                  <SitePageLink
+                    slug={org.slug}
+                    page={safeLinkUrl(link.link_url)!.slice(1)}
                     className="rounded-full border border-border px-3 py-1.5 text-[12px] hover:border-primary"
                   >
                     {link.label}
-                  </Link>
+                  </SitePageLink>
                 ) : (
                   <span className="rounded-full border border-border px-3 py-1.5 text-[12px]">
                     {link.label}
