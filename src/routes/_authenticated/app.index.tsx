@@ -11,6 +11,8 @@ import {
   KeyLabel,
 } from "@/components/app/Bits";
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
+import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
+import { useProductionStatus } from "@/lib/production.hooks";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,6 +120,7 @@ const RANGE_KEY = "revora.dashboard.range";
 
 function Dashboard() {
   const { data: ws } = useWorkspace();
+  const { data: production } = useProductionStatus(ws?.workspace?.organizationId);
   const orgId = ws?.workspace?.organizationId;
   const org = ws?.workspace?.organization;
 
@@ -318,6 +321,8 @@ function Dashboard() {
         </div>
       </div>
 
+
+      <ProductionSummaryCard status={production} />
 
       <OnboardingJourney />
 
