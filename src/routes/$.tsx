@@ -21,7 +21,10 @@ export const Route = createFileRoute("/$")({
       throw notFound();
     }
     const response = await getHostSite({ data: { pageSlug } });
-    if (!response?.result?.site?.content) throw notFound();
+    // A page with no visible sections renders blank for a real visitor — treat
+    // it as not published yet instead of serving an empty page.
+    if (!response?.result?.site?.content?.sections?.length) throw notFound();
+
 
 
     return response.result;
