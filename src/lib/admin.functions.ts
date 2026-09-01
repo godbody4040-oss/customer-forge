@@ -563,7 +563,7 @@ export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
       supabaseAdmin
         .from("organizations")
         .select("id, name, slug, industry, subscription_status, is_suspended, is_demo, created_at"),
-      supabaseAdmin.from("website_settings").select("organization_id, publish_state, domain"),
+      supabaseAdmin.from("website_settings").select("organization_id, publish_state, custom_domain"),
     ]);
 
     const report = buildMonthlyReport({
@@ -590,7 +590,7 @@ export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
             demo: org.is_demo,
             createdAt: org.created_at,
             publishState: site?.publish_state ?? null,
-            domain: site?.domain ?? null,
+            domain: site?.custom_domain ?? null,
           },
         ];
       }),

@@ -135,7 +135,7 @@ function MonthlyReport() {
               : `${currency(windowRevenue)} across ${monthRows.length} months`
           }
           tone="signal"
-          badge={current && previous ? undefined : "Live"}
+          {...(current && previous ? {} : { badge: "Live" })}
         />
         <MetricCard
           label="Leads this month"
