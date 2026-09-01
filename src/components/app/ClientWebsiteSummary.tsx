@@ -34,7 +34,7 @@ export function ClientWebsiteSummary({
   visits: number;
 }) {
   const { data: settings } = useWebsiteSettings(organizationId);
-  const { data: pages } = useWebsiteContent(organizationId);
+  const { data: pages, isPending: pagesPending } = useWebsiteContent(organizationId);
 
   const state = settings?.publish_state ?? "draft";
   const live = state === "published";
@@ -45,9 +45,9 @@ export function ClientWebsiteSummary({
   );
   const address = settings?.custom_domain ?? (slug ? `/s/${slug}` : null);
 
-  const stats = [
-    { label: "Pages", value: pageCount },
-    { label: "Sections live", value: sectionCount },
+  const stats: { label: string; value: number | string }[] = [
+    { label: "Pages", value: pagesPending ? "—" : pageCount },
+    { label: "Sections live", value: pagesPending ? "—" : sectionCount },
     { label: "Leads", value: leads },
     { label: "Bookings", value: bookings },
     { label: "Visits", value: visits },
