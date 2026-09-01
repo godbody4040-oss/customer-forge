@@ -25,7 +25,8 @@ export const Route = createFileRoute("/demo/")({
       { property: "og:title", content: "See Revora for your business" },
       {
         property: "og:description",
-        content: "A live, interactive demo of the quote → lead → booking flow, plus a preview request for your business.",
+        content:
+          "A live, interactive demo of the quote → lead → booking flow, plus a preview request for your business.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -143,8 +144,8 @@ function DemoPage() {
                 title="See what your business could look like"
               />
               <p className="mt-4 max-w-md text-[14px] leading-relaxed text-muted-foreground">
-                Enter a few details and we'll show you how Revora would turn your online
-                presence into a customer-acquisition system. No card, no obligation.
+                Enter a few details and we'll show you how Revora would turn your online presence
+                into a customer-acquisition system. No card, no obligation.
               </p>
             </div>
 

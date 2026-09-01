@@ -14,7 +14,10 @@ async function handle(request: Request): Promise<Response> {
   const { drainSiteEngineQueue } = await import("@/lib/site-engine.worker.server");
 
   try {
-    const result = await drainSiteEngineQueue(supabaseAdmin as never, { max: 3, probeWhilePaused: true });
+    const result = await drainSiteEngineQueue(supabaseAdmin as never, {
+      max: 3,
+      probeWhilePaused: true,
+    });
     return Response.json(result);
   } catch (error) {
     console.error("[site-engine worker]", error);

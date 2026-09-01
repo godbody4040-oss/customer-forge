@@ -29,7 +29,11 @@ export function Sparkline({
   tone?: "primary" | "info" | "accent";
 }) {
   const stroke =
-    tone === "info" ? "var(--color-info)" : tone === "accent" ? "var(--color-accent)" : "var(--color-primary)";
+    tone === "info"
+      ? "var(--color-info)"
+      : tone === "accent"
+        ? "var(--color-accent)"
+        : "var(--color-primary)";
   const d = useMemo(() => path(values, 100, 28), [values]);
   return (
     <svg
@@ -64,7 +68,8 @@ export function TrendChart({ points }: { points: DemoPoint[] }) {
     <div className="mt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-[12px] text-muted-foreground">
-          Leads and booked jobs per day <span className="text-muted-foreground/70">(demo data)</span>
+          Leads and booked jobs per day{" "}
+          <span className="text-muted-foreground/70">(demo data)</span>
         </p>
         {current ? (
           <p className="tnum text-[12px]">
@@ -103,7 +108,13 @@ export function TrendChart({ points }: { points: DemoPoint[] }) {
         ))}
 
         <path d={area} fill={`url(#area-${gid})`} />
-        <path d={line} fill="none" stroke="var(--color-gold)" strokeWidth="2" strokeLinecap="round" />
+        <path
+          d={line}
+          fill="none"
+          stroke="var(--color-gold)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
 
         {points.map((p, i) => {
           const x = pad + i * stepX;
@@ -149,7 +160,9 @@ export function TrendChart({ points }: { points: DemoPoint[] }) {
         <span className="inline-flex items-center gap-1.5">
           <span aria-hidden="true" className="size-2 rounded-full bg-info" /> Booked jobs
         </span>
-        <span className="ml-auto">{points[0]?.label} – {points[points.length - 1]?.label}</span>
+        <span className="ml-auto">
+          {points[0]?.label} – {points[points.length - 1]?.label}
+        </span>
       </div>
     </div>
   );
@@ -188,7 +201,9 @@ export function FunnelChart({
                   {row.label}
                 </span>
                 <span className="tnum text-[12px]">
-                  <span className={active ? "gold-hl" : "font-semibold"}>{row.count.toLocaleString()}</span>
+                  <span className={active ? "gold-hl" : "font-semibold"}>
+                    {row.count.toLocaleString()}
+                  </span>
                   <span className="text-muted-foreground"> · {row.stepRate}% of previous</span>
                 </span>
               </div>

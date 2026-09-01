@@ -37,13 +37,7 @@ export function Pill({
 }
 
 /** Gold key-information label — use for the most important fact in a block. */
-export function KeyLabel({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function KeyLabel({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(
@@ -67,7 +61,6 @@ export function Dot({ tone = "signal" }: { tone?: Tone }) {
   return <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full", map[tone])} />;
 }
 
-
 export function Panel({
   children,
   className,
@@ -81,7 +74,11 @@ export function Panel({
   ref?: Ref<HTMLElement>;
 } & Omit<HTMLAttributes<HTMLElement>, "className" | "children">) {
   return (
-    <As ref={ref as Ref<HTMLDivElement> & Ref<HTMLElement>} className={cn("panel p-4", className)} {...rest}>
+    <As
+      ref={ref as Ref<HTMLDivElement> & Ref<HTMLElement>}
+      className={cn("panel p-4", className)}
+      {...rest}
+    >
       {children}
     </As>
   );
@@ -192,7 +189,6 @@ export function MetricCard({
     </div>
   );
 }
-
 
 export function EmptyState({
   title,

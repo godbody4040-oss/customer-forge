@@ -52,8 +52,8 @@ export function LeadEngine({
             Lay out every page my business needs
           </Button>
           <p className="text-[12px] text-muted-foreground">
-            Builds {PAGE_LIBRARY.length - 1} page types from what you've entered — service pages, area
-            pages, pricing, booking, proof, FAQ, contact, thank-you and privacy.
+            Builds {PAGE_LIBRARY.length - 1} page types from what you've entered — service pages,
+            area pages, pricing, booking, proof, FAQ, contact, thank-you and privacy.
           </p>
         </div>
       ) : null}

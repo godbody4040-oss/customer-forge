@@ -24,7 +24,8 @@ export function StripeServiceCheckout({ organizationId, product, onClose }: Prop
       },
     });
     if ("error" in result) throw new Error(result.error);
-    if (!result.clientSecret) throw new Error("The payment provider did not return a checkout session.");
+    if (!result.clientSecret)
+      throw new Error("The payment provider did not return a checkout session.");
     return result.clientSecret;
   }, [organizationId, product.id]);
 
@@ -40,7 +41,8 @@ export function StripeServiceCheckout({ organizationId, product, onClose }: Prop
             {product.name} — {money.format(product.amount)} one-time
           </h2>
           <p className="mt-1 text-[12px] text-muted-foreground">
-            Card, Apple Pay, Google Pay and Cash App Pay appear when your device and the provider support them.
+            Card, Apple Pay, Google Pay and Cash App Pay appear when your device and the provider
+            support them.
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close checkout">

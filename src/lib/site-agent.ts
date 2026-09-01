@@ -214,7 +214,9 @@ export function readActions(
       }
       case "reorder_sections": {
         const ids = Array.isArray(row["sectionIds"])
-          ? (row["sectionIds"] as unknown[]).map((id) => text(id, 40)).filter((id) => known.sectionIds.has(id))
+          ? (row["sectionIds"] as unknown[])
+              .map((id) => text(id, 40))
+              .filter((id) => known.sectionIds.has(id))
           : [];
         if (!known.pageIds.has(pageId) || ids.length < 2) break;
         out.push({ type, pageId, sectionIds: [...new Set(ids)] });
@@ -229,7 +231,8 @@ export function readActions(
           const safe = safeLinkUrl(text(patchRaw["link_url"], 400));
           if (safe) patch.link_url = safe;
         }
-        if (typeof patchRaw["link_label"] === "string") patch.link_label = text(patchRaw["link_label"], 120);
+        if (typeof patchRaw["link_label"] === "string")
+          patch.link_label = text(patchRaw["link_label"], 120);
         if ("is_visible" in patchRaw) patch.is_visible = bool(patchRaw["is_visible"]);
         if (!known.componentIds.has(componentId) || Object.keys(patch).length === 0) break;
         out.push({ type, componentId, patch });
@@ -266,14 +269,18 @@ export function readActions(
         const patchRaw = (row["patch"] ?? {}) as Record<string, unknown>;
         const patch: PageSeoPatch = {};
         if (typeof patchRaw["title"] === "string") patch.title = text(patchRaw["title"], 120);
-        if (typeof patchRaw["slug"] === "string") patch.slug = slugifyPath(text(patchRaw["slug"], 80));
+        if (typeof patchRaw["slug"] === "string")
+          patch.slug = slugifyPath(text(patchRaw["slug"], 80));
         if ("is_visible" in patchRaw) patch.is_visible = bool(patchRaw["is_visible"]);
         if ("noindex" in patchRaw) patch.noindex = bool(patchRaw["noindex"]);
-        if (typeof patchRaw["seo_title"] === "string") patch.seo_title = text(patchRaw["seo_title"], 70);
+        if (typeof patchRaw["seo_title"] === "string")
+          patch.seo_title = text(patchRaw["seo_title"], 70);
         if (typeof patchRaw["seo_description"] === "string")
           patch.seo_description = text(patchRaw["seo_description"], 165);
-        if (typeof patchRaw["seo_canonical"] === "string") patch.seo_canonical = text(patchRaw["seo_canonical"], 300);
-        if (typeof patchRaw["og_title"] === "string") patch.og_title = text(patchRaw["og_title"], 90);
+        if (typeof patchRaw["seo_canonical"] === "string")
+          patch.seo_canonical = text(patchRaw["seo_canonical"], 300);
+        if (typeof patchRaw["og_title"] === "string")
+          patch.og_title = text(patchRaw["og_title"], 90);
         if (typeof patchRaw["og_description"] === "string")
           patch.og_description = text(patchRaw["og_description"], 200);
         if (!known.pageIds.has(pageId) || Object.keys(patch).length === 0) break;
@@ -343,7 +350,11 @@ export type SiteIndex = {
 /** Human-readable "where" for a step, e.g. `Home → Hero`. */
 function locate(
   index: SiteIndex,
-  ids: { pageId?: string | undefined; sectionId?: string | undefined; componentId?: string | undefined },
+  ids: {
+    pageId?: string | undefined;
+    sectionId?: string | undefined;
+    componentId?: string | undefined;
+  },
 ): string {
   if (ids.componentId) {
     const component = index.components.get(ids.componentId);
@@ -364,7 +375,11 @@ function locate(
 }
 
 /** Turns each action into a line the business owner can approve or skip. */
-export function describeActions(actions: AgentAction[], index: SiteIndex, currentText: Map<string, string>): AgentStep[] {
+export function describeActions(
+  actions: AgentAction[],
+  index: SiteIndex,
+  currentText: Map<string, string>,
+): AgentStep[] {
   return actions.map((action, i) => {
     const key = `${i}-${action.type}`;
     switch (action.type) {
@@ -424,7 +439,12 @@ export function describeActions(actions: AgentAction[], index: SiteIndex, curren
           key,
           title: "Update this item",
           where: locate(index, { componentId: action.componentId }),
-          after: action.patch.label ?? action.patch.body ?? action.patch.link_label ?? action.patch.link_url ?? "",
+          after:
+            action.patch.label ??
+            action.patch.body ??
+            action.patch.link_label ??
+            action.patch.link_url ??
+            "",
           destructive: action.patch.is_visible === false,
           action,
         };
@@ -477,7 +497,9 @@ export function describeActions(actions: AgentAction[], index: SiteIndex, curren
       case "set_theme":
         return {
           key,
-          title: `Update the look (${Object.keys(action.patch).map((f) => f.replace(/_/g, " ")).join(", ")})`,
+          title: `Update the look (${Object.keys(action.patch)
+            .map((f) => f.replace(/_/g, " "))
+            .join(", ")})`,
           where: "Whole website",
           after: Object.values(action.patch).join("  "),
           destructive: false,
@@ -649,10 +671,25 @@ export const MULTIMODAL_TEMPLATES: {
   },
 ];
 
-
-export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
+export const IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+];
 export const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v"];
-export const AUDIO_MIME_TYPES = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg", "audio/m4a", "audio/x-m4a"];
+export const AUDIO_MIME_TYPES = [
+  "audio/webm",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/ogg",
+  "audio/m4a",
+  "audio/x-m4a",
+];
 
 export const ATTACHMENT_ACCEPT = [...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES].join(",");
 
@@ -683,7 +720,9 @@ export function readAttachments(value: unknown): AgentAttachment[] {
     const dataUrl = typeof item["dataUrl"] === "string" ? item["dataUrl"] : "";
     // Browser recordings carry codec parameters (audio/webm;codecs=opus) — accept
     // and drop them, since only the base media type decides what we allow.
-    const match = /^data:([a-z0-9.+/-]+)((?:;[a-z0-9.+=_-]+)*);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
+    const match = /^data:([a-z0-9.+/-]+)((?:;[a-z0-9.+=_-]+)*);base64,([A-Za-z0-9+/=\s]+)$/i.exec(
+      dataUrl,
+    );
     if (!match) continue;
     const mimeType = (match[1] ?? "").toLowerCase();
 
@@ -691,10 +730,10 @@ export function readAttachments(value: unknown): AgentAttachment[] {
     if (!kind) continue;
     const clean = `data:${mimeType};base64,${(match[3] ?? "").replace(/\s+/g, "")}`;
     if (base64Bytes(clean) > ATTACHMENT_LIMITS[kind]) continue;
-    const name = typeof item["name"] === "string" ? item["name"].slice(0, 120) : `${kind} attachment`;
+    const name =
+      typeof item["name"] === "string" ? item["name"].slice(0, 120) : `${kind} attachment`;
     const chapters = kind === "video" ? readChapters(item["chapters"]) : [];
     out.push({ kind, mimeType, name, dataUrl: clean, ...(chapters.length ? { chapters } : {}) });
-
   }
   return out;
 }

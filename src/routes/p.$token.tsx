@@ -17,13 +17,18 @@ export const Route = createFileRoute("/p/$token")({
       },
       { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: "Website draft preview — Revora" },
-      { property: "og:description", content: "A private preview link for reviewing a website draft." },
+      {
+        property: "og:description",
+        content: "A private preview link for reviewing a website draft.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PreviewRoute,
-  errorComponent: () => <PreviewMessage title="This preview link isn't valid" body="Ask for a new link." />,
+  errorComponent: () => (
+    <PreviewMessage title="This preview link isn't valid" body="Ask for a new link." />
+  ),
 });
 
 function PreviewMessage({ title, body }: { title: string; body: string }) {
@@ -46,8 +51,14 @@ function PreviewRoute() {
       reason === "expired"
         ? { title: "This preview link has expired", body: "Ask the business for a fresh link." }
         : reason === "revoked"
-          ? { title: "This preview link was switched off", body: "Ask the business for a fresh link." }
-          : { title: "This preview link isn't valid", body: "Check the address, or ask for a new link." };
+          ? {
+              title: "This preview link was switched off",
+              body: "Ask the business for a fresh link.",
+            }
+          : {
+              title: "This preview link isn't valid",
+              body: "Check the address, or ask for a new link.",
+            };
     return <PreviewMessage {...copy} />;
   }
 

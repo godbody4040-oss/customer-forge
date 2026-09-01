@@ -72,7 +72,9 @@ export const submitAssessment = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("marketing_conversions").insert({
       event_name: data.source === "website_audit" ? "audit_requested" : "assessment_submitted",
       landing_path: data.landingPath,
-      industry_slug: data.answers.industry ? data.answers.industry.toLowerCase().slice(0, 80) : null,
+      industry_slug: data.answers.industry
+        ? data.answers.industry.toLowerCase().slice(0, 80)
+        : null,
       session_id: data.sessionId,
       email: data.answers.email,
       amount_cents: Math.min(result.missedRevenueMonthly, 2_000_000) * 100,

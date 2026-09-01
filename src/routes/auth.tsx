@@ -35,7 +35,8 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in — Revora" },
       {
         name: "description",
-        content: "Sign in or create your Revora account to manage leads, bookings and your business website.",
+        content:
+          "Sign in or create your Revora account to manage leads, bookings and your business website.",
       },
       { property: "og:title", content: "Sign in — Revora" },
       { property: "og:description", content: "Access your business command center." },
@@ -125,7 +126,6 @@ function AuthPage() {
     }
   }
 
-
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -151,7 +151,6 @@ function AuthPage() {
       setBusy(null);
     }
   }
-
 
   async function handleForgotPassword(e?: React.FormEvent) {
     e?.preventDefault();
@@ -199,7 +198,6 @@ function AuthPage() {
     }
   }
 
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border">
@@ -235,8 +233,10 @@ function AuthPage() {
             {isSignup ? (
               <>
                 Create your account to unlock{" "}
-                <span className="gold-hl">every feature free for {GROWTH_SYSTEM.fullAccessTrialDays} days</span>.
-                No card needed to explore.
+                <span className="gold-hl">
+                  every feature free for {GROWTH_SYSTEM.fullAccessTrialDays} days
+                </span>
+                . No card needed to explore.
               </>
             ) : (
               <>
@@ -315,162 +315,161 @@ function AuthPage() {
               </form>
             </div>
           ) : (
-          <div className="panel mt-6 p-5">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogle}
-              disabled={busy !== null}
-            >
-              {busy === "google" ? <Loader2 className="size-4 animate-spin" /> : null}
-              Continue with Google
-            </Button>
-            <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">
-              Google shows our secure sign-in provider on the consent screen — you're signing into{" "}
-              <span className="gold-hl">Revora</span>.
-            </p>
-
-
-            <div className="my-5 flex items-center gap-3">
-              <span className="h-px flex-1 bg-border" />
-              <span className="text-[11px] tracking-wider uppercase text-muted-foreground">or</span>
-              <span className="h-px flex-1 bg-border" />
-            </div>
-
-            <form
-              className="space-y-4"
-              onSubmit={magicMode && !isSignup ? handleMagicLink : handleEmail}
-            >
-              {isSignup ? (
-                <div className="space-y-1.5">
-                  <Label htmlFor="a-name">Your name</Label>
-                  <Input
-                    id="a-name"
-                    name="name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    autoComplete="name"
-                    required
-                  />
-                </div>
-              ) : null}
-              <div className="space-y-1.5">
-                <Label htmlFor="a-email">Email</Label>
-                <Input
-                  id="a-email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setMagicSent(false);
-                  }}
-                  autoComplete="email"
-                  required
-                />
-              </div>
-              {magicMode && !isSignup ? null : (
-                <div className="space-y-1.5">
-                  <Label htmlFor="a-password">Password</Label>
-                  <Input
-                    id="a-password"
-                    name="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={isSignup ? "new-password" : "current-password"}
-                    minLength={8}
-                    required
-                  />
-                </div>
-              )}
-              {magicMode && !isSignup ? null : (
-                <label
-                  htmlFor="a-remember"
-                  className="flex cursor-pointer items-start gap-2.5 rounded-md border border-border bg-elevated/60 px-3 py-2.5"
-                >
-                  <Checkbox
-                    id="a-remember"
-                    checked={remember}
-                    onCheckedChange={(v) => {
-                      const next = v === true;
-                      setRemember(next);
-                      setRememberPreference(next);
-                    }}
-                    className="mt-0.5"
-                  />
-                  <span className="text-[12.5px] leading-snug">
-                    <span className="font-medium text-foreground">Remember me</span>
-                    <span className="block text-muted-foreground">
-                      {remember
-                        ? "Stay signed in on this device across refreshes — sign out any time."
-                        : "You'll be signed out when you close this browser."}
-                    </span>
-                  </span>
-                </label>
-              )}
-              {error ? <ErrorNote message={error} /> : null}
-              {magicSent && magicMode && !isSignup ? (
-                <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
-                  Link sent to <span className="gold-hl">{email}</span>. Open it on this device and
-                  you'll land straight in your dashboard.
-                </p>
-              ) : null}
-              <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
-                {busy === "email" || busy === "magic" ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : null}
-                {isSignup
-                  ? "CREATE ACCOUNT — START FREE"
-                  : magicMode
-                    ? magicSent
-                      ? "Resend sign-in link"
-                      : "Email me a sign-in link"
-                    : "Sign in"}
+            <div className="panel mt-6 p-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogle}
+                disabled={busy !== null}
+              >
+                {busy === "google" ? <Loader2 className="size-4 animate-spin" /> : null}
+                Continue with Google
               </Button>
-              {!isSignup ? (
-                <>
-                  <button
-                    type="button"
-                    className="w-full cursor-pointer text-center text-[12.5px] text-primary transition-colors hover:underline"
-                    onClick={() => {
-                      setError(null);
+              <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">
+                Google shows our secure sign-in provider on the consent screen — you're signing into{" "}
+                <span className="gold-hl">Revora</span>.
+              </p>
+
+              <div className="my-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-border" />
+                <span className="text-[11px] tracking-wider uppercase text-muted-foreground">
+                  or
+                </span>
+                <span className="h-px flex-1 bg-border" />
+              </div>
+
+              <form
+                className="space-y-4"
+                onSubmit={magicMode && !isSignup ? handleMagicLink : handleEmail}
+              >
+                {isSignup ? (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="a-name">Your name</Label>
+                    <Input
+                      id="a-name"
+                      name="name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+                ) : null}
+                <div className="space-y-1.5">
+                  <Label htmlFor="a-email">Email</Label>
+                  <Input
+                    id="a-email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
                       setMagicSent(false);
-                      setMagicMode((v) => !v);
                     }}
-                    disabled={busy !== null}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                {magicMode && !isSignup ? null : (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="a-password">Password</Label>
+                    <Input
+                      id="a-password"
+                      name="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={isSignup ? "new-password" : "current-password"}
+                      minLength={8}
+                      required
+                    />
+                  </div>
+                )}
+                {magicMode && !isSignup ? null : (
+                  <label
+                    htmlFor="a-remember"
+                    className="flex cursor-pointer items-start gap-2.5 rounded-md border border-border bg-elevated/60 px-3 py-2.5"
                   >
-                    {magicMode
-                      ? "Use my password instead"
-                      : "Sign in without a password — email me a magic link"}
-                  </button>
-                  {magicMode ? null : (
+                    <Checkbox
+                      id="a-remember"
+                      checked={remember}
+                      onCheckedChange={(v) => {
+                        const next = v === true;
+                        setRemember(next);
+                        setRememberPreference(next);
+                      }}
+                      className="mt-0.5"
+                    />
+                    <span className="text-[12.5px] leading-snug">
+                      <span className="font-medium text-foreground">Remember me</span>
+                      <span className="block text-muted-foreground">
+                        {remember
+                          ? "Stay signed in on this device across refreshes — sign out any time."
+                          : "You'll be signed out when you close this browser."}
+                      </span>
+                    </span>
+                  </label>
+                )}
+                {error ? <ErrorNote message={error} /> : null}
+                {magicSent && magicMode && !isSignup ? (
+                  <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
+                    Link sent to <span className="gold-hl">{email}</span>. Open it on this device
+                    and you'll land straight in your dashboard.
+                  </p>
+                ) : null}
+                <Button type="submit" variant="signal" className="w-full" disabled={busy !== null}>
+                  {busy === "email" || busy === "magic" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : null}
+                  {isSignup
+                    ? "CREATE ACCOUNT — START FREE"
+                    : magicMode
+                      ? magicSent
+                        ? "Resend sign-in link"
+                        : "Email me a sign-in link"
+                      : "Sign in"}
+                </Button>
+                {!isSignup ? (
+                  <>
                     <button
                       type="button"
-                      className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                      className="w-full cursor-pointer text-center text-[12.5px] text-primary transition-colors hover:underline"
                       onClick={() => {
                         setError(null);
-                        setResetSent(false);
-                        setForgotMode(true);
+                        setMagicSent(false);
+                        setMagicMode((v) => !v);
                       }}
                       disabled={busy !== null}
                     >
-                      Forgot your password?
+                      {magicMode
+                        ? "Use my password instead"
+                        : "Sign in without a password — email me a magic link"}
                     </button>
-                  )}
-                </>
-              ) : null}
-              <p className="text-center text-[11.5px] text-muted-foreground">
-                {remember
-                  ? "We keep you signed in on this device, so next time you land straight in your dashboard."
-                  : "This session ends when you close your browser."}
-              </p>
-            </form>
-
-          </div>
+                    {magicMode ? null : (
+                      <button
+                        type="button"
+                        className="w-full cursor-pointer text-center text-[12.5px] text-muted-foreground transition-colors hover:text-primary"
+                        onClick={() => {
+                          setError(null);
+                          setResetSent(false);
+                          setForgotMode(true);
+                        }}
+                        disabled={busy !== null}
+                      >
+                        Forgot your password?
+                      </button>
+                    )}
+                  </>
+                ) : null}
+                <p className="text-center text-[11.5px] text-muted-foreground">
+                  {remember
+                    ? "We keep you signed in on this device, so next time you land straight in your dashboard."
+                    : "This session ends when you close your browser."}
+                </p>
+              </form>
+            </div>
           )}
-
 
           <p className="mt-5 text-center text-[13px] text-muted-foreground">
             {isSignup ? "Already have an account?" : "New here?"}{" "}

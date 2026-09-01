@@ -5,15 +5,7 @@
  */
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CalendarCheck,
-  Calculator,
-  Globe,
-  LineChart,
-  Users,
-  Zap,
-} from "lucide-react";
+import { ArrowRight, CalendarCheck, Calculator, Globe, LineChart, Users, Zap } from "lucide-react";
 import { Panel, Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 
@@ -41,9 +33,7 @@ const Row = ({
 }) => (
   <div className="flex items-center justify-between gap-3 border-b border-border/70 py-2.5 last:border-0">
     <span className="min-w-0 flex-1 text-[12.5px] text-foreground">{left}</span>
-    <span className="hidden min-w-0 flex-1 text-[12px] text-muted-foreground sm:block">
-      {mid}
-    </span>
+    <span className="hidden min-w-0 flex-1 text-[12px] text-muted-foreground sm:block">{mid}</span>
     <span
       className={`tnum shrink-0 rounded-full border px-2 py-0.5 text-[11px] ${
         tone === "gold"
@@ -130,7 +120,10 @@ function Screen({ view }: { view: ScreenKey }) {
             ["Quoted", "3"],
             ["Booked", "2"],
           ].map(([label, count]) => (
-            <div key={label} className="rounded-md border border-border bg-background/40 p-2 text-center">
+            <div
+              key={label}
+              className="rounded-md border border-border bg-background/40 p-2 text-center"
+            >
               <p className="tnum font-display text-[16px] font-semibold text-primary">{count}</p>
               <p className="text-[10.5px] text-muted-foreground">{label}</p>
             </div>

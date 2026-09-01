@@ -15,11 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  useQuoteBuilder,
-  useQuoteBuilderMutations,
-  useQuoteRequests,
-} from "@/lib/queries";
+import { useQuoteBuilder, useQuoteBuilderMutations, useQuoteRequests } from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
 import { currency, relative } from "@/lib/format";
 
@@ -138,7 +134,10 @@ function QuotesPage() {
 
       {/* Form settings */}
       <Panel className="p-5">
-        <SectionHeading eyebrow="Pricing rules" title={form ? form.name : "Create your calculator"} />
+        <SectionHeading
+          eyebrow="Pricing rules"
+          title={form ? form.name : "Create your calculator"}
+        />
         <form
           className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           onSubmit={(e) => {
@@ -156,7 +155,12 @@ function QuotesPage() {
         >
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="f-name">Calculator name</Label>
-            <Input id="f-name" name="name" defaultValue={form?.name ?? "Instant estimate"} required />
+            <Input
+              id="f-name"
+              name="name"
+              defaultValue={form?.name ?? "Instant estimate"}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="f-base">Base price ($)</Label>
@@ -402,8 +406,8 @@ function QuotesPage() {
             ))}
             {addons.length === 0 ? (
               <li className="py-4 text-[13px] text-muted-foreground">
-                Add-ons let visitors raise their own price — interior shampoo, gutter clearing, extra
-                rooms.
+                Add-ons let visitors raise their own price — interior shampoo, gutter clearing,
+                extra rooms.
               </li>
             ) : null}
           </ul>
@@ -421,7 +425,8 @@ function QuotesPage() {
                   {(request.leads as { name?: string } | null)?.name ?? "Website visitor"}
                 </p>
                 <p className="tnum text-[13px] text-primary">
-                  {currency(Number(request.estimate_min))} – {currency(Number(request.estimate_max))}
+                  {currency(Number(request.estimate_min))} –{" "}
+                  {currency(Number(request.estimate_max))}
                 </p>
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -450,7 +455,9 @@ function QuotesPage() {
             <>
               <DialogHeader>
                 <DialogTitle>{question.id ? "Edit question" : "Add question"}</DialogTitle>
-                <DialogDescription>Keep it to one decision a visitor can answer fast.</DialogDescription>
+                <DialogDescription>
+                  Keep it to one decision a visitor can answer fast.
+                </DialogDescription>
               </DialogHeader>
               <form
                 className="space-y-4"
@@ -581,7 +588,9 @@ function QuotesPage() {
             <>
               <DialogHeader>
                 <DialogTitle>{addon.id ? "Edit add-on" : "Add extra"}</DialogTitle>
-                <DialogDescription>Visitors can tick these to raise their estimate.</DialogDescription>
+                <DialogDescription>
+                  Visitors can tick these to raise their estimate.
+                </DialogDescription>
               </DialogHeader>
               <form
                 className="space-y-4"

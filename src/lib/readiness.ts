@@ -86,7 +86,8 @@ export function readiness(input: ReadinessInput) {
     {
       key: "contact",
       label: "Contact information",
-      done: hasText(p?.phone) && hasText(p?.email) && (hasText(p?.address) || hasText(p?.service_area)),
+      done:
+        hasText(p?.phone) && hasText(p?.email) && (hasText(p?.address) || hasText(p?.service_area)),
       fix: "Add a phone number, email and address or service area.",
       to: "/app/website",
     },
@@ -187,7 +188,15 @@ export const PUBLISH_STATES: Record<
   { label: string; tone: "signal" | "attention" | "info" | "neutral" | "danger"; help: string }
 > = {
   draft: { label: "Draft", tone: "neutral", help: "Only your team can see this site." },
-  preview: { label: "Preview", tone: "info", help: "Shareable with a preview link, hidden from search." },
+  preview: {
+    label: "Preview",
+    tone: "info",
+    help: "Shareable with a preview link, hidden from search.",
+  },
   published: { label: "Published", tone: "signal", help: "Live to the public and indexable." },
-  unpublished: { label: "Unpublished", tone: "attention", help: "Taken offline. Visitors see a short notice." },
+  unpublished: {
+    label: "Unpublished",
+    tone: "attention",
+    help: "Taken offline. Visitors see a short notice.",
+  },
 };

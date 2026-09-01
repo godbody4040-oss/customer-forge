@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { AlertCircle, Check, CircleDashed, Loader2, Pencil, Sparkles, Stethoscope, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  CircleDashed,
+  Loader2,
+  Pencil,
+  Sparkles,
+  Stethoscope,
+  X,
+} from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +27,22 @@ import { dateShort } from "@/lib/format";
 
 /* ----------------------------- brief review ----------------------------- */
 
-const LIST_FIELDS: { key: "objections" | "trustNeeds" | "qualifyingFields"; label: string; help: string }[] = [
-  { key: "objections", label: "Questions to answer", help: "One per line — what makes people hesitate." },
+const LIST_FIELDS: {
+  key: "objections" | "trustNeeds" | "qualifyingFields";
+  label: string;
+  help: string;
+}[] = [
+  {
+    key: "objections",
+    label: "Questions to answer",
+    help: "One per line — what makes people hesitate.",
+  },
   { key: "trustNeeds", label: "What the site must prove", help: "One per line." },
-  { key: "qualifyingFields", label: "Lead form fields", help: "One per line — what you need to know to quote." },
+  {
+    key: "qualifyingFields",
+    label: "Lead form fields",
+    help: "One per line — what you need to know to quote.",
+  },
 ];
 
 /**
@@ -50,12 +71,22 @@ export function BriefReviewPanel({
       <Panel id="business-brief" className="scroll-mt-24 p-5">
         <SectionHeading eyebrow="Step one" title="Let Revora read your business first" />
         <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-          Before anything is written, Revora works out what you do, who buys from you and how they decide.
-          You read it, correct anything that's wrong, and approve it — then the build uses exactly that.
+          Before anything is written, Revora works out what you do, who buys from you and how they
+          decide. You read it, correct anything that's wrong, and approve it — then the build uses
+          exactly that.
         </p>
         {canManage ? (
-          <Button className="mt-4" variant="signal" disabled={analyze.isPending} onClick={() => analyze.mutate()}>
-            {analyze.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+          <Button
+            className="mt-4"
+            variant="signal"
+            disabled={analyze.isPending}
+            onClick={() => analyze.mutate()}
+          >
+            {analyze.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
             Analyse my business
           </Button>
         ) : null}
@@ -63,7 +94,11 @@ export function BriefReviewPanel({
     );
 
   const set = (patch: Partial<SiteBrief>) => setDraft((d) => (d ? { ...d, ...patch } : d));
-  const lines = (value: string) => value.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = (value: string) =>
+    value
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
 
   return (
     <div className="space-y-4">
@@ -81,15 +116,25 @@ export function BriefReviewPanel({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Pill tone={brief.approved ? "signal" : "attention"}>{brief.approved ? "Approved" : "Needs your approval"}</Pill>
+            <Pill tone={brief.approved ? "signal" : "attention"}>
+              {brief.approved ? "Approved" : "Needs your approval"}
+            </Pill>
             {canManage ? (
               <>
                 <Button variant="outline" onClick={() => setEditing((v) => !v)}>
                   {editing ? <X className="size-4" /> : <Pencil className="size-4" />}
                   {editing ? "Stop editing" : "Edit"}
                 </Button>
-                <Button variant="outline" disabled={analyze.isPending} onClick={() => analyze.mutate()}>
-                  {analyze.isPending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                <Button
+                  variant="outline"
+                  disabled={analyze.isPending}
+                  onClick={() => analyze.mutate()}
+                >
+                  {analyze.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-4" />
+                  )}
                   Re-analyse
                 </Button>
                 {!brief.approved ? (
@@ -120,11 +165,19 @@ export function BriefReviewPanel({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-1.5">
                 <Label htmlFor="brief-buyer">Who the website talks to</Label>
-                <Input id="brief-buyer" value={draft.buyer} onChange={(e) => set({ buyer: e.target.value })} />
+                <Input
+                  id="brief-buyer"
+                  value={draft.buyer}
+                  onChange={(e) => set({ buyer: e.target.value })}
+                />
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="brief-goal">What they want done</Label>
-                <Input id="brief-goal" value={draft.buyerGoal} onChange={(e) => set({ buyerGoal: e.target.value })} />
+                <Input
+                  id="brief-goal"
+                  value={draft.buyerGoal}
+                  onChange={(e) => set({ buyerGoal: e.target.value })}
+                />
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="brief-primary">Main action</Label>
@@ -150,14 +203,20 @@ export function BriefReviewPanel({
                   id={`brief-${field.key}`}
                   rows={4}
                   value={draft[field.key].join("\n")}
-                  onChange={(e) => set({ [field.key]: lines(e.target.value) } as Partial<SiteBrief>)}
+                  onChange={(e) =>
+                    set({ [field.key]: lines(e.target.value) } as Partial<SiteBrief>)
+                  }
                 />
                 <p className="text-[11px] text-muted-foreground">{field.help}</p>
               </div>
             ))}
             <div className="grid gap-1.5">
               <Label htmlFor="brief-tone">How the copy should sound</Label>
-              <Input id="brief-tone" value={draft.toneNotes} onChange={(e) => set({ toneNotes: e.target.value })} />
+              <Input
+                id="brief-tone"
+                value={draft.toneNotes}
+                onChange={(e) => set({ toneNotes: e.target.value })}
+              />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -175,7 +234,11 @@ export function BriefReviewPanel({
                   setEditing(false);
                 }}
               >
-                {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                {save.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Check className="size-4" />
+                )}
                 Save and approve
               </Button>
             </div>
@@ -213,7 +276,8 @@ export function MissingFactsPanel({
       <Panel id="required-answers" className="scroll-mt-24 p-5">
         <SectionHeading eyebrow="Your information" title="Nothing missing" />
         <p className="mt-2 text-[13px] text-muted-foreground">
-          Revora has everything it needs from you. Anything else you add makes the site stronger, not possible.
+          Revora has everything it needs from you. Anything else you add makes the site stronger,
+          not possible.
         </p>
       </Panel>
     );
@@ -225,12 +289,16 @@ export function MissingFactsPanel({
     <Panel id="required-answers" className="scroll-mt-24 p-5">
       <SectionHeading
         eyebrow="Only the blanks"
-        title={required.length ? `${required.length} answer${required.length === 1 ? "" : "s"} needed to build` : "Optional detail Revora asked for"}
+        title={
+          required.length
+            ? `${required.length} answer${required.length === 1 ? "" : "s"} needed to build`
+            : "Optional detail Revora asked for"
+        }
       />
       <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-        These are the only things Revora couldn't find in what you've already entered. Nothing here is guessed
-        on your behalf. Answer the ones marked required and the build unlocks straight away — each answer is
-        reused across your pages, buttons, forms and search settings.
+        These are the only things Revora couldn't find in what you've already entered. Nothing here
+        is guessed on your behalf. Answer the ones marked required and the build unlocks straight
+        away — each answer is reused across your pages, buttons, forms and search settings.
       </p>
 
       {answerable.length ? (
@@ -264,7 +332,11 @@ export function MissingFactsPanel({
               disabled={save.isPending || !Object.values(answers).some((v) => v.trim())}
               onClick={() => save.mutate(answers)}
             >
-              {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+              {save.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Check className="size-4" />
+              )}
               Save my answers
             </Button>
           ) : null}
@@ -308,12 +380,17 @@ export function EngineSelfTestPanel({ organizationId }: { organizationId: string
         <div>
           <SectionHeading eyebrow="System check" title="Test the whole pipeline for real" />
           <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-            Runs a live AI analysis call on your own business, checks your lead-capture and booking flow, and
-            loads your public preview. Results below are what actually happened — nothing is simulated.
+            Runs a live AI analysis call on your own business, checks your lead-capture and booking
+            flow, and loads your public preview. Results below are what actually happened — nothing
+            is simulated.
           </p>
         </div>
         <Button variant="outline" disabled={check.isPending} onClick={() => check.mutate()}>
-          {check.isPending ? <Loader2 className="size-4 animate-spin" /> : <Stethoscope className="size-4" />}
+          {check.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Stethoscope className="size-4" />
+          )}
           Run system check
         </Button>
       </div>
@@ -330,13 +407,16 @@ export function EngineSelfTestPanel({ organizationId }: { organizationId: string
                 )}
                 <div className="min-w-0">
                   <p className="text-[13px]">{step.label}</p>
-                  <p className="mt-0.5 break-words text-[12px] text-muted-foreground">{step.detail}</p>
+                  <p className="mt-0.5 break-words text-[12px] text-muted-foreground">
+                    {step.detail}
+                  </p>
                 </div>
               </li>
             ))}
           </ul>
           <p className="mt-4 text-[11px] text-muted-foreground">
-            Checked {dateShort(result.ranAt)} — {result.passed ? "everything passed" : "see the failures above"}.
+            Checked {dateShort(result.ranAt)} —{" "}
+            {result.passed ? "everything passed" : "see the failures above"}.
           </p>
         </>
       ) : null}

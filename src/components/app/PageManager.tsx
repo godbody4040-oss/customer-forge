@@ -66,8 +66,8 @@ export function PageManager({
         }
       />
       <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
-        Rename a page, copy one you already like, hide it from visitors while you work on it, change the order
-        it appears in your menu, or pick which page people land on first.
+        Rename a page, copy one you already like, hide it from visitors while you work on it, change
+        the order it appears in your menu, or pick which page people land on first.
       </p>
 
       {adding && canManage ? (
@@ -103,11 +103,20 @@ export function PageManager({
               onClick={() =>
                 addPage.mutate(
                   { title: newTitle, kind: newKind, sortOrder: ordered.length },
-                  { onSuccess: () => { setNewTitle(""); setAdding(false); } },
+                  {
+                    onSuccess: () => {
+                      setNewTitle("");
+                      setAdding(false);
+                    },
+                  },
                 )
               }
             >
-              {addPage.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              {addPage.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Plus className="size-4" />
+              )}
               Create page
             </Button>
           </div>
@@ -131,7 +140,8 @@ export function PageManager({
                     defaultValue={page.title}
                     onBlur={(event) => {
                       const value = event.target.value.trim();
-                      if (value && value !== page.title) savePage.mutate({ id: page.id, patch: { title: value } });
+                      if (value && value !== page.title)
+                        savePage.mutate({ id: page.id, patch: { title: value } });
                     }}
                     className="w-full rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-foreground hover:border-border focus:border-primary focus:outline-none"
                   />
@@ -170,7 +180,9 @@ export function PageManager({
                     variant="ghost"
                     size="sm"
                     aria-label={page.is_visible ? `Hide ${page.title}` : `Show ${page.title}`}
-                    onClick={() => savePage.mutate({ id: page.id, patch: { is_visible: !page.is_visible } })}
+                    onClick={() =>
+                      savePage.mutate({ id: page.id, patch: { is_visible: !page.is_visible } })
+                    }
                   >
                     {page.is_visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
                   </Button>
@@ -198,7 +210,8 @@ export function PageManager({
                     aria-label={`Delete ${page.title}`}
                     disabled={page.id === homeId || deletePage.isPending}
                     onClick={() => {
-                      if (window.confirm(`Delete "${page.title}" and everything on it?`)) deletePage.mutate(page);
+                      if (window.confirm(`Delete "${page.title}" and everything on it?`))
+                        deletePage.mutate(page);
                     }}
                   >
                     <Trash2 className="size-4" />

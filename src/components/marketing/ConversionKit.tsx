@@ -61,11 +61,14 @@ function StickyCtaBar() {
       <div className="mx-auto flex max-w-6xl items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[12.5px] leading-snug">
-            <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days free — full access</span>
+            <span className="gold-hl">
+              {GROWTH_SYSTEM.fullAccessTrialDays} days free — full access
+            </span>
             <span className="text-muted-foreground"> · no card to start</span>
           </p>
           <p className="hidden text-[11px] text-muted-foreground sm:block">
-            Then {usd(GROWTH_SYSTEM.setupPrice)} setup, first month free, {usd(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
+            Then {usd(GROWTH_SYSTEM.setupPrice)} setup, first month free,{" "}
+            {usd(GROWTH_SYSTEM.monthlyPrice)}/month. Cancel anytime.
           </p>
         </div>
         <Button asChild variant="signal" size="sm" className="shrink-0">
@@ -219,7 +222,8 @@ export function LongTermValue() {
       </div>
       <p className="mt-5 text-[12px] text-muted-foreground">
         Month one launches the system. Every month after that it gets more pages ranked, more leads
-        followed up and more reviews collected — <span className="gold-hl">that's why clients stay</span>.
+        followed up and more reviews collected —{" "}
+        <span className="gold-hl">that's why clients stay</span>.
       </p>
     </div>
   );

@@ -181,7 +181,6 @@ function Contact() {
                   Prefer to talk it through? Call {REVORA.phoneDisplay} — no automated queue.
                 </p>
               </form>
-
             )}
           </div>
         </div>

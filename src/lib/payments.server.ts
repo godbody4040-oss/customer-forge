@@ -41,18 +41,23 @@ export async function recordOrderResult(
   order: PayPalOrder,
 ): Promise<{ payment: PaymentRow; fulfilled: boolean }> {
   const capture = captureFromOrder(order);
-  const status = (capture?.status === "COMPLETED"
-    ? "completed"
-    : capture?.status === "DECLINED"
-      ? "failed"
-      : mapOrderStatus(order.status)) as PaymentStatus;
+  const status = (
+    capture?.status === "COMPLETED"
+      ? "completed"
+      : capture?.status === "DECLINED"
+        ? "failed"
+        : mapOrderStatus(order.status)
+  ) as PaymentStatus;
 
   const alreadyDone = payment.status === "completed" && payment.entitlement_applied;
   const patch: Database["public"]["Tables"]["payments"]["Update"] = {
     status,
     paypal_capture_id: capture?.id ?? payment.paypal_capture_id,
     customer_email: order.payer?.email_address ?? payment.customer_email,
-    completed_at: status === "completed" ? (payment.completed_at ?? new Date().toISOString()) : payment.completed_at,
+    completed_at:
+      status === "completed"
+        ? (payment.completed_at ?? new Date().toISOString())
+        : payment.completed_at,
     failure_reason: status === "failed" ? (capture?.status ?? "Capture declined") : null,
   };
 
@@ -88,7 +93,9 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
 
   if (product?.kind === "subscription" && product.plan_id) {
     const interval = product.billing_interval ?? "monthly";
-    const periodEnd = new Date(Date.now() + (interval === "annual" ? 365 : 30) * 86_400_000).toISOString();
+    const periodEnd = new Date(
+      Date.now() + (interval === "annual" ? 365 : 30) * 86_400_000,
+    ).toISOString();
 
     await admin
       .from("organizations")
@@ -114,7 +121,11 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
 
     await admin
       .from("payments")
-      .update({ period_start: new Date().toISOString(), period_end: periodEnd, plan_id: product.plan_id })
+      .update({
+        period_start: new Date().toISOString(),
+        period_end: periodEnd,
+        plan_id: product.plan_id,
+      })
       .eq("id", payment.id);
   }
 
@@ -156,12 +167,28 @@ export async function logPaymentActivity(
 
   const notice =
     kind === "completed"
-      ? { title: "Payment received", body: `${label} — ${amount} paid by ${providerLabel}.`, tone: "success" }
+      ? {
+          title: "Payment received",
+          body: `${label} — ${amount} paid by ${providerLabel}.`,
+          tone: "success",
+        }
       : kind === "failed"
-        ? { title: "Payment could not be completed", body: `${label} — checkout was unsuccessful.`, tone: "warning" }
+        ? {
+            title: "Payment could not be completed",
+            body: `${label} — checkout was unsuccessful.`,
+            tone: "warning",
+          }
         : kind === "cancelled"
-          ? { title: "Payment cancelled", body: `${label} — checkout was cancelled, nothing was charged.`, tone: "info" }
-          : { title: "Refund processed", body: `${label} — refund issued via PayPal.`, tone: "info" };
+          ? {
+              title: "Payment cancelled",
+              body: `${label} — checkout was cancelled, nothing was charged.`,
+              tone: "info",
+            }
+          : {
+              title: "Refund processed",
+              body: `${label} — refund issued via PayPal.`,
+              tone: "info",
+            };
 
   await admin.from("notifications").insert({
     organization_id: payment.organization_id,

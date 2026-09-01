@@ -126,9 +126,7 @@ function AutomationsPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="eyebrow">When: {triggerLabel(automation.trigger_event)}</p>
-                <h2 className="mt-1 font-display text-[17px] font-semibold">
-                  {automation.name}
-                </h2>
+                <h2 className="mt-1 font-display text-[17px] font-semibold">{automation.name}</h2>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
@@ -169,7 +167,9 @@ function AutomationsPage() {
                         </span>
                       </div>
                       <p className="mt-1.5 text-[13px] font-medium">{s.subject}</p>
-                      <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">{s.body}</p>
+                      <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">
+                        {s.body}
+                      </p>
                     </div>
                     <div className="flex shrink-0 gap-1">
                       <Button
@@ -233,7 +233,9 @@ function AutomationsPage() {
               <h3 className="mt-1 font-display text-[15px] font-semibold">{recipe.name}</h3>
               <p className="mt-1 text-[12px] text-muted-foreground">{recipe.description}</p>
               <p className="mt-2 text-[11px] text-muted-foreground">
-                {recipe.steps.map((s) => `${delayLabel(s.delay_minutes)} · ${s.action_type}`).join(" → ")}
+                {recipe.steps
+                  .map((s) => `${delayLabel(s.delay_minutes)} · ${s.action_type}`)
+                  .join(" → ")}
               </p>
               <Button
                 variant={installedTriggers.has(recipe.trigger_event) ? "outline" : "signal"}
@@ -277,7 +279,13 @@ function AutomationsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Pill
-                  tone={run.status === "sent" ? "signal" : run.status === "queued" ? "attention" : "neutral"}
+                  tone={
+                    run.status === "sent"
+                      ? "signal"
+                      : run.status === "queued"
+                        ? "attention"
+                        : "neutral"
+                  }
                 >
                   {run.status}
                 </Pill>
@@ -397,9 +405,7 @@ function AutomationsPage() {
                     <select
                       id="st-delay"
                       value={String(step.delay_minutes)}
-                      onChange={(e) =>
-                        setStep({ ...step, delay_minutes: Number(e.target.value) })
-                      }
+                      onChange={(e) => setStep({ ...step, delay_minutes: Number(e.target.value) })}
                       className="h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm"
                     >
                       {DELAY_PRESETS.map((d) => (

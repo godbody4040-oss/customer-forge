@@ -54,10 +54,30 @@ import { directionActions, directionPreview, recommendDirections } from "@/lib/d
 type TabKey = "gems" | "missing" | "ahead" | "options" | "surprise";
 
 const TABS: { key: TabKey; label: string; hint: string; icon: typeof Gem }[] = [
-  { key: "gems", label: "Hidden gems", hint: "Things you didn't know your site could do", icon: Gem },
-  { key: "missing", label: "Find what I'm missing", hint: "Full audit of your live pages", icon: Search },
-  { key: "ahead", label: "Let Revora think ahead", hint: "Your next moves, in order", icon: Lightbulb },
-  { key: "options", label: "Show me options", hint: "Different designs, not one template", icon: Palette },
+  {
+    key: "gems",
+    label: "Hidden gems",
+    hint: "Things you didn't know your site could do",
+    icon: Gem,
+  },
+  {
+    key: "missing",
+    label: "Find what I'm missing",
+    hint: "Full audit of your live pages",
+    icon: Search,
+  },
+  {
+    key: "ahead",
+    label: "Let Revora think ahead",
+    hint: "Your next moves, in order",
+    icon: Lightbulb,
+  },
+  {
+    key: "options",
+    label: "Show me options",
+    hint: "Different designs, not one template",
+    icon: Palette,
+  },
   { key: "surprise", label: "Surprise me", hint: "Creative ideas for your trade", icon: Sparkles },
 ];
 
@@ -107,7 +127,10 @@ export function RevoraGenius({
     () =>
       pages
         .filter((page) => page.is_visible)
-        .reduce((sum, page) => sum + page.sections.filter((section) => section.is_visible).length, 0),
+        .reduce(
+          (sum, page) => sum + page.sections.filter((section) => section.is_visible).length,
+          0,
+        ),
     [pages],
   );
 
@@ -122,7 +145,11 @@ export function RevoraGenius({
           data: {
             organizationId: organizationId!,
             actions: chunk,
-            label: `Before: ${input.label}${chunks.length > 1 ? ` (${index + 1}/${chunks.length})` : ""}`.slice(0, 110),
+            label:
+              `Before: ${input.label}${chunks.length > 1 ? ` (${index + 1}/${chunks.length})` : ""}`.slice(
+                0,
+                110,
+              ),
           },
         });
         applied += result.applied;
@@ -135,7 +162,9 @@ export function RevoraGenius({
       toast.success(
         `${result.applied} change${result.applied === 1 ? "" : "s"} written to your site.` +
           (result.failed ? ` ${result.failed} skipped.` : ""),
-        { description: `Rollback point saved as “${result.snapshot}”. You can undo this at any time.` },
+        {
+          description: `Rollback point saved as “${result.snapshot}”. You can undo this at any time.`,
+        },
       );
       void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website-versions", organizationId] });
@@ -164,17 +193,23 @@ export function RevoraGenius({
         title="You don't need to know what to ask — Revora already knows"
         action={
           <Pill tone="signal">
-            <Sparkles className="size-3" aria-hidden="true" /> {gems.length + gaps.length} ideas ready
+            <Sparkles className="size-3" aria-hidden="true" /> {gems.length + gaps.length} ideas
+            ready
           </Pill>
         }
       />
       <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
-        Revora reads your live pages like a designer, developer, copywriter and conversion specialist at once, then
-        offers what your site is missing with the <span className="text-gold">reason, the exact preview and a build
-        button</span>. Everything is added, never removed, and a rollback point is saved before each change.
+        Revora reads your live pages like a designer, developer, copywriter and conversion
+        specialist at once, then offers what your site is missing with the{" "}
+        <span className="text-gold">reason, the exact preview and a build button</span>. Everything
+        is added, never removed, and a rollback point is saved before each change.
       </p>
 
-      <div className="mt-4 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Revora genius">
+      <div
+        className="mt-4 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+        role="tablist"
+        aria-label="Revora genius"
+      >
         {TABS.map((entry) => {
           const Icon = entry.icon;
           const active = tab === entry.key;
@@ -186,10 +221,14 @@ export function RevoraGenius({
               aria-selected={active}
               onClick={() => setTab(entry.key)}
               className={`shrink-0 cursor-pointer rounded-md border px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-                active ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/40 hover:bg-elevated"
+                active
+                  ? "border-primary/60 bg-primary/10"
+                  : "border-border hover:border-primary/40 hover:bg-elevated"
               }`}
             >
-              <span className={`flex items-center gap-1.5 text-[12.5px] font-medium ${active ? "text-primary" : ""}`}>
+              <span
+                className={`flex items-center gap-1.5 text-[12.5px] font-medium ${active ? "text-primary" : ""}`}
+              >
                 <Icon className="size-3.5" aria-hidden="true" />
                 {entry.label}
               </span>
@@ -206,7 +245,15 @@ export function RevoraGenius({
             return (
               <div key={gem.id} className="rounded-md border border-border p-3.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Pill tone={gem.path === "install" ? "signal" : gem.path === "system" ? "info" : "attention"}>
+                  <Pill
+                    tone={
+                      gem.path === "install"
+                        ? "signal"
+                        : gem.path === "system"
+                          ? "info"
+                          : "attention"
+                    }
+                  >
                     {gem.category}
                   </Pill>
                   <p className="min-w-0 text-[13px] font-medium">{gem.name}</p>
@@ -262,8 +309,8 @@ export function RevoraGenius({
         <div className="mt-4 grid gap-3">
           {!gaps.length ? (
             <p className="rounded-md border border-border bg-elevated/50 p-4 text-[13px] text-muted-foreground">
-              Nothing is missing that Revora can detect. Add services, photos or reviews and this audit will find the
-              next level.
+              Nothing is missing that Revora can detect. Add services, photos or reviews and this
+              audit will find the next level.
             </p>
           ) : null}
           {gaps.map((gap) => {
@@ -278,7 +325,10 @@ export function RevoraGenius({
                 <div className="mt-2.5">
                   {gem ? (
                     gem.path === "system" && gem.route ? (
-                      <Link to={gem.route} className="text-[12px] text-primary underline-offset-2 hover:underline">
+                      <Link
+                        to={gem.route}
+                        className="text-[12px] text-primary underline-offset-2 hover:underline"
+                      >
                         {gem.routeLabel ?? "Open it"}
                       </Link>
                     ) : (
@@ -288,7 +338,9 @@ export function RevoraGenius({
                         onClick={() => buildGem(gem)}
                         className="cursor-pointer text-[12px] font-medium text-primary underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {gem.path === "install" ? `Fix it now — ${gem.name.toLowerCase()}` : "Plan the fix with the assistant"}
+                        {gem.path === "install"
+                          ? `Fix it now — ${gem.name.toLowerCase()}`
+                          : "Plan the fix with the assistant"}
                       </button>
                     )
                   ) : gap.prompt ? (
@@ -347,16 +399,20 @@ export function RevoraGenius({
       {tab === "options" ? (
         <div className="mt-4 space-y-3">
           <p className="text-[12.5px] text-muted-foreground">
-            Six complete identities built for <span className="text-foreground">{facts.businessName ?? "your business"}</span>
-            {facts.industry ? ` (${facts.industry})` : ""} — colours, type, background and motion together. Every Revora
-            client gets a different starting set, so no two sites look alike. Installing one is reversible.
+            Six complete identities built for{" "}
+            <span className="text-foreground">{facts.businessName ?? "your business"}</span>
+            {facts.industry ? ` (${facts.industry})` : ""} — colours, type, background and motion
+            together. Every Revora client gets a different starting set, so no two sites look alike.
+            Installing one is reversible.
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            {([
-              { key: "any", label: "Any style" },
-              { key: "light", label: "White / light sites" },
-              { key: "dark", label: "Dark sites" },
-            ] as const).map((option) => (
+            {(
+              [
+                { key: "any", label: "Any style" },
+                { key: "light", label: "White / light sites" },
+                { key: "dark", label: "Dark sites" },
+              ] as const
+            ).map((option) => (
               <button
                 key={option.key}
                 type="button"
@@ -395,7 +451,9 @@ export function RevoraGenius({
                   <p className="text-[13px] font-medium">{direction.name}</p>
                 </div>
                 <p className="mt-1.5 text-[12.5px] text-muted-foreground">{direction.mood}</p>
-                <p className="mt-1 text-[11.5px] text-muted-foreground">Best for: {direction.bestFor}</p>
+                <p className="mt-1 text-[11.5px] text-muted-foreground">
+                  Best for: {direction.bestFor}
+                </p>
                 <ul className="mt-2 list-disc space-y-1 pl-4 text-[11.5px] text-muted-foreground">
                   {directionPreview(direction, visibleSections).map((line) => (
                     <li key={line}>{line}</li>
@@ -469,7 +527,9 @@ export function RevoraGenius({
               variant="signal"
               size="sm"
               onClick={() =>
-                askAssistant("I have an idea for my website — ask me what I want and then build it step by step.")
+                askAssistant(
+                  "I have an idea for my website — ask me what I want and then build it step by step.",
+                )
               }
             >
               <Sparkles className="size-4" /> Describe your own idea
@@ -480,8 +540,8 @@ export function RevoraGenius({
 
       {busy ? (
         <p className="mt-3 flex items-center gap-2 text-[12px] text-muted-foreground">
-          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> Writing your changes and saving a rollback
-          point…
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> Writing your changes and
+          saving a rollback point…
         </p>
       ) : null}
       {!canManage ? (

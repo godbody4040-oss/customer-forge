@@ -73,13 +73,22 @@ export function QuoteCalculator({ site }: { site: Site }) {
   let total = base;
   for (const { option } of selected) {
     if (!option) continue;
-    total = option.modifier_type === "multiply" ? total * option.price_modifier : total + option.price_modifier;
+    total =
+      option.modifier_type === "multiply"
+        ? total * option.price_modifier
+        : total + option.price_modifier;
   }
   const addons = quote.addons ?? [];
   const chosenAddons = addons.filter((a) => picked.includes(a.id));
   total += chosenAddons.reduce((sum, a) => sum + Number(a.price), 0);
   const min = Math.max(Number(quote.form.min_price ?? 0), Math.round(total * 0.9));
-  const max = Math.max(min, Math.min(Number(quote.form.max_price ?? total * 1.15) || total * 1.15, Math.round(total * 1.15)));
+  const max = Math.max(
+    min,
+    Math.min(
+      Number(quote.form.max_price ?? total * 1.15) || total * 1.15,
+      Math.round(total * 1.15),
+    ),
+  );
   const answered = selected.filter((s) => s.option).length;
   const complete = answered === quote.questions.length && quote.questions.length > 0;
 

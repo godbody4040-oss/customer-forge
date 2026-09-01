@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowDown, Check, History, Loader2, RotateCcw, Sparkles, TriangleAlert, Wand2 } from "lucide-react";
+import {
+  ArrowDown,
+  Check,
+  History,
+  Loader2,
+  RotateCcw,
+  Sparkles,
+  TriangleAlert,
+  Wand2,
+} from "lucide-react";
 import { MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +29,6 @@ import {
 import { dateShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { focusAndScrollToId } from "@/lib/use-step-scroll";
-
 
 /* ---------------------------- generation progress ---------------------------- */
 
@@ -76,9 +84,9 @@ export function SiteEnginePanel({
             }
           />
           <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-            Revora analyses your business, works out how your customers buy, chooses the right structure
-            for your industry, writes the copy, sets up your search settings and connects lead capture — in
-            one run. It never invents reviews, awards, credentials or prices.
+            Revora analyses your business, works out how your customers buy, chooses the right
+            structure for your industry, writes the copy, sets up your search settings and connects
+            lead capture — in one run. It never invents reviews, awards, credentials or prices.
           </p>
         </div>
         {canManage ? (
@@ -88,8 +96,16 @@ export function SiteEnginePanel({
             onClick={() => run.mutate()}
             title={blockedReason ?? undefined}
           >
-            {running ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            {status === "failed" ? "Retry build" : hasCopy ? "Rebuild from my info" : "Build my complete website"}
+            {running ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
+            {status === "failed"
+              ? "Retry build"
+              : hasCopy
+                ? "Rebuild from my info"
+                : "Build my complete website"}
           </Button>
         ) : null}
       </div>
@@ -126,7 +142,6 @@ export function SiteEnginePanel({
         </div>
       ) : null}
 
-
       {status === "failed" && job?.error_message ? (
         <div className="mt-4 flex items-start gap-2.5 rounded-md border border-destructive/40 bg-destructive/5 p-3.5">
           <TriangleAlert className="mt-0.5 size-4 text-destructive" aria-hidden="true" />
@@ -146,7 +161,9 @@ export function SiteEnginePanel({
             />
           </div>
           <p className="mt-2 text-[12px] text-muted-foreground" aria-live="polite">
-            {running ? `${stepLabel(job?.current_step as string | null)}…` : `${progress}% complete`}
+            {running
+              ? `${stepLabel(job?.current_step as string | null)}…`
+              : `${progress}% complete`}
           </p>
 
           <ul className="mt-4 grid gap-1.5 sm:grid-cols-2">
@@ -161,8 +178,17 @@ export function SiteEnginePanel({
                     complete ? "text-muted-foreground" : active ? "" : "text-muted-foreground/60",
                   )}
                 >
-                  <span aria-hidden="true" className={complete ? "text-primary" : "text-muted-foreground/60"}>
-                    {complete ? <Check className="size-3.5" /> : active ? <Loader2 className="size-3.5 animate-spin" /> : "•"}
+                  <span
+                    aria-hidden="true"
+                    className={complete ? "text-primary" : "text-muted-foreground/60"}
+                  >
+                    {complete ? (
+                      <Check className="size-3.5" />
+                    ) : active ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      "•"
+                    )}
                   </span>
                   {step.label}
                 </li>
@@ -207,8 +233,8 @@ export function AiCopyAssistant({
     <Panel className="p-5">
       <SectionHeading eyebrow="AI assistant" title="Ask Revora to rewrite your copy" />
       <p className="mt-2 text-[13px] text-muted-foreground">
-        Revora only changes the wording you ask about — your structure, services and contact details stay
-        exactly as they are.
+        Revora only changes the wording you ask about — your structure, services and contact details
+        stay exactly as they are.
       </p>
 
       <form
@@ -245,11 +271,17 @@ export function AiCopyAssistant({
           ))}
         </div>
         <Button type="submit" variant="signal" disabled={edit.isPending || !usable.length}>
-          {edit.isPending ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
+          {edit.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Wand2 className="size-4" />
+          )}
           Rewrite copy
         </Button>
         {!usable.length ? (
-          <p className="text-[12px] text-muted-foreground">Generate your website first so there's copy to edit.</p>
+          <p className="text-[12px] text-muted-foreground">
+            Generate your website first so there's copy to edit.
+          </p>
         ) : null}
       </form>
 
@@ -311,7 +343,10 @@ export function RevoraScorePanel({
               <p className="text-[13px] font-medium">{rec.title}</p>
               <p className="mt-1 text-[12px] text-muted-foreground">{rec.detail}</p>
               {rec.to ? (
-                <Link to={rec.to} className="mt-1.5 inline-block text-[12px] text-primary underline-offset-2 hover:underline">
+                <Link
+                  to={rec.to}
+                  className="mt-1.5 inline-block text-[12px] text-primary underline-offset-2 hover:underline"
+                >
                   Fix this
                 </Link>
               ) : null}
@@ -350,7 +385,10 @@ export function VersionHistory({
   return (
     <Panel className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <SectionHeading eyebrow="Version control" title={`${(versions ?? []).length} saved versions`} />
+        <SectionHeading
+          eyebrow="Version control"
+          title={`${(versions ?? []).length} saved versions`}
+        />
         {canManage ? (
           <form
             className="flex flex-wrap items-center gap-2"
@@ -374,13 +412,16 @@ export function VersionHistory({
 
       {(versions ?? []).length === 0 ? (
         <p className="mt-4 text-[12px] text-muted-foreground">
-          Saving a version snapshots your current structure, copy and SEO. Editing the draft afterwards never
-          changes a saved version.
+          Saving a version snapshots your current structure, copy and SEO. Editing the draft
+          afterwards never changes a saved version.
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-border">
           {(versions ?? []).map((v) => (
-            <li key={String(v.id)} className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <li
+              key={String(v.id)}
+              className="flex flex-wrap items-center justify-between gap-3 py-3"
+            >
               <div>
                 <p className="text-[13px] font-medium">
                   Version {String(v.version)}{" "}
@@ -389,11 +430,16 @@ export function VersionHistory({
                   ) : null}
                 </p>
                 <p className="text-[12px] text-muted-foreground">
-                  Saved {dateShort(String(v.created_at))} · template {String(v.template ?? "default")}
+                  Saved {dateShort(String(v.created_at))} · template{" "}
+                  {String(v.template ?? "default")}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {v.published_at ? <Pill tone="signal">Published</Pill> : <Pill tone="neutral">Snapshot</Pill>}
+                {v.published_at ? (
+                  <Pill tone="signal">Published</Pill>
+                ) : (
+                  <Pill tone="neutral">Snapshot</Pill>
+                )}
                 {canManage ? (
                   <Button
                     size="sm"

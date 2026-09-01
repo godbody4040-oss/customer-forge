@@ -1,12 +1,24 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CreditCard, ExternalLink, Receipt, Wallet } from "lucide-react";
-import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import {
+  EmptyState,
+  LoadingRows,
+  MetricCard,
+  Panel,
+  Pill,
+  SectionHeading,
+} from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { PayPalCheckout } from "@/components/app/PayPalCheckout";
 import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
-import { usePaymentConfig, usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
+import {
+  usePaymentConfig,
+  usePaymentProducts,
+  usePayments,
+  type PaymentProduct,
+} from "@/lib/payments.hooks";
 import { useBillingState } from "@/lib/stripe.hooks";
 import { createBillingPortalSession } from "@/lib/stripe.functions";
 import { getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
@@ -18,12 +30,15 @@ import { REVORA } from "@/lib/brand";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-
 export const Route = createFileRoute("/_authenticated/app/billing")({
   head: () => ({
     meta: [
       { title: "Billing & payments — Revora" },
-      { name: "description", content: "Your Revora plan, subscription and secure card, Apple Pay and Cash App Pay checkout." },
+      {
+        name: "description",
+        content:
+          "Your Revora plan, subscription and secure card, Apple Pay and Cash App Pay checkout.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -45,10 +60,18 @@ const STATUS_LABEL: Record<string, string> = {
   disputed: "Disputed",
 };
 
-function paymentReference(payment: { paypal_capture_id: string | null; paypal_order_id: string | null; metadata: unknown }) {
+function paymentReference(payment: {
+  paypal_capture_id: string | null;
+  paypal_order_id: string | null;
+  metadata: unknown;
+}) {
   if (payment.paypal_capture_id) return payment.paypal_capture_id;
   if (payment.paypal_order_id) return payment.paypal_order_id;
-  if (payment.metadata && typeof payment.metadata === "object" && !Array.isArray(payment.metadata)) {
+  if (
+    payment.metadata &&
+    typeof payment.metadata === "object" &&
+    !Array.isArray(payment.metadata)
+  ) {
     const stripeId = (payment.metadata as Record<string, unknown>)["stripe_id"];
     if (typeof stripeId === "string") return stripeId;
   }
@@ -81,7 +104,6 @@ function BillingPage() {
   const subscription = billing?.subscription ?? null;
   const setupPaid = Boolean(billing?.setupPaid);
 
-
   // Stripe embedded checkout redirects here after a completed payment.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -102,7 +124,11 @@ function BillingPage() {
     setPortalBusy(true);
     try {
       const result = await createBillingPortalSession({
-        data: { organizationId: orgId, returnUrl: `${window.location.origin}/app/billing`, environment: getStripeEnvironment() },
+        data: {
+          organizationId: orgId,
+          returnUrl: `${window.location.origin}/app/billing`,
+          environment: getStripeEnvironment(),
+        },
       });
       if ("error" in result) throw new Error(result.error);
       window.open(result.url, "_blank", "noopener");
@@ -125,7 +151,9 @@ function BillingPage() {
             {subscription ? subscription.status.replace("_", " ") : "No subscription"}
           </Pill>
 
-          <Pill tone="neutral">Card payments {billing?.environment === "sandbox" ? "test" : "live"}</Pill>
+          <Pill tone="neutral">
+            Card payments {billing?.environment === "sandbox" ? "test" : "live"}
+          </Pill>
           {config?.configured ? <Pill tone="neutral">PayPal {config.environment}</Pill> : null}
         </div>
       </div>
@@ -136,9 +164,16 @@ function BillingPage() {
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
           <p className="font-medium">Your last payment did not go through.</p>
           <p className="mt-1">
-            Update your card to keep your workspace active — access continues while the payment provider retries.
+            Update your card to keep your workspace active — access continues while the payment
+            provider retries.
           </p>
-          <Button variant="outline" size="sm" className="mt-2" onClick={openPortal} disabled={portalBusy || !manage}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={openPortal}
+            disabled={portalBusy || !manage}
+          >
             <ExternalLink className="size-4" /> {portalBusy ? "Opening…" : "Update payment method"}
           </Button>
         </div>
@@ -147,7 +182,9 @@ function BillingPage() {
       {subscription?.cancel_at_period_end ? (
         <div className="rounded-md border border-border bg-muted/40 px-4 py-3 text-[13px] text-muted-foreground">
           Cancellation is scheduled. You keep full access until{" "}
-          {subscription.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : "the end of the paid period"}
+          {subscription.current_period_end
+            ? new Date(subscription.current_period_end).toLocaleDateString()
+            : "the end of the paid period"}
           , then the workspace becomes read-only.
         </div>
       ) : null}
@@ -164,9 +201,19 @@ function BillingPage() {
           hint={setupPaid ? "Paid" : "Due at checkout"}
         />
 
-        <MetricCard label="Paid to date" value={money(paidTotal, "USD")} hint={`${paid.length} payment${paid.length === 1 ? "" : "s"}`} />
         <MetricCard
-          label={subscription?.cancel_at_period_end ? "Access ends" : subscription?.status === "trialing" ? "Trial ends" : "Renews"}
+          label="Paid to date"
+          value={money(paidTotal, "USD")}
+          hint={`${paid.length} payment${paid.length === 1 ? "" : "s"}`}
+        />
+        <MetricCard
+          label={
+            subscription?.cancel_at_period_end
+              ? "Access ends"
+              : subscription?.status === "trialing"
+                ? "Trial ends"
+                : "Renews"
+          }
           value={
             subscription?.status === "trialing" && subscription.trial_ends_at
               ? new Date(subscription.trial_ends_at).toLocaleDateString()
@@ -184,7 +231,12 @@ function BillingPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHeading eyebrow="Your system" title={GROWTH_SYSTEM.name} />
           {subscription?.provider_subscription_id ? (
-            <Button variant="outline" size="sm" onClick={openPortal} disabled={portalBusy || !manage}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openPortal}
+              disabled={portalBusy || !manage}
+            >
               <ExternalLink className="size-4" /> {portalBusy ? "Opening…" : "Manage subscription"}
             </Button>
           ) : null}
@@ -193,13 +245,19 @@ function BillingPage() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-md border border-border p-4">
             <p className="text-[12px] text-muted-foreground">Setup</p>
-            <p className="tnum mt-1 text-[22px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</p>
+            <p className="tnum mt-1 text-[22px] font-semibold">
+              {usdExact(GROWTH_SYSTEM.setupPrice)}
+            </p>
             <p className="mt-1 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
-            <Pill tone={setupPaid ? "signal" : "neutral"}>{setupPaid ? "Paid" : "Not paid yet"}</Pill>
+            <Pill tone={setupPaid ? "signal" : "neutral"}>
+              {setupPaid ? "Paid" : "Not paid yet"}
+            </Pill>
           </div>
           <div className="rounded-md border border-primary/40 p-4">
             <p className="text-[12px] text-muted-foreground">Monthly</p>
-            <p className="tnum mt-1 text-[22px] font-semibold">{usdExact(GROWTH_SYSTEM.monthlyPrice)}</p>
+            <p className="tnum mt-1 text-[22px] font-semibold">
+              {usdExact(GROWTH_SYSTEM.monthlyPrice)}
+            </p>
             <p className="mt-1 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
             <Pill tone={billing?.active ? "signal" : "neutral"}>
               {subscription ? subscription.status.replace("_", " ") : "Not active"}
@@ -219,19 +277,24 @@ function BillingPage() {
           <span className="text-muted-foreground">{BUILDER_INCLUDED_DETAIL}</span>
         </p>
 
-
         {!cardsReady ? (
           <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
             Card checkout is not configured for this build yet, so no payment can be taken.
           </p>
         ) : billing?.active && subscription?.provider_subscription_id ? (
           <p className="mt-4 text-[12px] text-muted-foreground">
-            Your system is active. Update your card, view invoices or cancel from Manage subscription — access
-            continues until the end of the paid period.
+            Your system is active. Update your card, view invoices or cancel from Manage
+            subscription — access continues until the end of the paid period.
           </p>
         ) : (
           <>
-            <Button asChild variant="signal" size="lg" className="mt-4 w-full sm:w-auto" disabled={!manage}>
+            <Button
+              asChild
+              variant="signal"
+              size="lg"
+              className="mt-4 w-full sm:w-auto"
+              disabled={!manage}
+            >
               <Link to="/get-started">
                 <CreditCard className="size-4" /> {GROWTH_SYSTEM.ctaPrimary}
               </Link>
@@ -240,17 +303,21 @@ function BillingPage() {
           </>
         )}
         <p className="mt-4 text-[12px] text-muted-foreground">
-          Checkout accepts cards, Apple Pay, Google Pay and Cash App Pay where the provider and your device support
-          them. {GROWTH_SYSTEM.explainer}
+          Checkout accepts cards, Apple Pay, Google Pay and Cash App Pay where the provider and your
+          device support them. {GROWTH_SYSTEM.explainer}
         </p>
       </Panel>
-
 
       <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHeading eyebrow="Payment methods" title="Saved cards & wallets" />
           {subscription?.provider_customer_id ? (
-            <Button variant="outline" size="sm" onClick={openPortal} disabled={portalBusy || !manage}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openPortal}
+              disabled={portalBusy || !manage}
+            >
               <Wallet className="size-4" /> {portalBusy ? "Opening…" : "Manage payment methods"}
             </Button>
           ) : null}
@@ -261,9 +328,6 @@ function BillingPage() {
             : "A saved payment method is added automatically the first time you subscribe or pay by card. Cards, Apple Pay, Google Pay and Cash App Pay are supported where your device and the provider support them."}
         </p>
       </Panel>
-
-
-
 
       {cardService && orgId ? (
         <StripeServiceCheckout
@@ -291,63 +355,66 @@ function BillingPage() {
 
       {services.length > 0 ? (
         <Panel className="p-5">
-        <SectionHeading eyebrow="Services" title="Revora services" />
-        {loadingProducts ? (
-          <LoadingRows rows={3} />
-        ) : (
-          <ul className="mt-4 grid gap-3 md:grid-cols-2">
-            {services.map((product) => (
-              <li key={product.id} className="rounded-md border border-border p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[14px] font-medium">{product.name}</p>
-                    {product.description ? (
-                      <p className="mt-1 text-[12px] text-muted-foreground">{product.description}</p>
+          <SectionHeading eyebrow="Services" title="Revora services" />
+          {loadingProducts ? (
+            <LoadingRows rows={3} />
+          ) : (
+            <ul className="mt-4 grid gap-3 md:grid-cols-2">
+              {services.map((product) => (
+                <li key={product.id} className="rounded-md border border-border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[14px] font-medium">{product.name}</p>
+                      {product.description ? (
+                        <p className="mt-1 text-[12px] text-muted-foreground">
+                          {product.description}
+                        </p>
+                      ) : null}
+                    </div>
+                    <p className="tnum text-[15px] font-semibold">
+                      {money(product.amount, product.currency)}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      variant="signal"
+                      size="sm"
+                      disabled={!manage || !cardsReady}
+                      onClick={() => setCardService(product)}
+                    >
+                      <CreditCard className="size-4" /> Pay by card
+                    </Button>
+                    {config?.configured ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!manage}
+                        onClick={() => setSelected(product)}
+                      >
+                        Pay with PayPal
+                      </Button>
                     ) : null}
                   </div>
-                  <p className="tnum text-[15px] font-semibold">{money(product.amount, product.currency)}</p>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    variant="signal"
-                    size="sm"
-                    disabled={!manage || !cardsReady}
-                    onClick={() => setCardService(product)}
-                  >
-                    <CreditCard className="size-4" /> Pay by card
-                  </Button>
-                  {config?.configured ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!manage}
-                      onClick={() => setSelected(product)}
-                    >
-                      Pay with PayPal
-                    </Button>
+                  {!cardsReady ? (
+                    <p className="mt-2 text-[11px] text-destructive">
+                      Card checkout is not configured for this build yet.
+                    </p>
                   ) : null}
-                </div>
-                {!cardsReady ? (
-                  <p className="mt-2 text-[11px] text-destructive">
-                    Card checkout is not configured for this build yet.
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
       ) : null}
 
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
         <p className="mt-3 text-[13px] text-muted-foreground">
-          One-off services above are charged once by card (or PayPal where available). Software plans are billed as a
-          subscription and can be changed or cancelled at any time. Questions: {REVORA.email} ·{" "}
-          {REVORA.phoneDisplay ?? REVORA.phone}
+          One-off services above are charged once by card (or PayPal where available). Software
+          plans are billed as a subscription and can be changed or cancelled at any time. Questions:{" "}
+          {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
         </p>
       </Panel>
-
 
       <Panel className="p-5">
         <SectionHeading eyebrow="History" title="Payment history" />
@@ -380,17 +447,19 @@ function BillingPage() {
                     <td className="py-2.5 pr-3 whitespace-nowrap">
                       {new Date(payment.completed_at ?? payment.created_at).toLocaleDateString()}
                     </td>
-                    <td className="py-2.5 pr-3">{payment.description ?? payment.product_id ?? "Revora service"}</td>
-                    <td className="tnum py-2.5 pr-3">{money(Number(payment.amount), payment.currency)}</td>
+                    <td className="py-2.5 pr-3">
+                      {payment.description ?? payment.product_id ?? "Revora service"}
+                    </td>
+                    <td className="tnum py-2.5 pr-3">
+                      {money(Number(payment.amount), payment.currency)}
+                    </td>
                     <td className="py-2.5 pr-3">
                       <Pill tone={payment.status === "completed" ? "signal" : "neutral"}>
                         {STATUS_LABEL[payment.status] ?? payment.status}
                       </Pill>
                     </td>
                     <td className="py-2.5 pr-3 capitalize">{payment.payment_provider}</td>
-                    <td className="py-2.5 font-mono text-[11px]">
-                      {paymentReference(payment)}
-                    </td>
+                    <td className="py-2.5 font-mono text-[11px]">{paymentReference(payment)}</td>
                   </tr>
                 ))}
               </tbody>

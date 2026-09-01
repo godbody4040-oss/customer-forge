@@ -21,7 +21,10 @@ const WINDOWS = [
   { days: 90, label: "90 days" },
 ];
 
-const VERDICT: Record<PageInsight["verdict"], { label: string; tone: "signal" | "attention" | "neutral" | "info" }> = {
+const VERDICT: Record<
+  PageInsight["verdict"],
+  { label: string; tone: "signal" | "attention" | "neutral" | "info" }
+> = {
   strong: { label: "Converting", tone: "signal" },
   average: { label: "Average", tone: "info" },
   weak: { label: "Low", tone: "attention" },
@@ -67,7 +70,8 @@ export function ConversionOptimizer({ organizationId }: { organizationId: string
       ).length,
       primaryCtaLabel: seo.primary_cta_label ?? null,
       quoteFormQuestions: quote?.questions?.length ?? 0,
-      bookableServices: (services ?? []).filter((s) => (s as { bookable?: boolean }).bookable).length,
+      bookableServices: (services ?? []).filter((s) => (s as { bookable?: boolean }).bookable)
+        .length,
       captureAboveFold,
     });
   }, [events, leads, appointments, days, seo.primary_cta_label, quote, services, captureAboveFold]);
@@ -77,10 +81,13 @@ export function ConversionOptimizer({ organizationId }: { organizationId: string
       <Panel className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <SectionHeading eyebrow="Post-launch optimisation" title="What to change next, based on real visits" />
+            <SectionHeading
+              eyebrow="Post-launch optimisation"
+              title="What to change next, based on real visits"
+            />
             <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
-              Revora watches how visitors behave on your live site and only recommends a change when the numbers
-              support it. Pages with fewer than {MIN_VIEWS} visits are left alone.
+              Revora watches how visitors behave on your live site and only recommends a change when
+              the numbers support it. Pages with fewer than {MIN_VIEWS} visits are left alone.
             </p>
           </div>
           <div className="flex gap-1.5">
@@ -111,8 +118,20 @@ export function ConversionOptimizer({ organizationId }: { organizationId: string
                   )}
                   {action.title}
                 </p>
-                <Pill tone={action.impact === "high" ? "attention" : action.impact === "low" ? "signal" : "info"}>
-                  {action.impact === "high" ? "Fix first" : action.impact === "low" ? "Healthy" : "Worth doing"}
+                <Pill
+                  tone={
+                    action.impact === "high"
+                      ? "attention"
+                      : action.impact === "low"
+                        ? "signal"
+                        : "info"
+                  }
+                >
+                  {action.impact === "high"
+                    ? "Fix first"
+                    : action.impact === "low"
+                      ? "Healthy"
+                      : "Worth doing"}
                 </Pill>
               </div>
               <p className="mt-1.5 text-[12px] text-muted-foreground">{action.evidence}</p>

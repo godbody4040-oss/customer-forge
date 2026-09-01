@@ -32,7 +32,11 @@ export function MetaPreview({ meta, label }: { meta: PrivateMetaResult; label: s
       { label: "Canonical", value: meta.resolved.canonical, live: live?.["canonical"] },
       { label: "Robots", value: meta.resolved.robots, live: live?.["robots"] },
       { label: "og:title", value: meta.resolved.ogTitle, live: live?.["og:title"] },
-      { label: "og:description", value: meta.resolved.ogDescription, live: live?.["og:description"] },
+      {
+        label: "og:description",
+        value: meta.resolved.ogDescription,
+        live: live?.["og:description"],
+      },
       { label: "og:url", value: meta.resolved.ogUrl, live: live?.["og:url"] },
       { label: "og:type", value: meta.resolved.ogType, live: live?.["og:type"] },
       { label: "og:site_name", value: meta.resolved.ogSiteName, live: live?.["og:site_name"] },
@@ -43,7 +47,11 @@ export function MetaPreview({ meta, label }: { meta: PrivateMetaResult; label: s
         value: meta.resolved.twitterDescription,
         live: live?.["twitter:description"],
       },
-      { label: "og:image", value: meta.resolved.image ?? "— none (host supplies preview)", live: live?.["og:image"] },
+      {
+        label: "og:image",
+        value: meta.resolved.image ?? "— none (host supplies preview)",
+        live: live?.["og:image"],
+      },
     ],
     [live, meta],
   );
@@ -66,8 +74,8 @@ export function MetaPreview({ meta, label }: { meta: PrivateMetaResult; label: s
             Search &amp; social preview
           </h3>
           <p className="text-sm text-muted-foreground">
-            Exactly what crawlers read for <span className="font-mono">{label}</span>. This page is private, so it stays
-            out of search results.
+            Exactly what crawlers read for <span className="font-mono">{label}</span>. This page is
+            private, so it stays out of search results.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={copy}>
@@ -78,8 +86,12 @@ export function MetaPreview({ meta, label }: { meta: PrivateMetaResult; label: s
 
       <div className="rounded-xl border border-border/70 bg-card/60 p-4">
         <p className="truncate text-xs text-muted-foreground">{meta.resolved.canonical}</p>
-        <p className="mt-1 line-clamp-1 font-display text-base font-semibold text-primary">{meta.resolved.title}</p>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{meta.resolved.description}</p>
+        <p className="mt-1 line-clamp-1 font-display text-base font-semibold text-primary">
+          {meta.resolved.title}
+        </p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+          {meta.resolved.description}
+        </p>
       </div>
 
       <dl className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/70">
@@ -87,13 +99,20 @@ export function MetaPreview({ meta, label }: { meta: PrivateMetaResult; label: s
           const matches = row.live === undefined || row.live === row.value;
           return (
             <div key={row.label} className="grid gap-1 p-3 sm:grid-cols-[10rem_1fr] sm:gap-4">
-              <dt className="font-mono text-xs uppercase tracking-wide text-muted-foreground">{row.label}</dt>
+              <dt className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                {row.label}
+              </dt>
               <dd className="flex items-start gap-2 break-words text-sm">
                 <span className="flex-1">{row.value}</span>
                 {matches ? (
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-label="Matches rendered head" />
+                  <Check
+                    className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    aria-label="Matches rendered head"
+                  />
                 ) : (
-                  <span className="shrink-0 text-xs text-destructive">rendered: {row.live || "missing"}</span>
+                  <span className="shrink-0 text-xs text-destructive">
+                    rendered: {row.live || "missing"}
+                  </span>
                 )}
               </dd>
             </div>

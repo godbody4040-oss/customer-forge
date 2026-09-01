@@ -39,7 +39,9 @@ export const RESERVED_SLUGS = [
 ];
 
 export function safeSlug(value: string, fallback = "my-business") {
-  const base = slugify(value || "").replace(/^-+|-+$/g, "").slice(0, 48);
+  const base = slugify(value || "")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
   if (!base) return fallback;
   if (RESERVED_SLUGS.includes(base)) return `${base}-business`;
   if (/^\d+$/.test(base)) return `biz-${base}`;
@@ -165,14 +167,7 @@ export const REQUEST_KINDS: { value: string; label: string }[] = [
 /* --------------------------------- generation --------------------------------- */
 
 export type GoalKey =
-  | "call"
-  | "text"
-  | "quote"
-  | "book"
-  | "lead"
-  | "visit"
-  | "purchase"
-  | "consult";
+  "call" | "text" | "quote" | "book" | "lead" | "visit" | "purchase" | "consult";
 
 export const WEBSITE_GOALS: { value: GoalKey; label: string; cta: string }[] = [
   { value: "call", label: "Call us", cta: "Call now" },
@@ -258,51 +253,162 @@ export function generateWebsitePlan(input: GenerationInput): WebsitePlan {
     (place
       ? `${name} serves ${place}. See services, get a straight answer on price, and lock in a time.`
       : `${name} makes it simple to see services, get pricing and lock in a time.`);
-  if (!input.description?.trim()) mark("About paragraph — replace this generated summary with your own words");
+  if (!input.description?.trim())
+    mark("About paragraph — replace this generated summary with your own words");
 
   const pages: PlannedPage[] = [
-    { key: "home", label: "Home", path: "/", reason: "Primary landing page pointed at your main goal.", core: true },
-    { key: "services", label: "Services", path: "/#services", reason: "Your service menu with what's included.", core: true },
-    { key: "about", label: "About", path: "/#about", reason: "Who you are and why customers trust you.", core: true },
-    { key: "contact", label: "Contact", path: "/#contact", reason: "Phone, email and lead form in one place.", core: true },
+    {
+      key: "home",
+      label: "Home",
+      path: "/",
+      reason: "Primary landing page pointed at your main goal.",
+      core: true,
+    },
+    {
+      key: "services",
+      label: "Services",
+      path: "/#services",
+      reason: "Your service menu with what's included.",
+      core: true,
+    },
+    {
+      key: "about",
+      label: "About",
+      path: "/#about",
+      reason: "Who you are and why customers trust you.",
+      core: true,
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      path: "/#contact",
+      reason: "Phone, email and lead form in one place.",
+      core: true,
+    },
   ];
 
   if (input.photoCount >= 3)
-    pages.push({ key: "gallery", label: "Gallery", path: "/#gallery", reason: `Your ${input.photoCount} photos give visual proof of your work.`, core: false });
+    pages.push({
+      key: "gallery",
+      label: "Gallery",
+      path: "/#gallery",
+      reason: `Your ${input.photoCount} photos give visual proof of your work.`,
+      core: false,
+    });
   else mark("Photos — add at least 3 images to unlock a gallery page");
 
   if (input.testimonialCount > 0)
-    pages.push({ key: "reviews", label: "Reviews", path: "/#reviews", reason: "Shows only the testimonials you provided.", core: false });
+    pages.push({
+      key: "reviews",
+      label: "Reviews",
+      path: "/#reviews",
+      reason: "Shows only the testimonials you provided.",
+      core: false,
+    });
   else mark("Testimonials — none provided, so no reviews page was created");
 
   if (input.serviceArea)
-    pages.push({ key: "areas", label: "Service areas", path: "/#areas", reason: "Local relevance for the areas you named.", core: false });
+    pages.push({
+      key: "areas",
+      label: "Service areas",
+      path: "/#areas",
+      reason: "Local relevance for the areas you named.",
+      core: false,
+    });
 
   if (input.goals.includes("quote"))
-    pages.push({ key: "quote", label: "Request a quote", path: "/#quote", reason: "Instant estimate flow wired into your CRM.", core: false });
+    pages.push({
+      key: "quote",
+      label: "Request a quote",
+      path: "/#quote",
+      reason: "Instant estimate flow wired into your CRM.",
+      core: false,
+    });
 
   if (input.goals.includes("book"))
-    pages.push({ key: "booking", label: "Booking", path: "/#book", reason: "Online booking wired into your Revora calendar.", core: false });
+    pages.push({
+      key: "booking",
+      label: "Booking",
+      path: "/#book",
+      reason: "Online booking wired into your Revora calendar.",
+      core: false,
+    });
 
   if (input.goals.includes("consult"))
-    pages.push({ key: "consult", label: "Consultation", path: "/#contact", reason: "Consultation request form before quoting.", core: false });
+    pages.push({
+      key: "consult",
+      label: "Consultation",
+      path: "/#contact",
+      reason: "Consultation request form before quoting.",
+      core: false,
+    });
 
   if (input.services.some((s) => typeof s.price === "number" && s.price != null))
-    pages.push({ key: "pricing", label: "Pricing", path: "/#pricing", reason: "You published prices, so pricing gets its own section.", core: false });
+    pages.push({
+      key: "pricing",
+      label: "Pricing",
+      path: "/#pricing",
+      reason: "You published prices, so pricing gets its own section.",
+      core: false,
+    });
 
   if (serviceNames.length >= 4)
-    pages.push({ key: "faq", label: "FAQ", path: "/#faq", reason: "Answers the questions a multi-service business gets asked.", core: false });
+    pages.push({
+      key: "faq",
+      label: "FAQ",
+      path: "/#faq",
+      reason: "Answers the questions a multi-service business gets asked.",
+      core: false,
+    });
 
   if (input.hasCredentials)
-    pages.push({ key: "credentials", label: "Credentials", path: "/#about", reason: "Shows the credentials you supplied, exactly as supplied.", core: false });
+    pages.push({
+      key: "credentials",
+      label: "Credentials",
+      path: "/#about",
+      reason: "Shows the credentials you supplied, exactly as supplied.",
+      core: false,
+    });
 
   const sections = [
-    { key: "hero", label: "Hero", summary: `Headline, ${goalMeta.label.toLowerCase()} button and trust line.` },
-    { key: "services", label: "Services", summary: serviceNames.length ? serviceNames.slice(0, 6).join(" · ") : "No services added yet." },
-    { key: "proof", label: "Proof", summary: input.testimonialCount > 0 ? `${input.testimonialCount} testimonial(s) you provided.` : "No proof supplied yet." },
-    { key: "about", label: "About", summary: place ? `Local story for ${place}.` : "Business story." },
-    { key: "cta", label: "Conversion block", summary: `Repeats your main action: ${goalMeta.cta}.` },
-    { key: "contact", label: "Contact", summary: input.phone || input.email ? "Uses your business phone and email." : "Needs your business phone and email." },
+    {
+      key: "hero",
+      label: "Hero",
+      summary: `Headline, ${goalMeta.label.toLowerCase()} button and trust line.`,
+    },
+    {
+      key: "services",
+      label: "Services",
+      summary: serviceNames.length
+        ? serviceNames.slice(0, 6).join(" · ")
+        : "No services added yet.",
+    },
+    {
+      key: "proof",
+      label: "Proof",
+      summary:
+        input.testimonialCount > 0
+          ? `${input.testimonialCount} testimonial(s) you provided.`
+          : "No proof supplied yet.",
+    },
+    {
+      key: "about",
+      label: "About",
+      summary: place ? `Local story for ${place}.` : "Business story.",
+    },
+    {
+      key: "cta",
+      label: "Conversion block",
+      summary: `Repeats your main action: ${goalMeta.cta}.`,
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      summary:
+        input.phone || input.email
+          ? "Uses your business phone and email."
+          : "Needs your business phone and email.",
+    },
   ];
 
   if (!serviceNames.length) mark("Services — add at least one service so the menu isn't empty");
@@ -316,7 +422,10 @@ export function generateWebsitePlan(input: GenerationInput): WebsitePlan {
     ? [
         {
           question: `What areas do you serve?`,
-          answer: input.serviceArea || place ? `We serve ${input.serviceArea || place}.` : "Answer needed: list the areas you serve.",
+          answer:
+            input.serviceArea || place
+              ? `We serve ${input.serviceArea || place}.`
+              : "Answer needed: list the areas you serve.",
         },
         {
           question: `How do I get started?`,

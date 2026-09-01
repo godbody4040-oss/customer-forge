@@ -30,8 +30,15 @@ function useJourneyFacts(organizationId: string | undefined) {
             .select("publish_state, domain_status, generated_at")
             .eq("organization_id", orgId)
             .maybeSingle(),
-          supabase.from("services").select("bookable").eq("organization_id", orgId).eq("is_active", true),
-          supabase.from("media").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+          supabase
+            .from("services")
+            .select("bookable")
+            .eq("organization_id", orgId)
+            .eq("is_active", true),
+          supabase
+            .from("media")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId),
           supabase
             .from("quote_forms")
             .select("id", { count: "exact", head: true })
@@ -42,8 +49,14 @@ function useJourneyFacts(organizationId: string | undefined) {
             .select("id", { count: "exact", head: true })
             .eq("organization_id", orgId)
             .eq("is_active", true),
-          supabase.from("reviews").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
-          supabase.from("leads").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+          supabase
+            .from("reviews")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId),
+          supabase
+            .from("leads")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId),
           supabase
             .from("analytics_events")
             .select("id", { count: "exact", head: true })
@@ -69,7 +82,9 @@ function useJourneyFacts(organizationId: string | undefined) {
         localSeo: {
           city: has(p?.city),
           serviceArea: has(p?.service_area),
-          hours: Boolean(p?.hours && typeof p.hours === "object" && Object.keys(p.hours).length > 0),
+          hours: Boolean(
+            p?.hours && typeof p.hours === "object" && Object.keys(p.hours).length > 0,
+          ),
           phone: has(p?.phone),
           description: has(p?.description),
         },
@@ -102,8 +117,8 @@ export function OnboardingJourney() {
       <Panel className="p-5">
         <SectionHeading eyebrow="Setup complete" title="Your system is fully set up" />
         <p className="mt-2 text-[13px] text-muted-foreground">
-          Every setup step is done. Keep momentum in the Command Center — it scans your live site and
-          hands you the next improvement.
+          Every setup step is done. Keep momentum in the Command Center — it scans your live site
+          and hands you the next improvement.
         </p>
         <Button asChild variant="signal" size="sm" className="mt-4">
           <Link to="/app/command">Open the Command Center</Link>
@@ -133,7 +148,9 @@ export function OnboardingJourney() {
         <h2 className="mt-3 font-display text-[20px] leading-tight font-semibold">
           Next: <span className="gold-text">{next.label}</span>
         </h2>
-        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">{next.why}</p>
+        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+          {next.why}
+        </p>
 
         <div
           className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-border"
@@ -143,7 +160,10 @@ export function OnboardingJourney() {
           aria-valuemax={100}
           aria-label="Setup progress"
         >
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${plan.percent}%` }} />
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${plan.percent}%` }}
+          />
         </div>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -174,7 +194,9 @@ export function OnboardingJourney() {
                 {step.key === next.key ? <span className="gold-hl"> · do this now</span> : null}
               </p>
               {!step.done ? (
-                <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{step.action}</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+                  {step.action}
+                </p>
               ) : null}
             </div>
             {!step.done ? (

@@ -13,23 +13,10 @@
  */
 
 export type BackdropId =
-  | "none"
-  | "stars"
-  | "aurora"
-  | "nebula"
-  | "grid"
-  | "spotlight"
-  | "gradient_mesh";
+  "none" | "stars" | "aurora" | "nebula" | "grid" | "spotlight" | "gradient_mesh";
 
 export type SectionEffectId =
-  | "none"
-  | "float_3d"
-  | "tilt_3d"
-  | "glass"
-  | "gold_glow"
-  | "rise"
-  | "parallax_slow"
-  | "shine";
+  "none" | "float_3d" | "tilt_3d" | "glass" | "gold_glow" | "rise" | "parallax_slow" | "shine";
 
 export type EffectOption<T extends string> = {
   id: T;
@@ -40,12 +27,28 @@ export type EffectOption<T extends string> = {
 
 export const BACKDROPS: EffectOption<BackdropId>[] = [
   { id: "none", label: "Clean", help: "No background animation. Fastest and most neutral." },
-  { id: "stars", label: "Starfield", help: "Slow drifting stars behind the whole site. Premium and calm." },
+  {
+    id: "stars",
+    label: "Starfield",
+    help: "Slow drifting stars behind the whole site. Premium and calm.",
+  },
   { id: "aurora", label: "Aurora", help: "Soft moving gold light bands, like northern lights." },
   { id: "nebula", label: "Nebula glow", help: "Deep drifting colour clouds for a high-end feel." },
-  { id: "grid", label: "Tech grid", help: "Faint moving grid lines. Great for trades and installers." },
-  { id: "spotlight", label: "Spotlight", help: "A wide light beam that follows the top of the page." },
-  { id: "gradient_mesh", label: "Gradient mesh", help: "Blended colour wash that shifts very slowly." },
+  {
+    id: "grid",
+    label: "Tech grid",
+    help: "Faint moving grid lines. Great for trades and installers.",
+  },
+  {
+    id: "spotlight",
+    label: "Spotlight",
+    help: "A wide light beam that follows the top of the page.",
+  },
+  {
+    id: "gradient_mesh",
+    label: "Gradient mesh",
+    help: "Blended colour wash that shifts very slowly.",
+  },
 ];
 
 export const SECTION_EFFECTS: EffectOption<SectionEffectId>[] = [
@@ -68,7 +71,8 @@ export const isBackdropId = (value: unknown): value is BackdropId =>
 export const isSectionEffectId = (value: unknown): value is SectionEffectId =>
   typeof value === "string" && SECTION_IDS.has(value as SectionEffectId);
 
-export const backdropLabel = (id: BackdropId) => BACKDROPS.find((b) => b.id === id)?.label ?? "Clean";
+export const backdropLabel = (id: BackdropId) =>
+  BACKDROPS.find((b) => b.id === id)?.label ?? "Clean";
 export const sectionEffectLabel = (id: SectionEffectId) =>
   SECTION_EFFECTS.find((s) => s.id === id)?.label ?? "Standard";
 
@@ -81,10 +85,13 @@ export function readBackdrop(generation: unknown): BackdropId {
 
 /** Merges a backdrop choice into an existing `generation` JSON blob. */
 export function writeBackdrop(generation: unknown, backdrop: BackdropId) {
-  const base = (generation && typeof generation === "object" ? generation : {}) as Record<string, unknown>;
-  const effects = (base["effects"] && typeof base["effects"] === "object"
-    ? base["effects"]
-    : {}) as Record<string, unknown>;
+  const base = (generation && typeof generation === "object" ? generation : {}) as Record<
+    string,
+    unknown
+  >;
+  const effects = (
+    base["effects"] && typeof base["effects"] === "object" ? base["effects"] : {}
+  ) as Record<string, unknown>;
   return { ...base, effects: { ...effects, backdrop } };
 }
 
@@ -96,7 +103,10 @@ export function readSectionEffect(settings: unknown): SectionEffectId {
 
 /** Merges a section effect into an existing `settings` JSON blob. */
 export function writeSectionEffect(settings: unknown, effect: SectionEffectId) {
-  const base = (settings && typeof settings === "object" ? settings : {}) as Record<string, unknown>;
+  const base = (settings && typeof settings === "object" ? settings : {}) as Record<
+    string,
+    unknown
+  >;
   return { ...base, effect };
 }
 

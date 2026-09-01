@@ -2,7 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowUpRight, Building2 } from "lucide-react";
-import { EmptyState, LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import {
+  EmptyState,
+  LoadingRows,
+  MetricCard,
+  Panel,
+  Pill,
+  SectionHeading,
+} from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { getPlatformMetrics, listClients } from "@/lib/admin.functions";
 import { getConversionReport } from "@/lib/conversion.functions";
@@ -11,6 +18,9 @@ import { currency, dateShort, number } from "@/lib/format";
 import { REVORA } from "@/lib/brand";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({
+    meta: [{ title: "Admin — Revora" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AdminOverview,
 });
 
@@ -38,7 +48,11 @@ function AdminOverview() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Client businesses" value={number(metrics.data?.clients ?? 0)} tone="signal" />
+        <MetricCard
+          label="Client businesses"
+          value={number(metrics.data?.clients ?? 0)}
+          tone="signal"
+        />
         <MetricCard
           label="Live websites"
           value={number(metrics.data?.published ?? 0)}
@@ -159,7 +173,10 @@ function AdminOverview() {
         {conversions.isLoading ? (
           <LoadingRows rows={3} />
         ) : (conversions.data?.report.length ?? 0) === 0 ? (
-          <EmptyState title="No tracked visits yet" description="Publish the industry landing pages and share the links to start collecting funnel data." />
+          <EmptyState
+            title="No tracked visits yet"
+            description="Publish the industry landing pages and share the links to start collecting funnel data."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
@@ -181,7 +198,9 @@ function AdminOverview() {
                     <td className="px-4 py-2">{number(row.signupsStarted)}</td>
                     <td className="px-4 py-2">{number(row.signupsCompleted)}</td>
                     <td className="px-4 py-2">{number(row.checkoutsStarted)}</td>
-                    <td className="px-4 py-2 font-semibold text-primary">{number(row.checkoutsCompleted)}</td>
+                    <td className="px-4 py-2 font-semibold text-primary">
+                      {number(row.checkoutsCompleted)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -189,7 +208,6 @@ function AdminOverview() {
           </div>
         )}
       </Panel>
-
     </div>
   );
 }

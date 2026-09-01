@@ -72,7 +72,11 @@ type SeoReport = {
   canonicalOrigin: string;
   canonicalMatches: boolean;
   checkedAt: string;
-  redirects: { allCanonical: boolean; detail: string; results: { url: string; canonical: boolean; status: number | null }[] };
+  redirects: {
+    allCanonical: boolean;
+    detail: string;
+    results: { url: string; canonical: boolean; status: number | null }[];
+  };
   crawl: {
     robots: { reachable: boolean; blocksEverything: boolean };
     sitemap: { reachable: boolean; urls: number };
@@ -124,7 +128,10 @@ export function DomainOperations({
   const runReport = useServerFn(runDomainSeoReport);
 
   const routingMutation = useMutation({
-    mutationFn: () => saveRouting({ data: { organizationId: organizationId!, primaryHost: host, forceHttps: https } }),
+    mutationFn: () =>
+      saveRouting({
+        data: { organizationId: organizationId!, primaryHost: host, forceHttps: https },
+      }),
     onSuccess: () => {
       toast.success("Address settings saved");
       refresh();
@@ -142,7 +149,8 @@ export function DomainOperations({
   });
 
   const startMutation = useMutation({
-    mutationFn: () => startTransfer({ data: { organizationId: organizationId!, toDomain: newDomain } }),
+    mutationFn: () =>
+      startTransfer({ data: { organizationId: organizationId!, toDomain: newDomain } }),
     onSuccess: () => {
       toast.success("Transfer prepared — your current address stays live.");
       refresh();
@@ -170,7 +178,8 @@ export function DomainOperations({
   });
 
   const emailSaveMutation = useMutation({
-    mutationFn: () => saveEmail({ data: { organizationId: organizationId!, provider, alias, forwardTo } }),
+    mutationFn: () =>
+      saveEmail({ data: { organizationId: organizationId!, provider, alias, forwardTo } }),
     onSuccess: () => {
       toast.success("Saved. Add the records, then verify.");
       refresh();
@@ -228,13 +237,20 @@ export function DomainOperations({
               disabled={!canManage || !domain || certMutation.isPending}
               onClick={() => certMutation.mutate()}
             >
-              {certMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              {certMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
               Check now
             </Button>
           }
         />
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          <ShieldCheck className={`size-5 ${ssl.secure ? "text-primary" : "text-muted-foreground"}`} aria-hidden="true" />
+          <ShieldCheck
+            className={`size-5 ${ssl.secure ? "text-primary" : "text-muted-foreground"}`}
+            aria-hidden="true"
+          />
           <Pill tone={ssl.tone}>{ssl.label}</Pill>
           {settings?.ssl_last_ok_at ? (
             <span className="text-[11px] text-muted-foreground">
@@ -244,8 +260,8 @@ export function DomainOperations({
         </div>
         <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">{ssl.detail}</p>
         <p className="mt-2 text-[12px] text-muted-foreground">
-          Issuing and renewal are handled for you. Revora re-checks the certificate and notifies you if HTTPS ever
-          stops answering, so an expiry can't quietly take the site down.
+          Issuing and renewal are handled for you. Revora re-checks the certificate and notifies you
+          if HTTPS ever stops answering, so an expiry can't quietly take the site down.
         </p>
       </Panel>
 
@@ -253,8 +269,8 @@ export function DomainOperations({
       <Panel>
         <SectionHeading eyebrow="Web address" title="Redirects and canonical address" />
         <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">
-          Pick the one address you want people and Google to see. Every other version points to it, so your ranking
-          isn't split between two copies of the same site.
+          Pick the one address you want people and Google to see. Every other version points to it,
+          so your ranking isn't split between two copies of the same site.
         </p>
 
         <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
@@ -267,12 +283,16 @@ export function DomainOperations({
                 disabled={!canManage}
                 onClick={() => setHost(option)}
                 className={`rounded-md border p-3.5 text-left transition ${
-                  host === option ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                  host === option
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
                 }`}
               >
                 <p className="text-[13px] font-medium">https://{label}</p>
                 <p className="mt-1 text-[12px] text-muted-foreground">
-                  {option === "root" ? "Shorter, easier to say out loud." : "Traditional, works well with some proxies."}
+                  {option === "root"
+                    ? "Shorter, easier to say out loud."
+                    : "Traditional, works well with some proxies."}
                 </p>
               </button>
             );
@@ -280,7 +300,12 @@ export function DomainOperations({
         </div>
 
         <div className="mt-4 flex items-center gap-2.5">
-          <Switch id="force-https" checked={https} disabled={!canManage} onCheckedChange={setHttps} />
+          <Switch
+            id="force-https"
+            checked={https}
+            disabled={!canManage}
+            onCheckedChange={setHttps}
+          />
           <Label htmlFor="force-https" className="text-[13px]">
             Always send visitors to the secure https version
           </Label>
@@ -291,14 +316,17 @@ export function DomainOperations({
             {rules.map((rule) => (
               <li key={rule.key} className="rounded-md border border-border p-3">
                 <p className="text-[13px]">
-                  <span className="text-muted-foreground">{rule.from}</span> → <span className="font-medium">{rule.to}</span>
+                  <span className="text-muted-foreground">{rule.from}</span> →{" "}
+                  <span className="font-medium">{rule.to}</span>
                 </p>
                 <p className="mt-1 text-[12px] text-muted-foreground">{rule.why}</p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-4 text-[13px] text-muted-foreground">Connect your own domain to manage redirects.</p>
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            Connect your own domain to manage redirects.
+          </p>
         )}
 
         <Button
@@ -316,8 +344,9 @@ export function DomainOperations({
       <Panel>
         <SectionHeading eyebrow="Move domain" title="Transfer to a different domain" />
         <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">
-          Your live address keeps working the whole time. The switch only happens once the new domain has been proven
-          to resolve here and answer over HTTPS — and you can roll back at any point.
+          Your live address keeps working the whole time. The switch only happens once the new
+          domain has been proven to resolve here and answer over HTTPS — and you can roll back at
+          any point.
         </p>
 
         {transfer.state && transfer.state !== "idle" ? (
@@ -325,17 +354,24 @@ export function DomainOperations({
             <div className="flex flex-wrap items-center gap-2">
               <ArrowRightLeft className="size-4 text-muted-foreground" aria-hidden="true" />
               <p className="text-[13px]">
-                {transfer.from_domain ?? "no domain"} → <span className="font-medium">{transfer.to_domain}</span>
+                {transfer.from_domain ?? "no domain"} →{" "}
+                <span className="font-medium">{transfer.to_domain}</span>
               </p>
               <Pill
                 tone={
-                  transfer.state === "completed" ? "signal" : transfer.state === "rolled_back" ? "danger" : "attention"
+                  transfer.state === "completed"
+                    ? "signal"
+                    : transfer.state === "rolled_back"
+                      ? "danger"
+                      : "attention"
                 }
               >
                 {transfer.state.replace("_", " ")}
               </Pill>
             </div>
-            {transfer.detail ? <p className="mt-2 text-[12px] text-muted-foreground">{transfer.detail}</p> : null}
+            {transfer.detail ? (
+              <p className="mt-2 text-[12px] text-muted-foreground">{transfer.detail}</p>
+            ) : null}
           </div>
         ) : null}
 
@@ -345,7 +381,10 @@ export function DomainOperations({
               {step.done ? (
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
               ) : (
-                <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <Circle
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
               )}
               <div>
                 <p className="text-[13px] font-medium">{step.title}</p>
@@ -409,7 +448,11 @@ export function DomainOperations({
           eyebrow="Branded email"
           title="Get mail at your own domain"
           action={
-            forwarding.active ? <Pill tone="signal">Active</Pill> : forwarding.alias ? <Pill tone="attention">Not verified</Pill> : null
+            forwarding.active ? (
+              <Pill tone="signal">Active</Pill>
+            ) : forwarding.alias ? (
+              <Pill tone="attention">Not verified</Pill>
+            ) : null
           }
         />
         <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">
@@ -421,7 +464,9 @@ export function DomainOperations({
         </p>
 
         {!domain ? (
-          <p className="mt-4 text-[13px] text-muted-foreground">Connect your own domain first — branded email needs it.</p>
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            Connect your own domain first — branded email needs it.
+          </p>
         ) : (
           <>
             <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
@@ -432,7 +477,9 @@ export function DomainOperations({
                   disabled={!canManage}
                   onClick={() => setProvider(option.id)}
                   className={`rounded-md border p-3.5 text-left transition ${
-                    provider === option.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    provider === option.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
                   }`}
                 >
                   <p className="text-[13px] font-medium">{option.name}</p>
@@ -445,7 +492,12 @@ export function DomainOperations({
               <div>
                 <Label htmlFor="alias">Address</Label>
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  <Input id="alias" value={alias} onChange={(event) => setAlias(event.target.value)} className="max-w-[160px]" />
+                  <Input
+                    id="alias"
+                    value={alias}
+                    onChange={(event) => setAlias(event.target.value)}
+                    className="max-w-[160px]"
+                  />
                   <span className="truncate text-[13px] text-muted-foreground">@{domain}</span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -482,7 +534,9 @@ export function DomainOperations({
                   <span className="w-10 font-medium">{record.type}</span>
                   <span className="w-10 text-muted-foreground">{record.name}</span>
                   <span className="min-w-0 flex-1 truncate">{record.value}</span>
-                  {record.priority ? <span className="text-muted-foreground">priority {record.priority}</span> : null}
+                  {record.priority ? (
+                    <span className="text-muted-foreground">priority {record.priority}</span>
+                  ) : null}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -495,11 +549,17 @@ export function DomainOperations({
               ))}
             </ul>
 
-            {forwarding.detail ? <p className="mt-3 text-[12px] text-muted-foreground">{forwarding.detail}</p> : null}
+            {forwarding.detail ? (
+              <p className="mt-3 text-[12px] text-muted-foreground">{forwarding.detail}</p>
+            ) : null}
 
             {canManage ? (
               <div className="mt-4 flex flex-wrap gap-2.5">
-                <Button variant="signal" disabled={emailSaveMutation.isPending} onClick={() => emailSaveMutation.mutate()}>
+                <Button
+                  variant="signal"
+                  disabled={emailSaveMutation.isPending}
+                  onClick={() => emailSaveMutation.mutate()}
+                >
                   {emailSaveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
                   Save address
                 </Button>
@@ -516,7 +576,11 @@ export function DomainOperations({
                   Verify and activate
                 </Button>
                 <Button asChild variant="ghost">
-                  <a href={EMAIL_PROVIDERS.find((p) => p.id === provider)!.setupUrl} target="_blank" rel="noreferrer">
+                  <a
+                    href={EMAIL_PROVIDERS.find((p) => p.id === provider)!.setupUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     Create the alias <ExternalLink className="size-3.5" />
                   </a>
                 </Button>
@@ -538,7 +602,11 @@ export function DomainOperations({
               disabled={!canManage || !domain || reportMutation.isPending}
               onClick={() => reportMutation.mutate()}
             >
-              {reportMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+              {reportMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Search className="size-4" />
+              )}
               Run report
             </Button>
           }
@@ -569,7 +637,10 @@ export function DomainOperations({
             </ul>
             <p className="text-[12px] text-muted-foreground">{report.redirects.detail}</p>
             <dl className="grid gap-3 sm:grid-cols-3">
-              <Signal label="robots.txt" ok={report.crawl.robots.reachable && !report.crawl.robots.blocksEverything} />
+              <Signal
+                label="robots.txt"
+                ok={report.crawl.robots.reachable && !report.crawl.robots.blocksEverything}
+              />
               <Signal
                 label={`Sitemap (${report.crawl.sitemap.urls} pages)`}
                 ok={report.crawl.sitemap.reachable && report.crawl.sitemap.urls > 0}
@@ -590,7 +661,9 @@ export function DomainOperations({
                 Redirects, crawl access and the canonical address all check out on your domain.
               </p>
             )}
-            <p className="text-[11px] text-muted-foreground">Checked {dateLong(report.checkedAt)}</p>
+            <p className="text-[11px] text-muted-foreground">
+              Checked {dateLong(report.checkedAt)}
+            </p>
           </div>
         )}
       </Panel>

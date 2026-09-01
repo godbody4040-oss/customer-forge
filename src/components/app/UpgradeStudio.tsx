@@ -16,7 +16,13 @@ import { Check, History, Loader2, RefreshCw, Sparkles, Wand2 } from "lucide-reac
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { applyWebsiteChanges } from "@/lib/site-agent.functions";
-import { chunkActions, scanForUpgrades, summarizeUpgrades, type EliteUpgrade, type StudioFacts } from "@/lib/upgrade-studio";
+import {
+  chunkActions,
+  scanForUpgrades,
+  summarizeUpgrades,
+  type EliteUpgrade,
+  type StudioFacts,
+} from "@/lib/upgrade-studio";
 import type { ContentPage } from "@/lib/website-content";
 
 const TIER_TONE: Record<EliteUpgrade["tier"], "info" | "signal" | "attention"> = {
@@ -27,7 +33,6 @@ const TIER_TONE: Record<EliteUpgrade["tier"], "info" | "signal" | "attention"> =
   "Premium visuals": "attention",
   Structure: "signal",
 };
-
 
 export function UpgradeStudio({
   organizationId,
@@ -50,7 +55,10 @@ export function UpgradeStudio({
     () => scanForUpgrades(pages, { ...facts, cycle }),
     [pages, facts, cycle],
   );
-  const chosen = useMemo(() => upgrades.filter((upgrade) => !skipped.has(upgrade.id)), [upgrades, skipped]);
+  const chosen = useMemo(
+    () => upgrades.filter((upgrade) => !skipped.has(upgrade.id)),
+    [upgrades, skipped],
+  );
   const totals = summarizeUpgrades(chosen);
 
   const apply = useMutation({
@@ -65,7 +73,11 @@ export function UpgradeStudio({
           data: {
             organizationId: organizationId!,
             actions: chunk,
-            label: `Before upgrade batch${chunks.length > 1 ? ` ${index + 1}/${chunks.length}` : ""}: ${batch[0]?.title ?? "site upgrades"}`.slice(0, 110),
+            label:
+              `Before upgrade batch${chunks.length > 1 ? ` ${index + 1}/${chunks.length}` : ""}: ${batch[0]?.title ?? "site upgrades"}`.slice(
+                0,
+                110,
+              ),
           },
         });
         applied += result.applied;
@@ -78,7 +90,9 @@ export function UpgradeStudio({
       toast.success(
         `${result.upgrades} upgrade${result.upgrades === 1 ? "" : "s"} installed — ${result.applied} change${result.applied === 1 ? "" : "s"} written.` +
           (result.failed ? ` ${result.failed} skipped.` : ""),
-        { description: `Rollback point saved as “${result.label}”. Scanning again for the next upgrades…` },
+        {
+          description: `Rollback point saved as “${result.label}”. Scanning again for the next upgrades…`,
+        },
       );
       setSkipped(new Set());
       setCycle((value) => value + 1);
@@ -102,9 +116,10 @@ export function UpgradeStudio({
         }
       />
       <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
-        Every time your site changes, Revora re-reads all of your pages and works out what is still missing — closing
-        asks, capture forms, proof, prices, answers, local pages, Google snippets and premium 3D visuals. Tick as many
-        as you like and <span className="text-gold">upload them all in one go</span>. Nothing is ever deleted or
+        Every time your site changes, Revora re-reads all of your pages and works out what is still
+        missing — closing asks, capture forms, proof, prices, answers, local pages, Google snippets
+        and premium 3D visuals. Tick as many as you like and{" "}
+        <span className="text-gold">upload them all in one go</span>. Nothing is ever deleted or
         watered down, and a rollback point is saved before every batch.
       </p>
 
@@ -112,8 +127,9 @@ export function UpgradeStudio({
         <div className="mt-4 rounded-md border border-border bg-elevated/50 p-4 text-[13px] text-muted-foreground">
           <p className="font-medium text-foreground">Your site is running at full strength.</p>
           <p className="mt-1">
-            Every upgrade Revora can install automatically is already in place. Add more services, photos or reviews and
-            the scanner will unlock the next tier — or ask the assistant for anything custom.
+            Every upgrade Revora can install automatically is already in place. Add more services,
+            photos or reviews and the scanner will unlock the next tier — or ask the assistant for
+            anything custom.
           </p>
         </div>
       ) : (
@@ -131,7 +147,8 @@ export function UpgradeStudio({
                     <Pill tone={TIER_TONE[upgrade.tier]}>{upgrade.tier}</Pill>
                     <p className="min-w-0 text-[13px] font-medium">{upgrade.title}</p>
                     <span className="text-[11px] text-muted-foreground">
-                      {upgrade.actions.length} change{upgrade.actions.length === 1 ? "" : "s"} · +{upgrade.impact} pts
+                      {upgrade.actions.length} change{upgrade.actions.length === 1 ? "" : "s"} · +
+                      {upgrade.impact} pts
                     </span>
                   </div>
                   <p className="mt-1.5 text-[12.5px] text-muted-foreground">{upgrade.why}</p>
@@ -184,7 +201,11 @@ export function UpgradeStudio({
               disabled={!canManage || !chosen.length || apply.isPending}
               onClick={() => apply.mutate(chosen)}
             >
-              {apply.isPending ? <Loader2 className="size-4 animate-spin" /> : <Wand2 className="size-4" />}
+              {apply.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Wand2 className="size-4" />
+              )}
               Install {totals.count} upgrade{totals.count === 1 ? "" : "s"} ({totals.changes} change
               {totals.changes === 1 ? "" : "s"})
             </Button>
@@ -202,7 +223,9 @@ export function UpgradeStudio({
               disabled={apply.isPending}
               onClick={() => {
                 setCycle((value) => value + 1);
-                void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
+                void queryClient.invalidateQueries({
+                  queryKey: ["website_content", organizationId],
+                });
                 void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
                 toast.success("Re-scanning your site for new upgrades.");
               }}
@@ -210,8 +233,8 @@ export function UpgradeStudio({
               <RefreshCw className="size-4" /> Scan again
             </Button>
             <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <History className="size-3.5" aria-hidden="true" /> Rollback point saved before every batch · +
-              {totals.impact} growth points available
+              <History className="size-3.5" aria-hidden="true" /> Rollback point saved before every
+              batch · +{totals.impact} growth points available
             </span>
           </div>
         </>

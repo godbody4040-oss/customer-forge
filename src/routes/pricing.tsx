@@ -5,12 +5,16 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Pill } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { SalesCTA } from "@/components/marketing/SalesCTA";
-import { AfterYouStart, TrialBadge, ValueSplit, WhyRevora } from "@/components/marketing/OfferSections";
+import {
+  AfterYouStart,
+  TrialBadge,
+  ValueSplit,
+  WhyRevora,
+} from "@/components/marketing/OfferSections";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 import { GROWTH_SYSTEM_SCHEMA, breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
 import { useExperiment } from "@/lib/experiments.hooks";
 import { trackConversion } from "@/lib/conversion";
-
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -24,7 +28,8 @@ export const Route = createFileRoute("/pricing")({
       { property: "og:title", content: "Pricing — Revora Growth System" },
       {
         property: "og:description",
-        content: "$750 one-time setup + first month free + $100/month afterward. One complete growth system.",
+        content:
+          "$750 one-time setup + first month free + $100/month afterward. One complete growth system.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -93,7 +98,6 @@ function Pricing() {
                 split ? "md:border-r md:border-b-0" : ""
               }`}
             >
-
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-display text-[20px] font-semibold">{GROWTH_SYSTEM.name}</h2>
                 <Pill tone="signal">Complete system</Pill>
@@ -113,7 +117,9 @@ function Pricing() {
                     <span className="text-[14px] font-normal text-muted-foreground">/month</span>
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Ongoing</p>
-                  <p className="max-w-xs text-[12px] text-muted-foreground">{GROWTH_SYSTEM.monthlyLabel}</p>
+                  <p className="max-w-xs text-[12px] text-muted-foreground">
+                    {GROWTH_SYSTEM.monthlyLabel}
+                  </p>
                 </div>
               </div>
 
@@ -131,12 +137,13 @@ function Pricing() {
                 >
                   {GROWTH_SYSTEM.ctaPrimary}
                 </Link>
-
               </Button>
               <div className="mt-3">
                 <FreeAccessBanner />
               </div>
-              <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.ctaSecondary}</p>
+              <p className="mt-2.5 text-[12px] text-muted-foreground">
+                {GROWTH_SYSTEM.ctaSecondary}
+              </p>
               <p className="mt-4 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                 {GROWTH_SYSTEM.explainer}

@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import { GitCompare } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { dateShort } from "@/lib/format";
-import { diffContent, readVersionContent, snapshotContent, type ContentDiffRow } from "@/lib/website-content";
+import {
+  diffContent,
+  readVersionContent,
+  snapshotContent,
+  type ContentDiffRow,
+} from "@/lib/website-content";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { useWebsiteVersions } from "@/lib/site-engine.hooks";
 
@@ -75,8 +80,8 @@ export function VersionDiff({ organizationId }: { organizationId: string | undef
 
           {!hasSnapshots ? (
             <p className="mt-4 text-[13px] text-muted-foreground">
-              Versions saved before section tracking was added don't hold a structure snapshot. Save a new
-              version to start comparing section by section.
+              Versions saved before section tracking was added don't hold a structure snapshot. Save
+              a new version to start comparing section by section.
             </p>
           ) : !rows.length ? (
             <p className="mt-4 flex items-center gap-2 text-[13px] text-muted-foreground">
@@ -85,10 +90,19 @@ export function VersionDiff({ organizationId }: { organizationId: string | undef
           ) : (
             <ul className="mt-4 space-y-2">
               {rows.map((row, index) => (
-                <li key={`${row.page}-${row.section}-${row.field}-${index}`} className="rounded-md border border-border p-3">
+                <li
+                  key={`${row.page}-${row.section}-${row.field}-${index}`}
+                  className="rounded-md border border-border p-3"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <Pill
-                      tone={row.change === "added" ? "signal" : row.change === "removed" ? "danger" : "info"}
+                      tone={
+                        row.change === "added"
+                          ? "signal"
+                          : row.change === "removed"
+                            ? "danger"
+                            : "info"
+                      }
                     >
                       {row.change}
                     </Pill>
@@ -98,11 +112,15 @@ export function VersionDiff({ organizationId }: { organizationId: string | undef
                   </div>
                   <div className="mt-2 grid gap-2 sm:grid-cols-2">
                     <div className="rounded-md bg-elevated p-2">
-                      <p className="text-[11px] tracking-wide text-muted-foreground uppercase">Before</p>
+                      <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+                        Before
+                      </p>
                       <p className="mt-1 text-[13px] whitespace-pre-line">{row.before || "—"}</p>
                     </div>
                     <div className="rounded-md bg-elevated p-2">
-                      <p className="text-[11px] tracking-wide text-muted-foreground uppercase">After</p>
+                      <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+                        After
+                      </p>
                       <p className="mt-1 text-[13px] whitespace-pre-line">{row.after || "—"}</p>
                     </div>
                   </div>

@@ -12,7 +12,8 @@ export const Route = createFileRoute("/_authenticated/app/domain")({
       { title: "Domain setup — Revora" },
       {
         name: "description",
-        content: "Buy a new domain or connect one you already own, with live DNS and HTTPS verification.",
+        content:
+          "Buy a new domain or connect one you already own, with live DNS and HTTPS verification.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -36,8 +37,8 @@ function DomainPage() {
         <p className="eyebrow">Domain</p>
         <h1 className="mt-1 font-display text-[24px] font-semibold">Your domain</h1>
         <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">
-          Buy a new web address or connect one you already own. You can do all of it yourself — no support
-          request needed.
+          Buy a new web address or connect one you already own. You can do all of it yourself — no
+          support request needed.
         </p>
       </div>
 

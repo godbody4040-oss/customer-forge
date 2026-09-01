@@ -8,13 +8,24 @@ import { usePaymentConfig, type PaymentProduct } from "@/lib/payments.hooks";
 import { REVORA } from "@/lib/brand";
 
 type Result =
-  | { kind: "success"; product: string | null; amount: number; currency: string; captureId: string | null; at: string | null }
+  | {
+      kind: "success";
+      product: string | null;
+      amount: number;
+      currency: string;
+      captureId: string | null;
+      at: string | null;
+    }
   | { kind: "cancelled" }
   | { kind: "failed"; message: string };
 
 declare global {
   interface Window {
-    paypal?: { Buttons: (options: Record<string, unknown>) => { render: (target: HTMLElement) => Promise<void> } };
+    paypal?: {
+      Buttons: (options: Record<string, unknown>) => {
+        render: (target: HTMLElement) => Promise<void>;
+      };
+    };
   }
 }
 
@@ -64,7 +75,15 @@ export function PayPalCheckout({
   const rendered = useRef(false);
 
   useEffect(() => {
-    if (sdk !== "ready" || !window.paypal || !target.current || rendered.current || result || !agreed) return;
+    if (
+      sdk !== "ready" ||
+      !window.paypal ||
+      !target.current ||
+      rendered.current ||
+      result ||
+      !agreed
+    )
+      return;
     rendered.current = true;
     void window.paypal
       .Buttons({
@@ -100,10 +119,21 @@ export function PayPalCheckout({
           setResult({ kind: "cancelled" });
           onPaid();
         },
-        onError: () => setResult({ kind: "failed", message: "PayPal reported a problem with this checkout." }),
+        onError: () =>
+          setResult({ kind: "failed", message: "PayPal reported a problem with this checkout." }),
       })
       .render(target.current);
-  }, [sdk, agreed, result, organizationId, product.id, createOrder, captureOrder, cancelOrder, onPaid]);
+  }, [
+    sdk,
+    agreed,
+    result,
+    organizationId,
+    product.id,
+    createOrder,
+    captureOrder,
+    cancelOrder,
+    onPaid,
+  ]);
 
   const retry = () => {
     rendered.current = false;
@@ -117,7 +147,9 @@ export function PayPalCheckout({
           <p className="eyebrow">Order review</p>
           <h3 className="mt-1 font-display text-[20px] font-semibold">{product.name}</h3>
           {product.description ? (
-            <p className="mt-1.5 max-w-prose text-[13px] text-muted-foreground">{product.description}</p>
+            <p className="mt-1.5 max-w-prose text-[13px] text-muted-foreground">
+              {product.description}
+            </p>
           ) : null}
         </div>
         {config?.configured ? (
@@ -148,7 +180,8 @@ export function PayPalCheckout({
         </div>
       </dl>
       <p className="mt-2 text-[12px] text-muted-foreground">
-        No taxes or extra fees are added by Revora. Any tax that applies is shown by PayPal at checkout.
+        No taxes or extra fees are added by Revora. Any tax that applies is shown by PayPal at
+        checkout.
       </p>
 
       {isLoading ? (
@@ -159,7 +192,8 @@ export function PayPalCheckout({
             <AlertTriangle className="size-4 text-accent" /> Setup required
           </p>
           <p className="mt-1.5 text-[12px] text-muted-foreground">
-            PayPal is not connected yet, so no payment can be taken. Contact {REVORA.email} to finish setup.
+            PayPal is not connected yet, so no payment can be taken. Contact {REVORA.email} to
+            finish setup.
           </p>
         </div>
       ) : result?.kind === "success" ? (
@@ -181,7 +215,9 @@ export function PayPalCheckout({
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Date</dt>
-              <dd>{result.at ? new Date(result.at).toLocaleString() : new Date().toLocaleString()}</dd>
+              <dd>
+                {result.at ? new Date(result.at).toLocaleString() : new Date().toLocaleString()}
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted-foreground">PayPal transaction ID</dt>
@@ -236,12 +272,14 @@ export function PayPalCheckout({
               className="mt-0.5 size-4 accent-[var(--color-primary)]"
             />
             <span>
-              I agree to Revora&apos;s terms and privacy policy. Digital services begin immediately after payment;
-              refunds are handled case by case — email {REVORA.email}.
+              I agree to Revora&apos;s terms and privacy policy. Digital services begin immediately
+              after payment; refunds are handled case by case — email {REVORA.email}.
             </span>
           </label>
           {!agreed ? (
-            <p className="text-[12px] text-muted-foreground">Accept the terms to show the PayPal button.</p>
+            <p className="text-[12px] text-muted-foreground">
+              Accept the terms to show the PayPal button.
+            </p>
           ) : null}
           <div ref={target} aria-label="Pay with PayPal" className="min-h-[52px] max-w-sm" />
           {sdk === "loading" ? (
@@ -250,7 +288,9 @@ export function PayPalCheckout({
             </p>
           ) : null}
           {sdk === "error" ? (
-            <p className="text-[12px] text-accent">PayPal checkout could not load. Check your connection and retry.</p>
+            <p className="text-[12px] text-accent">
+              PayPal checkout could not load. Check your connection and retry.
+            </p>
           ) : null}
           {busy ? (
             <p className="flex items-center gap-2 text-[12px] text-muted-foreground">

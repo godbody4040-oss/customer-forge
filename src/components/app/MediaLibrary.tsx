@@ -87,7 +87,8 @@ export function MediaLibrary({
       if (!organizationId || !files.length) return;
       const accepted = files.filter((f) => ACCEPTED_IMAGE_TYPES.includes(f.type));
       const rejected = files.length - accepted.length;
-      if (rejected > 0) toast.error(`${rejected} file(s) skipped — only JPG, PNG, WebP or AVIF images.`);
+      if (rejected > 0)
+        toast.error(`${rejected} file(s) skipped — only JPG, PNG, WebP or AVIF images.`);
       if (!accepted.length) return;
 
       setBusy((n) => n + accepted.length);
@@ -96,7 +97,9 @@ export function MediaLibrary({
         try {
           const file = await compressImage(original);
           if (file.size > MAX_UPLOAD_BYTES) {
-            toast.error(`${original.name} is still ${humanFileSize(file.size)} — please use a smaller photo.`);
+            toast.error(
+              `${original.name} is still ${humanFileSize(file.size)} — please use a smaller photo.`,
+            );
             continue;
           }
           const path = buildObjectPath(organizationId, file.name);
@@ -244,7 +247,10 @@ export function MediaLibrary({
       ) : (
         <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {rows.map((row) => (
-            <li key={row.id} className="overflow-hidden rounded-md border border-border bg-elevated">
+            <li
+              key={row.id}
+              className="overflow-hidden rounded-md border border-border bg-elevated"
+            >
               <img
                 src={row.preview}
                 alt={row.alt_text ?? row.file_name ?? "Business photo"}
@@ -253,7 +259,10 @@ export function MediaLibrary({
               />
               <div className="space-y-2 p-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-[12px] text-muted-foreground" title={row.file_name ?? ""}>
+                  <span
+                    className="truncate text-[12px] text-muted-foreground"
+                    title={row.file_name ?? ""}
+                  >
                     {row.file_name ?? "Photo"}
                   </span>
                   {heroUrl === row.url ? <Pill tone="signal">Hero</Pill> : null}

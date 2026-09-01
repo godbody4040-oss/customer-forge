@@ -8,11 +8,7 @@
  */
 
 import { useMemo } from "react";
-import {
-  useBusinessProfile,
-  useServices,
-  useWebsiteSettings,
-} from "@/lib/queries";
+import { useBusinessProfile, useServices, useWebsiteSettings } from "@/lib/queries";
 import { useScoreFacts } from "@/lib/site-engine.hooks";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { readSeo } from "@/lib/site-seo";

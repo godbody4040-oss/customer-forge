@@ -35,7 +35,6 @@ import { UpgradeStudio } from "@/components/app/UpgradeStudio";
 import { RevoraGenius } from "@/components/app/RevoraGenius";
 import { BuilderAudit } from "@/components/app/BuilderAudit";
 
-
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
@@ -47,9 +46,18 @@ import {
   VersionHistory,
 } from "@/components/app/SiteEngine";
 import { BuildReportPanel, BusinessBriefPanel } from "@/components/app/BuildBrief";
-import { BriefReviewPanel, EngineSelfTestPanel, MissingFactsPanel } from "@/components/app/BriefReview";
+import {
+  BriefReviewPanel,
+  EngineSelfTestPanel,
+  MissingFactsPanel,
+} from "@/components/app/BriefReview";
 import { readBrief, readReport } from "@/lib/site-brief";
-import { EDITABLE_COPY_FIELDS, growthRecommendations, readCopy, revoraScore } from "@/lib/site-engine";
+import {
+  EDITABLE_COPY_FIELDS,
+  growthRecommendations,
+  readCopy,
+  revoraScore,
+} from "@/lib/site-engine";
 import { useBuildReadiness, useScoreFacts } from "@/lib/site-engine.hooks";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { websiteQa, type WizardStepKey } from "@/lib/website-content";
@@ -62,13 +70,15 @@ export const Route = createFileRoute("/_authenticated/app/website")({
   head: () => ({
     meta: [
       { title: "Website builder — Revora" },
-      { name: "description", content: "Build, review and publish your business website step by step." },
+      {
+        name: "description",
+        content: "Build, review and publish your business website step by step.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: WebsitePage,
 });
-
 
 function WebsitePage() {
   const { section: sectionParam } = Route.useSearch();
@@ -93,7 +103,9 @@ function WebsitePage() {
   const brief = readBrief(generation?.["brief"]);
   const buildReport = readReport(generation?.["report"]);
   const manage = canManage(ws?.workspace?.role ?? "viewer");
-  const [jump, setJump] = useState<{ step: WizardStepKey; anchor?: string; nonce: number } | null>(null);
+  const [jump, setJump] = useState<{ step: WizardStepKey; anchor?: string; nonce: number } | null>(
+    null,
+  );
   const [section, setSection] = useState(sectionParam ?? "overview");
   // A finding elsewhere can deep-link straight into the area that fixes it.
   useEffect(() => {
@@ -152,7 +164,10 @@ function WebsitePage() {
 
   const copyFields = copy
     ? Object.fromEntries(
-        EDITABLE_COPY_FIELDS.map((f) => [f.key, String((copy as Record<string, unknown>)[f.key] ?? "")]),
+        EDITABLE_COPY_FIELDS.map((f) => [
+          f.key,
+          String((copy as Record<string, unknown>)[f.key] ?? ""),
+        ]),
       )
     : {};
 
@@ -198,7 +213,9 @@ function WebsitePage() {
           <WebsiteProject
             organizationId={orgId}
             businessName={org?.name ?? null}
-            industry={(org?.industry as string | undefined) ?? (profile?.["industry"] as string) ?? null}
+            industry={
+              (org?.industry as string | undefined) ?? (profile?.["industry"] as string) ?? null
+            }
             slug={org?.slug ?? null}
             city={(profile?.["city"] as string) ?? null}
             publishState={settings?.publish_state ?? "draft"}
@@ -215,10 +232,12 @@ function WebsitePage() {
           {requiredCount > 0 && manage ? (
             <section className="panel border-accent/40 bg-accent/5 p-4">
               <p className="text-[13px] font-medium">
-                {requiredCount} answer{requiredCount === 1 ? "" : "s"} needed before Revora can build
+                {requiredCount} answer{requiredCount === 1 ? "" : "s"} needed before Revora can
+                build
               </p>
               <p className="mt-0.5 text-[12px] text-muted-foreground">
-                Answer them once — they're reused across your pages, buttons, forms, CRM and search settings.
+                Answer them once — they're reused across your pages, buttons, forms, CRM and search
+                settings.
               </p>
               <Button
                 className="mt-3"
@@ -328,7 +347,6 @@ function WebsitePage() {
       node: <BuilderAudit organizationId={orgId} org={org ?? null} canManage={manage} />,
     },
     {
-
       key: "upgrades",
       label: "Upgrades",
       hint: "Elite additions Revora recommends",
@@ -351,7 +369,11 @@ function WebsitePage() {
       ...(requiredCount ? { badge: requiredCount } : {}),
       node: (
         <div className="space-y-5">
-          <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
+          <MissingFactsPanel
+            organizationId={orgId}
+            gaps={readiness?.gaps ?? []}
+            canManage={manage}
+          />
           <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
           <BuilderWizard
             organizationId={orgId}
@@ -399,9 +421,16 @@ function WebsitePage() {
             canManage={manage}
             isPublishing={launchFlow.isLaunching || saveSettings.isPending}
             onPublish={() => launchFlow.launch()}
-            onUnpublish={() => saveSettings.mutate({ publish_state: "unpublished", published: false })}
+            onUnpublish={() =>
+              saveSettings.mutate({ publish_state: "unpublished", published: false })
+            }
           />
-          <WebsiteReview organizationId={orgId} slug={org?.slug} settings={settings} canManage={manage} />
+          <WebsiteReview
+            organizationId={orgId}
+            slug={org?.slug}
+            settings={settings}
+            canManage={manage}
+          />
           <PreviewLinks organizationId={orgId} canManage={manage} />
           <BuildReportPanel report={buildReport} />
           <EngineSelfTestPanel organizationId={orgId} />
@@ -449,7 +478,11 @@ function WebsitePage() {
       <BuilderShell
         projectName={org?.name ? `${org.name} · website` : "Your website"}
         statusLabel={
-          publishState === "published" ? "Live" : publishState === "unpublished" ? "Unpublished" : "Draft"
+          publishState === "published"
+            ? "Live"
+            : publishState === "unpublished"
+              ? "Unpublished"
+              : "Draft"
         }
         statusTone={publishState === "published" ? "live" : "draft"}
         saveLabel={

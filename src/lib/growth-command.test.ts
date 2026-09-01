@@ -84,14 +84,22 @@ describe("growthAudit", () => {
   });
 
   it("offers an auto fix when drafted copy can fill a blank field", () => {
-    const audit = growthAudit({ ...empty, copyPrimaryCta: "Get my quote", copyMetaDescription: "Detailing in Raleigh." });
+    const audit = growthAudit({
+      ...empty,
+      copyPrimaryCta: "Get my quote",
+      copyMetaDescription: "Detailing in Raleigh.",
+    });
     expect(audit.findings.find((x) => x.key === "cta")?.autoFix).toBe("apply_cta");
     expect(audit.findings.find((x) => x.key === "meta")?.autoFix).toBe("apply_meta");
   });
 
   it("waits for real traffic before giving data-based advice", () => {
     expect(growthAudit(empty).findings.some((x) => x.key === "need-visits")).toBe(true);
-    expect(growthAudit({ ...complete, visitors: 200, leads: 0 }).findings.some((x) => x.key === "no-leads")).toBe(true);
+    expect(
+      growthAudit({ ...complete, visitors: 200, leads: 0 }).findings.some(
+        (x) => x.key === "no-leads",
+      ),
+    ).toBe(true);
   });
 
   it("never marks a healthy workspace's category below its findings", () => {

@@ -140,12 +140,19 @@ async function gatherReadiness(
       .select("seo, custom_domain, domain_status, publish_state")
       .eq("organization_id", organizationId)
       .maybeSingle(),
-    supabase.from("website_pages").select("id, slug, is_visible").eq("organization_id", organizationId),
+    supabase
+      .from("website_pages")
+      .select("id, slug, is_visible")
+      .eq("organization_id", organizationId),
     supabase
       .from("website_sections")
       .select("id, kind, is_visible")
       .eq("organization_id", organizationId),
-    supabase.from("services").select("id").eq("organization_id", organizationId).eq("is_active", true),
+    supabase
+      .from("services")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("is_active", true),
   ]);
 
   const p = (profile.data ?? {}) as Record<string, unknown>;
@@ -277,8 +284,7 @@ export const activateProduction = createServerFn({ method: "POST" })
       await audit("PUBLISH_BLOCKED", { reason: "setup_payment_required", role });
       return {
         activated: false,
-        reason:
-          `Complete your one-time ${usd(GROWTH_SYSTEM.setupPrice)} setup to publish your website, connect your domain and go live. Everything you've built stays saved.`,
+        reason: `Complete your one-time ${usd(GROWTH_SYSTEM.setupPrice)} setup to publish your website, connect your domain and go live. Everything you've built stays saved.`,
         version: null,
         publishState: "draft",
         readiness,

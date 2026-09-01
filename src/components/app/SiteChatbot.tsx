@@ -3,7 +3,19 @@ import { onAssistantPrompt } from "@/lib/assistant-bridge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertTriangle, Bot, Check, Clapperboard, History, Loader2, Rocket, Send, Sparkles, Trash2, User } from "lucide-react";
+import {
+  AlertTriangle,
+  Bot,
+  Check,
+  Clapperboard,
+  History,
+  Loader2,
+  Rocket,
+  Send,
+  Sparkles,
+  Trash2,
+  User,
+} from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,11 +83,14 @@ export function SiteChatbot({
   const [attachments, setAttachments] = useState<AgentAttachment[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
-  const [lastRequest, setLastRequest] = useState<{ text: string; attachments: AgentAttachment[] } | null>(null);
+  const [lastRequest, setLastRequest] = useState<{
+    text: string;
+    attachments: AgentAttachment[];
+  } | null>(null);
 
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   /** When on, safe plans (nothing removed, nothing missing) are written the moment they're ready. */
-const [autoApply, setAutoApply] = useState(true);
+  const [autoApply, setAutoApply] = useState(true);
   /** Instruction chips the client has picked — they glow gold so the choice is obvious. */
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
@@ -89,7 +104,6 @@ const [autoApply, setAutoApply] = useState(true);
     setInstruction([...next].join("\n"));
   };
 
-
   // A section panel below can hand its request up to this box.
   useEffect(
     () =>
@@ -101,7 +115,6 @@ const [autoApply, setAutoApply] = useState(true);
     [],
   );
 
-
   const ask = useServerFn(planWebsiteChanges);
   const applyFn = useServerFn(applyWebsiteChanges);
 
@@ -110,7 +123,10 @@ const [autoApply, setAutoApply] = useState(true);
     [messages],
   );
 
-  const chosen = useMemo(() => (plan?.steps ?? []).filter((step) => !skipped.has(step.key)), [plan, skipped]);
+  const chosen = useMemo(
+    () => (plan?.steps ?? []).filter((step) => !skipped.has(step.key)),
+    [plan, skipped],
+  );
 
   const propose = useMutation({
     mutationFn: (input: { text: string; attachments: AgentAttachment[] }) => {
@@ -126,12 +142,18 @@ const [autoApply, setAutoApply] = useState(true);
     },
     onSuccess: (result) => {
       const steps = result.steps as AgentStep[];
-      const next = { summary: result.summary, steps, questions: result.questions, notes: result.notes };
+      const next = {
+        summary: result.summary,
+        steps,
+        questions: result.questions,
+        notes: result.notes,
+      };
       setMessages((prior) => [...prior, { role: "assistant", content: result.reply, plan: next }]);
       setPlan(next);
       setSkipped(new Set());
       // Auto-apply: safe plans (nothing removed, nothing missing) go straight onto the site.
-      const safe = steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
+      const safe =
+        steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
       if (autoApply && canManage && safe) apply.mutate(steps);
     },
     // Nothing here is charged or metered, so a failure is never a paywall: the
@@ -146,7 +168,6 @@ const [autoApply, setAutoApply] = useState(true);
         },
       ]),
   });
-
 
   const apply = useMutation({
     mutationFn: (steps?: AgentStep[]) =>
@@ -170,7 +191,9 @@ const [autoApply, setAutoApply] = useState(true);
           content:
             `Done — ${result.applied} change${result.applied === 1 ? "" : "s"} are live in your draft.` +
             ` I saved a version called "${result.snapshotLabel}" first, so you can roll back any time.` +
-            (result.failed ? ` ${result.failed} step${result.failed === 1 ? "" : "s"} couldn't be applied.` : ""),
+            (result.failed
+              ? ` ${result.failed} step${result.failed === 1 ? "" : "s"} couldn't be applied.`
+              : ""),
         },
       ]);
       setPlan(null);
@@ -231,23 +254,32 @@ const [autoApply, setAutoApply] = useState(true);
       <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-3.5">
         <p className="text-[12.5px] font-medium text-primary">How to use this to win more work</p>
         <ol className="mt-1.5 grid gap-1 text-[12px] text-muted-foreground">
-          <li>1. Say what you want in plain words — “make the home page sell emergency callouts”.</li>
+          <li>
+            1. Say what you want in plain words — “make the home page sell emergency callouts”.
+          </li>
           <li>2. Revora shows a plan of the exact changes before anything is written.</li>
           <li>3. Approve it and your pages, buttons, forms and search text update together.</li>
         </ol>
         <p className="mt-2 text-[12px] text-muted-foreground">
-          Ask for lead-generator work, not decoration: clear call, text, book and quote buttons on every page,
-          prices, proof, answers to the questions that stop people buying, and a follow-up path for every enquiry.
+          Ask for lead-generator work, not decoration: clear call, text, book and quote buttons on
+          every page, prices, proof, answers to the questions that stop people buying, and a
+          follow-up path for every enquiry.
         </p>
       </div>
       <p className="mt-3 max-w-2xl text-[13px] text-muted-foreground">
-        Write as little or as much as you like — a single tweak or a full brief. Revora can rewrite copy, add and
-        remove sections and pages, reorder the layout, edit items and buttons, write your search and social text, and
-        change colours and fonts. It can also install premium visuals on request —{" "}
-        <span className="text-gold">starfield, aurora, nebula, tech grid or spotlight backgrounds</span> and{" "}
-        <span className="text-gold">3D floating, tilted, frosted-glass, gold-glow or shine sections</span>. Add photos
-        or a short video, or just speak your request — Revora reads and listens too. You review the plan, then it's
-        applied for you. No support request, no waiting.
+        Write as little or as much as you like — a single tweak or a full brief. Revora can rewrite
+        copy, add and remove sections and pages, reorder the layout, edit items and buttons, write
+        your search and social text, and change colours and fonts. It can also install premium
+        visuals on request —{" "}
+        <span className="text-gold">
+          starfield, aurora, nebula, tech grid or spotlight backgrounds
+        </span>{" "}
+        and{" "}
+        <span className="text-gold">
+          3D floating, tilted, frosted-glass, gold-glow or shine sections
+        </span>
+        . Add photos or a short video, or just speak your request — Revora reads and listens too.
+        You review the plan, then it's applied for you. No support request, no waiting.
       </p>
 
       {!hasSections ? (
@@ -273,7 +305,9 @@ const [autoApply, setAutoApply] = useState(true);
               <div className="min-w-0">
                 <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{message.content}</p>
                 {message.role === "user" && message.attached?.length ? (
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">{message.attached.join(" · ")}</p>
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    {message.attached.join(" · ")}
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -290,7 +324,7 @@ const [autoApply, setAutoApply] = useState(true);
       <form className="mt-4 space-y-3" onSubmit={submit}>
         <Textarea
           id="assistant-instruction"
-          
+
           rows={messages.length ? 3 : 5}
           value={instruction}
           onChange={(event) => setInstruction(event.target.value.slice(0, PLAN_INSTRUCTION_LIMIT))}
@@ -308,18 +342,38 @@ const [autoApply, setAutoApply] = useState(true);
           onTranscript={(text) => {
             setTranscripts((prior) => [
               ...prior,
-              { at: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), text },
+              {
+                at: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+                text,
+              },
             ]);
-            setInstruction((prior) => (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT));
+            setInstruction((prior) =>
+              (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT),
+            );
           }}
           onInsert={(text) =>
-            setInstruction((prior) => (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT))
+            setInstruction((prior) =>
+              (prior ? `${prior.trim()} ${text}` : text).slice(0, PLAN_INSTRUCTION_LIMIT),
+            )
           }
           disabled={!canManage || !hasSections}
         />
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" variant="signal" disabled={!canManage || !hasSections || propose.isPending || (instruction.trim().length < 3 && !attachments.length)}>
-            {propose.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+          <Button
+            type="submit"
+            variant="signal"
+            disabled={
+              !canManage ||
+              !hasSections ||
+              propose.isPending ||
+              (instruction.trim().length < 3 && !attachments.length)
+            }
+          >
+            {propose.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Send className="size-4" />
+            )}
             {messages.length ? "Send" : "Ask Revora"}
           </Button>
           {propose.isError && lastRequest ? (
@@ -329,16 +383,18 @@ const [autoApply, setAutoApply] = useState(true);
               disabled={propose.isPending}
               onClick={() => propose.mutate(lastRequest)}
             >
-              <Loader2 className={propose.isPending ? "size-4 animate-spin" : "hidden"} /> Retry that request
+              <Loader2 className={propose.isPending ? "size-4 animate-spin" : "hidden"} /> Retry
+              that request
             </Button>
           ) : null}
           <span className="text-[11px] text-muted-foreground">
-            {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()} characters
+            {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()}{" "}
+            characters
           </span>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Unlimited requests, edits, rebuilds and publishes — the builder is included in your Revora subscription. There
-          are no credits, tokens or per-change charges.
+          Unlimited requests, edits, rebuilds and publishes — the builder is included in your Revora
+          subscription. There are no credits, tokens or per-change charges.
         </p>
 
         <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-primary/30 bg-primary/5 p-3">
@@ -354,12 +410,13 @@ const [autoApply, setAutoApply] = useState(true);
               Auto-install safe changes the moment they're ready
             </span>
             <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
-              Revora writes every change straight onto your site when nothing is being removed and nothing is missing.
-              A rollback point is still saved first. Anything that removes content always waits for your approval.
+              Revora writes every change straight onto your site when nothing is being removed and
+              nothing is missing. A rollback point is still saved first. Anything that removes
+              content always waits for your approval.
             </span>
           </span>
         </label>
-<div className="space-y-2">
+        <div className="space-y-2">
           <p className="text-[11px] font-medium text-muted-foreground" id="quick-commands-label">
             Quick commands — tap to pick, gold means picked · or say it out loud
           </p>
@@ -384,11 +441,15 @@ const [autoApply, setAutoApply] = useState(true);
           </div>
         </div>
 
-<div className="space-y-2">
+        <div className="space-y-2">
           <p className="text-[11px] font-medium text-muted-foreground" id="media-templates-label">
             Guided photo &amp; video briefs — tap to pick, attach the files, then send
           </p>
-          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="media-templates-label">
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-labelledby="media-templates-label"
+          >
             {MULTIMODAL_TEMPLATES.map((template) => {
               const text = template.instruction.slice(0, PLAN_INSTRUCTION_LIMIT);
               const active = picked.has(text);
@@ -414,11 +475,13 @@ const [autoApply, setAutoApply] = useState(true);
             })}
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {MULTIMODAL_TEMPLATES.map((template) => `${template.label}: ${template.attach}`).join(" · ")}
+            {MULTIMODAL_TEMPLATES.map((template) => `${template.label}: ${template.attach}`).join(
+              " · ",
+            )}
           </p>
         </div>
 
-{!messages.length ? (
+        {!messages.length ? (
           <div className="flex flex-wrap gap-2">
             {EXAMPLES.map((example) => {
               const active = picked.has(example);
@@ -439,7 +502,10 @@ const [autoApply, setAutoApply] = useState(true);
         ) : null}
 
         {transcripts.length ? (
-          <section aria-label="Voice request transcripts" className="rounded-md border border-border p-3">
+          <section
+            aria-label="Voice request transcripts"
+            className="rounded-md border border-border p-3"
+          >
             <p className="text-[11px] font-medium text-muted-foreground">
               Voice transcripts — what Revora heard, in your words
             </p>
@@ -451,11 +517,7 @@ const [autoApply, setAutoApply] = useState(true);
                 </li>
               ))}
             </ul>
-            <button
-              type="button"
-              className={`${CHIP} mt-2`}
-              onClick={() => setTranscripts([])}
-            >
+            <button type="button" className={`${CHIP} mt-2`} onClick={() => setTranscripts([])}>
               Clear transcripts
             </button>
           </section>
@@ -466,7 +528,9 @@ const [autoApply, setAutoApply] = useState(true);
         <div className="mt-5 space-y-3">
           {plan.questions.length ? (
             <div className="rounded-md border border-accent/40 bg-accent/5 p-3.5">
-              <p className="text-[12px] font-medium">Revora needs these facts before it can go further</p>
+              <p className="text-[12px] font-medium">
+                Revora needs these facts before it can go further
+              </p>
               <ul className="mt-1.5 list-disc space-y-1 pl-4 text-[13px] text-muted-foreground">
                 {plan.questions.map((question) => (
                   <li key={question}>{question}</li>
@@ -478,9 +542,9 @@ const [autoApply, setAutoApply] = useState(true);
           {plan.steps.length ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2">
-<p className="text-[12px] font-medium text-muted-foreground">
-                  {plan.steps.length} proposed change{plan.steps.length === 1 ? "" : "s"} — gold means included; untick
-                  anything you don't want
+                <p className="text-[12px] font-medium text-muted-foreground">
+                  {plan.steps.length} proposed change{plan.steps.length === 1 ? "" : "s"} — gold
+                  means included; untick anything you don't want
                 </p>
                 <Pill tone="info">
                   <Sparkles className="size-3" aria-hidden="true" /> {chosen.length} selected
@@ -493,18 +557,29 @@ const [autoApply, setAutoApply] = useState(true);
                   <div
                     key={step.key}
                     className={`rounded-md border p-3.5 transition-all ${
-                      off ? "border-border/60 bg-transparent opacity-55" : "border-primary/40 bg-primary/5 gold-glow"
+                      off
+                        ? "border-border/60 bg-transparent opacity-55"
+                        : "border-primary/40 bg-primary/5 gold-glow"
                     }`}
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <Pill tone={step.destructive ? "danger" : "info"}>{step.where}</Pill>
                       <p className="text-[13px] font-medium">{step.title}</p>
-                      {!off ? <Check className="ml-auto size-4 shrink-0 text-primary" aria-hidden="true" /> : null}
+                      {!off ? (
+                        <Check
+                          className="ml-auto size-4 shrink-0 text-primary"
+                          aria-hidden="true"
+                        />
+                      ) : null}
                     </div>
                     {step.before ? (
-                      <p className="mt-2 text-[12px] text-muted-foreground line-through">{step.before}</p>
+                      <p className="mt-2 text-[12px] text-muted-foreground line-through">
+                        {step.before}
+                      </p>
                     ) : null}
-                    {step.after ? <p className="mt-1.5 whitespace-pre-wrap text-[13px]">{step.after}</p> : null}
+                    {step.after ? (
+                      <p className="mt-1.5 whitespace-pre-wrap text-[13px]">{step.after}</p>
+                    ) : null}
                     <button
                       type="button"
                       className="mt-2.5 cursor-pointer text-[12px] text-muted-foreground underline-offset-2 hover:underline"
@@ -526,8 +601,8 @@ const [autoApply, setAutoApply] = useState(true);
               {destructive ? (
                 <p className="flex items-start gap-2 text-[12px] text-accent">
                   <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                  {destructive} step{destructive === 1 ? "" : "s"} remove or hide content. A version is saved first, so
-                  you can roll back.
+                  {destructive} step{destructive === 1 ? "" : "s"} remove or hide content. A version
+                  is saved first, so you can roll back.
                 </p>
               ) : null}
 
@@ -537,14 +612,19 @@ const [autoApply, setAutoApply] = useState(true);
                   disabled={!canManage || !chosen.length || apply.isPending}
                   onClick={() => apply.mutate(undefined)}
                 >
-                  {apply.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                  {apply.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
                   Apply {chosen.length} change{chosen.length === 1 ? "" : "s"}
                 </Button>
                 <Button variant="outline" onClick={() => setPlan(null)} disabled={apply.isPending}>
                   Discard plan
                 </Button>
                 <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <History className="size-3.5" aria-hidden="true" /> A rollback point is saved automatically
+                  <History className="size-3.5" aria-hidden="true" /> A rollback point is saved
+                  automatically
                 </span>
               </div>
             </>
@@ -565,8 +645,17 @@ const [autoApply, setAutoApply] = useState(true);
           <p className="text-[12px] text-muted-foreground">
             Changes go to your draft. Publish to put them on your live site.
           </p>
-          <Button variant="outline" size="sm" onClick={onPublishNow} disabled={!canManage || isPublishing}>
-            {isPublishing ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPublishNow}
+            disabled={!canManage || isPublishing}
+          >
+            {isPublishing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Rocket className="size-4" />
+            )}
             Publish now
           </Button>
         </div>

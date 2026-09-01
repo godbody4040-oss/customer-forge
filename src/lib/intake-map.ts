@@ -30,7 +30,13 @@ export const INTAKE_FIELDS: IntakeField[] = [
     column: "name",
     kind: "text",
     required: true,
-    usedBy: ["Website pages", "Page titles & SEO", "Emails & notifications", "Quotes & invoices", "Reviews requests"],
+    usedBy: [
+      "Website pages",
+      "Page titles & SEO",
+      "Emails & notifications",
+      "Quotes & invoices",
+      "Reviews requests",
+    ],
   },
   {
     key: "description",
@@ -40,7 +46,13 @@ export const INTAKE_FIELDS: IntakeField[] = [
     column: "description",
     kind: "textarea",
     required: true,
-    usedBy: ["AI copywriting", "Home & about pages", "Search description", "Offers", "Future AI upgrades"],
+    usedBy: [
+      "AI copywriting",
+      "Home & about pages",
+      "Search description",
+      "Offers",
+      "Future AI upgrades",
+    ],
   },
   {
     key: "phone",
@@ -50,7 +62,13 @@ export const INTAKE_FIELDS: IntakeField[] = [
     column: "phone",
     kind: "text",
     required: true,
-    usedBy: ["Call & text CTAs", "Sticky call bar", "Lead alerts", "Booking confirmations", "Local SEO"],
+    usedBy: [
+      "Call & text CTAs",
+      "Sticky call bar",
+      "Lead alerts",
+      "Booking confirmations",
+      "Local SEO",
+    ],
   },
   {
     key: "email",
@@ -90,7 +108,13 @@ export const INTAKE_FIELDS: IntakeField[] = [
     column: "primary_cta_label",
     kind: "goal",
     required: true,
-    usedBy: ["Conversion engine", "Every call-to-action", "Forms & booking", "CRM lead routing", "Analytics goals"],
+    usedBy: [
+      "Conversion engine",
+      "Every call-to-action",
+      "Forms & booking",
+      "CRM lead routing",
+      "Analytics goals",
+    ],
   },
 ];
 

@@ -43,7 +43,11 @@ export function normalizeDomain(value: string) {
 
 export function isValidDomain(value: string) {
   // Also rejects IP literals and internal/reserved names (see net-guard.server).
-  return isFetchableHostname(value) && /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) && value.length <= 253;
+  return (
+    isFetchableHostname(value) &&
+    /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) &&
+    value.length <= 253
+  );
 }
 
 type DnsAnswer = { name: string; type: number; data: string };
@@ -94,7 +98,12 @@ const emptyRecords = (): DomainRecords => ({
 export const requiredDnsRecords = (domain: string) => [
   { type: "A", name: "@", value: DOMAIN_A_RECORD, purpose: `Points ${domain} at the platform` },
   { type: "A", name: "www", value: DOMAIN_A_RECORD, purpose: "Makes the www address work too" },
-  { type: "TXT", name: DOMAIN_TXT_NAME, value: "lovable_verify=<value shown in project settings>", purpose: "Proves you own the domain" },
+  {
+    type: "TXT",
+    name: DOMAIN_TXT_NAME,
+    value: "lovable_verify=<value shown in project settings>",
+    purpose: "Proves you own the domain",
+  },
 ];
 
 /**
@@ -112,7 +121,13 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
       records: emptyRecords(),
     };
   if (!domain)
-    return { status: "not_connected", detail: "No custom domain added.", dnsOk: false, sslOk: false, records: emptyRecords() };
+    return {
+      status: "not_connected",
+      detail: "No custom domain added.",
+      dnsOk: false,
+      sslOk: false,
+      records: emptyRecords(),
+    };
 
   const records = emptyRecords();
 
@@ -127,7 +142,9 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
     records.cname = cnameRes.filter((r) => r.type === 5).map((r) => normalizeDomain(r.data));
     records.txt = txtRes.filter((r) => r.type === 16).map((r) => r.data.replace(/"/g, "").trim());
     records.aMatches = records.a.includes(DOMAIN_A_RECORD);
-    records.cnameMatches = records.cname.some((c) => c === DOMAIN_TARGET || c.endsWith(".lovable.app"));
+    records.cnameMatches = records.cname.some(
+      (c) => c === DOMAIN_TARGET || c.endsWith(".lovable.app"),
+    );
     records.txtVerified = records.txt.some((t) => t.toLowerCase().startsWith("lovable_verify="));
 
     const dnsOk = records.aMatches || records.cnameMatches;
@@ -137,18 +154,28 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
         records.a.length === 0 && records.cname.length === 0
           ? `No DNS records found for ${domain} yet. Add an A record pointing to ${DOMAIN_A_RECORD}.`
           : `DNS exists but doesn't point here. ${domain} currently resolves to ${[...records.a, ...records.cname].slice(0, 3).join(", ")}. Point it to ${DOMAIN_A_RECORD} instead.`;
-      return { status: records.txtVerified ? "verifying" : "dns_pending", detail, dnsOk: false, sslOk: false, records };
+      return {
+        status: records.txtVerified ? "verifying" : "dns_pending",
+        detail,
+        dnsOk: false,
+        sslOk: false,
+        records,
+      };
     }
 
     // DNS resolves here. Never fetch a host unless every address it resolves to
     // (IPv4 and IPv6) is globally routable — an unresolvable or private/
     // loopback/link-local/metadata target is refused outright (SSRF guard).
     const aaaaRes = await dnsQuery(domain, "AAAA").catch(() => [] as DnsAnswer[]);
-    const resolved = [...records.a, ...aaaaRes.filter((r) => r.type === 28).map((r) => r.data.trim())];
+    const resolved = [
+      ...records.a,
+      ...aaaaRes.filter((r) => r.type === 28).map((r) => r.data.trim()),
+    ];
     if (!areAddressesPublic(resolved)) {
       return {
         status: "error",
-        detail: "That domain doesn't resolve to a public internet address, so it can't be checked or served publicly.",
+        detail:
+          "That domain doesn't resolve to a public internet address, so it can't be checked or served publicly.",
         dnsOk: false,
         sslOk: false,
         records,
@@ -189,7 +216,8 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
   } catch (error) {
     return {
       status: "error",
-      detail: error instanceof Error ? error.message : "The domain check failed. Try again shortly.",
+      detail:
+        error instanceof Error ? error.message : "The domain check failed. Try again shortly.",
       dnsOk: false,
       sslOk: false,
       records,
@@ -199,7 +227,9 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
 
 function randomPassword() {
   const bytes = crypto.getRandomValues(new Uint8Array(18));
-  return `Ll-${Array.from(bytes, (b) => b.toString(36)).join("").slice(0, 18)}!7`;
+  return `Ll-${Array.from(bytes, (b) => b.toString(36))
+    .join("")
+    .slice(0, 18)}!7`;
 }
 
 /** Creates a fully provisioned, isolated client tenant. Requires the service-role client. */
@@ -207,7 +237,11 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
   const base = slugify(input.business_name) || "business";
   let slug = base;
   for (let attempt = 0; attempt < 25; attempt += 1) {
-    const { data: taken } = await admin.from("organizations").select("id").eq("slug", slug).maybeSingle();
+    const { data: taken } = await admin
+      .from("organizations")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
     if (!taken) break;
     slug = `${base}-${attempt + 2}`;
   }
@@ -247,7 +281,7 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
       industry: input.industry ?? null,
       plan_id: input.plan_id ?? null,
       subscription_status: "trialing",
-trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
+      trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
       conversion_goal: input.conversion_goal ?? null,
       onboarding_step: 4,
       onboarding_completed: true,
@@ -259,7 +293,9 @@ trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
 
   const organizationId = (org as { id: string }).id;
 
-  await admin.from("memberships").insert({ organization_id: organizationId, user_id: ownerId, role: "owner" });
+  await admin
+    .from("memberships")
+    .insert({ organization_id: organizationId, user_id: ownerId, role: "owner" });
 
   await admin.from("business_profiles").insert({
     organization_id: organizationId,
@@ -332,15 +368,21 @@ trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
   const images = (input.images ?? []).filter((url) => url?.trim());
   if (images.length) {
     await admin.from("media").insert(
-      images.map((url) => ({ organization_id: organizationId, url: url.trim(), category: "gallery" })),
+      images.map((url) => ({
+        organization_id: organizationId,
+        url: url.trim(),
+        category: "gallery",
+      })),
     );
   }
 
   // Every workspace launches with a working quote calculator so the public site's
   // primary CTA always has a real destination (the owner can edit it afterwards).
-  await seedQuoteCalculator(admin, organizationId, services.map((s) => s.name.trim()));
-
-
+  await seedQuoteCalculator(
+    admin,
+    organizationId,
+    services.map((s) => s.name.trim()),
+  );
 
   await admin.from("subscriptions").insert({
     organization_id: organizationId,
@@ -360,4 +402,3 @@ trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(),
 
   return { organizationId, slug, ownerId, tempPassword, email };
 }
-

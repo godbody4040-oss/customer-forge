@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { auditLiveHtml, auditScore, auditStructure, sortIssues } from "./site-audit";
-import { conversionGaps, ctaLadder, normalizeGoal, type ConversionContext } from "./conversion-engine";
+import {
+  conversionGaps,
+  ctaLadder,
+  normalizeGoal,
+  type ConversionContext,
+} from "./conversion-engine";
 import { proposeUpgrades, summarizeProposals } from "./auto-upgrade";
 import { INTAKE_FIELDS, intakeCompleteness, intakeGaps } from "./intake-map";
 import type { ContentPage } from "./website-content";
@@ -36,13 +41,25 @@ const page = (over: Partial<ContentPage> = {}): ContentPage =>
     og_description: null,
     og_image_url: null,
     noindex: false,
-    sections: [section("hero"), section("services"), section("quote"), section("reviews"), section("faq"), section("cta")],
+    sections: [
+      section("hero"),
+      section("services"),
+      section("quote"),
+      section("reviews"),
+      section("faq"),
+      section("cta"),
+    ],
     ...over,
   }) as ContentPage;
 
 describe("auditStructure", () => {
   it("flags an empty site as critical and offers a rebuild", () => {
-    const { issues } = auditStructure({ pages: [], goal: "quote", metaDescription: null, headline: null });
+    const { issues } = auditStructure({
+      pages: [],
+      goal: "quote",
+      metaDescription: null,
+      headline: null,
+    });
     expect(issues[0]?.severity).toBe("critical");
     expect(issues[0]?.upgrade).toBe("rebuild_site");
   });
@@ -59,15 +76,27 @@ describe("auditStructure", () => {
   });
 
   it("flags a dead-end page with no CTA or capture block", () => {
-    const bare = page({ sections: [section("hero"), section("intro"), section("about" as string)] });
-    const { issues } = auditStructure({ pages: [bare], goal: "quote", metaDescription: "x", headline: "y" });
+    const bare = page({
+      sections: [section("hero"), section("intro"), section("about" as string)],
+    });
+    const { issues } = auditStructure({
+      pages: [bare],
+      goal: "quote",
+      metaDescription: "x",
+      headline: "y",
+    });
     expect(issues.some((i) => i.key.startsWith("no-cta") && i.severity === "critical")).toBe(true);
     expect(issues.some((i) => i.key === "no-capture")).toBe(true);
   });
 
   it("flags noindex and missing page SEO", () => {
     const hidden = page({ noindex: true, seo_description: null });
-    const { issues } = auditStructure({ pages: [hidden], goal: "quote", metaDescription: "x", headline: "y" });
+    const { issues } = auditStructure({
+      pages: [hidden],
+      goal: "quote",
+      metaDescription: "x",
+      headline: "y",
+    });
     expect(issues.some((i) => i.upgrade === "page_index")).toBe(true);
     expect(issues.some((i) => i.upgrade === "page_seo")).toBe(true);
   });
@@ -99,7 +128,9 @@ describe("auditLiveHtml", () => {
 
   it("catches thin content, no conversion path and missing alt text", () => {
     const bad = `<html><head><title>Home</title></head><body><h1>Home</h1><h1>Again</h1><img src="a.jpg"><p>short</p></body></html>`;
-    const keys = auditLiveHtml("/s/shine", "https://x.test/s/shine", 200, bad).issues.map((i) => i.key);
+    const keys = auditLiveHtml("/s/shine", "https://x.test/s/shine", 200, bad).issues.map(
+      (i) => i.key,
+    );
     expect(keys.some((k) => k.startsWith("live-thin"))).toBe(true);
     expect(keys.some((k) => k.startsWith("live-cta"))).toBe(true);
     expect(keys.some((k) => k.startsWith("live-alt"))).toBe(true);
@@ -107,7 +138,12 @@ describe("auditLiveHtml", () => {
   });
 
   it("scores and sorts issues worst first", () => {
-    const issues = auditLiveHtml("/x", "https://x.test/x", 200, "<html><body></body></html>").issues;
+    const issues = auditLiveHtml(
+      "/x",
+      "https://x.test/x",
+      200,
+      "<html><body></body></html>",
+    ).issues;
     expect(auditScore(issues, 60)).toBeLessThan(100);
     expect(sortIssues(issues)[0]?.severity).toBe("critical");
   });
@@ -160,7 +196,16 @@ describe("auto-upgrade proposals", () => {
     metaDescription: null,
     primaryCtaLabel: null,
     publishState: "draft",
-    pages: [{ id: "p1", title: "Home", slug: "home", seo_title: null, seo_description: null, noindex: false }],
+    pages: [
+      {
+        id: "p1",
+        title: "Home",
+        slug: "home",
+        seo_title: null,
+        seo_description: null,
+        noindex: false,
+      },
+    ],
     businessName: "Shine Co",
     city: "Raleigh",
   };
@@ -183,7 +228,11 @@ describe("auto-upgrade proposals", () => {
   });
 
   it("blocks meta promotion when there is no drafted copy to use", () => {
-    const proposals = proposeUpgrades([], { ...base, copyHeadline: null, copyMetaDescription: null });
+    const proposals = proposeUpgrades([], {
+      ...base,
+      copyHeadline: null,
+      copyMetaDescription: null,
+    });
     const meta = proposals.find((p) => p.kind === "apply_meta");
     expect(meta?.applyable).toBe(false);
     expect(meta?.needs).toBeTruthy();

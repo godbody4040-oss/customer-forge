@@ -3,10 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppointmentStatus, LeadStatus } from "@/lib/domain";
 import { generateWebsitePlan, type GoalKey } from "@/lib/website-plan";
-import {
-  AUTOMATION_RECIPES,
-  enqueueAutomations,
-} from "@/lib/automation-engine";
+import { AUTOMATION_RECIPES, enqueueAutomations } from "@/lib/automation-engine";
 import { runDueAutomations } from "@/lib/automations.functions";
 
 /**
@@ -197,7 +194,9 @@ export function useQuoteRequests(organizationId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quote_requests")
-        .select("id, answers, estimate_min, estimate_max, created_at, lead_id, leads(name, email, phone)")
+        .select(
+          "id, answers, estimate_min, estimate_max, created_at, lead_id, leads(name, email, phone)",
+        )
         .eq("organization_id", organizationId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -211,7 +210,9 @@ export function useQuoteRequests(organizationId: string | undefined) {
 function useInvalidate(keys: string[], organizationId: string | undefined) {
   const queryClient = useQueryClient();
   return () =>
-    Promise.all(keys.map((key) => queryClient.invalidateQueries({ queryKey: [key, organizationId] })));
+    Promise.all(
+      keys.map((key) => queryClient.invalidateQueries({ queryKey: [key, organizationId] })),
+    );
 }
 
 export function useUpdateLead(organizationId: string | undefined) {
@@ -230,7 +231,10 @@ export function useUpdateLead(organizationId: string | undefined) {
         notes?: string | null;
       };
     }) => {
-      const { error } = await supabase.from("leads").update(patch as never).eq("id", id);
+      const { error } = await supabase
+        .from("leads")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -298,7 +302,10 @@ export function useSaveService(organizationId: string | undefined) {
     }) => {
       if (service.id) {
         const { id, ...patch } = service;
-        const { error } = await supabase.from("services").update(patch as never).eq("id", id);
+        const { error } = await supabase
+          .from("services")
+          .update(patch as never)
+          .eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -336,7 +343,9 @@ export function useSaveBusinessProfile(organizationId: string | undefined) {
     mutationFn: async (patch: Record<string, unknown>) => {
       const { error } = await supabase
         .from("business_profiles")
-        .upsert({ organization_id: organizationId!, ...patch } as never, { onConflict: "organization_id" });
+        .upsert({ organization_id: organizationId!, ...patch } as never, {
+          onConflict: "organization_id",
+        });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -353,7 +362,9 @@ export function useSaveWebsiteSettings(organizationId: string | undefined) {
     mutationFn: async (patch: Record<string, unknown>) => {
       const { error } = await supabase
         .from("website_settings")
-        .upsert({ organization_id: organizationId!, ...patch } as never, { onConflict: "organization_id" });
+        .upsert({ organization_id: organizationId!, ...patch } as never, {
+          onConflict: "organization_id",
+        });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -368,7 +379,10 @@ export function useUpdateOrganization() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
-      const { error } = await supabase.from("organizations").update(patch as never).eq("id", id);
+      const { error } = await supabase
+        .from("organizations")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -458,7 +472,10 @@ export function useLeadAction(organizationId: string | undefined, businessName?:
       trigger?: string;
     }) => {
       if (patch && Object.keys(patch).length) {
-        const { error } = await supabase.from("leads").update(patch as never).eq("id", lead.id);
+        const { error } = await supabase
+          .from("leads")
+          .update(patch as never)
+          .eq("id", lead.id);
         if (error) throw error;
       }
       if (activity) {
@@ -667,7 +684,10 @@ export function useSaveAppointment(
         notes?: string | null;
       };
     }) => {
-      const { error } = await supabase.from("appointments").update(patch as never).eq("id", appointment.id);
+      const { error } = await supabase
+        .from("appointments")
+        .update(patch as never)
+        .eq("id", appointment.id);
       if (error) throw error;
 
       if (appointment.lead_id) {
@@ -687,9 +707,7 @@ export function useSaveAppointment(
           lead_id: appointment.lead_id,
           appointment_id: appointment.id,
           kind: patch.status ? `appointment_${patch.status}` : "appointment_updated",
-          body: patch.starts_at
-            ? `Moved to ${new Date(patch.starts_at).toLocaleString()}.`
-            : null,
+          body: patch.starts_at ? `Moved to ${new Date(patch.starts_at).toLocaleString()}.` : null,
         } as never);
       }
 
@@ -713,7 +731,13 @@ export function useSaveAppointment(
     },
     onSuccess: () => {
       toast.success("Booking updated.");
-      for (const key of ["appointments", "leads", "automation_runs", "notifications", "customers"]) {
+      for (const key of [
+        "appointments",
+        "leads",
+        "automation_runs",
+        "notifications",
+        "customers",
+      ]) {
         void queryClient.invalidateQueries({ queryKey: [key, organizationId] });
       }
       void queryClient.invalidateQueries({ queryKey: ["lead_activities"] });
@@ -739,7 +763,9 @@ export function useAutomations(organizationId: string | undefined) {
       if (error) throw error;
       return data.map((a) => ({
         ...a,
-        automation_steps: [...(a.automation_steps ?? [])].sort((x, y) => x.sort_order - y.sort_order),
+        automation_steps: [...(a.automation_steps ?? [])].sort(
+          (x, y) => x.sort_order - y.sort_order,
+        ),
       }));
     },
   });
@@ -776,7 +802,10 @@ export function useSaveAutomation(organizationId: string | undefined) {
     }) => {
       if (input.id) {
         const { id, ...patch } = input;
-        const { error } = await supabase.from("automations").update(patch as never).eq("id", id);
+        const { error } = await supabase
+          .from("automations")
+          .update(patch as never)
+          .eq("id", id);
         if (error) throw error;
         return id;
       }
@@ -964,8 +993,8 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["quote_builder", organizationId] }),
       queryClient.invalidateQueries({ queryKey: ["quote_requests", organizationId] }),
     ]);
-  // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed call order below
-  const useWrapped = <T,>(fn: (input: T) => Promise<unknown>, success?: string) =>
+
+  const useWrapped = <T>(fn: (input: T) => Promise<unknown>, success?: string) =>
     useMutation({
       mutationFn: fn,
       onSuccess: () => {
@@ -986,7 +1015,10 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     }) => {
       if (input.id) {
         const { id, ...patch } = input;
-        const { error } = await supabase.from("quote_forms").update(patch as never).eq("id", id);
+        const { error } = await supabase
+          .from("quote_forms")
+          .update(patch as never)
+          .eq("id", id);
         if (error) throw error;
         return;
       }
@@ -1008,7 +1040,10 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     }) => {
       if (input.id) {
         const { id, ...patch } = input;
-        const { error } = await supabase.from("quote_questions").update(patch as never).eq("id", id);
+        const { error } = await supabase
+          .from("quote_questions")
+          .update(patch as never)
+          .eq("id", id);
         if (error) throw error;
         return;
       }
@@ -1038,7 +1073,10 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     }) => {
       if (input.id) {
         const { id, ...patch } = input;
-        const { error } = await supabase.from("quote_options").update(patch as never).eq("id", id);
+        const { error } = await supabase
+          .from("quote_options")
+          .update(patch as never)
+          .eq("id", id);
         if (error) throw error;
         return;
       }
@@ -1066,7 +1104,10 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
     }) => {
       if (input.id) {
         const { id, ...patch } = input;
-        const { error } = await supabase.from("quote_addons").update(patch as never).eq("id", id);
+        const { error } = await supabase
+          .from("quote_addons")
+          .update(patch as never)
+          .eq("id", id);
         if (error) throw error;
         return;
       }
@@ -1144,7 +1185,10 @@ export function useUpdateWebsiteRequest() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
-      const { error } = await supabase.from("website_requests").update(patch as never).eq("id", id);
+      const { error } = await supabase
+        .from("website_requests")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -1162,7 +1206,11 @@ export function useGenerateWebsite(organizationId: string | undefined) {
     mutationFn: async () => {
       const orgId = organizationId!;
       const [org, profile, services, media, socials, forms] = await Promise.all([
-        supabase.from("organizations").select("name, industry, conversion_goal").eq("id", orgId).maybeSingle(),
+        supabase
+          .from("organizations")
+          .select("name, industry, conversion_goal")
+          .eq("id", orgId)
+          .maybeSingle(),
         supabase.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
         supabase.from("services").select("name, description, price").eq("organization_id", orgId),
         supabase.from("media").select("id").eq("organization_id", orgId),
@@ -1172,9 +1220,9 @@ export function useGenerateWebsite(organizationId: string | undefined) {
       const p = (profile.data ?? {}) as Record<string, unknown>;
       const testimonials = Array.isArray(p["testimonials"]) ? (p["testimonials"] as unknown[]) : [];
       const goalsRaw = (p["website_goals"] as string[] | undefined) ?? [];
-      const goals = (goalsRaw.length
-        ? goalsRaw
-        : [(org.data?.conversion_goal as string | null) ?? "quote"]) as GoalKey[];
+      const goals = (
+        goalsRaw.length ? goalsRaw : [(org.data?.conversion_goal as string | null) ?? "quote"]
+      ) as GoalKey[];
       const plan = generateWebsitePlan({
         businessName: (org.data?.name as string) ?? "",
         industry: (org.data?.industry as string) ?? "",
@@ -1185,7 +1233,11 @@ export function useGenerateWebsite(organizationId: string | undefined) {
         phone: (p["phone"] as string) ?? null,
         email: (p["email"] as string) ?? null,
         goals: goals.length ? goals : ["quote"],
-        services: (services.data ?? []) as { name: string; description?: string | null; price?: number | null }[],
+        services: (services.data ?? []) as {
+          name: string;
+          description?: string | null;
+          price?: number | null;
+        }[],
         photoCount: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
         testimonialCount: testimonials.length,
         hasCredentials: Boolean(p["certifications"] || p["awards"] || p["years_in_business"]),
@@ -1229,7 +1281,10 @@ export function useSetWebsiteReviewState(organizationId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ state, message }: { state: string; message?: string }) => {
-      const patch: Record<string, unknown> = { organization_id: organizationId!, review_state: state };
+      const patch: Record<string, unknown> = {
+        organization_id: organizationId!,
+        review_state: state,
+      };
       if (state === "approved") {
         patch["approved_at"] = new Date().toISOString();
         patch["approved_by"] = (await supabase.auth.getUser()).data.user?.id ?? null;

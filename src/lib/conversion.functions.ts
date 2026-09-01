@@ -17,7 +17,6 @@ const EVENTS = [
   "checkout_completed",
 ] as const;
 
-
 export type ConversionEvent = (typeof EVENTS)[number];
 
 export interface ConversionInput {
@@ -170,7 +169,10 @@ export const getConversionReport = createServerFn({ method: "GET" })
       const key = row.industry_slug ?? row.landing_path ?? "direct";
       const entry =
         grouped.get(key) ??
-        emptyRow(key, row.industry_slug ? row.industry_slug.replace(/-/g, " ") : (row.landing_path ?? "Direct"));
+        emptyRow(
+          key,
+          row.industry_slug ? row.industry_slug.replace(/-/g, " ") : (row.landing_path ?? "Direct"),
+        );
       if (row.event_name === "landing_view") entry.landingViews += 1;
       if (row.event_name === "signup_started") entry.signupsStarted += 1;
       if (row.event_name === "signup_completed") entry.signupsCompleted += 1;
@@ -186,19 +188,18 @@ export const getConversionReport = createServerFn({ method: "GET" })
           ? (row.metadata as Record<string, unknown>)
           : {};
       for (const [experiment, value] of Object.entries(meta)) {
-        if (experiment === "experiment" || experiment === "variant" || typeof value !== "string") continue;
+        if (experiment === "experiment" || experiment === "variant" || typeof value !== "string")
+          continue;
         const vkey = `${experiment}:${value}`;
-        const vrow =
-          variants.get(vkey) ??
-          {
-            experiment,
-            variant: value,
-            exposures: 0,
-            signupsStarted: 0,
-            signupsCompleted: 0,
-            checkoutsCompleted: 0,
-            signupRate: 0,
-          };
+        const vrow = variants.get(vkey) ?? {
+          experiment,
+          variant: value,
+          exposures: 0,
+          signupsStarted: 0,
+          signupsCompleted: 0,
+          checkoutsCompleted: 0,
+          signupRate: 0,
+        };
         if (row.event_name === "experiment_exposure") vrow.exposures += 1;
         if (row.event_name === "signup_started") vrow.signupsStarted += 1;
         if (row.event_name === "signup_completed") vrow.signupsCompleted += 1;
@@ -213,10 +214,10 @@ export const getConversionReport = createServerFn({ method: "GET" })
     const variantReport = [...variants.values()]
       .map((v) => ({
         ...v,
-        signupRate: v.exposures > 0 ? Math.round((v.signupsCompleted / v.exposures) * 1000) / 10 : 0,
+        signupRate:
+          v.exposures > 0 ? Math.round((v.signupsCompleted / v.exposures) * 1000) / 10 : 0,
       }))
       .sort((a, b) => a.experiment.localeCompare(b.experiment) || b.signupRate - a.signupRate);
 
     return { days: data.days, total: rows?.length ?? 0, report, variantReport };
   });
-

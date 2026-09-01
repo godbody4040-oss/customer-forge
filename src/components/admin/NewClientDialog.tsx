@@ -77,7 +77,8 @@ export function NewClientDialog({
   ]);
   const [images, setImages] = useState<string[]>([""]);
 
-  const set = (key: keyof typeof form) => (value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const set = (key: keyof typeof form) => (value: string) =>
+    setForm((f) => ({ ...f, [key]: value }));
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -129,7 +130,9 @@ export function NewClientDialog({
                 <div>
                   <p className="eyebrow">Temporary password</p>
                   <div className="mt-1 flex items-center gap-2">
-                    <code className="rounded bg-elevated px-2 py-1 text-[12px]">{result.tempPassword}</code>
+                    <code className="rounded bg-elevated px-2 py-1 text-[12px]">
+                      {result.tempPassword}
+                    </code>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -144,7 +147,8 @@ export function NewClientDialog({
                 </div>
               ) : (
                 <p className="text-[12px] text-muted-foreground">
-                  This email already had an account — it was added as the owner of the new workspace.
+                  This email already had an account — it was added as the owner of the new
+                  workspace.
                 </p>
               )}
             </Panel>
@@ -164,10 +168,18 @@ export function NewClientDialog({
           >
             <Section title="Business & owner">
               <Field label="Business name" required>
-                <Input value={form.business_name} onChange={(e) => set("business_name")(e.target.value)} required />
+                <Input
+                  value={form.business_name}
+                  onChange={(e) => set("business_name")(e.target.value)}
+                  required
+                />
               </Field>
               <Field label="Owner name" required>
-                <Input value={form.owner_name} onChange={(e) => set("owner_name")(e.target.value)} required />
+                <Input
+                  value={form.owner_name}
+                  onChange={(e) => set("owner_name")(e.target.value)}
+                  required
+                />
               </Field>
               <Field label="Owner email" required>
                 <Input
@@ -225,7 +237,10 @@ export function NewClientDialog({
                 </select>
               </Field>
               <Field label="Support email shown to client">
-                <Input value={form.support_email} onChange={(e) => set("support_email")(e.target.value)} />
+                <Input
+                  value={form.support_email}
+                  onChange={(e) => set("support_email")(e.target.value)}
+                />
               </Field>
             </Section>
 
@@ -280,10 +295,17 @@ export function NewClientDialog({
                 <Input value={form.logo_url} onChange={(e) => set("logo_url")(e.target.value)} />
               </Field>
               <Field label="Hero image URL">
-                <Input value={form.hero_image_url} onChange={(e) => set("hero_image_url")(e.target.value)} />
+                <Input
+                  value={form.hero_image_url}
+                  onChange={(e) => set("hero_image_url")(e.target.value)}
+                />
               </Field>
               <Field label="Primary colour">
-                <Input type="color" value={form.primary_color} onChange={(e) => set("primary_color")(e.target.value)} />
+                <Input
+                  type="color"
+                  value={form.primary_color}
+                  onChange={(e) => set("primary_color")(e.target.value)}
+                />
               </Field>
               <Field label="Secondary colour">
                 <Input
@@ -293,7 +315,11 @@ export function NewClientDialog({
                 />
               </Field>
               <Field label="Accent colour">
-                <Input type="color" value={form.accent_color} onChange={(e) => set("accent_color")(e.target.value)} />
+                <Input
+                  type="color"
+                  value={form.accent_color}
+                  onChange={(e) => set("accent_color")(e.target.value)}
+                />
               </Field>
             </Section>
 
@@ -319,7 +345,10 @@ export function NewClientDialog({
                         setServices((list) =>
                           list.map((s, i) =>
                             i === index
-                              ? { ...s, price: e.target.value === "" ? undefined : Number(e.target.value) }
+                              ? {
+                                  ...s,
+                                  price: e.target.value === "" ? undefined : Number(e.target.value),
+                                }
                               : s,
                           ),
                         )
@@ -361,7 +390,10 @@ export function NewClientDialog({
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    setServices((list) => [...list, { name: "", duration_minutes: 60, bookable: true }])
+                    setServices((list) => [
+                      ...list,
+                      { name: "", duration_minutes: 60, bookable: true },
+                    ])
                   }
                 >
                   <Plus className="mr-1 size-3.5" /> Add service
@@ -391,7 +423,12 @@ export function NewClientDialog({
                     </Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => setImages((l) => [...l, ""])}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setImages((l) => [...l, ""])}
+                >
                   <Plus className="mr-1 size-3.5" /> Add photo URL
                 </Button>
               </div>
@@ -408,10 +445,16 @@ export function NewClientDialog({
                 <Input value={form.tiktok} onChange={(e) => set("tiktok")(e.target.value)} />
               </Field>
               <Field label="Google Business profile">
-                <Input value={form.google_business} onChange={(e) => set("google_business")(e.target.value)} />
+                <Input
+                  value={form.google_business}
+                  onChange={(e) => set("google_business")(e.target.value)}
+                />
               </Field>
               <Field label="Leave-a-review link" full>
-                <Input value={form.review_link} onChange={(e) => set("review_link")(e.target.value)} />
+                <Input
+                  value={form.review_link}
+                  onChange={(e) => set("review_link")(e.target.value)}
+                />
               </Field>
             </Section>
 
@@ -424,8 +467,8 @@ export function NewClientDialog({
                 />
               </Field>
               <p className="text-[12px] text-muted-foreground">
-                Saved as <Pill tone="attention">DNS pending</Pill> — nothing is reported as connected until
-                DNS is actually verified.
+                Saved as <Pill tone="attention">DNS pending</Pill> — nothing is reported as
+                connected until DNS is actually verified.
               </p>
             </Section>
 

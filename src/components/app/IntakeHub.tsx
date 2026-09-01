@@ -27,18 +27,21 @@ export function IntakeHub({
 
   const progress = intakeCompleteness(draft);
   const gaps = intakeGaps(draft);
-  const dirty = INTAKE_FIELDS.some((field) => (draft[field.key] ?? "") !== (values[field.key] ?? ""));
+  const dirty = INTAKE_FIELDS.some(
+    (field) => (draft[field.key] ?? "") !== (values[field.key] ?? ""),
+  );
 
   return (
     <section className="panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="eyebrow flex items-center gap-2">
-            <Sparkles className="size-3.5 text-primary" aria-hidden="true" /> Your business, entered once
+            <Sparkles className="size-3.5 text-primary" aria-hidden="true" /> Your business, entered
+            once
           </p>
           <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
-            Revora reuses these facts across your pages, SEO, buttons, forms, CRM, booking, offers and every future AI
-            upgrade. You never have to type them twice.
+            Revora reuses these facts across your pages, SEO, buttons, forms, CRM, booking, offers
+            and every future AI upgrade. You never have to type them twice.
           </p>
         </div>
         <Pill tone={gaps.length ? "attention" : "signal"}>
@@ -47,7 +50,10 @@ export function IntakeHub({
       </div>
 
       <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-border">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(progress.percent, 2)}%` }} />
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${Math.max(progress.percent, 2)}%` }}
+        />
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -71,10 +77,14 @@ export function IntakeHub({
                         key={goal.value}
                         type="button"
                         disabled={!canManage}
-                        onClick={() => setDraft((d) => ({ ...d, [field.key]: goalLabel(goal.value) }))}
+                        onClick={() =>
+                          setDraft((d) => ({ ...d, [field.key]: goalLabel(goal.value) }))
+                        }
                         className={cn(
                           "cursor-pointer rounded-full border px-2.5 py-1 text-[11px] transition-colors disabled:cursor-not-allowed",
-                          active ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground",
+                          active
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-border text-muted-foreground",
                         )}
                         aria-pressed={active}
                         title={goal.blurb}
@@ -92,7 +102,10 @@ export function IntakeHub({
                   rows={3}
                   onChange={(event) => setDraft((d) => ({ ...d, [field.key]: event.target.value }))}
                   onBlur={(event) =>
-                    setDraft((d) => ({ ...d, [field.key]: smartIntakeValue(field.key, event.target.value) }))
+                    setDraft((d) => ({
+                      ...d,
+                      [field.key]: smartIntakeValue(field.key, event.target.value),
+                    }))
                   }
                   className={cn(
                     "mt-2 w-full rounded-md border bg-background px-2.5 py-2 text-[13px] outline-none focus:border-primary",
@@ -106,9 +119,14 @@ export function IntakeHub({
                   disabled={!canManage}
                   onChange={(event) => setDraft((d) => ({ ...d, [field.key]: event.target.value }))}
                   onBlur={(event) =>
-                    setDraft((d) => ({ ...d, [field.key]: smartIntakeValue(field.key, event.target.value) }))
+                    setDraft((d) => ({
+                      ...d,
+                      [field.key]: smartIntakeValue(field.key, event.target.value),
+                    }))
                   }
-                  inputMode={field.key === "phone" ? "tel" : field.key === "email" ? "email" : "text"}
+                  inputMode={
+                    field.key === "phone" ? "tel" : field.key === "email" ? "email" : "text"
+                  }
                   autoComplete={
                     field.key === "phone"
                       ? "tel"
@@ -143,7 +161,8 @@ export function IntakeHub({
             <>Still needed: {gaps.map((gap) => gap.label.toLowerCase()).join(", ")}.</>
           ) : (
             <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="size-3.5 text-primary" aria-hidden="true" /> Every system has what it needs.
+              <CheckCircle2 className="size-3.5 text-primary" aria-hidden="true" /> Every system has
+              what it needs.
             </span>
           )}
         </p>

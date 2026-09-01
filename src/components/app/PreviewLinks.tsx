@@ -108,13 +108,10 @@ export function PreviewLinks({
 
   return (
     <Panel className="p-5">
-      <SectionHeading
-        eyebrow="Share for review"
-        title="Private preview links"
-      />
+      <SectionHeading eyebrow="Share for review" title="Private preview links" />
       <p className="mt-2 max-w-2xl text-[13px] text-muted-foreground">
-        Send a link so someone can review the draft — including the latest AI changes — before you publish.
-        Links stop working on their own, and you can switch one off instantly.
+        Send a link so someone can review the draft — including the latest AI changes — before you
+        publish. Links stop working on their own, and you can switch one off instantly.
       </p>
 
       {canManage ? (
@@ -151,7 +148,11 @@ export function PreviewLinks({
             </select>
           </div>
           <Button type="submit" variant="signal" disabled={create.isPending}>
-            {create.isPending ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
+            {create.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Link2 className="size-4" />
+            )}
             Create link
           </Button>
         </form>
@@ -173,12 +174,17 @@ export function PreviewLinks({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Pill tone={status === "active" ? "signal" : "neutral"}>
-                      {status === "active" ? "Active" : status === "off" ? "Switched off" : "Expired"}
+                      {status === "active"
+                        ? "Active"
+                        : status === "off"
+                          ? "Switched off"
+                          : "Expired"}
                     </Pill>
                     <p className="truncate text-[13px]">{link.label ?? "Preview link"}</p>
                   </div>
                   <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                    Expires {dateShort(link.expires_at)} · {link.views} view{link.views === 1 ? "" : "s"}
+                    Expires {dateShort(link.expires_at)} · {link.views} view
+                    {link.views === 1 ? "" : "s"}
                     {link.last_viewed_at ? ` · last opened ${dateShort(link.last_viewed_at)}` : ""}
                   </p>
                 </div>

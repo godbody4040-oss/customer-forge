@@ -42,7 +42,17 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     lighting: "controlled studio strip lighting with soft reflected highlights",
     environment: "dark clean detailing bay or dusk city backdrop",
     treatment: "high contrast, deep blacks, subtle warm highlights, no lens flare clutter",
-    affinity: ["detail", "auto", "car", "mobile detail", "ceramic", "tint", "wrap", "mechanic", "tow"],
+    affinity: [
+      "detail",
+      "auto",
+      "car",
+      "mobile detail",
+      "ceramic",
+      "tint",
+      "wrap",
+      "mechanic",
+      "tow",
+    ],
   },
   {
     id: "home-trade",
@@ -58,8 +68,23 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     environment: "residential exterior or freshly finished interior",
     treatment: "true-to-life colour, sharp detail, nothing staged or glossy",
     affinity: [
-      "roof", "plumb", "hvac", "electric", "remodel", "construct", "concrete", "paint",
-      "fence", "deck", "floor", "tile", "handyman", "carpent", "landscap", "lawn", "tree",
+      "roof",
+      "plumb",
+      "hvac",
+      "electric",
+      "remodel",
+      "construct",
+      "concrete",
+      "paint",
+      "fence",
+      "deck",
+      "floor",
+      "tile",
+      "handyman",
+      "carpent",
+      "landscap",
+      "lawn",
+      "tree",
     ],
   },
   {
@@ -75,7 +100,17 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     lighting: "airy daylight, high key, clean whites",
     environment: "bright domestic or commercial interior",
     treatment: "crisp, fresh, high clarity, cool clean tones",
-    affinity: ["clean", "wash", "maid", "janitor", "carpet", "window", "pest", "restoration", "septic"],
+    affinity: [
+      "clean",
+      "wash",
+      "maid",
+      "janitor",
+      "carpet",
+      "window",
+      "pest",
+      "restoration",
+      "septic",
+    ],
   },
   {
     id: "food",
@@ -105,7 +140,19 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     lighting: "soft diffused studio light, gentle gradients",
     environment: "minimal studio or refined salon interior",
     treatment: "soft, luminous, low contrast, elegant negative space",
-    affinity: ["salon", "beauty", "hair", "nail", "spa", "lash", "brow", "barber", "skin", "massage", "groom"],
+    affinity: [
+      "salon",
+      "beauty",
+      "hair",
+      "nail",
+      "spa",
+      "lash",
+      "brow",
+      "barber",
+      "skin",
+      "massage",
+      "groom",
+    ],
   },
   {
     id: "professional",
@@ -120,7 +167,19 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     lighting: "even natural light with controlled contrast",
     environment: "modern office, meeting room or city exterior",
     treatment: "muted editorial palette, generous space, no clichéd stock posing",
-    affinity: ["law", "attorney", "account", "financ", "insur", "consult", "coach", "real estate", "mortgage", "it", "tech"],
+    affinity: [
+      "law",
+      "attorney",
+      "account",
+      "financ",
+      "insur",
+      "consult",
+      "coach",
+      "real estate",
+      "mortgage",
+      "it",
+      "tech",
+    ],
   },
   {
     id: "health",
@@ -135,7 +194,19 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     lighting: "soft even daylight, no harsh shadows",
     environment: "modern clinic interior",
     treatment: "clean, calm, trustworthy, gentle colour",
-    affinity: ["dental", "dentist", "med", "clinic", "health", "therap", "chiro", "vet", "care", "wellness", "yoga"],
+    affinity: [
+      "dental",
+      "dentist",
+      "med",
+      "clinic",
+      "health",
+      "therap",
+      "chiro",
+      "vet",
+      "care",
+      "wellness",
+      "yoga",
+    ],
   },
   {
     id: "events",
@@ -165,7 +236,18 @@ export const VISUAL_DIRECTIONS: VisualDirection[] = [
     lighting: "cool directional light with controlled speculars",
     environment: "modern building exterior or clean install site",
     treatment: "sharp, cool tones, engineered and deliberate",
-    affinity: ["solar", "security", "camera", "network", "smart", "ev", "energy", "automation", "audio", "install"],
+    affinity: [
+      "solar",
+      "security",
+      "camera",
+      "network",
+      "smart",
+      "ev",
+      "energy",
+      "automation",
+      "audio",
+      "install",
+    ],
   },
   {
     id: "service",
@@ -198,7 +280,9 @@ export function pickVisualDirection(input: {
   industry?: string | null;
   services?: { name: string }[];
 }): VisualDirection {
-  const words = [input.industry ?? "", ...(input.services ?? []).map((s) => s.name)].join(" ").toLowerCase();
+  const words = [input.industry ?? "", ...(input.services ?? []).map((s) => s.name)]
+    .join(" ")
+    .toLowerCase();
   const scored = VISUAL_DIRECTIONS.map((direction) => ({
     direction,
     score: direction.affinity.filter((word) => words.includes(word)).length,
@@ -210,14 +294,7 @@ export function pickVisualDirection(input: {
 /* ------------------------------- shot plan -------------------------------- */
 
 export type ShotSlot =
-  | "hero"
-  | "service"
-  | "about"
-  | "proof"
-  | "background"
-  | "cta"
-  | "social"
-  | "icon";
+  "hero" | "service" | "about" | "proof" | "background" | "cta" | "social" | "icon";
 
 export type PlannedShot = {
   slot: ShotSlot;
@@ -246,7 +323,8 @@ export function planShots(input: {
     shots.push({
       slot: "hero",
       label: "Hero image",
-      purpose: "The first thing a visitor sees — it has to make them believe the quality before reading.",
+      purpose:
+        "The first thing a visitor sees — it has to make them believe the quality before reading.",
       aspect: "16:9",
       placement: ["hero"],
       subjectHint: input.direction.subjects[0],
@@ -292,7 +370,8 @@ export function planShots(input: {
     {
       slot: "background",
       label: "Section background",
-      purpose: "Abstract brand-coloured texture for section backgrounds, never competing with text.",
+      purpose:
+        "Abstract brand-coloured texture for section backgrounds, never competing with text.",
       aspect: "16:9",
       placement: ["offer", "faq", "areas"],
     },
@@ -309,7 +388,8 @@ export function planShots(input: {
     shots.unshift({
       slot: "hero",
       label: "Starter set",
-      purpose: "You have no photos yet — start here so no section falls back to a plain colour panel.",
+      purpose:
+        "You have no photos yet — start here so no section falls back to a plain colour panel.",
       aspect: "16:9",
       placement: ["hero"],
       subjectHint: input.direction.subjects[0],
@@ -351,16 +431,57 @@ export const CANDIDATE_STYLES = [
 export type CandidateStyleId = (typeof CANDIDATE_STYLES)[number]["id"];
 
 export const REFINEMENTS = [
-  { id: "premium", label: "Make it more premium", modifier: "more premium and expensive looking, refined lighting, luxury finish" },
-  { id: "realistic", label: "Make it more realistic", modifier: "photorealistic, real-world imperfections, documentary honesty, no CGI look" },
-  { id: "brighter", label: "Make it brighter", modifier: "brighter exposure, airier highlights, lighter overall mood" },
-  { id: "darker", label: "Make it moodier", modifier: "darker moodier grade, deeper shadows, low-key lighting" },
-  { id: "wider", label: "Make it wider", modifier: "wider framing with more room for headline text on the left" },
-  { id: "mobile", label: "Create a mobile version", modifier: "vertical-friendly framing with the subject centred and safe margins for phone screens" },
-  { id: "brand", label: "Match my brand", modifier: "colour grade tuned to the brand palette, brand colours present in the environment" },
-  { id: "subject", label: "Change the subject", modifier: "a different subject from the same world, clearly not a repeat of the previous frame" },
-  { id: "background", label: "Change the background", modifier: "a different background environment, same subject treatment" },
-  { id: "clean-bg", label: "Simple background", modifier: "plain uncluttered background so text overlays stay readable" },
+  {
+    id: "premium",
+    label: "Make it more premium",
+    modifier: "more premium and expensive looking, refined lighting, luxury finish",
+  },
+  {
+    id: "realistic",
+    label: "Make it more realistic",
+    modifier: "photorealistic, real-world imperfections, documentary honesty, no CGI look",
+  },
+  {
+    id: "brighter",
+    label: "Make it brighter",
+    modifier: "brighter exposure, airier highlights, lighter overall mood",
+  },
+  {
+    id: "darker",
+    label: "Make it moodier",
+    modifier: "darker moodier grade, deeper shadows, low-key lighting",
+  },
+  {
+    id: "wider",
+    label: "Make it wider",
+    modifier: "wider framing with more room for headline text on the left",
+  },
+  {
+    id: "mobile",
+    label: "Create a mobile version",
+    modifier:
+      "vertical-friendly framing with the subject centred and safe margins for phone screens",
+  },
+  {
+    id: "brand",
+    label: "Match my brand",
+    modifier: "colour grade tuned to the brand palette, brand colours present in the environment",
+  },
+  {
+    id: "subject",
+    label: "Change the subject",
+    modifier: "a different subject from the same world, clearly not a repeat of the previous frame",
+  },
+  {
+    id: "background",
+    label: "Change the background",
+    modifier: "a different background environment, same subject treatment",
+  },
+  {
+    id: "clean-bg",
+    label: "Simple background",
+    modifier: "plain uncluttered background so text overlays stay readable",
+  },
 ] as const;
 
 export type RefinementId = (typeof REFINEMENTS)[number]["id"];
@@ -410,7 +531,8 @@ export function buildImageBrief(input: {
         ? `${shot.subjectHint} being carried out professionally`
         : (shot.subjectHint ?? direction.subjects[0]!);
 
-  const palette = [input.primaryColor, input.accentColor].filter(Boolean).join(" and ") || "the brand palette";
+  const palette =
+    [input.primaryColor, input.accentColor].filter(Boolean).join(" and ") || "the brand palette";
   const place = input.city ? ` in a ${input.city} setting` : "";
   const refinementText = (input.refinements ?? [])
     .map((id) => REFINEMENTS.find((r) => r.id === id)?.modifier)
@@ -484,18 +606,27 @@ export function checkImageQuality(input: {
 
   if (width && height) {
     if (width < 1200 && (input.slot === "hero" || input.slot === "cta")) {
-      issues.push({ level: "fix", message: `Only ${width}px wide — hero images look soft below 1200px.` });
+      issues.push({
+        level: "fix",
+        message: `Only ${width}px wide — hero images look soft below 1200px.`,
+      });
     }
     const ratio = width / height;
     if (input.slot === "hero" && (ratio < 1.4 || ratio > 2.2)) {
-      issues.push({ level: "warn", message: "Shape is off for a banner — it will crop hard on desktop." });
+      issues.push({
+        level: "warn",
+        message: "Shape is off for a banner — it will crop hard on desktop.",
+      });
     }
   }
   if (sizeBytes && sizeBytes > 600 * 1024) {
     issues.push({ level: "warn", message: "Over 600 KB — it will slow the page on mobile data." });
   }
   if (!altText || !altText.trim()) {
-    issues.push({ level: "fix", message: "No alt text, so search engines and screen readers can't read it." });
+    issues.push({
+      level: "fix",
+      message: "No alt text, so search engines and screen readers can't read it.",
+    });
   }
   return issues;
 }

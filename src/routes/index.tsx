@@ -24,7 +24,11 @@ import { LongTermValue } from "@/components/marketing/ConversionKit";
 import { AiClarity, AutomationFlow, SleepEngine } from "@/components/marketing/AiClarity";
 import { ProductTour } from "@/components/marketing/ProductTour";
 import { ValueStack } from "@/components/marketing/ValueStack";
-import { FreeAccessBanner, FreeAccessButton, FreeAccessSection } from "@/components/marketing/FreeAccess";
+import {
+  FreeAccessBanner,
+  FreeAccessButton,
+  FreeAccessSection,
+} from "@/components/marketing/FreeAccess";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
@@ -105,7 +109,6 @@ const PROBLEMS = [
   },
 ];
 
-
 /** Every capability stated as the outcome it produces for the owner. */
 const OUTCOMES = [
   {
@@ -177,8 +180,10 @@ function PriceLine({ className = "" }: { className?: string }) {
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
       <span className="gold-hl">{GROWTH_SYSTEM.fullAccessTrialDays} days free full access</span> ·{" "}
-      <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span> ·{" "}
-      <span className="gold-hl">first month free</span> · then{" "}
+      <span className="font-medium text-foreground">
+        {usd(GROWTH_SYSTEM.setupPrice)} one-time setup
+      </span>{" "}
+      · <span className="gold-hl">first month free</span> · then{" "}
       <span className="font-medium text-foreground">{usd(GROWTH_SYSTEM.monthlyPrice)}/month</span> ·
       Cancel anytime
     </p>
@@ -328,7 +333,12 @@ function Landing() {
                 </p>
               </div>
               <div className="flex flex-col gap-2.5">
-                <Button asChild variant="signal" size="lg" className="h-auto py-3 leading-snug whitespace-normal">
+                <Button
+                  asChild
+                  variant="signal"
+                  size="lg"
+                  className="h-auto py-3 leading-snug whitespace-normal"
+                >
                   <Link to="/growth-assessment">
                     GET MY FREE GROWTH SCORE <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
@@ -414,7 +424,9 @@ function Landing() {
                 >
                   <Link to="/get-started">{GROWTH_SYSTEM.ctaShort}</Link>
                 </Button>
-                <p className="mt-2.5 text-[12px] text-muted-foreground">{GROWTH_SYSTEM.explainer}</p>
+                <p className="mt-2.5 text-[12px] text-muted-foreground">
+                  {GROWTH_SYSTEM.explainer}
+                </p>
               </div>
               <div className="min-w-0 bg-background/40 p-6 sm:p-7">
                 <p className="eyebrow">Everything included</p>
@@ -495,7 +507,8 @@ function Landing() {
               ))}
             </ul>
             <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-muted-foreground">
-              <span className="text-foreground">Also built for:</span> {TRUST_INDUSTRIES.join(" · ")}.
+              <span className="text-foreground">Also built for:</span>{" "}
+              {TRUST_INDUSTRIES.join(" · ")}.
             </p>
           </div>
         </section>

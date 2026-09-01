@@ -5,7 +5,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getPaymentConfig = createServerFn({ method: "GET" }).handler(async () => {
   const { paypalConfig } = await import("@/lib/paypal.server");
   const config = paypalConfig();
-  if (!config) return { configured: false as const, environment: "sandbox" as const, clientId: null, webhookConfigured: false };
+  if (!config)
+    return {
+      configured: false as const,
+      environment: "sandbox" as const,
+      clientId: null,
+      webhookConfigured: false,
+    };
   return {
     configured: true as const,
     environment: config.environment,
@@ -88,7 +94,10 @@ export const createPaypalOrder = createServerFn({ method: "POST" })
         .from("payments")
         .update({ status: "failed", failure_reason: "Order creation failed" })
         .eq("id", payment.id);
-      return { ok: false as const, error: "PayPal could not start this checkout. Please try again." };
+      return {
+        ok: false as const,
+        error: "PayPal could not start this checkout. Please try again.",
+      };
     }
   });
 
@@ -96,13 +105,17 @@ export const createPaypalOrder = createServerFn({ method: "POST" })
 export const capturePaypalOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { orderId: string }) => {
-    const orderId = String(input?.orderId ?? "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 40);
+    const orderId = String(input?.orderId ?? "")
+      .replace(/[^A-Za-z0-9-]/g, "")
+      .slice(0, 40);
     if (!orderId) throw new Error("Missing PayPal order");
     return { orderId };
   })
   .handler(async ({ data, context }) => {
-    const { paypalConfig, capturePayPalOrder, getPayPalOrder } = await import("@/lib/paypal.server");
-    const { adminClient, recordOrderResult, logPaymentError } = await import("@/lib/payments.server");
+    const { paypalConfig, capturePayPalOrder, getPayPalOrder } =
+      await import("@/lib/paypal.server");
+    const { adminClient, recordOrderResult, logPaymentError } =
+      await import("@/lib/payments.server");
     const config = paypalConfig();
     if (!config) return { ok: false as const, error: "PayPal is not configured yet." };
 
@@ -170,7 +183,9 @@ export const capturePaypalOrder = createServerFn({ method: "POST" })
 export const cancelPaypalOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { orderId: string }) => ({
-    orderId: String(input?.orderId ?? "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 40),
+    orderId: String(input?.orderId ?? "")
+      .replace(/[^A-Za-z0-9-]/g, "")
+      .slice(0, 40),
   }))
   .handler(async ({ data, context }) => {
     if (!data.orderId) return { ok: false as const };
@@ -210,27 +225,40 @@ export const refundPayment = createServerFn({ method: "POST" })
     if (!(roles ?? []).some((r) => r.role === "super_admin")) throw new Error("Forbidden");
 
     const { paypalConfig, refundPayPalCapture } = await import("@/lib/paypal.server");
-    const { adminClient, logPaymentActivity, logPaymentError } = await import("@/lib/payments.server");
+    const { adminClient, logPaymentActivity, logPaymentError } =
+      await import("@/lib/payments.server");
     const config = paypalConfig();
     if (!config) return { ok: false as const, error: "PayPal is not configured yet." };
 
     const admin = await adminClient();
-    const { data: payment } = await admin.from("payments").select("*").eq("id", data.paymentId).single();
-    if (!payment?.paypal_capture_id || (payment.status !== "completed" && payment.status !== "partially_refunded")) {
+    const { data: payment } = await admin
+      .from("payments")
+      .select("*")
+      .eq("id", data.paymentId)
+      .single();
+    if (
+      !payment?.paypal_capture_id ||
+      (payment.status !== "completed" && payment.status !== "partially_refunded")
+    ) {
       return { ok: false as const, error: "Only completed PayPal payments can be refunded." };
     }
     const remaining = Number(payment.amount) - Number(payment.refunded_amount ?? 0);
-    if (remaining <= 0.005) return { ok: false as const, error: "This payment has already been fully refunded." };
+    if (remaining <= 0.005)
+      return { ok: false as const, error: "This payment has already been fully refunded." };
     if (data.amount && data.amount > remaining + 0.005) {
-      return { ok: false as const, error: `The most that can still be refunded is ${remaining.toFixed(2)}.` };
+      return {
+        ok: false as const,
+        error: `The most that can still be refunded is ${remaining.toFixed(2)}.`,
+      };
     }
-
 
     try {
       const refund = await refundPayPalCapture(
         config,
         payment.paypal_capture_id,
-        data.amount ? { value: data.amount.toFixed(2), currency_code: payment.currency } : undefined,
+        data.amount
+          ? { value: data.amount.toFixed(2), currency_code: payment.currency }
+          : undefined,
       );
       if (refund.status !== "COMPLETED" && refund.status !== "PENDING") {
         return { ok: false as const, error: `PayPal refund status: ${refund.status}` };

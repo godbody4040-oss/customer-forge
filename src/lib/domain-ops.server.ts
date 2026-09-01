@@ -10,10 +10,16 @@ import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server"
 
 type DnsAnswer = { name: string; type: number; data: string };
 
-async function dnsQuery(name: string, type: "A" | "AAAA" | "CNAME" | "TXT" | "MX"): Promise<DnsAnswer[]> {
-  const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`, {
-    headers: { accept: "application/dns-json" },
-  });
+async function dnsQuery(
+  name: string,
+  type: "A" | "AAAA" | "CNAME" | "TXT" | "MX",
+): Promise<DnsAnswer[]> {
+  const res = await fetch(
+    `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,
+    {
+      headers: { accept: "application/dns-json" },
+    },
+  );
   if (!res.ok) throw new Error("DNS lookup failed");
   const json = (await res.json()) as { Answer?: DnsAnswer[] };
   return json.Answer ?? [];
@@ -34,7 +40,8 @@ export type HopResult = {
  */
 async function guardedFetch(url: string): Promise<Response> {
   const parsed = new URL(url);
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("Unsupported address");
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
+    throw new Error("Unsupported address");
   if (!isFetchableHostname(parsed.hostname)) throw new Error("Not a public domain");
   const [a, aaaa] = await Promise.all([
     dnsQuery(parsed.hostname, "A").catch(() => [] as DnsAnswer[]),
@@ -59,7 +66,13 @@ async function probe(url: string): Promise<HopResult> {
       error: null,
     };
   } catch (error) {
-    return { url, status: null, location: null, ok: false, error: error instanceof Error ? error.message : "No response" };
+    return {
+      url,
+      status: null,
+      location: null,
+      ok: false,
+      error: error instanceof Error ? error.message : "No response",
+    };
   }
 }
 
@@ -126,7 +139,8 @@ export async function checkCrawlSignals(origin: string) {
   try {
     if (home.ok) {
       const html = await (await guardedFetch(`${origin}/`)).text();
-      canonicalTag = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1] ?? null;
+      canonicalTag =
+        html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1] ?? null;
     }
   } catch {
     /* keep the measured default */
@@ -143,10 +157,16 @@ export async function checkCrawlSignals(origin: string) {
 export async function domainSeoReport(domain: string, preference: HostPreference) {
   const target = canonicalHost(domain, preference)!;
   const origin = `https://${target}`;
-  const [redirects, crawl] = await Promise.all([checkRedirects(domain, preference), checkCrawlSignals(origin)]);
+  const [redirects, crawl] = await Promise.all([
+    checkRedirects(domain, preference),
+    checkCrawlSignals(origin),
+  ]);
 
   const canonicalMatches = crawl.home.canonical
-    ? crawl.home.canonical.replace(/^https?:\/\//, "").replace(/\/$/, "").startsWith(target)
+    ? crawl.home.canonical
+        .replace(/^https?:\/\//, "")
+        .replace(/\/$/, "")
+        .startsWith(target)
     : false;
 
   const issues: { label: string; fix: string }[] = [];
@@ -156,11 +176,20 @@ export async function domainSeoReport(domain: string, preference: HostPreference
       fix: "Wait for DNS and the certificate to finish, then re-run this report.",
     });
   if (!crawl.home.reachable)
-    issues.push({ label: "The homepage didn't answer on your domain", fix: "Publish the website, then re-run the report." });
+    issues.push({
+      label: "The homepage didn't answer on your domain",
+      fix: "Publish the website, then re-run the report.",
+    });
   if (crawl.robots.blocksEverything)
-    issues.push({ label: "robots.txt blocks all crawlers", fix: "Allow crawling so Google can index the site." });
+    issues.push({
+      label: "robots.txt blocks all crawlers",
+      fix: "Allow crawling so Google can index the site.",
+    });
   if (!crawl.sitemap.reachable || crawl.sitemap.urls === 0)
-    issues.push({ label: "No sitemap found on your domain", fix: "Publish the site so /sitemap.xml is served." });
+    issues.push({
+      label: "No sitemap found on your domain",
+      fix: "Publish the site so /sitemap.xml is served.",
+    });
   if (!canonicalMatches)
     issues.push({
       label: "The canonical tag doesn't point at your domain yet",
@@ -187,8 +216,17 @@ export async function checkEmailForwardingDns(domain: string, provider: EmailFor
     dnsQuery(bare, "TXT").catch(() => [] as DnsAnswer[]),
   ]);
 
-  const mxHosts = mx.filter((r) => r.type === 15).map((r) => r.data.replace(/^\d+\s+/, "").replace(/\.$/, "").toLowerCase());
-  const txtValues = txt.filter((r) => r.type === 16).map((r) => r.data.replace(/"/g, "").trim().toLowerCase());
+  const mxHosts = mx
+    .filter((r) => r.type === 15)
+    .map((r) =>
+      r.data
+        .replace(/^\d+\s+/, "")
+        .replace(/\.$/, "")
+        .toLowerCase(),
+    );
+  const txtValues = txt
+    .filter((r) => r.type === 16)
+    .map((r) => r.data.replace(/"/g, "").trim().toLowerCase());
 
   const mxOk = mxHosts.some((host) => host.endsWith(expectedMx));
   const spfOk =

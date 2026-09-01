@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { isTrialActive, trialEndsAtMs, trialHoursLeft, newTrialEndsAt, TRIAL_DAYS } from "@/lib/trial";
+import {
+  isTrialActive,
+  trialEndsAtMs,
+  trialHoursLeft,
+  newTrialEndsAt,
+  TRIAL_DAYS,
+} from "@/lib/trial";
 
 const DAY = 86_400_000;
 
@@ -19,8 +25,20 @@ describe("cross-session free-access trial", () => {
 
   it("keeps access on relogin even if subscription status drifted to past_due/canceled", () => {
     const createdAt = new Date(Date.now() - 2 * DAY).toISOString();
-    expect(isTrialActive({ subscription_status: "past_due", trial_ends_at: null, created_at: createdAt })).toBe(true);
-    expect(isTrialActive({ subscription_status: "canceled", trial_ends_at: null, created_at: createdAt })).toBe(true);
+    expect(
+      isTrialActive({
+        subscription_status: "past_due",
+        trial_ends_at: null,
+        created_at: createdAt,
+      }),
+    ).toBe(true);
+    expect(
+      isTrialActive({
+        subscription_status: "canceled",
+        trial_ends_at: null,
+        created_at: createdAt,
+      }),
+    ).toBe(true);
   });
 
   it("uses the explicit trial_ends_at when it is later than the created_at window", () => {
@@ -32,7 +50,13 @@ describe("cross-session free-access trial", () => {
 
   it("denies access after the 3-day window has expired", () => {
     const createdAt = new Date(Date.now() - (TRIAL_DAYS + 1) * DAY).toISOString();
-    expect(isTrialActive({ subscription_status: "trialing", trial_ends_at: null, created_at: createdAt })).toBe(false);
+    expect(
+      isTrialActive({
+        subscription_status: "trialing",
+        trial_ends_at: null,
+        created_at: createdAt,
+      }),
+    ).toBe(false);
   });
 
   it("stamps new workspaces with a full 3-day window", () => {

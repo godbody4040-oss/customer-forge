@@ -16,7 +16,8 @@ export const Route = createFileRoute("/_authenticated/app/welcome")({
       { title: "Welcome to Revora — your system is being set up" },
       {
         name: "description",
-        content: "Your Revora Growth System payment confirmation, subscription status and onboarding next steps.",
+        content:
+          "Your Revora Growth System payment confirmation, subscription status and onboarding next steps.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -100,7 +101,11 @@ function WelcomePage() {
           }
         />
 
-        <MetricCard label="Workspace" value={org?.name ?? "—"} hint={org?.slug ? `${org.slug}.revora.app` : ""} />
+        <MetricCard
+          label="Workspace"
+          value={org?.name ?? "—"}
+          hint={org?.slug ? `${org.slug}.revora.app` : ""}
+        />
       </div>
 
       <Panel className="p-5">
@@ -143,7 +148,8 @@ function WelcomePage() {
         </ul>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Pill tone="neutral">
-            <Clock className="mr-1 inline size-3" /> Billed {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
+            <Clock className="mr-1 inline size-3" /> Billed {usdExact(GROWTH_SYSTEM.monthlyPrice)}
+            /month
           </Pill>
           <Button asChild variant="ghost" size="sm">
             <Link to="/app/billing">View billing</Link>

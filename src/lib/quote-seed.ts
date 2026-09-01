@@ -32,13 +32,18 @@ export async function seedQuoteCalculator(
   if (error || !form) return null;
   const formId = form.id as string;
 
-  const questions: { label: string; helper: string; options: { label: string; modifier: number; type: string }[] }[] = [
+  const questions: {
+    label: string;
+    helper: string;
+    options: { label: string; modifier: number; type: string }[];
+  }[] = [
     {
       label: "Which service do you need?",
       helper: "Pick the closest match — we'll confirm the details.",
-      options: (serviceNames.length ? serviceNames.slice(0, 4) : ["Standard service", "Premium service"]).map(
-        (name, index) => ({ label: name, modifier: index * 60, type: "fixed" }),
-      ),
+      options: (serviceNames.length
+        ? serviceNames.slice(0, 4)
+        : ["Standard service", "Premium service"]
+      ).map((name, index) => ({ label: name, modifier: index * 60, type: "fixed" })),
     },
     {
       label: "How big is the job?",

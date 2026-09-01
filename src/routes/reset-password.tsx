@@ -111,48 +111,45 @@ function ResetPasswordPage() {
               </Link>
             </div>
           ) : (
-
-
-          <form className="panel mt-6 space-y-4 p-5" onSubmit={handleSubmit}>
-            <div className="space-y-1.5">
-              <Label htmlFor="rp-password">New password</Label>
-              <Input
-                id="rp-password"
-                name="new-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-                minLength={8}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="rp-confirm">Confirm password</Label>
-              <Input
-                id="rp-confirm"
-                name="confirm-password"
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                autoComplete="new-password"
-                minLength={8}
-                required
-              />
-            </div>
-            {error ? <ErrorNote message={error} /> : null}
-            <Button type="submit" variant="signal" className="w-full" disabled={busy || !ready}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              Update password
-            </Button>
-            {ready ? null : (
-              <p className="text-center text-[11.5px] text-muted-foreground">
-                Waiting for your reset link — open it in this browser to unlock this form.
-              </p>
-            )}
-          </form>
+            <form className="panel mt-6 space-y-4 p-5" onSubmit={handleSubmit}>
+              <div className="space-y-1.5">
+                <Label htmlFor="rp-password">New password</Label>
+                <Input
+                  id="rp-password"
+                  name="new-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="rp-confirm">Confirm password</Label>
+                <Input
+                  id="rp-confirm"
+                  name="confirm-password"
+                  type="password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </div>
+              {error ? <ErrorNote message={error} /> : null}
+              <Button type="submit" variant="signal" className="w-full" disabled={busy || !ready}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+                Update password
+              </Button>
+              {ready ? null : (
+                <p className="text-center text-[11.5px] text-muted-foreground">
+                  Waiting for your reset link — open it in this browser to unlock this form.
+                </p>
+              )}
+            </form>
           )}
-
         </div>
       </main>
     </div>

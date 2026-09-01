@@ -36,7 +36,12 @@ export type VariationFacts = {
 };
 
 export function variationSeed(facts: VariationFacts): string {
-  return [facts.organizationId ?? "", facts.businessName ?? "", facts.industry ?? "", facts.city ?? ""]
+  return [
+    facts.organizationId ?? "",
+    facts.businessName ?? "",
+    facts.industry ?? "",
+    facts.city ?? "",
+  ]
     .join("|")
     .toLowerCase();
 }
@@ -91,33 +96,64 @@ export type HeadingSlot = keyof typeof HEADINGS;
 
 const PROCESS_SETS = [
   [
-    { label: "1. Tell us what you need", body: "Answer a few questions and get an instant price range." },
-    { label: "2. We confirm the details", body: "We check the job, confirm the price and hold your slot." },
-    { label: "3. We get it done", body: "You get a confirmation, a reminder and the work on the day." },
+    {
+      label: "1. Tell us what you need",
+      body: "Answer a few questions and get an instant price range.",
+    },
+    {
+      label: "2. We confirm the details",
+      body: "We check the job, confirm the price and hold your slot.",
+    },
+    {
+      label: "3. We get it done",
+      body: "You get a confirmation, a reminder and the work on the day.",
+    },
   ],
   [
-    { label: "1. Send the details", body: "A short form tells us the job, the size and where you are." },
+    {
+      label: "1. Send the details",
+      body: "A short form tells us the job, the size and where you are.",
+    },
     { label: "2. Get your price", body: "You see a clear price range before anyone calls you." },
-    { label: "3. Choose your time", body: "Pick a slot that works, then get a reminder before the day." },
+    {
+      label: "3. Choose your time",
+      body: "Pick a slot that works, then get a reminder before the day.",
+    },
   ],
   [
-    { label: "1. Quick look at the job", body: "Tell us what needs doing — photos help but aren't required." },
-    { label: "2. Straight answer", body: "We come back with the price and what's included, in writing." },
-    { label: "3. Booked and done", body: "We turn up when we said, finish the job and follow up after." },
+    {
+      label: "1. Quick look at the job",
+      body: "Tell us what needs doing — photos help but aren't required.",
+    },
+    {
+      label: "2. Straight answer",
+      body: "We come back with the price and what's included, in writing.",
+    },
+    {
+      label: "3. Booked and done",
+      body: "We turn up when we said, finish the job and follow up after.",
+    },
   ],
 ] as const;
 
 const HEADLINE_PATTERNS = [
-  ({ trade, area }: HeadlineFacts) => (area ? `${trade} in ${area}, done right` : `${trade}, done right`),
   ({ trade, area }: HeadlineFacts) =>
-    area ? `${area}'s go-to team for ${trade.toLowerCase()}` : `Your go-to team for ${trade.toLowerCase()}`,
+    area ? `${trade} in ${area}, done right` : `${trade}, done right`,
   ({ trade, area }: HeadlineFacts) =>
-    area ? `Book ${trade.toLowerCase()} in ${area} without the phone tag` : `Book ${trade.toLowerCase()} without the phone tag`,
+    area
+      ? `${area}'s go-to team for ${trade.toLowerCase()}`
+      : `Your go-to team for ${trade.toLowerCase()}`,
+  ({ trade, area }: HeadlineFacts) =>
+    area
+      ? `Book ${trade.toLowerCase()} in ${area} without the phone tag`
+      : `Book ${trade.toLowerCase()} without the phone tag`,
   ({ trade, area }: HeadlineFacts) =>
     area ? `${trade} across ${area} — priced up front` : `${trade} — priced up front`,
   ({ name, trade }: HeadlineFacts) => `${name}: ${trade.toLowerCase()} you can book today`,
   ({ trade, area }: HeadlineFacts) =>
-    area ? `Straightforward ${trade.toLowerCase()} for ${area}` : `Straightforward ${trade.toLowerCase()}`,
+    area
+      ? `Straightforward ${trade.toLowerCase()} for ${area}`
+      : `Straightforward ${trade.toLowerCase()}`,
 ] as const;
 
 export type HeadlineFacts = { name: string; trade: string; area: string | null };

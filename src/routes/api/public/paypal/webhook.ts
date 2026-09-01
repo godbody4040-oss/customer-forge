@@ -8,10 +8,10 @@ export const Route = createFileRoute("/api/public/paypal/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { paypalConfig, verifyPayPalWebhook, getPayPalOrder } = await import("@/lib/paypal.server");
-        const { adminClient, recordOrderResult, logPaymentActivity, logPaymentError } = await import(
-          "@/lib/payments.server"
-        );
+        const { paypalConfig, verifyPayPalWebhook, getPayPalOrder } =
+          await import("@/lib/paypal.server");
+        const { adminClient, recordOrderResult, logPaymentActivity, logPaymentError } =
+          await import("@/lib/payments.server");
 
         const config = paypalConfig();
         // PayPal isn't connected on this environment. Acknowledge and drop the
@@ -72,17 +72,27 @@ export const Route = createFileRoute("/api/public/paypal/webhook")({
         if (!payment) return new Response("ok", { status: 200 });
 
         try {
-          if (event.event_type.startsWith("PAYMENT.CAPTURE.REFUND") || event.event_type === "PAYMENT.CAPTURE.REFUNDED") {
+          if (
+            event.event_type.startsWith("PAYMENT.CAPTURE.REFUND") ||
+            event.event_type === "PAYMENT.CAPTURE.REFUNDED"
+          ) {
             const { data: updated } = await admin
               .from("payments")
-              .update({ status: "refunded", refund_status: resource.status ?? "COMPLETED", refunded_amount: payment.amount })
+              .update({
+                status: "refunded",
+                refund_status: resource.status ?? "COMPLETED",
+                refunded_amount: payment.amount,
+              })
               .eq("id", payment.id)
               .select("*")
               .single();
             if (updated) await logPaymentActivity(admin, updated, "refunded");
           } else if (event.event_type.startsWith("CUSTOMER.DISPUTE")) {
             await admin.from("payments").update({ status: "disputed" }).eq("id", payment.id);
-          } else if (event.event_type === "PAYMENT.CAPTURE.DENIED" || event.event_type === "PAYMENT.CAPTURE.DECLINED") {
+          } else if (
+            event.event_type === "PAYMENT.CAPTURE.DENIED" ||
+            event.event_type === "PAYMENT.CAPTURE.DECLINED"
+          ) {
             const { data: updated } = await admin
               .from("payments")
               .update({ status: "failed", failure_reason: resource.status ?? "Capture denied" })
@@ -96,7 +106,10 @@ export const Route = createFileRoute("/api/public/paypal/webhook")({
             await recordOrderResult(admin, payment, order);
           }
 
-          await admin.from("payment_events").update({ processed: true }).eq("provider_event_id", event.id);
+          await admin
+            .from("payment_events")
+            .update({ processed: true })
+            .eq("provider_event_id", event.id);
           return new Response("ok", { status: 200 });
         } catch (error) {
           logPaymentError("webhook-process", {

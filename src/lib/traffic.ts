@@ -22,7 +22,13 @@ export const TRAFFIC_RANGES = [
   { value: "90", label: "90 days" },
 ] as const;
 
-const CONVERSION_EVENTS = new Set(["lead", "quote_request", "booking", "call_click", "form_submit"]);
+const CONVERSION_EVENTS = new Set([
+  "lead",
+  "quote_request",
+  "booking",
+  "call_click",
+  "form_submit",
+]);
 
 const dayKey = (iso: string) => iso.slice(0, 10);
 
@@ -40,8 +46,10 @@ export function summarizeTraffic(events: TrafficEvent[], days: number) {
   });
 
   const views = (list: TrafficEvent[]) => list.filter((e) => e.event_type === "page_view");
-  const conversions = (list: TrafficEvent[]) => list.filter((e) => CONVERSION_EVENTS.has(e.event_type));
-  const visitors = (list: TrafficEvent[]) => new Set(list.map((e) => e.session_id ?? e.created_at)).size;
+  const conversions = (list: TrafficEvent[]) =>
+    list.filter((e) => CONVERSION_EVENTS.has(e.event_type));
+  const visitors = (list: TrafficEvent[]) =>
+    new Set(list.map((e) => e.session_id ?? e.created_at)).size;
 
   const currentViews = views(inWindow);
   const previousViews = views(previous);
@@ -75,7 +83,9 @@ export function summarizeTraffic(events: TrafficEvent[], days: number) {
     days,
     views: viewTotal,
     previousViews: previousTotal,
-    changePct: previousTotal ? Math.round(((viewTotal - previousTotal) / previousTotal) * 100) : null,
+    changePct: previousTotal
+      ? Math.round(((viewTotal - previousTotal) / previousTotal) * 100)
+      : null,
     visitors: visitors(currentViews),
     conversions: conversionTotal,
     conversionRate: viewTotal ? Math.round((conversionTotal / viewTotal) * 1000) / 10 : 0,
@@ -84,7 +94,10 @@ export function summarizeTraffic(events: TrafficEvent[], days: number) {
     pages: count(currentViews, (e) => e.path ?? "/").slice(0, 10),
     devices: count(currentViews, (e) => e.device ?? "unknown"),
     daily,
-    busiestDay: daily.reduce((best, day) => (day.views > best.views ? day : best), daily[0] ?? { day: "", views: 0, conversions: 0 }),
+    busiestDay: daily.reduce(
+      (best, day) => (day.views > best.views ? day : best),
+      daily[0] ?? { day: "", views: 0, conversions: 0 },
+    ),
     hasEnoughData: viewTotal >= 20,
   };
 }
@@ -96,7 +109,13 @@ export type TrafficIssue = {
   detail: string;
   fix: string;
   /** Where in the app the client goes to fix it. */
-  href: "/app/launch" | "/app/analytics" | "/app/domain" | "/app/website" | "/app/quotes" | "/app/services";
+  href:
+    | "/app/launch"
+    | "/app/analytics"
+    | "/app/domain"
+    | "/app/website"
+    | "/app/quotes"
+    | "/app/services";
 };
 
 /** Problems worth telling a business owner about, with the place to fix each. */
@@ -222,7 +241,8 @@ export function detectTrafficIssues(input: {
       key: "tracking_gap",
       severity: "info",
       title: "Leads recorded without matching visits",
-      detail: "Enquiries came in but page views weren't tracked — usually an ad blocker or an old published version.",
+      detail:
+        "Enquiries came in but page views weren't tracked — usually an ad blocker or an old published version.",
       fix: "Re-publish the site so tracking is up to date.",
       href: "/app/launch",
     });

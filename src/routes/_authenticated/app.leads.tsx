@@ -42,7 +42,10 @@ export const Route = createFileRoute("/_authenticated/app/leads")({
   head: () => ({
     meta: [
       { title: "Lead pipeline — Revora" },
-      { name: "description", content: "Work every lead from new to booked with calls, texts and follow-ups." },
+      {
+        name: "description",
+        content: "Work every lead from new to booked with calls, texts and follow-ups.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -245,7 +248,9 @@ function LeadsPage() {
                     >
                       <p className="truncate text-[13px] font-medium">{lead.name}</p>
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                        {[lead.service_interest, sourceLabel(lead.source)].filter(Boolean).join(" · ")}
+                        {[lead.service_interest, sourceLabel(lead.source)]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="tnum text-[11px] text-muted-foreground">
@@ -311,7 +316,10 @@ function LeadsPage() {
                         onClick={() =>
                           action.mutate({
                             lead: leadRef,
-                            patch: { last_contacted_at: new Date().toISOString(), status: selected.status === "new" ? "contacted" : selected.status },
+                            patch: {
+                              last_contacted_at: new Date().toISOString(),
+                              status: selected.status === "new" ? "contacted" : selected.status,
+                            },
                             activity: { kind: "call", body: `Called ${selected.phone}` },
                           })
                         }
@@ -446,9 +454,10 @@ function LeadsPage() {
                     >
                       <option value="">Unassigned</option>
                       {(team ?? []).map((member) => {
-                        const profile = member.profiles as
-                          | { full_name?: string | null; email?: string | null }
-                          | null;
+                        const profile = member.profiles as {
+                          full_name?: string | null;
+                          email?: string | null;
+                        } | null;
                         return (
                           <option key={member.id} value={member.user_id}>
                             {profile?.full_name || profile?.email || member.role}
@@ -500,7 +509,10 @@ function LeadsPage() {
                               Date.now() + f.days * 86_400_000,
                             ).toISOString(),
                           },
-                          activity: { kind: "follow_up", body: `Follow-up set ${f.label.toLowerCase()}.` },
+                          activity: {
+                            kind: "follow_up",
+                            body: `Follow-up set ${f.label.toLowerCase()}.`,
+                          },
                         })
                       }
                     >

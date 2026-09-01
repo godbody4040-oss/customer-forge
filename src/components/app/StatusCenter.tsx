@@ -10,7 +10,13 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
-import { useAppointments, useAutomationRuns, useAutomations, useLeads, useWebsiteSettings } from "@/lib/queries";
+import {
+  useAppointments,
+  useAutomationRuns,
+  useAutomations,
+  useLeads,
+  useWebsiteSettings,
+} from "@/lib/queries";
 import { useProductionStatus } from "@/lib/production.hooks";
 import { useTrialCountdown } from "@/lib/trial-clock";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
@@ -114,7 +120,6 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
       to: "/app/website",
     };
 
-
     const domainState = DOMAIN_LABEL[settings?.domain_status ?? "not_connected"] ?? {
       value: "Not connected",
       tone: "neutral" as Tone,
@@ -124,7 +129,9 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
       label: "Domain",
       value: domainState.value,
       tone: domainState.tone,
-      hint: settings?.custom_domain ? settings.custom_domain : "Add your own domain when you launch.",
+      hint: settings?.custom_domain
+        ? settings.custom_domain
+        : "Add your own domain when you launch.",
       to: "/app/domain",
     };
 
@@ -175,7 +182,11 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
     const automationTile: Tile = {
       key: "automations",
       label: "Automations",
-      value: automations ? (failedRuns > 0 ? `${failedRuns} failed` : `${activeAutomations} active`) : "—",
+      value: automations
+        ? failedRuns > 0
+          ? `${failedRuns} failed`
+          : `${activeAutomations} active`
+        : "—",
       tone: failedRuns > 0 ? "danger" : activeAutomations > 0 ? "signal" : "neutral",
       hint:
         failedRuns > 0
@@ -186,7 +197,18 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
       to: "/app/automations",
     };
 
-    return [website, trial, billing, builder, domain, ssl, launch, leadTile, bookingTile, automationTile];
+    return [
+      website,
+      trial,
+      billing,
+      builder,
+      domain,
+      ssl,
+      launch,
+      leadTile,
+      bookingTile,
+      automationTile,
+    ];
   }, [production, productionPending, settings, leads, appointments, automations, runs, countdown]);
 
   return (

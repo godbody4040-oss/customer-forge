@@ -12,6 +12,9 @@ import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
 import { currency, dateShort, number } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/clients")({
+  head: () => ({
+    meta: [{ title: "Clients — Revora admin" }, { name: "robots", content: "noindex, nofollow" }],
+  }),
   component: AdminClients,
 });
 
@@ -56,7 +59,6 @@ function AdminClients() {
       return matches && state;
     });
   }, [clients.data, search, filter]);
-
 
   return (
     <div className="space-y-5">
@@ -126,13 +128,18 @@ function AdminClients() {
                   {client.city ?? "no city"}
                 </p>
                 <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                  {client.custom_domain ?? `/s/${client.slug}`} · joined {dateShort(client.created_at)} ·{" "}
-                  {number(client.leads)} leads · {number(client.appointments)} bookings
+                  {client.custom_domain ?? `/s/${client.slug}`} · joined{" "}
+                  {dateShort(client.created_at)} · {number(client.leads)} leads ·{" "}
+                  {number(client.appointments)} bookings
                 </p>
                 <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                  {client.setup_paid_at ? `Setup paid ${dateShort(client.setup_paid_at)}` : "Setup unpaid"} ·{" "}
-                  {currency(client.paid_total)} collected
-                  {client.current_period_end ? ` · renews ${dateShort(client.current_period_end)}` : ""}
+                  {client.setup_paid_at
+                    ? `Setup paid ${dateShort(client.setup_paid_at)}`
+                    : "Setup unpaid"}{" "}
+                  · {currency(client.paid_total)} collected
+                  {client.current_period_end
+                    ? ` · renews ${dateShort(client.current_period_end)}`
+                    : ""}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -157,7 +164,6 @@ function AdminClients() {
                 <Pill tone={PUBLISH_STATES[client.publish_state]?.tone ?? "neutral"}>
                   {PUBLISH_STATES[client.publish_state]?.label ?? client.publish_state}
                 </Pill>
-
 
                 <Pill tone={DOMAIN_STATES[client.domain_status]?.tone ?? "neutral"}>
                   {DOMAIN_STATES[client.domain_status]?.label ?? client.domain_status}

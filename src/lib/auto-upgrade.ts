@@ -60,13 +60,21 @@ export type ProposalContext = {
   metaDescription: string | null;
   primaryCtaLabel: string | null;
   publishState: string | null;
-  pages: { id: string; title: string; slug: string; seo_title: string | null; seo_description: string | null; noindex: boolean | null }[];
+  pages: {
+    id: string;
+    title: string;
+    slug: string;
+    seo_title: string | null;
+    seo_description: string | null;
+    noindex: boolean | null;
+  }[];
   businessName: string | null;
   city: string | null;
 };
 
 const blank = (value: unknown) => !(typeof value === "string" && value.trim().length > 0);
-const clip = (value: string, max = 160) => (value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`);
+const clip = (value: string, max = 160) =>
+  value.length <= max ? value : `${value.slice(0, max - 1).trimEnd()}…`;
 
 /** Builds the approved-before-applied proposal list from audit issues. */
 export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): UpgradeProposal[] {
@@ -78,7 +86,9 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
     out.push(proposal);
   };
   const weightOf = (kind: UpgradeKind) =>
-    issues.filter((issue) => issue.upgrade === kind).reduce((sum, issue) => sum + (issue.max - issue.points), 0);
+    issues
+      .filter((issue) => issue.upgrade === kind)
+      .reduce((sum, issue) => sum + (issue.max - issue.points), 0);
 
   const kinds = new Set(issues.map((issue) => issue.upgrade).filter(Boolean) as UpgradeKind[]);
 
@@ -90,7 +100,11 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
     if (blank(ctx.headline) && ctx.copyHeadline)
       changes.push({ label: "Site headline", before: "(empty)", after: ctx.copyHeadline });
     if (blank(ctx.metaDescription) && ctx.copyMetaDescription)
-      changes.push({ label: "Search description", before: "(empty)", after: clip(ctx.copyMetaDescription) });
+      changes.push({
+        label: "Search description",
+        before: "(empty)",
+        after: clip(ctx.copyMetaDescription),
+      });
     push({
       id: "apply_meta",
       kind: "apply_meta",
@@ -99,7 +113,9 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
       impact: Math.max(weightOf("apply_meta"), 3),
       changes,
       applyable: canFill,
-      ...(canFill ? {} : { needs: "Run the Revora build first so there is drafted copy to promote." }),
+      ...(canFill
+        ? {}
+        : { needs: "Run the Revora build first so there is drafted copy to promote." }),
     });
   }
 
@@ -118,7 +134,14 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
   for (const kind of ["add_cta_section", "add_capture_section", "add_faq_section"] as const) {
     if (!kinds.has(kind)) continue;
     const issue = issues.find((i) => i.upgrade === kind)!;
-    const sectionKind = kind === "add_cta_section" ? "cta" : kind === "add_faq_section" ? "faq" : ctx.goal === "book" ? "booking" : "quote";
+    const sectionKind =
+      kind === "add_cta_section"
+        ? "cta"
+        : kind === "add_faq_section"
+          ? "faq"
+          : ctx.goal === "book"
+            ? "booking"
+            : "quote";
     push({
       id: `${kind}-${issue.pageId ?? "site"}`,
       kind,
@@ -160,8 +183,16 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
       why: "Every page needs its own snippet, or pages compete with each other in search.",
       impact: issue.max,
       changes: [
-        { label: `${page.title} — search title`, before: page.seo_title ?? "(empty)", after: title },
-        { label: `${page.title} — search description`, before: page.seo_description ?? "(empty)", after: description },
+        {
+          label: `${page.title} — search title`,
+          before: page.seo_title ?? "(empty)",
+          after: title,
+        },
+        {
+          label: `${page.title} — search description`,
+          before: page.seo_description ?? "(empty)",
+          after: description,
+        },
       ],
       applyable: true,
       pageId: page.id,
@@ -178,7 +209,13 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
       title: `Let Google list ${issue.scope}`,
       why: "This page is marked noindex, so it can never appear in search results.",
       impact: issue.max,
-      changes: [{ label: `${issue.scope} — search visibility`, before: "hidden (noindex)", after: "listed" }],
+      changes: [
+        {
+          label: `${issue.scope} — search visibility`,
+          before: "hidden (noindex)",
+          after: "listed",
+        },
+      ],
       applyable: true,
       pageId,
       pageTitle: issue.scope,
@@ -194,7 +231,11 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
       why: "Several pages are thin or missing generated content. A rebuild writes them from the facts you already entered.",
       impact: Math.max(weightOf("rebuild_site"), 6),
       changes: [
-        { label: "Pages and copy", before: "current draft (saved as a version first)", after: "regenerated from your business information" },
+        {
+          label: "Pages and copy",
+          before: "current draft (saved as a version first)",
+          after: "regenerated from your business information",
+        },
       ],
       applyable: true,
     });
@@ -207,7 +248,9 @@ export function proposeUpgrades(issues: AuditIssue[], ctx: ProposalContext): Upg
       title: "Publish the site",
       why: "Customers and search engines cannot reach an unpublished site.",
       impact: 9,
-      changes: [{ label: "Publish state", before: ctx.publishState ?? "draft", after: "published" }],
+      changes: [
+        { label: "Publish state", before: ctx.publishState ?? "draft", after: "published" },
+      ],
       applyable: true,
     });
   }

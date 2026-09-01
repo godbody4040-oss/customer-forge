@@ -34,9 +34,13 @@ export function publicClient() {
  * site rendering runs on the server, so it resolves the handful of public
  * fields with the privileged client and returns nothing else.
  */
-export async function publicOrganization(
-  by: { slug: string } | { id: string },
-): Promise<{ id: string; name: string; slug: string; industry: string | null; is_demo: boolean } | null> {
+export async function publicOrganization(by: { slug: string } | { id: string }): Promise<{
+  id: string;
+  name: string;
+  slug: string;
+  industry: string | null;
+  is_demo: boolean;
+} | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   let query = supabaseAdmin
     .from("organizations")
@@ -46,8 +50,6 @@ export async function publicOrganization(
   const { data } = await query.maybeSingle();
   return data ?? null;
 }
-
-
 
 export type SiteSectionSettings = {
   seo?: {
@@ -84,7 +86,6 @@ export type SiteSection = {
   components?: SiteComponent[];
 };
 
-
 /**
  * Reads everything a business website renders. `allowUnpublished` is only ever
  * true behind an authorised, unexpired preview token.
@@ -103,7 +104,6 @@ export async function loadSite(
 
   const org = await publicOrganization({ slug });
 
-
   if (!org?.id) return null;
   const orgId: string = org.id;
 
@@ -115,11 +115,16 @@ export async function loadSite(
 
   // A client site is only served publicly once it is published (or in preview).
   if (!allowUnpublished) {
-    if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview")) return null;
+    if (!gate || (gate.publish_state !== "published" && gate.publish_state !== "preview"))
+      return null;
   }
 
   const [profile, services, settings, social, reviews, galleryRows, quoteForm] = await Promise.all([
-    supabase.from("public_business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+    supabase
+      .from("public_business_profiles")
+      .select("*")
+      .eq("organization_id", orgId)
+      .maybeSingle(),
     supabase
       .from("services")
       .select(
@@ -220,7 +225,8 @@ export async function loadSite(
       if (entry.path && entry.signedUrl) signed.set(entry.path, entry.signedUrl);
     }
   }
-  const resolve = (value: string | null): string | null => (value ? (signed.get(value) ?? value) : value);
+  const resolve = (value: string | null): string | null =>
+    value ? (signed.get(value) ?? value) : value;
 
   // Structured content: the builder's page/section tree. Loads the requested
   // page when one is asked for, otherwise the home page, plus the navigation
@@ -323,7 +329,8 @@ export async function resolvePreviewToken(token: string) {
 
   if (!link) return { ok: false as const, reason: "unknown" as const };
   if (link.revoked) return { ok: false as const, reason: "revoked" as const };
-  if (new Date(link.expires_at).getTime() <= Date.now()) return { ok: false as const, reason: "expired" as const };
+  if (new Date(link.expires_at).getTime() <= Date.now())
+    return { ok: false as const, reason: "expired" as const };
 
   const { data: org } = await supabaseAdmin
     .from("organizations")

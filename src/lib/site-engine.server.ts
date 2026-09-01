@@ -45,7 +45,12 @@ export type CopyFacts = {
   style: string | null;
   goals: string[];
   ctaLabel: string;
-  services: { name: string; description?: string | null; price?: number | null; starting_price?: number | null }[];
+  services: {
+    name: string;
+    description?: string | null;
+    price?: number | null;
+    starting_price?: number | null;
+  }[];
 };
 
 /** Carries the gateway HTTP status so the worker can pause or retry correctly. */
@@ -89,7 +94,6 @@ async function chatJson(
   if (!key)
     throw new AiGatewayError(402, "Revora is writing this build from your own business details.");
 
-
   const response = await fetch(GATEWAY, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
@@ -107,7 +111,11 @@ async function chatJson(
     const body = await response.text().catch(() => "");
     if (response.status === 429) {
       const retryAfter = Number(response.headers.get("retry-after")) || null;
-      throw new AiGatewayError(429, "AI is busy right now. The build will retry automatically.", retryAfter);
+      throw new AiGatewayError(
+        429,
+        "AI is busy right now. The build will retry automatically.",
+        retryAfter,
+      );
     }
     if (response.status === 402) {
       markAiUnavailable();
@@ -115,7 +123,10 @@ async function chatJson(
     }
     if (response.status === 403) {
       markAiUnavailable();
-      throw new AiGatewayError(403, "AI is blocked for this workspace, so Revora built the site from your details.");
+      throw new AiGatewayError(
+        403,
+        "AI is blocked for this workspace, so Revora built the site from your details.",
+      );
     }
 
     console.error("[site-engine] gateway error", response.status, body);
@@ -126,10 +137,14 @@ async function chatJson(
     choices?: { message?: { content?: string } }[];
   };
   const raw = payload.choices?.[0]?.message?.content ?? "";
-  const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const cleaned = raw
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   try {
     const parsed = JSON.parse(cleaned) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("bad shape");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+      throw new Error("bad shape");
     return parsed as Record<string, unknown>;
   } catch {
     throw new Error("The copy engine returned an unexpected response. Try again.");
@@ -165,7 +180,10 @@ const str = (value: unknown, fallback = "") =>
   typeof value === "string" && value.trim() ? value.trim() : fallback;
 
 /** Full website copy pass. */
-export async function generateSiteCopy(facts: CopyFacts, brief?: SiteBrief | null): Promise<SiteCopy> {
+export async function generateSiteCopy(
+  facts: CopyFacts,
+  brief?: SiteBrief | null,
+): Promise<SiteCopy> {
   const data = await chatJson(
     `Return JSON with exactly these keys: heroHeadline (max 70 chars), heroSubheadline (max 160 chars),
 primaryCta (max 24 chars), secondaryCta (max 24 chars), intro (2 sentences),
@@ -177,7 +195,9 @@ metaTitle (max 60 chars), metaDescription (max 155 chars), ogTitle (max 60 chars
     `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.${briefContext(brief)}\n\nFACTS:\n${factSheet(facts)}`,
   );
 
-  const cards = Array.isArray(data["serviceCards"]) ? (data["serviceCards"] as Record<string, unknown>[]) : [];
+  const cards = Array.isArray(data["serviceCards"])
+    ? (data["serviceCards"] as Record<string, unknown>[])
+    : [];
   const faqs = Array.isArray(data["faqs"]) ? (data["faqs"] as Record<string, unknown>[]) : [];
 
   return {
@@ -278,7 +298,15 @@ Rules:
       after: after.slice(0, field === "body" ? 900 : field === "subheading" ? 200 : 90),
     });
   }
-  return { edits, reply: str(data["reply"], edits.length ? "Here are the changes I suggest." : "I couldn't make that change without more information.") };
+  return {
+    edits,
+    reply: str(
+      data["reply"],
+      edits.length
+        ? "Here are the changes I suggest."
+        : "I couldn't make that change without more information.",
+    ),
+  };
 }
 
 /* ---------------------- Business intelligence orchestrator ---------------------- */
@@ -315,7 +343,10 @@ Never assert reviews, credentials, prices, guarantees or history that were not s
     data = await attempt(ANALYSIS_MODEL);
   } catch (error) {
     // Credit and policy failures must surface so the queue can pause correctly.
-    if (error instanceof AiGatewayError && (error.status === 402 || error.status === 403 || error.status === 429))
+    if (
+      error instanceof AiGatewayError &&
+      (error.status === 402 || error.status === 403 || error.status === 429)
+    )
       throw error;
     data = await attempt(COPY_MODEL);
   }
@@ -335,8 +366,12 @@ export function fallbackBrief(facts: CopyFacts): SiteBrief {
       ? facts.description.trim().slice(0, 200)
       : `${facts.businessName} provides ${facts.industry || "local services"}${facts.city ? ` in ${facts.city}` : ""}.`,
     buyer: `People nearby looking for ${facts.industry || "this service"}.`,
-    buyerGoal: bookable ? "Book a time without a back-and-forth." : "Find out what it costs and who to trust.",
-    intents: bookable ? ["ready_to_book", "wants_price", "local_search"] : ["wants_price", "researching", "local_search"],
+    buyerGoal: bookable
+      ? "Book a time without a back-and-forth."
+      : "Find out what it costs and who to trust.",
+    intents: bookable
+      ? ["ready_to_book", "wants_price", "local_search"]
+      : ["wants_price", "researching", "local_search"],
     primaryAction: facts.ctaLabel,
     secondaryAction: "See services",
     objections: [
@@ -344,9 +379,26 @@ export function fallbackBrief(facts: CopyFacts): SiteBrief {
       "Not sure the business covers my area.",
       "Not sure how quickly they can get to me.",
     ],
-    trustNeeds: ["Clear service detail", "A real way to make contact", priced ? "Visible pricing" : "Honest pricing guidance"],
-    qualifyingFields: ["Name", "Phone", "Email", "Service needed", "Location", "Preferred timing", "Notes"],
-    pagePriorities: ["Home", "Services", facts.goals.includes("bookings") ? "Booking" : "Quote", "Contact"],
+    trustNeeds: [
+      "Clear service detail",
+      "A real way to make contact",
+      priced ? "Visible pricing" : "Honest pricing guidance",
+    ],
+    qualifyingFields: [
+      "Name",
+      "Phone",
+      "Email",
+      "Service needed",
+      "Location",
+      "Preferred timing",
+      "Notes",
+    ],
+    pagePriorities: [
+      "Home",
+      "Services",
+      facts.goals.includes("bookings") ? "Booking" : "Quote",
+      "Contact",
+    ],
     toneNotes: "Plain, specific and local. No hype.",
     missingFacts: [
       ...(facts.description ? [] : ["A short description of the business in your own words"]),
@@ -398,7 +450,9 @@ export function fallbackCopy(facts: CopyFacts, brief?: SiteBrief | null): SiteCo
 
   const benefits = [
     area ? `Serving ${area}` : "Local, responsive service",
-    facts.yearsInBusiness ? `${facts.yearsInBusiness}+ years in business` : "Straight answers, no pressure",
+    facts.yearsInBusiness
+      ? `${facts.yearsInBusiness}+ years in business`
+      : "Straight answers, no pressure",
     facts.hasHours ? "Published hours so you know when we work" : "Fast replies to every request",
     priced.length ? "Clear pricing before any work starts" : "A quote before any work starts",
     facts.phone ? "Reach a real person by phone" : "Every request answered",
@@ -413,7 +467,8 @@ export function fallbackCopy(facts: CopyFacts, brief?: SiteBrief | null): SiteCo
     secondaryCta: "See services",
     intro: `${name} provides ${category}${area ? ` in ${area}` : ""}. Send a request and you'll get a clear answer on scope, timing and price.`,
     about: `${
-      facts.description?.trim() || `${name} is a ${category} business${place ? ` based in ${place}` : ""}.`
+      facts.description?.trim() ||
+      `${name} is a ${category} business${place ? ` based in ${place}` : ""}.`
     }\n\n${
       facts.yearsInBusiness
         ? `We've been doing this for ${facts.yearsInBusiness}+ years.`
@@ -433,7 +488,9 @@ export function fallbackCopy(facts: CopyFacts, brief?: SiteBrief | null): SiteCo
     faqs: [
       {
         question: area ? `Do you work in ${area}?` : "What areas do you cover?",
-        answer: area ? `Yes — we cover ${area}.` : "Send a request with your location and we'll confirm coverage.",
+        answer: area
+          ? `Yes — we cover ${area}.`
+          : "Send a request with your location and we'll confirm coverage.",
       },
       {
         question: "How much does it cost?",
@@ -458,8 +515,13 @@ export function fallbackCopy(facts: CopyFacts, brief?: SiteBrief | null): SiteCo
       ? `We work throughout ${area}. If you're just outside it, send a request and we'll tell you honestly.`
       : "Send a request with your location and we'll confirm whether we can reach you.",
     metaTitle: `${name}${place ? ` — ${category} in ${place}` : ` — ${category}`}`.slice(0, 60),
-    metaDescription: `${name} provides ${category}${area ? ` in ${area}` : ""}. ${cta} today.`.slice(0, 155),
+    metaDescription:
+      `${name} provides ${category}${area ? ` in ${area}` : ""}. ${cta} today.`.slice(0, 155),
     ogTitle: `${name}${place ? ` — ${place}` : ""}`.slice(0, 60),
-    ogDescription: `${category.replace(/^\w/, (c) => c.toUpperCase())}${area ? ` in ${area}` : ""} from ${name}.`.slice(0, 155),
+    ogDescription:
+      `${category.replace(/^\w/, (c) => c.toUpperCase())}${area ? ` in ${area}` : ""} from ${name}.`.slice(
+        0,
+        155,
+      ),
   };
 }

@@ -69,7 +69,9 @@ export function readCopy(value: unknown): SiteCopy | null {
     primaryCta: copy.primaryCta ?? "Get in touch",
     secondaryCta: copy.secondaryCta ?? "See services",
     intro: copy.intro ?? "",
-    benefits: Array.isArray(copy.benefits) ? copy.benefits.filter((b) => typeof b === "string") : [],
+    benefits: Array.isArray(copy.benefits)
+      ? copy.benefits.filter((b) => typeof b === "string")
+      : [],
     serviceCards: Array.isArray(copy.serviceCards) ? copy.serviceCards : [],
     faqs: Array.isArray(copy.faqs) ? copy.faqs : [],
     areaCopy: copy.areaCopy ?? "",
@@ -99,7 +101,11 @@ export type ScoreInput = {
       }
     | null
     | undefined;
-  seo: { headline?: string | null; meta_description?: string | null; primary_cta_label?: string | null };
+  seo: {
+    headline?: string | null;
+    meta_description?: string | null;
+    primary_cta_label?: string | null;
+  };
   servicesCount: number;
   pricedServicesCount: number;
   mediaCount: number;
@@ -110,7 +116,14 @@ export type ScoreInput = {
   hasCopy: boolean;
 };
 
-export type ScoreFactor = { key: string; label: string; points: number; max: number; fix: string; to?: string };
+export type ScoreFactor = {
+  key: string;
+  label: string;
+  points: number;
+  max: number;
+  fix: string;
+  to?: string;
+};
 
 const has = (value: unknown) => typeof value === "string" && value.trim().length > 0;
 
@@ -164,7 +177,10 @@ export function revoraScore(input: ScoreInput) {
     {
       key: "seo",
       label: "SEO",
-      points: (has(input.seo.headline) ? 5 : 0) + (has(input.seo.meta_description) ? 5 : 0) + (input.hasCopy ? 2 : 0),
+      points:
+        (has(input.seo.headline) ? 5 : 0) +
+        (has(input.seo.meta_description) ? 5 : 0) +
+        (input.hasCopy ? 2 : 0),
       max: 12,
       fix: "Generate your site copy and set a search description.",
       to: "/app/website",
@@ -229,7 +245,10 @@ export type Recommendation = { key: string; title: string; detail: string; to?: 
  * Recommendations from real signals only. When there isn't enough data we say
  * so rather than inventing an insight.
  */
-export function growthRecommendations(score: ReturnType<typeof revoraScore>, signals: GrowthSignal) {
+export function growthRecommendations(
+  score: ReturnType<typeof revoraScore>,
+  signals: GrowthSignal,
+) {
   const recs: Recommendation[] = [];
 
   if (signals.visitors >= 50 && signals.leads === 0) {
@@ -258,7 +277,12 @@ export function growthRecommendations(score: ReturnType<typeof revoraScore>, sig
   }
 
   for (const gap of score.gaps.slice(0, 3)) {
-    recs.push({ key: `gap-${gap.key}`, title: gap.label, detail: gap.fix, ...(gap.to ? { to: gap.to } : {}) });
+    recs.push({
+      key: `gap-${gap.key}`,
+      title: gap.label,
+      detail: gap.fix,
+      ...(gap.to ? { to: gap.to } : {}),
+    });
   }
 
   if (!recs.length && signals.visitors < 25) {

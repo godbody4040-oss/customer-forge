@@ -120,7 +120,10 @@ function SettingsPage() {
         <SectionHeading eyebrow="People" title="Team" />
         <ul className="mt-4 divide-y divide-border">
           {(team ?? []).map((member) => {
-            const profile = member.profiles as { full_name?: string | null; email?: string | null } | null;
+            const profile = member.profiles as {
+              full_name?: string | null;
+              email?: string | null;
+            } | null;
             const name = profile?.full_name || profile?.email || "Team member";
             return (
               <li key={member.id} className="flex items-center gap-3 py-3">

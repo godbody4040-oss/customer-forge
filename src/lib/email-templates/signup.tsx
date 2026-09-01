@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from "react";
 
 import {
   Body,
@@ -10,13 +10,13 @@ import {
   Link,
   Preview,
   Text,
-} from '@react-email/components'
+} from "@react-email/components";
 
 interface SignupEmailProps {
-  siteName: string
-  siteUrl: string
-  recipient: string
-  confirmationUrl: string
+  siteName: string;
+  siteUrl: string;
+  recipient: string;
+  confirmationUrl: string;
 }
 
 export const SignupEmail = ({
@@ -35,7 +35,7 @@ export const SignupEmail = ({
         <Text style={brand}>REVORA</Text>
         <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
-          Thanks for signing up for{' '}
+          Thanks for signing up for{" "}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
@@ -57,42 +57,50 @@ export const SignupEmail = ({
       </Container>
     </Body>
   </Html>
-)
+);
 
-export default SignupEmail
+export default SignupEmail;
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }
+const main = {
+  backgroundColor: "#ffffff",
+  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+};
 const brand = {
-  fontSize: '13px',
-  letterSpacing: '3px',
-  fontWeight: 'bold' as const,
-  color: '#A5741F',
-  margin: '0 0 24px',
-}
-const container = { padding: '32px 28px', maxWidth: '560px', border: '1px solid #EDE7DA', borderRadius: '14px' }
+  fontSize: "13px",
+  letterSpacing: "3px",
+  fontWeight: "bold" as const,
+  color: "#A5741F",
+  margin: "0 0 24px",
+};
+const container = {
+  padding: "32px 28px",
+  maxWidth: "560px",
+  border: "1px solid #EDE7DA",
+  borderRadius: "14px",
+};
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#141210',
-  margin: '0 0 20px',
-}
+  fontSize: "22px",
+  fontWeight: "bold" as const,
+  color: "#141210",
+  margin: "0 0 20px",
+};
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
+  fontSize: "14px",
+  color: "#55575d",
+  lineHeight: "1.5",
+  margin: "0 0 25px",
+};
+const link = { color: "inherit", textDecoration: "underline" };
 const button = {
-  backgroundColor: '#B8862B',
-  color: '#ffffff',
-  fontSize: '14px',
-  border: '1px solid #A5741F',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+  backgroundColor: "#B8862B",
+  color: "#ffffff",
+  fontSize: "14px",
+  border: "1px solid #A5741F",
+  borderRadius: "8px",
+  padding: "12px 20px",
+  textDecoration: "none",
+};
+const footer = { fontSize: "12px", color: "#999999", margin: "30px 0 0" };
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
   @media (prefers-color-scheme: dark) {
@@ -100,4 +108,4 @@ const darkModeCss = `
   }
   [data-ogsc] .dm-btn { background-color: #E0B75A !important; color: #141210 !important; }
   [data-ogsb] .dm-btn { background-color: #E0B75A !important; color: #141210 !important; }
-`
+`;

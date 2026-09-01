@@ -25,7 +25,10 @@ export type CustomerIntent =
 export const INTENT_META: Record<CustomerIntent, { label: string; path: string }> = {
   ready_to_book: { label: "Ready to book", path: "Send them straight to online booking." },
   ready_to_call: { label: "Ready to call", path: "Keep the phone number visible on every screen." },
-  wants_price: { label: "Wants a price", path: "Lead with the quote calculator and starting prices." },
+  wants_price: {
+    label: "Wants a price",
+    path: "Lead with the quote calculator and starting prices.",
+  },
   researching: { label: "Researching services", path: "Give clear service detail and FAQs." },
   comparing: { label: "Comparing providers", path: "Show proof, process and what's included." },
   local_search: { label: "Looking locally", path: "Make the service area obvious." },
@@ -74,7 +77,9 @@ export function readBrief(value: unknown): SiteBrief | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   if (typeof raw["positioning"] !== "string") return null;
-  const intents = strings(raw["intents"], 7, 40).filter((i): i is CustomerIntent => i in INTENT_META);
+  const intents = strings(raw["intents"], 7, 40).filter(
+    (i): i is CustomerIntent => i in INTENT_META,
+  );
   return {
     positioning: text(raw["positioning"], ""),
     buyer: text(raw["buyer"], ""),

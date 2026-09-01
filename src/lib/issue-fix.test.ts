@@ -38,7 +38,10 @@ describe("issue → fix routing", () => {
   });
 
   it("offers no automatic fix when the matching proposal needs owner input", () => {
-    const [target] = fixTargets([issue({})], [proposal({ applyable: false, needs: "Run the build first." })]);
+    const [target] = fixTargets(
+      [issue({})],
+      [proposal({ applyable: false, needs: "Run the build first." })],
+    );
     expect(target?.proposalId).toBeNull();
   });
 
@@ -75,7 +78,6 @@ describe("issue → fix routing", () => {
     expect(targets[1]?.category).toBe("accessibility");
   });
 
-
   it("routes missing contact facts to the business answers area", () => {
     const [target] = gapTargets([
       {
@@ -93,7 +95,10 @@ describe("issue → fix routing", () => {
 
   it("sorts critical findings first", () => {
     const sorted = criticalFirst(
-      fixTargets([issue({ severity: "opportunity", key: "a" }), issue({ severity: "critical", key: "b" })], []),
+      fixTargets(
+        [issue({ severity: "opportunity", key: "a" }), issue({ severity: "critical", key: "b" })],
+        [],
+      ),
     );
     expect(sorted[0]?.severity).toBe("critical");
   });

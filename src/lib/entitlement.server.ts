@@ -31,7 +31,6 @@ export async function orgEntitlement(
   return { allowed: access.allowed, reason: access.reason, state: access.state };
 }
 
-
 /** Throws a plain, user-safe error when the workspace isn't entitled. */
 export async function assertOrgEntitled(supabase: SupabaseClient, organizationId: string) {
   const result = await orgEntitlement(supabase, organizationId);

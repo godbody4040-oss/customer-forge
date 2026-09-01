@@ -111,7 +111,8 @@ function PrivacyPage() {
               Privacy Policy
             </h1>
             <p className="mt-3 text-[12.5px] text-muted-foreground">
-              Last updated {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              Last updated{" "}
+              {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </p>
             <div className="mt-10 space-y-9">
               {SECTIONS.map((section) => (

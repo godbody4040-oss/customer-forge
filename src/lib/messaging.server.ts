@@ -8,8 +8,7 @@ import { sendTemplateEmail } from "@/lib/email-templates/send-email";
  * - otherwise: permanent for this run; it is recorded as skipped/failed with a reason.
  */
 export type DeliveryResult =
-  | { ok: true }
-  | { ok: false; retry: boolean; reason: string; retryAfterSeconds?: number };
+  { ok: true } | { ok: false; retry: boolean; reason: string; retryAfterSeconds?: number };
 
 export type DeliverableRun = {
   id: string;

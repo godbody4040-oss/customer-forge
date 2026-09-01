@@ -223,11 +223,15 @@ function NavItem({
       )}
     >
       <span className="flex items-center justify-between gap-2">
-        <span className={cn("text-[13px] font-medium", active ? "text-primary" : "text-foreground")}>
+        <span
+          className={cn("text-[13px] font-medium", active ? "text-primary" : "text-foreground")}
+        >
           {section.label}
         </span>
         {section.badge ? (
-          <span className="rounded-full bg-accent/15 px-1.5 text-[10px] text-accent">{section.badge}</span>
+          <span className="rounded-full bg-accent/15 px-1.5 text-[10px] text-accent">
+            {section.badge}
+          </span>
         ) : null}
       </span>
       {showHint && section.hint ? (

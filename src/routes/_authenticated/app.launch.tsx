@@ -41,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/app/launch")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: Launch,
@@ -68,7 +69,9 @@ function Launch() {
   const domainMutation = useMutation({
     mutationFn: (value: string) => domainFn({ data: { organizationId: orgId!, domain: value } }),
     onSuccess: async (result) => {
-      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, { description: result.detail });
+      toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
+        description: result.detail,
+      });
       await queryClient.invalidateQueries({ queryKey: ["website-settings"] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -89,7 +92,9 @@ function Launch() {
 
   const domainStatus = settings?.domain_status ?? "not_connected";
   const publishState = settings?.publish_state ?? "draft";
-  const siteUrl = settings?.custom_domain ? `https://${settings.custom_domain}` : `/s/${org?.slug ?? ""}`;
+  const siteUrl = settings?.custom_domain
+    ? `https://${settings.custom_domain}`
+    : `/s/${org?.slug ?? ""}`;
 
   const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
   const reviewMeta = reviewStateMeta(reviewState);
@@ -212,7 +217,13 @@ function Launch() {
               <Button
                 key={state}
                 size="sm"
-                variant={state === publishState ? "secondary" : state === "published" ? "signal" : "outline"}
+                variant={
+                  state === publishState
+                    ? "secondary"
+                    : state === "published"
+                      ? "signal"
+                      : "outline"
+                }
                 disabled={saveSettings.isPending || (state === "published" && !approved)}
                 onClick={() => setPublish(state)}
               >
@@ -285,18 +296,24 @@ function Launch() {
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[12px] font-medium">Secure certificate (SSL)</p>
                 <Pill tone={settings.ssl_ok ? "signal" : settings.dns_ok ? "info" : "neutral"}>
-                  {settings.ssl_ok ? "HTTPS active" : settings.dns_ok ? "Being issued" : "Waiting on DNS"}
+                  {settings.ssl_ok
+                    ? "HTTPS active"
+                    : settings.dns_ok
+                      ? "Being issued"
+                      : "Waiting on DNS"}
                 </Pill>
               </div>
               <p className="mt-1.5 text-[11px] text-muted-foreground">
-                Certificates are issued automatically once DNS resolves here — usually within a few hours.
+                Certificates are issued automatically once DNS resolves here — usually within a few
+                hours.
               </p>
             </div>
           </div>
         ) : null}
         {settings?.custom_domain && !(settings.dns_ok && settings.ssl_ok) ? (
           <p className="text-[12px] text-accent">
-            Your domain isn't live yet. Until both checks pass, your site stays on its Revora address.
+            Your domain isn't live yet. Until both checks pass, your site stays on its Revora
+            address.
           </p>
         ) : null}
         {settings?.domain_error ? (
@@ -307,7 +324,6 @@ function Launch() {
             Last checked {dateLong(settings.domain_checked_at)}
           </p>
         ) : null}
-
       </Panel>
 
       <Panel className="space-y-3">
@@ -353,10 +369,17 @@ function Launch() {
           <Row label="Business email" value={profile?.email ?? "Not set"} />
           <Row
             label="Address"
-            value={[profile?.address, profile?.city, profile?.state, profile?.zip].filter(Boolean).join(", ") || "Not set"}
+            value={
+              [profile?.address, profile?.city, profile?.state, profile?.zip]
+                .filter(Boolean)
+                .join(", ") || "Not set"
+            }
           />
           <Row label="Service area" value={profile?.service_area ?? "Not set"} />
-          <Row label="Plan" value={`${org?.plan_id ?? "No plan"} · ${org?.subscription_status ?? ""}`} />
+          <Row
+            label="Plan"
+            value={`${org?.plan_id ?? "No plan"} · ${org?.subscription_status ?? ""}`}
+          />
           <Row label="Support" value={profile?.support_email ?? "Revorabusiness0@gmail.com"} />
           <Row label="Team members" value={number((team ?? []).length)} />
           <Row label="Setup complete" value={`${score.score}%`} />

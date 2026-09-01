@@ -1,5 +1,14 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { Building2, ClipboardList, CreditCard, Globe2, LayoutGrid, LifeBuoy, Receipt, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  ClipboardList,
+  CreditCard,
+  Globe2,
+  LayoutGrid,
+  LifeBuoy,
+  Receipt,
+  ShieldCheck,
+} from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Pill } from "@/components/app/Bits";
@@ -9,7 +18,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "Platform admin — Revora" },
-      { name: "description", content: "Create, launch and support client businesses on the platform." },
+      {
+        name: "description",
+        content: "Create, launch and support client businesses on the platform.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

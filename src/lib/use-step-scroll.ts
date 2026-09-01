@@ -45,7 +45,6 @@ export function focusAndScrollToId(id: string) {
   if (first) window.setTimeout(() => first.focus({ preventScroll: true }), 320);
 }
 
-
 /**
  * Attach the returned ref to the container that renders the current step.
  * The container is scrolled into view every time `step` changes.

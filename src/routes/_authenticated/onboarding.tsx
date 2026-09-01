@@ -7,7 +7,6 @@ import { seedQuoteCalculator } from "@/lib/quote-seed";
 import { newTrialEndsAt } from "@/lib/trial";
 import { assertNoError, supabaseErrorMessage } from "@/lib/supabase-error";
 
-
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +32,8 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
       { title: "Build your website — Revora" },
       {
         name: "description",
-        content: "Answer six short steps. Revora builds your website and connects it to your growth system.",
+        content:
+          "Answer six short steps. Revora builds your website and connects it to your growth system.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -159,7 +159,6 @@ function Onboarding() {
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-
   const toggleGoal = (goal: GoalKey) =>
     setDraft((prev) => ({
       ...prev,
@@ -280,7 +279,6 @@ function Onboarding() {
       );
       assertNoError(profileError, "Could not save your business details");
 
-
       const socialRow = {
         organization_id: org.id,
         instagram: draft.instagram.trim() || null,
@@ -293,7 +291,6 @@ function Onboarding() {
           .upsert(socialRow as never, { onConflict: "organization_id" });
         assertNoError(socialError, "Could not save your social links");
       }
-
 
       if (services.length) {
         // Re-running onboarding must not duplicate the service list.
@@ -313,16 +310,18 @@ function Onboarding() {
         assertNoError(servicesError, "Could not save your services");
       }
 
-
       // Give the workspace a working quote calculator so the public site's
       // primary "Get my quote" CTA has a real destination from day one.
       // A calculator hiccup must never block the build — log and continue.
       try {
-        await seedQuoteCalculator(supabase, org.id, services.map((s) => s.name.trim()));
+        await seedQuoteCalculator(
+          supabase,
+          org.id,
+          services.map((s) => s.name.trim()),
+        );
       } catch (seedError) {
         console.error("[onboarding] quote calculator seed failed", supabaseErrorMessage(seedError));
       }
-
 
       const plan = generateWebsitePlan({
         businessName: draft.businessName,
@@ -343,8 +342,9 @@ function Onboarding() {
         testimonialCount: testimonials.length,
         hasCredentials: Boolean(draft.certifications || draft.awards || draft.yearsInBusiness),
         hasHours: Boolean(draft.hours),
-        socialLinks: [socialRow.instagram, socialRow.facebook, socialRow.google_business].filter(Boolean)
-          .length,
+        socialLinks: [socialRow.instagram, socialRow.facebook, socialRow.google_business].filter(
+          Boolean,
+        ).length,
       });
 
       const { error: settingsError } = await supabase.from("website_settings").upsert(
@@ -376,7 +376,6 @@ function Onboarding() {
     } catch (err) {
       console.error("[onboarding] build failed", err);
       setError(supabaseErrorMessage(err));
-
     } finally {
       setBusy(false);
     }
@@ -392,8 +391,6 @@ function Onboarding() {
       </div>
     );
   }
-
-
 
   const canContinue =
     step === 0
@@ -450,7 +447,9 @@ function Onboarding() {
           {step === 0 ? (
             <div className="space-y-5">
               <div>
-                <h1 className="font-display text-[20px] font-semibold">Tell us about the business</h1>
+                <h1 className="font-display text-[20px] font-semibold">
+                  Tell us about the business
+                </h1>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
                   Revora uses only what you enter here — nothing is invented.
                 </p>
@@ -622,7 +621,8 @@ function Onboarding() {
               <div>
                 <h1 className="font-display text-[20px] font-semibold">Brand and visuals</h1>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
-                  Optional. Paste image links you already own — we never use stock claims about your work.
+                  Optional. Paste image links you already own — we never use stock claims about your
+                  work.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -671,7 +671,9 @@ function Onboarding() {
           {step === 3 ? (
             <div className="space-y-5">
               <div>
-                <h1 className="font-display text-[20px] font-semibold">How can customers reach you?</h1>
+                <h1 className="font-display text-[20px] font-semibold">
+                  How can customers reach you?
+                </h1>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
                   These details power your call, text, email and form buttons.
                 </p>
@@ -847,9 +849,7 @@ function Onboarding() {
           {step === 5 ? (
             <div className="space-y-5">
               <div>
-                <h1 className="font-display text-[20px] font-semibold">
-                  What should visitors do?
-                </h1>
+                <h1 className="font-display text-[20px] font-semibold">What should visitors do?</h1>
                 <p className="mt-1.5 text-[13px] text-muted-foreground">
                   Pick every action that matters. The first one becomes your main button.
                 </p>
@@ -869,9 +869,7 @@ function Onboarding() {
                       aria-pressed={active}
                     >
                       <p className="text-[14px] font-medium">{goal.label}</p>
-                      <p className="mt-1 text-[12px] text-muted-foreground">
-                        Button: {goal.cta}
-                      </p>
+                      <p className="mt-1 text-[12px] text-muted-foreground">Button: {goal.cta}</p>
                     </button>
                   );
                 })}

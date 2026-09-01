@@ -57,14 +57,9 @@ function SectionButtons({ site, components }: { site: Site; components: Componen
     <div className="mt-7 flex flex-wrap gap-2.5">
       {buttons.map((button, index) => {
         const href = safeLinkUrl(button.link_url) ?? "#quote";
-        const internal = href.startsWith("/") ;
+        const internal = href.startsWith("/");
         return (
-          <Button
-            key={button.id}
-            asChild
-            variant={index === 0 ? "signal" : "outline"}
-            size="lg"
-          >
+          <Button key={button.id} asChild variant={index === 0 ? "signal" : "outline"} size="lg">
             {internal ? (
               <Link to="/s/$slug/$page" params={{ slug: site.org.slug, page: href.slice(1) }}>
                 {button.label}
@@ -94,7 +89,9 @@ export function SiteSection({ site, section }: { site: Site; section: Section })
 function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
   const components = section.components ?? [];
   const { profile, services, reviews, gallery, org } = site;
-  const rating = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null;
+  const rating = reviews.length
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : null;
 
   switch (section.kind) {
     case "hero":
@@ -115,7 +112,9 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
               </p>
             ) : null}
             {section.body ? (
-              <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">{section.body}</p>
+              <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+                {section.body}
+              </p>
             ) : null}
             <SectionButtons site={site} components={components} />
           </div>
@@ -129,7 +128,10 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
         <section className="border-b border-border bg-card/40">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-4">
             {items.map((item) => (
-              <span key={item.id} className="flex items-center gap-2 text-[12px] text-muted-foreground">
+              <span
+                key={item.id}
+                className="flex items-center gap-2 text-[12px] text-muted-foreground"
+              >
                 <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
                 {item.label}
               </span>
@@ -167,7 +169,9 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
               <li key={item.id} className="panel flex flex-col p-4">
                 <h3 className="font-display text-[15px] font-semibold">{item.name}</h3>
                 {item.body ? (
-                  <p className="mt-2 flex-1 text-[13px] leading-relaxed text-muted-foreground">{item.body}</p>
+                  <p className="mt-2 flex-1 text-[13px] leading-relaxed text-muted-foreground">
+                    {item.body}
+                  </p>
                 ) : null}
                 {item.price !== null ? (
                   <p className="tnum mt-3.5 text-[15px] font-semibold text-primary">
@@ -199,7 +203,10 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
             {components
               .filter((c) => c.kind === "price_row" && c.label)
               .map((row) => (
-                <li key={row.id} className="flex items-baseline justify-between gap-4 border-b border-border py-2">
+                <li
+                  key={row.id}
+                  className="flex items-baseline justify-between gap-4 border-b border-border py-2"
+                >
                   <span className="text-[14px]">{row.label}</span>
                   <span className="tnum text-[14px] font-semibold text-primary">{row.body}</span>
                 </li>
@@ -217,7 +224,10 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
           {rows.length ? (
             <ul className="mt-7 space-y-2">
               {rows.map((row) => (
-                <li key={row.id} className="flex items-baseline justify-between gap-4 border-b border-border py-2.5">
+                <li
+                  key={row.id}
+                  className="flex items-baseline justify-between gap-4 border-b border-border py-2.5"
+                >
                   <span className="text-[14px]">{row.label}</span>
                   <span className="tnum text-[14px] font-semibold text-primary">{row.body}</span>
                 </li>
@@ -240,7 +250,9 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
               <li key={step.id} className="panel p-4">
                 <p className="font-display text-[14px] font-semibold">{step.label}</p>
                 {step.body ? (
-                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{step.body}</p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+                    {step.body}
+                  </p>
                 ) : null}
               </li>
             ))}
@@ -257,8 +269,14 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
           <Heading section={section} />
           <ul className="mt-7 grid gap-2.5 sm:grid-cols-2">
             {items.map((item) => (
-              <li key={item.id} className="flex items-start gap-2 text-[14px] text-muted-foreground">
-                <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+              <li
+                key={item.id}
+                className="flex items-start gap-2 text-[14px] text-muted-foreground"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary"
+                />
                 {item.label}
               </li>
             ))}
@@ -313,12 +331,17 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
           <ul className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {reviews.map((review) => (
               <li key={review.id} className="panel p-4">
-                <div className="flex items-center gap-0.5 text-accent" aria-label={`${review.rating} of 5`}>
+                <div
+                  className="flex items-center gap-0.5 text-accent"
+                  aria-label={`${review.rating} of 5`}
+                >
                   {Array.from({ length: review.rating }).map((_, index) => (
                     <Star key={index} className="size-3.5 fill-current" aria-hidden="true" />
                   ))}
                 </div>
-                {review.comment ? <p className="mt-3 text-[13px] leading-relaxed">{review.comment}</p> : null}
+                {review.comment ? (
+                  <p className="mt-3 text-[13px] leading-relaxed">{review.comment}</p>
+                ) : null}
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   {review.author_name} · {dateShort(review.created_at)}
                 </p>
@@ -338,7 +361,9 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
             {items.map((item) => (
               <div key={item.id}>
                 <dt className="text-[14px] font-medium">{item.label}</dt>
-                <dd className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{item.body}</dd>
+                <dd className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+                  {item.body}
+                </dd>
               </div>
             ))}
           </dl>
@@ -364,7 +389,9 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                     {link.label}
                   </Link>
                 ) : (
-                  <span className="rounded-full border border-border px-3 py-1.5 text-[12px]">{link.label}</span>
+                  <span className="rounded-full border border-border px-3 py-1.5 text-[12px]">
+                    {link.label}
+                  </span>
                 )}
               </li>
             ))}
