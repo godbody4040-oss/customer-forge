@@ -635,7 +635,10 @@ export function DomainOperations({
                 </Button>
                 <Button asChild variant="ghost">
                   <a
-                    href={EMAIL_PROVIDERS.find((p) => p.id === provider)!.setupUrl}
+                    href={
+                      EMAIL_PROVIDERS.find((p) => p.id === provider)?.setupUrl ??
+                      "https://improvmx.com/"
+                    }
                     target="_blank"
                     rel="noreferrer"
                   >
