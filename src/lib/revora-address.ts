@@ -150,13 +150,70 @@ export function customDomainIsLive(settings: {
   return !!settings.custom_domain && !!settings.dns_ok && !!settings.ssl_ok;
 }
 
-/** The address visitors should use today. */
+/**
+ * The ALWAYS-WORKING client website address.
+ *
+ * Hostname addresses (a client's own domain, or `name.revoraweb.site`) each
+ * need their own certificate on the hosting layer, so a hostname is only handed
+ * out once a real DNS + HTTPS probe has confirmed it answers. Every published
+ * client site is additionally, and permanently, reachable at a path on the
+ * platform domain — that address needs no DNS, no certificate and no purchase,
+ * which is what makes it safe to give a client on day one.
+ */
+export const PLATFORM_ORIGIN = `https://${REVORA_ROOT}`;
+
+export function clientSitePath(orgSlug: string | null | undefined) {
+  const slug = String(orgSlug ?? "").trim();
+  return slug ? `/s/${slug}` : null;
+}
+
+export function clientSiteUrl(orgSlug: string | null | undefined) {
+  const path = clientSitePath(orgSlug);
+  return path ? `${PLATFORM_ORIGIN}${path}` : null;
+}
+
+/**
+ * True once the free `name.revoraweb.site` address has been proven to resolve
+ * AND serve HTTPS. Stored on the workspace by the live check, never assumed.
+ */
+export function revoraHostIsLive(settings: {
+  subdomain?: string | null;
+  revora_host_ok?: boolean | null;
+}) {
+  return !!settings.subdomain && !!settings.revora_host_ok;
+}
+
+/** The hostname visitors should use today, or null when none is verified yet. */
 export function primaryAddress(settings: {
   custom_domain?: string | null;
   subdomain?: string | null;
   dns_ok?: boolean | null;
   ssl_ok?: boolean | null;
+  revora_host_ok?: boolean | null;
 }) {
   if (customDomainIsLive(settings)) return settings.custom_domain!;
-  return revoraHost(settings.subdomain);
+  if (revoraHostIsLive(settings)) return revoraHost(settings.subdomain);
+  return null;
+}
+
+/**
+ * The single address to show a client: their verified hostname when one exists,
+ * otherwise the platform path address that always works.
+ */
+export function liveAddressUrl(
+  settings: {
+    custom_domain?: string | null;
+    subdomain?: string | null;
+    dns_ok?: boolean | null;
+    ssl_ok?: boolean | null;
+    revora_host_ok?: boolean | null;
+  },
+  orgSlug: string | null | undefined,
+) {
+  const host = primaryAddress(settings);
+  if (host) return { url: `https://${host}`, label: host, kind: "hostname" as const };
+  const url = clientSiteUrl(orgSlug);
+  return url
+    ? { url, label: url.replace(/^https:\/\//, ""), kind: "path" as const }
+    : { url: null, label: null, kind: "none" as const };
 }
