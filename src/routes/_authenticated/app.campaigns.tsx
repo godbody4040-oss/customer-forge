@@ -1,3 +1,4 @@
+import { revoraUrl } from "@/lib/revora-address";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
