@@ -247,8 +247,7 @@ function CommandCenterPage() {
 
   /* ------------------------------ One-input intake ---------------------------- */
 
-  const saveProfile = useSaveBusinessProfile(orgId);
-  const updateOrg = useUpdateOrganization();
+
 
   const intakeValues: IntakeValues = {
     name: org?.name ?? "",
