@@ -18,6 +18,7 @@ import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
+import { WebsiteProject } from "@/components/app/WebsiteProject";
 import { AssistantShowcase } from "@/components/app/AssistantShowcase";
 import { EffectStudio } from "@/components/app/EffectStudio";
 import { ImageStudio } from "@/components/app/ImageStudio";
@@ -150,6 +151,24 @@ function WebsitePage() {
           />
         ) : null}
       </div>
+
+      <WebsiteProject
+        organizationId={orgId}
+        businessName={org?.name ?? null}
+        industry={(org?.industry as string | undefined) ?? (profile?.["industry"] as string) ?? null}
+        slug={org?.slug ?? null}
+        city={(profile?.["city"] as string) ?? null}
+        publishState={settings?.publish_state ?? "draft"}
+        lastPublishedAt={settings?.last_published_at ?? null}
+        customDomain={settings?.custom_domain ?? null}
+        subdomain={settings?.subdomain ?? null}
+        domainStatus={settings?.domain_status ?? null}
+        pagesCount={(pages ?? []).length}
+        visibleSections={visibleSections}
+        score={siteScore.score}
+        onEdit={() => setJump({ step: "structure", nonce: Date.now() })}
+        onLaunchChecks={() => setJump({ step: "launch", nonce: Date.now() })}
+      />
 
       <AssistantShowcase />
 
