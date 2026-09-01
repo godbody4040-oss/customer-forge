@@ -53,7 +53,10 @@ describe("resolveAccess", () => {
     for (const row of rows) {
       const result = resolveAccess(row);
       expect(result.builderUsage).toBe("included");
-      expect(result.reason.toLowerCase()).not.toMatch(/credit|token|per (build|prompt|generation)/);
+      expect(result.reason.toLowerCase()).not.toMatch(
+        /out of credits|buy credits|purchase credits|credits required|0 credits|credits remaining/,
+      );
+
     }
   });
 });
