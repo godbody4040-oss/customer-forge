@@ -68,9 +68,6 @@ function PricingRoute() {
     </TenantOrMarketing>
   );
 }
-const __unused_Pricing = (
-
-});
 
 const FAQ = [
   {

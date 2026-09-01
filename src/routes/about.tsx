@@ -41,9 +41,6 @@ function AboutRoute() {
     </TenantOrMarketing>
   );
 }
-const __unused_About = (
-
-});
 
 const PILLARS = [
   {

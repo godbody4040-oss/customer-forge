@@ -60,9 +60,6 @@ function ContactRoute() {
     </TenantOrMarketing>
   );
 }
-const __unused_Contact = (
-
-});
 
 function Contact() {
   const [sent, setSent] = useState(false);
