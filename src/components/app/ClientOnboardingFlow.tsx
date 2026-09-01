@@ -118,7 +118,9 @@ export function ClientOnboardingFlow({
                           {usdExact(setupPrice)}
                         </span>{" "}
                         one-time setup, then{" "}
-                        <span className="gold-text font-medium">{usdExact(monthlyPrice)}/month</span>{" "}
+                        <span className="gold-text font-medium">
+                          {usdExact(monthlyPrice)}/month
+                        </span>{" "}
                         — your first month is free.
                       </p>
                       <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
@@ -166,7 +168,11 @@ export function ClientOnboardingFlow({
                           disabled={!canManage || isPublishing}
                           onClick={onPublish}
                         >
-                          {isPublishing ? "Publishing…" : published ? "Publish updates" : "Publish site"}
+                          {isPublishing
+                            ? "Publishing…"
+                            : published
+                              ? "Publish updates"
+                              : "Publish site"}
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => onGoTo("launch")}>
                           Launch checks

@@ -28,13 +28,7 @@ export const Route = createFileRoute("/_authenticated/app/domain")({
  * One panel failing must never take the whole domain page down: the owner still
  * needs the parts that work, plus a way to retry the part that didn't.
  */
-function SafeSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function SafeSection({ title, children }: { title: string; children: React.ReactNode }) {
   const [attempt, setAttempt] = useState(0);
   return (
     <CatchBoundary

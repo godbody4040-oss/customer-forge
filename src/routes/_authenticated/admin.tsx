@@ -2,7 +2,6 @@ import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-rout
 import {
   BarChart3,
   Building2,
-
   ClipboardList,
   CreditCard,
   Globe2,
@@ -39,7 +38,6 @@ const NAV = [
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
   { to: "/admin/payments", label: "Payments", icon: CreditCard, exact: false },
 ] as const;
-
 
 function AdminShell() {
   const { data, isLoading } = useWorkspace();

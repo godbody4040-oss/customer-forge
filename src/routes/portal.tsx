@@ -14,7 +14,11 @@ import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { PORTAL_CODE_LENGTH, joinWithPortalCode, normalizePortalCode } from "@/lib/portal.functions";
+import {
+  PORTAL_CODE_LENGTH,
+  joinWithPortalCode,
+  normalizePortalCode,
+} from "@/lib/portal.functions";
 import { canonicalLink, ogUrl } from "@/lib/seo";
 
 type Search = { code?: string };
@@ -46,10 +50,26 @@ export const Route = createFileRoute("/portal")({
 });
 
 const BENEFITS = [
-  { icon: Globe, title: "Your website", body: "See what's live, request changes and track publishes." },
-  { icon: Users, title: "Your leads", body: "Every enquiry from your site, with status and follow-up." },
-  { icon: CalendarCheck, title: "Your bookings", body: "Appointments and quote requests as they come in." },
-  { icon: BarChart3, title: "Your results", body: "Visitors, calls, form fills and monthly reporting." },
+  {
+    icon: Globe,
+    title: "Your website",
+    body: "See what's live, request changes and track publishes.",
+  },
+  {
+    icon: Users,
+    title: "Your leads",
+    body: "Every enquiry from your site, with status and follow-up.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Your bookings",
+    body: "Appointments and quote requests as they come in.",
+  },
+  {
+    icon: BarChart3,
+    title: "Your results",
+    body: "Visitors, calls, form fills and monthly reporting.",
+  },
 ];
 
 function PortalPage() {
@@ -161,13 +181,24 @@ function PortalPage() {
             <div className="mt-6 border-t border-border pt-4">
               <p className="text-[12px] text-muted-foreground">
                 Already have a portal?{" "}
-                <Link to="/auth" search={{ mode: "signin", redirect: "/app" }} className="text-primary underline">
+                <Link
+                  to="/auth"
+                  search={{ mode: "signin", redirect: "/app" }}
+                  className="text-primary underline"
+                >
                   Sign in
                 </Link>
               </p>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Not a client yet? <Link to="/pricing" className="text-primary underline">See pricing</Link> or{" "}
-                <Link to="/get-started" className="text-primary underline">start your 3-day access</Link>.
+                Not a client yet?{" "}
+                <Link to="/pricing" className="text-primary underline">
+                  See pricing
+                </Link>{" "}
+                or{" "}
+                <Link to="/get-started" className="text-primary underline">
+                  start your 3-day access
+                </Link>
+                .
               </p>
             </div>
           </section>

@@ -51,12 +51,14 @@ async function assertCanManage(
 /** Creates a single-use, 14-day invitation and emails the invite link. */
 export const createTeamInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { organizationId: string; email: string; role: string; appUrl: string }) => ({
-    organizationId: parseWorkspaceId(input?.organizationId),
-    email: parseEmail(input?.email),
-    role: parseRole(input?.role),
-    appUrl: parseReturnUrl(input?.appUrl),
-  }))
+  .inputValidator(
+    (input: { organizationId: string; email: string; role: string; appUrl: string }) => ({
+      organizationId: parseWorkspaceId(input?.organizationId),
+      email: parseEmail(input?.email),
+      role: parseRole(input?.role),
+      appUrl: parseReturnUrl(input?.appUrl),
+    }),
+  )
   .handler(
     async ({
       data,
@@ -138,7 +140,9 @@ export const createTeamInvitation = createServerFn({ method: "POST" })
 
         return { ok: true, email: data.email, emailed };
       } catch (error) {
-        return { error: error instanceof Error ? error.message : "Could not send that invitation." };
+        return {
+          error: error instanceof Error ? error.message : "Could not send that invitation.",
+        };
       }
     },
   );

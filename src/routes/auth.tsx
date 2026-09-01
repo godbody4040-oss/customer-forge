@@ -60,6 +60,8 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState<"email" | "google" | "reset" | "magic" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Persistent (non-toast) notice, e.g. "confirm your email" after signup.
+  const [notice, setNotice] = useState<string | null>(null);
 
   const goToWorkspace = useCallback(
     async (fallback?: string) => {
@@ -103,7 +105,10 @@ function AuthPage() {
         if (signUpError) throw signUpError;
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
+          const message = `Account created for ${email}. Confirm your email address using the link we just sent, then sign in here — your progress is saved.`;
           toast.success("Account created. Check your email to confirm, then sign in.");
+          setNotice(message);
+          setPassword("");
           setIsSignup(false);
           return;
         }
@@ -412,6 +417,14 @@ function AuthPage() {
                   </label>
                 )}
                 {error ? <ErrorNote message={error} /> : null}
+                {notice ? (
+                  <p
+                    role="status"
+                    className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground"
+                  >
+                    {notice}
+                  </p>
+                ) : null}
                 {magicSent && magicMode && !isSignup ? (
                   <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
                     Link sent to <span className="gold-hl">{email}</span>. Open it on this device
