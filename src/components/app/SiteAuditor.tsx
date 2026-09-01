@@ -300,25 +300,14 @@ export function SiteAuditor({
             ))}
           </ol>
         </div>
-        <ul className="divide-y divide-border">
-          {conversionGaps.length ? (
-            conversionGaps.map((gap) => (
-              <li key={gap.key} className="px-3.5 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Pill tone={TONE[gap.severity]}>{gap.severity}</Pill>
-                  <p className="text-[13px] font-medium">{gap.title}</p>
-                </div>
-                <p className="mt-1 text-[12px] text-muted-foreground">{gap.detail}</p>
-                <p className="mt-1 text-[12px]">{gap.action}</p>
-              </li>
-            ))
-          ) : (
-            <li className="flex items-center gap-2 px-3.5 py-6 text-[13px] text-muted-foreground">
-              <CheckCircle2 className="size-4 text-primary" aria-hidden="true" /> Every conversion path for your goal is
-              wired up.
-            </li>
-          )}
-        </ul>
+        <FixList
+          targets={gapCards}
+          canManage={canManage}
+          busyProposalId={applyingId}
+          onFixAutomatically={fixOne}
+          emptyLabel="Every conversion path for your goal is wired up."
+        />
+
       </section>
 
       <section className="panel p-0">
