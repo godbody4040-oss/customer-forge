@@ -62,7 +62,10 @@ function page(patch: Partial<ContentPage> = {}): ContentPage {
 describe("interaction health — internal links", () => {
   it("passes a link that points at a real page", () => {
     const report = scanInteractions([
-      page({ slug: "home", sections: [section({ components: [component({ link_url: "/services" })] })] }),
+      page({
+        slug: "home",
+        sections: [section({ components: [component({ link_url: "/services" })] })],
+      }),
       page({ slug: "services", title: "Services", kind: "services" }),
     ]);
     expect(report.broken).toBe(0);
@@ -91,7 +94,9 @@ describe("interaction health — internal links", () => {
 describe("interaction health — dead and unsafe controls", () => {
   it("flags a button with no destination", () => {
     const report = scanInteractions([
-      page({ sections: [section({ components: [component({ kind: "button", link_url: null })] })] }),
+      page({
+        sections: [section({ components: [component({ kind: "button", link_url: null })] })],
+      }),
     ]);
     expect(report.broken).toBe(1);
     expect(report.checks[0]?.detail).toMatch(/no destination/i);
@@ -174,7 +179,9 @@ describe("interaction health — anchors and external links", () => {
     const report = scanInteractions([
       page({
         sections: [
-          section({ components: [component({ link_url: "https://project--x-dev.lovable.app/a" })] }),
+          section({
+            components: [component({ link_url: "https://project--x-dev.lovable.app/a" })],
+          }),
         ],
       }),
     ]);
@@ -194,7 +201,10 @@ describe("interaction health — anchors and external links", () => {
 describe("interaction health — visibility and scoring", () => {
   it("ignores hidden pages, sections and components", () => {
     const report = scanInteractions([
-      page({ is_visible: false, sections: [section({ components: [component({ link_url: "/gone" })] })] }),
+      page({
+        is_visible: false,
+        sections: [section({ components: [component({ link_url: "/gone" })] })],
+      }),
       page({
         slug: "b",
         sections: [

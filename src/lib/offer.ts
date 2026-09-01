@@ -94,15 +94,18 @@ export const usdExact = (amount: number) =>
  * ------------------------------------------------------------------------- */
 
 /** The subset of a Stripe Price the verifier reads. */
-export type PriceShape = {
-  id?: string | null;
-  lookup_key?: string | null;
-  active?: boolean | null;
-  currency?: string | null;
-  unit_amount?: number | null;
-  type?: string | null;
-  recurring?: { interval?: string | null; interval_count?: number | null } | null;
-} | null | undefined;
+export type PriceShape =
+  | {
+      id?: string | null;
+      lookup_key?: string | null;
+      active?: boolean | null;
+      currency?: string | null;
+      unit_amount?: number | null;
+      type?: string | null;
+      recurring?: { interval?: string | null; interval_count?: number | null } | null;
+    }
+  | null
+  | undefined;
 
 export type PriceVerification = { ok: true } | { ok: false; reason: string };
 
@@ -130,7 +133,8 @@ export function verifyGrowthPrices(setup: PriceShape, monthly: PriceShape): Pric
         typeof price.unit_amount === "number" ? money(price.unit_amount) : "unset"
       } but the Revora offer is ${usd(expectedDollars)}.`;
     if (recurring) {
-      if (price.type !== "recurring") return `${label} price is not a recurring subscription price.`;
+      if (price.type !== "recurring")
+        return `${label} price is not a recurring subscription price.`;
       if (price.recurring?.interval !== "month" || (price.recurring?.interval_count ?? 1) !== 1)
         return `${label} price does not bill once per month.`;
     } else if (price.type === "recurring") {

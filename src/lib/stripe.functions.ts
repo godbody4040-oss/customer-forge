@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnv } from "@/lib/stripe.server";
-import { cleanText, parseStripeEnvironment, parseWorkspaceId } from "@/lib/stripe-input";
+import {
+  cleanText,
+  parseReturnUrl,
+  parseStripeEnvironment,
+  parseWorkspaceId,
+} from "@/lib/stripe-input";
 import { GROWTH_SYSTEM, verifyGrowthPrices } from "@/lib/offer";
 
 export type GrowthSystemIntake = {
@@ -32,8 +37,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       environment: StripeEnv;
       intake: GrowthSystemIntake;
     }) => {
-      const returnUrl = cleanText(input?.returnUrl, 500);
-      if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
+      const returnUrl = parseReturnUrl(input?.returnUrl);
       const raw = input?.intake ?? ({} as GrowthSystemIntake);
       const intake: GrowthSystemIntake = {
         fullName: cleanText(raw.fullName, 120),
@@ -153,7 +157,6 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         return { error: `${verified.reason} Checkout is paused until this is corrected.` };
       }
 
-
       const found = await stripe.customers.search({
         query: `metadata['organizationId']:'${data.organizationId}'`,
         limit: 1,
@@ -240,8 +243,7 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       const productId = String(input?.productId ?? "").slice(0, 80);
       // Catalog rows use either a UUID or a readable slug id, so accept both.
       if (!/^[0-9a-zA-Z_-]{3,80}$/.test(productId)) throw new Error("Choose a service to pay for");
-      const returnUrl = String(input?.returnUrl ?? "").slice(0, 500);
-      if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
+      const returnUrl = parseReturnUrl(input?.returnUrl);
       return {
         organizationId: parseWorkspaceId(input?.organizationId),
         productId,
@@ -404,7 +406,7 @@ export const createBillingPortalSession = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { organizationId: string; returnUrl?: string; environment: StripeEnv }) => ({
       organizationId: parseWorkspaceId(input?.organizationId),
-      returnUrl: input?.returnUrl ? String(input.returnUrl).slice(0, 500) : undefined,
+      returnUrl: input?.returnUrl ? parseReturnUrl(input.returnUrl) : undefined,
       environment: parseStripeEnvironment(input?.environment),
     }),
   )

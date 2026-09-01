@@ -38,8 +38,7 @@ beforeAll(async () => {
   publicSite = /<loc>[^<]*(\/s\/[a-z0-9-]+)<\/loc>/i.exec(sitemap.body)?.[1] ?? null;
 }, 60_000);
 
-const REQUIRE_SERVER =
-  process.env["E2E_REQUIRE_SERVER"] === "1" || process.env["CI"] === "true";
+const REQUIRE_SERVER = process.env["E2E_REQUIRE_SERVER"] === "1" || process.env["CI"] === "true";
 
 const live = (name: string, fn: () => Promise<void>, timeout = 30_000) =>
   it(
@@ -134,7 +133,10 @@ describe("CRM, notifications and analytics surfaces", () => {
 describe("payment and webhook endpoints", () => {
   live("rejects unsigned payment webhooks", async () => {
     // The Stripe route needs its environment marker; without it the event is ignored, not processed.
-    for (const path of ["/api/public/payments/webhook?env=live", "/api/public/payments/webhook?env=sandbox"]) {
+    for (const path of [
+      "/api/public/payments/webhook?env=live",
+      "/api/public/payments/webhook?env=sandbox",
+    ]) {
       const response = await fetch(`${BASE}${path}`, {
         method: "POST",
         headers: { "content-type": "application/json" },

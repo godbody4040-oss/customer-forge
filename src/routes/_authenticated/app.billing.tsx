@@ -12,11 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StripeServiceCheckout } from "@/components/app/StripeServiceCheckout";
 import { PaymentTestModeBanner } from "@/components/app/PaymentTestModeBanner";
-import {
-  usePaymentProducts,
-  usePayments,
-  type PaymentProduct,
-} from "@/lib/payments.hooks";
+import { usePaymentProducts, usePayments, type PaymentProduct } from "@/lib/payments.hooks";
 import { useBillingState } from "@/lib/stripe.hooks";
 import { createBillingPortalSession } from "@/lib/stripe.functions";
 import { getStripeEnvironment, isPaymentsConfigured } from "@/lib/stripe";
@@ -155,8 +151,8 @@ function BillingPage() {
         <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
           <p className="font-medium">Your last payment did not go through.</p>
           <p className="mt-1">
-            Update your card to keep your workspace active — access continues while Stripe
-            retries the payment.
+            Update your card to keep your workspace active — access continues while Stripe retries
+            the payment.
           </p>
           <Button
             variant="outline"
@@ -378,9 +374,9 @@ function BillingPage() {
       <Panel className="p-5">
         <SectionHeading eyebrow="Support" title="Billing questions" />
         <p className="mt-3 text-[13px] text-muted-foreground">
-          One-off services above are charged once by card. Software
-          plans are billed as a subscription and can be changed or cancelled at any time. Questions:{" "}
-          {REVORA.email} · {REVORA.phoneDisplay ?? REVORA.phone}
+          One-off services above are charged once by card. Software plans are billed as a
+          subscription and can be changed or cancelled at any time. Questions: {REVORA.email} ·{" "}
+          {REVORA.phoneDisplay ?? REVORA.phone}
         </p>
       </Panel>
 
