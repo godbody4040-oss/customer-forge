@@ -196,6 +196,27 @@ function CommandCenterPage() {
     }
   };
 
+  /**
+   * "Fix all critical issues" / "Optimise entire website". One checkpoint, then
+   * every safe change in order, then the affected pages are re-scanned so the
+   * score and the finding list reflect the new state.
+   */
+  const runBatch = async (mode: "critical" | "all") => {
+    if (!manage) return;
+    const criticalKinds = new Set(
+      structure.issues.filter((issue) => issue.severity === "critical").map((issue) => issue.upgrade),
+    );
+    const selected =
+      mode === "critical" ? proposals.filter((proposal) => criticalKinds.has(proposal.kind)) : proposals;
+    const result = await batchFix.mutateAsync({
+      proposals: selected,
+      label: mode === "critical" ? "Fix all critical issues" : "Optimise entire website",
+    });
+    if (result.restore) setLastApplied(result.restore);
+    if (live) await scanLive();
+  };
+
+
   /* ------------------------------ One-input intake ---------------------------- */
 
   const saveProfile = useSaveBusinessProfile(orgId);
