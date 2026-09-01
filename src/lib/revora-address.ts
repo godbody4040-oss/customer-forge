@@ -14,12 +14,28 @@
  * constraint, so the two can never disagree.
  */
 
+/**
+ * Revora's own platform domain: dashboard, builder, billing, CRM. Client
+ * websites are NEVER served from here.
+ */
 export const REVORA_ROOT = "revoragrowthsystems.com";
+
+/**
+ * The client website hosting domain. Every client website gets a free address
+ * at `clientname.revoraweb.site`, kept completely separate from the platform
+ * domain above so client traffic can never reach the dashboard host.
+ */
+export const SITE_ROOT = "revoraweb.site";
+
+/** Roots whose subdomains are client website addresses (newest first). */
+export const SITE_ROOTS = [SITE_ROOT, REVORA_ROOT];
 
 /** Hosts that belong to Revora itself, never to a client site. */
 export const REVORA_OWN_HOSTS = [
   REVORA_ROOT,
   `www.${REVORA_ROOT}`,
+  SITE_ROOT,
+  `www.${SITE_ROOT}`,
   "customer-forge.lovable.app",
 ];
 
