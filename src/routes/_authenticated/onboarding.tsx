@@ -18,6 +18,13 @@ import { useWorkspace } from "@/lib/use-tenant";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useStepScroll } from "@/lib/use-step-scroll";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  analyzeSiteBrief,
+  runSiteGeneration,
+  saveSiteBrief,
+} from "@/lib/site-engine.functions";
+
 import {
   WEBSITE_GOALS,
   generateWebsitePlan,
@@ -79,6 +86,13 @@ function Onboarding() {
   const navigate = useNavigate();
   const { data: ws } = useWorkspace();
   const queryClient = useQueryClient();
+  // The last onboarding step promises Revora assembles the website, so it must
+  // really run the build pipeline: analyse the business, approve that brief,
+  // then queue the generation job the builder then reports progress for.
+  const analyzeBrief = useServerFn(analyzeSiteBrief);
+  const approveBrief = useServerFn(saveSiteBrief);
+  const queueBuild = useServerFn(runSiteGeneration);
+
   const [step, setStep] = useState(0);
   const stepRef = useStepScroll<HTMLDivElement>(step);
   const [busy, setBusy] = useState(false);
@@ -369,10 +383,37 @@ function Onboarding() {
       assertNoError(settingsError, "Could not create your website draft");
 
       await supabase.from("onboarding_drafts").delete().eq("user_id", user.id);
+
+      // Actually build the website the button promises. Each stage is real:
+      // the brief is analysed from the owner's own answers, approved on their
+      // behalf (they review and can rebuild in the builder), then the build is
+      // queued. The builder polls the job and shows live progress.
+      let queued = false;
+      try {
+        const analysis = await analyzeBrief({ data: { organizationId: org.id } });
+        await approveBrief({
+          data: { organizationId: org.id, brief: analysis.brief, approved: true },
+        });
+        await queueBuild({ data: { organizationId: org.id } });
+        queued = true;
+      } catch (buildError) {
+        // Never trap the owner in onboarding: their answers are saved, and the
+        // builder's own Build button lets them start the build with one click.
+        console.error("[onboarding] build queue failed", supabaseErrorMessage(buildError));
+      }
+
       await queryClient.invalidateQueries();
 
-      toast.success("Your website draft is ready to review.");
+      if (queued)
+        toast.success("Revora is building your website", {
+          description: "Progress shows in the builder — it only takes a moment.",
+        });
+      else
+        toast.message("Your details are saved", {
+          description: "Open Build in the builder to start your website.",
+        });
       navigate({ to: "/app/website", replace: true });
+
     } catch (err) {
       console.error("[onboarding] build failed", err);
       setError(supabaseErrorMessage(err));
