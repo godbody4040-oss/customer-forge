@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { siteVariation } from "@/lib/site-variation";
 
 type Props = {
-  organizationId?: string | null;
+  organizationId?: string | null | undefined;
   businessName?: string | null;
   industry?: string | null;
   slug?: string | null;

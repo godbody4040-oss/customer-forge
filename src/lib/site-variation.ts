@@ -170,11 +170,12 @@ export function siteVariation(facts: VariationFacts | string): SiteVariation {
     optionalOrder: pick(OPTIONAL_ORDERS, seed, "order"),
     processSteps: pick(PROCESS_SETS, seed, "process"),
     heading: (slot, replacements) => {
-      const raw = pick(HEADINGS[slot], seed, `heading:${slot}`);
-      return Object.entries(replacements ?? {}).reduce(
-        (out, [key, value]) => out.replaceAll(`{${key}}`, value),
-        raw,
-      );
+      const list = HEADINGS[slot] as readonly string[];
+      let out: string = pick(list, seed, `heading:${slot}`);
+      for (const [key, value] of Object.entries(replacements ?? {})) {
+        out = out.replaceAll(`{${key}}`, value);
+      }
+      return out;
     },
     headline: (f) => pick(HEADLINE_PATTERNS, seed, "headline")(f),
     subheadline: (f) => pick(SUBHEAD_PATTERNS, seed, "subheadline")(f),
