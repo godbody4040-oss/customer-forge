@@ -15,6 +15,7 @@ import { readSeo } from "@/lib/site-seo";
 import { trackConversion } from "@/lib/conversion";
 
 import { WebsiteReview } from "@/components/app/WebsiteReview";
+import { InteractionHealth } from "@/components/app/InteractionHealth";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { BuilderShell, type BuilderSection } from "@/components/app/BuilderShell";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
@@ -411,6 +412,14 @@ function WebsitePage() {
             canManage={manage}
             result={launchFlow.result}
           />
+          <InteractionHealth
+
+            pages={pages ?? []}
+            onFix={() => {
+              setSection("pages");
+            }}
+          />
+
           <LaunchChecks
             checks={qa.checks}
             blockers={qa.blockers}
