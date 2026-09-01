@@ -114,6 +114,8 @@ function startOfToday() {
   return d;
 }
 
+const RANGE_KEY = "revora.dashboard.range";
+
 function Dashboard() {
   const { data: ws } = useWorkspace();
   const orgId = ws?.workspace?.organizationId;
@@ -124,6 +126,16 @@ function Dashboard() {
     () => new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10),
   );
   const [customTo, setCustomTo] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // Remember the range the owner last looked at (client-only, avoids hydration mismatch).
+  useEffect(() => {
+    const saved = window.localStorage.getItem(RANGE_KEY);
+    if (saved && RANGES.some((r) => r.value === saved)) setRange(saved as RangeValue);
+  }, []);
+  useEffect(() => {
+    window.localStorage.setItem(RANGE_KEY, range);
+  }, [range]);
+
 
   const window = useMemo(() => {
     if (range === "custom") {
