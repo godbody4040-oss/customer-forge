@@ -28,6 +28,27 @@ import {
   useSaveSection,
 } from "@/lib/website-content.hooks";
 import { cn } from "@/lib/utils";
+import {
+  ALIGNMENTS,
+  BUTTON_SIZES,
+  BUTTON_STYLES,
+  FONT_FAMILIES,
+  FONT_WEIGHTS,
+  LAYOUTS,
+  LAYOUT_CLASS,
+  LINE_HEIGHTS,
+  OBJECT_FITS,
+  SPACING,
+  TEXT_SIZES,
+  blockCss,
+  buttonClasses,
+  buttonCss,
+  paddingClass,
+  readBlockStyle,
+  textClasses,
+  writeBlockStyle,
+  type BlockStyle,
+} from "@/lib/site-style";
 
 type Device = "mobile" | "tablet" | "desktop";
 
@@ -109,8 +130,10 @@ function ItemCard({
   onSelect: () => void;
   onCommit: (patch: Record<string, unknown>) => void;
 }) {
+  const style = readBlockStyle(item.settings);
   return (
     <div
+      style={blockCss(style)}
       role="button"
       tabIndex={0}
       onClick={(event) => {
@@ -126,11 +149,20 @@ function ItemCard({
         !item.is_visible && "opacity-50",
       )}
     >
+      {item.media_url ? (
+        <img
+          src={item.media_url}
+          alt={typeof item.settings?.["alt"] === "string" ? String(item.settings["alt"]) : ""}
+          loading="lazy"
+          className="mb-2 h-28 w-full rounded-md"
+          style={{ objectFit: style.objectFit }}
+        />
+      ) : null}
       <InlineText
         value={item.label ?? ""}
         placeholder="Item title"
         editable={editable}
-        className="text-[13px] font-medium"
+        className={cn("font-medium", textClasses(style))}
         onCommit={(label) => onCommit({ label })}
       />
       <InlineText
@@ -141,7 +173,9 @@ function ItemCard({
         onCommit={(body) => onCommit({ body })}
       />
       {item.link_label ? (
-        <span className="mt-2 inline-block text-[12px] text-primary">{item.link_label}</span>
+        <span className={cn("mt-2", buttonClasses(style))} style={buttonCss(style)}>
+          {item.link_label}
+        </span>
       ) : null}
     </div>
   );
@@ -278,8 +312,10 @@ export function BuilderCanvas({
                     if (event.key === "Enter")
                       setSelection({ type: "section", sectionId: section.id });
                   }}
+                  style={blockCss(readBlockStyle(section.settings))}
                   className={cn(
-                    "rounded-xl border bg-card p-4 text-left transition-colors",
+                    "rounded-xl border bg-card text-left transition-colors",
+                    paddingClass(readBlockStyle(section.settings)),
                     isSelected
                       ? "border-primary ring-1 ring-primary/40"
                       : "border-border hover:border-primary/40",
@@ -299,7 +335,10 @@ export function BuilderCanvas({
                     value={section.heading ?? ""}
                     placeholder="Add a headline"
                     editable={canManage}
-                    className="mt-2 font-display text-[18px] leading-snug font-semibold"
+                    className={cn(
+                      "mt-2 font-display text-[18px] leading-snug font-semibold",
+                      textClasses(readBlockStyle(section.settings)),
+                    )}
                     onCommit={(heading) =>
                       saveSection.mutate({ id: section.id, patch: { heading } })
                     }
@@ -325,7 +364,10 @@ export function BuilderCanvas({
                     <div
                       className={cn(
                         "mt-3 grid gap-2",
-                        device === "mobile" ? "grid-cols-1" : "sm:grid-cols-2",
+                        device === "mobile"
+                          ? "grid-cols-1"
+                          : LAYOUT_CLASS[readBlockStyle(section.settings).layout] ||
+                              "sm:grid-cols-2",
                       )}
                     >
                       {[...section.components]
@@ -425,6 +467,53 @@ export function BuilderCanvas({
                   }
                 />
               </Field>
+              <Field label="Image URL" hint="An https image link, or leave empty for no image">
+                <Input
+                  key={`m-${selectedComponent.id}`}
+                  defaultValue={selectedComponent.media_url ?? ""}
+                  disabled={!canManage}
+                  onBlur={(event) =>
+                    event.target.value !== (selectedComponent.media_url ?? "") &&
+                    saveComponent.mutate({
+                      id: selectedComponent.id,
+                      patch: { media_url: event.target.value.trim() || null },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Image description (alt text)">
+                <Input
+                  key={`alt-${selectedComponent.id}`}
+                  defaultValue={
+                    typeof selectedComponent.settings?.["alt"] === "string"
+                      ? String(selectedComponent.settings["alt"])
+                      : ""
+                  }
+                  disabled={!canManage}
+                  onBlur={(event) =>
+                    saveComponent.mutate({
+                      id: selectedComponent.id,
+                      patch: {
+                        settings: {
+                          ...(selectedComponent.settings ?? {}),
+                          alt: event.target.value.trim().slice(0, 160),
+                        },
+                      },
+                    })
+                  }
+                />
+              </Field>
+              <StyleControls
+                scope="component"
+                style={readBlockStyle(selectedComponent.settings)}
+                disabled={!canManage}
+                onChange={(patch) =>
+                  saveComponent.mutate({
+                    id: selectedComponent.id,
+                    patch: { settings: writeBlockStyle(selectedComponent.settings, patch) },
+                  })
+                }
+              />
               <Button
                 size="sm"
                 variant="outline"
@@ -486,6 +575,17 @@ export function BuilderCanvas({
                   }
                 />
               </Field>
+              <StyleControls
+                scope="section"
+                style={readBlockStyle(selectedSection.settings)}
+                disabled={!canManage}
+                onChange={(patch) =>
+                  saveSection.mutate({
+                    id: selectedSection.id,
+                    patch: { settings: writeBlockStyle(selectedSection.settings, patch) },
+                  })
+                }
+              />
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -544,5 +644,96 @@ function Field({
       <span className="mt-1 block">{children}</span>
       {hint ? <span className="mt-1 block text-[11px] text-muted-foreground">{hint}</span> : null}
     </label>
+  );
+}
+
+/** Closed-list visual controls. Every option maps to a validated style value. */
+function StyleControls({
+  scope,
+  style,
+  disabled,
+  onChange,
+}: {
+  scope: "section" | "component";
+  style: BlockStyle;
+  disabled: boolean;
+  onChange: (patch: Partial<BlockStyle>) => void;
+}) {
+  const select = <K extends keyof BlockStyle>(
+    label: string,
+    key: K,
+    options: readonly string[],
+  ) => (
+    <Field label={label} key={String(key)}>
+      <select
+        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[13px]"
+        value={String(style[key] ?? "")}
+        disabled={disabled}
+        onChange={(event) => onChange({ [key]: event.target.value } as Partial<BlockStyle>)}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+
+  const color = (label: string, key: "textColor" | "bgColor" | "buttonTextColor" | "buttonBgColor") => (
+    <Field label={label} key={key}>
+      <span className="flex items-center gap-2">
+        <input
+          type="color"
+          className="h-9 w-12 rounded-md border border-border bg-background"
+          value={style[key] ?? "#000000"}
+          disabled={disabled}
+          onChange={(event) => onChange({ [key]: event.target.value } as Partial<BlockStyle>)}
+          aria-label={label}
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={disabled || !style[key]}
+          onClick={() => onChange({ [key]: null } as Partial<BlockStyle>)}
+        >
+          Clear
+        </Button>
+      </span>
+    </Field>
+  );
+
+  return (
+    <div className="space-y-3 border-t border-border pt-3">
+      <p className="text-[12px] font-medium">Design</p>
+      <div className="grid grid-cols-2 gap-2">
+        {select("Font", "font", FONT_FAMILIES)}
+        {select("Text size", "size", TEXT_SIZES)}
+        {select("Weight", "weight", FONT_WEIGHTS)}
+        {select("Alignment", "align", ALIGNMENTS)}
+        {select("Line height", "lineHeight", LINE_HEIGHTS)}
+        {scope === "section" ? select("Padding", "padding", SPACING) : null}
+        {scope === "section" ? select("Card layout", "layout", LAYOUTS) : null}
+        {scope === "component" ? select("Image fit", "objectFit", OBJECT_FITS) : null}
+        {scope === "component" ? select("Button style", "buttonStyle", BUTTON_STYLES) : null}
+        {scope === "component" ? select("Button size", "buttonSize", BUTTON_SIZES) : null}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {color("Text colour", "textColor")}
+        {color("Background", "bgColor")}
+        {scope === "component" ? color("Button text", "buttonTextColor") : null}
+        {scope === "component" ? color("Button fill", "buttonBgColor") : null}
+      </div>
+      {scope === "section" ? (
+        <Field label="Background image" hint="An https image link; leave empty for none">
+          <Input
+            key={`bg-${style.bgImage ?? ""}`}
+            defaultValue={style.bgImage ?? ""}
+            disabled={disabled}
+            onBlur={(event) => onChange({ bgImage: event.target.value.trim() || null })}
+          />
+        </Field>
+      ) : null}
+    </div>
   );
 }
