@@ -81,8 +81,9 @@ function MyStart() {
     {
       title: "Publish it",
       body: `Go live on your free address${
-        settings?.subdomain ? ` — ${settings.subdomain}.revoragrowthsystems.com` : ""
+        settings?.subdomain ? ` — ${revoraUrl(settings.subdomain).replace("https://", "")}` : ""
       }. No domain purchase needed.`,
+
       done: live,
       to: "/app/launch",
       cta: "Publish",
