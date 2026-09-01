@@ -94,6 +94,27 @@ function PublicSiteRoute() {
 }
 
 /**
+ * The home address serves whatever the owner actually built. When the builder
+ * has a home page with visible sections, that exact page is rendered — the same
+ * renderer the other pages and the draft preview use — so the live site can
+ * never differ from the editor. Only tenants with no built home page fall back
+ * to the generated template layout.
+ */
+export function PublicSiteView({
+  site,
+  preview = false,
+}: {
+  site: NonNullable<PublicSite>;
+  preview?: boolean;
+}) {
+  if (site.content && site.content.sections.length > 0) {
+    return <SitePageView site={site} preview={preview} />;
+  }
+  return <TemplateSiteView site={site} preview={preview} />;
+}
+
+
+/**
  * The rendered business website. Shared by the live site and by time-limited
  * draft preview links, which pass `preview` so nothing is tracked as real traffic.
  */
