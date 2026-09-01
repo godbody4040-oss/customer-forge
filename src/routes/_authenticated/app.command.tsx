@@ -195,6 +195,12 @@ function CommandCenterPage() {
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [lastApplied, setLastApplied] = useState<AppliedUpgrade | null>(null);
 
+  // Every hook above runs on every render; the loading gate must come after them
+  // so hook order stays identical before and after the workspace queries settle.
+  if (isLoadingWorkspace) return <LoadingRows rows={5} />;
+
+
+
   const scanLive = async () => {
     const result = await liveAudit.mutateAsync();
     setLive(result.pages ?? []);
