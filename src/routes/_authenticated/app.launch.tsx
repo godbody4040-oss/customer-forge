@@ -93,9 +93,15 @@ function Launch() {
 
   const domainStatus = settings?.domain_status ?? "not_connected";
   const publishState = settings?.publish_state ?? "draft";
-  const siteUrl = settings?.custom_domain
-    ? `https://${settings.custom_domain}`
-    : `/s/${org?.slug ?? ""}`;
+  // The live address an owner should share: their own domain once it is verified
+  // and secure, otherwise the free Revora address included with the website.
+  const siteUrl =
+    settings?.custom_domain && settings?.dns_ok && settings?.ssl_ok
+      ? `https://${settings.custom_domain}`
+      : settings?.subdomain
+        ? `https://${settings.subdomain}.revoragrowthsystems.com`
+        : `/s/${org?.slug ?? ""}`;
+
 
   const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
   const reviewMeta = reviewStateMeta(reviewState);
