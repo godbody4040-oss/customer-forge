@@ -16,6 +16,12 @@ export type HostSiteResult = {
   site: NonNullable<Awaited<ReturnType<typeof loadSite>>>;
 } | null;
 
+/**
+ * Answers two things: does this web address belong to a client (`tenant`), and
+ * is the requested page published on it (`result`). The distinction matters —
+ * on a client's address a missing page must be a plain "page not found", never
+ * Revora's own marketing page.
+ */
 export const getHostSite = createServerFn({ method: "GET" })
   .inputValidator((input?: { pageSlug?: string }) => {
     const raw = String(input?.pageSlug ?? "")
@@ -25,7 +31,7 @@ export const getHostSite = createServerFn({ method: "GET" })
     if (raw && !/^[a-z0-9-]+$/.test(raw)) return {};
     return raw ? { pageSlug: raw } : {};
   })
-  .handler(async ({ data }): Promise<HostSiteResult> => {
+  .handler(async ({ data }): Promise<{ tenant: boolean; result: HostSiteResult }> => {
     const { getRequestHost } = await import("@tanstack/react-start/server");
     const { resolveTenantHost } = await import("@/lib/site-host.server");
     const { loadSite } = await import("@/lib/public-site.server");
@@ -37,7 +43,7 @@ export const getHostSite = createServerFn({ method: "GET" })
       host = null;
     }
     const tenant = await resolveTenantHost(host);
-    if (!tenant) return null;
+    if (!tenant) return { tenant: false, result: null };
 
     // Published-only: `loadSite` refuses drafts unless an authorised preview
     // token is presented, which never happens on a public host.
@@ -45,6 +51,10 @@ export const getHostSite = createServerFn({ method: "GET" })
       tenant.slug,
       data.pageSlug ? { pageSlug: data.pageSlug } : undefined,
     );
-    if (!site) return null;
-    return { slug: tenant.slug, host: tenant.host, via: tenant.via, site };
+    if (!site) return { tenant: true, result: null };
+    return {
+      tenant: true,
+      result: { slug: tenant.slug, host: tenant.host, via: tenant.via, site },
+    };
   });
+
