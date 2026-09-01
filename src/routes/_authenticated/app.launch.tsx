@@ -98,9 +98,8 @@ function Launch() {
   const siteUrl =
     settings?.custom_domain && settings?.dns_ok && settings?.ssl_ok
       ? `https://${settings.custom_domain}`
-      : settings?.subdomain
-        ? `https://${settings.subdomain}.revoragrowthsystems.com`
-        : `/s/${org?.slug ?? ""}`;
+      : (revoraUrl(settings?.subdomain) ?? `/s/${org?.slug ?? ""}`);
+
 
 
   const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
