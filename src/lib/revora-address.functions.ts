@@ -92,18 +92,21 @@ export const checkRevoraAddressLive = createServerFn({ method: "POST" })
     const host = revoraHost(settings.subdomain);
     if (!host) throw new Error("This workspace doesn't have a free Revora address yet.");
 
-    const { checkDomain, DOMAIN_A_RECORD } = await import("@/lib/admin.server");
+const { checkDomain, DOMAIN_A_RECORD } = await import("@/lib/admin.server");
     const { SITE_ROOT } = await import("@/lib/revora-address");
-    const check = await checkDomain(host);
+    // The free address is served either directly (wildcard A → platform) or
+    // through the Cloudflare proxy (wildcard A → Cloudflare edge), so DNS is
+    // judged by "public answers + HTTPS works" rather than one fixed record.
+    const check = await checkDomain(host, { proxied: true });
 
-    const detail =
-      check.dnsOk && check.sslOk
+const detail =
+      check.dnsOk && check.sslOk && check.records.servesThisSite
         ? `${host} is live and secured with HTTPS.`
         : !check.dnsOk
-          ? `${host} doesn't resolve yet. The hosting domain needs a wildcard A record: * → ${DOMAIN_A_RECORD} on ${SITE_ROOT}.`
-          : `${host} resolves correctly, but HTTPS isn't answering yet. Secure certificates can take a few minutes after the address first resolves.`;
+          ? `${host} doesn't resolve yet. The hosting domain needs a wildcard A record (* → ${DOMAIN_A_RECORD}) — directly at your registrar, or proxied inside Cloudflare.`
+          : `${host} resolves, but HTTPS isn't answering yet. If you use Cloudflare, keep the proxy on (orange cloud) with the Worker route covering *${SITE_ROOT}/*. Otherwise, certificates can take a few minutes after the address first resolves.`;
 
-    const live = check.dnsOk && check.sslOk;
+    const live = check.dnsOk && check.sslOk && check.records.servesThisSite;
     const checkedAt = new Date().toISOString();
 
     // Record the proven state so every other screen (launch checklist, portal,
@@ -123,7 +126,9 @@ export const checkRevoraAddressLive = createServerFn({ method: "POST" })
       live,
       status: check.status,
       detail,
-      expected: DOMAIN_A_RECORD,
+expected: check.records.a.includes(DOMAIN_A_RECORD)
+        ? DOMAIN_A_RECORD
+        : `Cloudflare edge (proxied ${SITE_ROOT})`,
       checkedAt,
     };
   });

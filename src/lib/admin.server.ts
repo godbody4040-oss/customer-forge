@@ -111,7 +111,10 @@ export const requiredDnsRecords = (domain: string) => [
  * DNS must actually resolve to the platform, and HTTPS must complete a TLS
  * handshake and return a real response from that hostname.
  */
-export async function checkDomain(domain: string): Promise<DomainCheck> {
+export async function checkDomain(
+  domain: string,
+  opts: { proxied?: boolean } = {},
+): Promise<DomainCheck> {
   if (domain && !isFetchableHostname(normalizeDomain(domain)))
     return {
       status: "error",
@@ -147,13 +150,24 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
     );
     records.txtVerified = records.txt.some((t) => t.toLowerCase().startsWith("lovable_verify="));
 
-    const dnsOk = records.aMatches || records.cnameMatches;
+// Behind a reverse proxy (Cloudflare) the public answers are the proxy's
+    // own edge addresses, never the platform record — so a proxied host is
+    // judged by "does DNS answer with public addresses at all", and the HTTPS
+    // probe below is what actually proves the site is served.
+    const dnsOk = opts.proxied
+      ? records.a.length > 0 || records.cname.length > 0
+      : records.aMatches || records.cnameMatches;
 
     if (!dnsOk) {
-      const detail =
-        records.a.length === 0 && records.cname.length === 0
+      const found = [...records.a, ...records.cname].slice(0, 3).join(", ");
+      const none = records.a.length === 0 && records.cname.length === 0;
+      const detail = opts.proxied
+        ? none
+          ? `No DNS records found for ${domain} yet. Add proxied A records for @ and * inside Cloudflare.`
+          : `DNS exists but isn't resolving through Cloudflare yet. ${domain} currently resolves to ${found}.`
+        : none
           ? `No DNS records found for ${domain} yet. Add an A record pointing to ${DOMAIN_A_RECORD}.`
-          : `DNS exists but doesn't point here. ${domain} currently resolves to ${[...records.a, ...records.cname].slice(0, 3).join(", ")}. Point it to ${DOMAIN_A_RECORD} instead.`;
+          : `DNS exists but doesn't point here. ${domain} currently resolves to ${found}. Point it to ${DOMAIN_A_RECORD} instead.`;
       return {
         status: records.txtVerified ? "verifying" : "dns_pending",
         detail,
@@ -185,8 +199,11 @@ export async function checkDomain(domain: string): Promise<DomainCheck> {
     // Now prove HTTPS actually works on that hostname.
     try {
       const res = await fetch(`https://${domain}/`, { method: "GET", redirect: "manual" });
-      records.httpsStatus = res.status;
-      records.servesThisSite = res.status < 500;
+records.httpsStatus = res.status;
+      // Through a reverse proxy a 404 means the Worker/route isn't serving the
+      // app yet, so "live" requires a real success response (or a deliberate
+      // redirect, such as to a client's own custom domain).
+      records.servesThisSite = opts.proxied ? res.status < 400 : res.status < 500;
       if (res.status >= 500) {
         return {
           status: "connected",
