@@ -320,6 +320,13 @@ function WebsitePage() {
       ),
     },
     {
+      key: "growth",
+      label: "Growth & audit",
+      hint: "Findings, one-click fixes, optimise",
+      node: <BuilderAudit organizationId={orgId} org={org ?? null} canManage={manage} />,
+    },
+    {
+
       key: "upgrades",
       label: "Upgrades",
       hint: "Elite additions Revora recommends",
