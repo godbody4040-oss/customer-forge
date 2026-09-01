@@ -79,6 +79,13 @@ function Onboarding() {
   const navigate = useNavigate();
   const { data: ws } = useWorkspace();
   const queryClient = useQueryClient();
+  // The last onboarding step promises Revora assembles the website, so it must
+  // really run the build pipeline: analyse the business, approve that brief,
+  // then queue the generation job the builder then reports progress for.
+  const analyzeBrief = useServerFn(analyzeSiteBrief);
+  const approveBrief = useServerFn(saveSiteBrief);
+  const queueBuild = useServerFn(runSiteGeneration);
+
   const [step, setStep] = useState(0);
   const stepRef = useStepScroll<HTMLDivElement>(step);
   const [busy, setBusy] = useState(false);
