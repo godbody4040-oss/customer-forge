@@ -475,7 +475,32 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                 <dd className="mt-1 text-[13px]">{profile.service_area ?? profile.city}</dd>
               </div>
             ) : null}
+            {profile?.address ? (
+              <div>
+                <dt className="eyebrow flex items-center gap-1.5">
+                  <MapPin className="size-3.5" aria-hidden="true" /> Address
+                </dt>
+                <dd className="mt-1 text-[13px]">
+                  {[profile.address, profile.city, profile.state, profile.zip]
+                    .filter(Boolean)
+                    .join(", ")}
+                </dd>
+              </div>
+            ) : null}
+            {profile?.hours ? (
+              <div>
+                <dt className="eyebrow">Hours</dt>
+                <dd className="mt-1 whitespace-pre-line text-[13px]">{String(profile.hours)}</dd>
+              </div>
+            ) : null}
           </dl>
+          <div className="mt-6">
+            <DirectContact
+              profile={profile}
+              businessName={site.org.name}
+              label={`Call or email ${site.org.name} directly`}
+            />
+          </div>
         </Shell>
       );
 
