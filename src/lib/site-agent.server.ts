@@ -174,9 +174,10 @@ async function call(model: string, messages: ChatMessage[]) {
       throw new AiGatewayError(429, "The assistant is busy right now. Try again in a moment.", retryAfter);
     }
     if (response.status === 402)
-      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to keep editing with the assistant.");
+      throw new AiGatewayError(402, "Revora's AI writer is paused right now — the built-in builder will handle this request.");
     if (response.status === 403)
-      throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+      throw new AiGatewayError(403, "Revora's AI writer is unavailable right now — the built-in builder will handle this request.");
+
     if (response.status === 413)
       throw new AiGatewayError(413, "That attachment is too large for the assistant. Try a shorter clip or a smaller photo.");
     console.error("[site-agent] gateway error", response.status, body.slice(0, 500));
