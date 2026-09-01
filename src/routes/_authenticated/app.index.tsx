@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import {
   MetricCard,
@@ -129,11 +129,11 @@ function Dashboard() {
 
   // Remember the range the owner last looked at (client-only, avoids hydration mismatch).
   useEffect(() => {
-    const saved = window.localStorage.getItem(RANGE_KEY);
+    const saved = globalThis.localStorage.getItem(RANGE_KEY);
     if (saved && RANGES.some((r) => r.value === saved)) setRange(saved as RangeValue);
   }, []);
   useEffect(() => {
-    window.localStorage.setItem(RANGE_KEY, range);
+    globalThis.localStorage.setItem(RANGE_KEY, range);
   }, [range]);
 
 
