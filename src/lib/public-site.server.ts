@@ -254,11 +254,23 @@ export async function loadSite(
 
   const navQuery = supabase
     .from("website_pages")
-    .select("slug, title, kind, noindex, sort_order")
+    .select("id, slug, title, kind, noindex, sort_order")
     .eq("organization_id", orgId);
   const { data: navRows } = await (allowUnpublished
     ? navQuery.order("sort_order")
     : navQuery.eq("is_visible", true).order("sort_order"));
+
+  // Never link the menu to a page that has no visible sections — it would open
+  // a blank page for a visitor.
+  const sectionCountQuery = supabase
+    .from("website_sections")
+    .select("page_id")
+    .eq("organization_id", orgId);
+  const { data: navSectionRows } = await (allowUnpublished
+    ? sectionCountQuery
+    : sectionCountQuery.eq("is_visible", true));
+  const populatedPages = new Set((navSectionRows ?? []).map((row) => row.page_id as string));
+
 
   let sections: SiteSection[] = [];
   if (currentPage?.id) {
@@ -319,7 +331,10 @@ export async function loadSite(
     gallery: gallery.map((g) => ({ ...g, url: resolve(g.url) ?? g.url })),
     quote: quoteForm.data ? { form: quoteForm.data, questions, addons } : null,
     content: currentPage ? { page: currentPage, sections: sectionsWithComponents } : null,
-    nav: (navRows ?? []).filter((row) => !row.noindex || row.kind !== "thanks"),
+    nav: (navRows ?? [])
+      .filter((row) => !row.noindex || row.kind !== "thanks")
+      .filter((row) => populatedPages.has(row.id as string) || row.kind === "home"),
+
     pageFound: options?.pageSlug ? !!currentPage : true,
 
     publishState: gate?.publish_state ?? "draft",

@@ -36,6 +36,7 @@ import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import { GROWTH_SYSTEM_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
 import { VisualComposition } from "@/components/site/VisualComposition";
 import { HOMEPAGE_COMPOSITION } from "@/lib/homepage-concept";
+import { SiteAddressProvider } from "@/components/site/site-links";
 import { getHostSite } from "@/lib/host-site.functions";
 import { isPossibleTenantHost } from "@/lib/revora-address";
 import { PublicSiteView } from "@/routes/s.$slug";
@@ -126,7 +127,12 @@ export const Route = createFileRoute("/")({
 /** Client website on a client host, Revora's sales site on Revora's host. */
 function HomeRoute() {
   const hostSite = Route.useLoaderData();
-  if (hostSite?.site) return <PublicSiteView site={hostSite.site} />;
+  if (hostSite?.site)
+    return (
+      <SiteAddressProvider ownAddress>
+        <PublicSiteView site={hostSite.site} />
+      </SiteAddressProvider>
+    );
   return <Landing />;
 }
 

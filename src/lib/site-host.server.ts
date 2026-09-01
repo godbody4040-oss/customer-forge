@@ -107,20 +107,32 @@ export async function resolveHostSite(
   if (!tenant) return null;
 
   const supabase = publicClient();
-  const { data: pages } = await supabase
-    .from("website_pages")
-    .select("slug, updated_at, noindex")
-    .eq("organization_id", tenant.organizationId)
-    .order("sort_order", { ascending: true });
+  const [{ data: pages }, { data: sections }] = await Promise.all([
+    supabase
+      .from("website_pages")
+      .select("id, slug, updated_at, noindex")
+      .eq("organization_id", tenant.organizationId)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("website_sections")
+      .select("page_id, is_visible")
+      .eq("organization_id", tenant.organizationId),
+  ]);
+
+  // A page with no visible sections renders blank — never advertise it publicly.
+  const populated = new Set(
+    (sections ?? []).filter((s) => s.is_visible !== false).map((s) => s.page_id as string),
+  );
 
   return {
     slug: tenant.slug,
     origin: `${protocol}://${tenant.host}`,
     noindex: false,
     pages: (pages ?? [])
-      .filter((p) => !p.noindex)
+      .filter((p) => !p.noindex && populated.has(p.id as string))
       .map((p) => ({ slug: p.slug, updatedAt: p.updated_at ?? null })),
   };
+
 }
 
 
