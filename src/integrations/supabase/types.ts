@@ -2822,6 +2822,8 @@ export type Database = {
           publish_state: Database["public"]["Enums"]["publish_state"]
           published: boolean
           review_state: string
+          revora_host_checked_at: string | null
+          revora_host_ok: boolean
           seo: Json
           ssl_active: boolean
           ssl_checked_at: string | null
@@ -2861,6 +2863,8 @@ export type Database = {
           publish_state?: Database["public"]["Enums"]["publish_state"]
           published?: boolean
           review_state?: string
+          revora_host_checked_at?: string | null
+          revora_host_ok?: boolean
           seo?: Json
           ssl_active?: boolean
           ssl_checked_at?: string | null
@@ -2900,6 +2904,8 @@ export type Database = {
           publish_state?: Database["public"]["Enums"]["publish_state"]
           published?: boolean
           review_state?: string
+          revora_host_checked_at?: string | null
+          revora_host_ok?: boolean
           seo?: Json
           ssl_active?: boolean
           ssl_checked_at?: string | null
