@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { StripeEnv } from "@/lib/stripe.server";
-import { cleanText, parseStripeEnvironment, parseWorkspaceId } from "@/lib/stripe-input";
+import { cleanText, parseReturnUrl, parseStripeEnvironment, parseWorkspaceId } from "@/lib/stripe-input";
 import { GROWTH_SYSTEM, verifyGrowthPrices } from "@/lib/offer";
 
 export type GrowthSystemIntake = {
