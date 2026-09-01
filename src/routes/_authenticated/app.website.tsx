@@ -33,6 +33,8 @@ import { readBackdrop, writeBackdrop } from "@/lib/site-effects";
 import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { UpgradeStudio } from "@/components/app/UpgradeStudio";
 import { RevoraGenius } from "@/components/app/RevoraGenius";
+import { BuilderAudit } from "@/components/app/BuilderAudit";
+
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
