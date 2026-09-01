@@ -6,7 +6,7 @@
  * client their domain is working when it isn't.
  */
 import { canonicalHost, type EmailForwardProvider, type HostPreference } from "@/lib/domain-ops";
-import { areAddressesPublic, isFetchableHostname } from "@/lib/net-guard.server";
+import { guardedFetch as sharedGuardedFetch } from "@/lib/net-guard.server";
 
 type DnsAnswer = { name: string; type: number; data: string };
 
