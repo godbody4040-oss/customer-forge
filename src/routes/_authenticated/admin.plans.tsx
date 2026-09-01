@@ -1,13 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { LoadingRows, Panel, Pill, SectionHeading, MetricCard } from "@/components/app/Bits";
-import { getOfferConfig, listClients, updateOfferRates } from "@/lib/admin.functions";
+import { getOfferConfig, listClients } from "@/lib/admin.functions";
 import { GROWTH_SYSTEM } from "@/lib/offer";
 import { currency, number } from "@/lib/format";
 
@@ -84,130 +79,64 @@ function AdminPlans() {
 }
 
 function PricingControls() {
-  const queryClient = useQueryClient();
   const configFn = useServerFn(getOfferConfig);
-  const updateFn = useServerFn(updateOfferRates);
   const config = useQuery({ queryKey: ["admin", "offer-config"], queryFn: () => configFn({}) });
-
-  const [setupPrice, setSetupPrice] = useState("");
-  const [monthlyPrice, setMonthlyPrice] = useState("");
-  const [notes, setNotes] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!config.data) return;
-    setSetupPrice(String(config.data.setupPrice));
-    setMonthlyPrice(String(config.data.monthlyPrice));
-  }, [config.data]);
-
-  const save = useMutation({
-    mutationFn: () =>
-      updateFn({ data: { setupPrice: Number(setupPrice), monthlyPrice: Number(monthlyPrice) } }),
-    onSuccess: async (result) => {
-      setNotes(result.notes);
-      toast.success(`Offer updated to ${currency(result.setupPrice)} setup + ${currency(result.monthlyPrice)}/month.`);
-      await queryClient.invalidateQueries({ queryKey: ["admin"] });
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const dirty =
-    Boolean(config.data) &&
-    (Number(setupPrice) !== config.data!.setupPrice ||
-      Number(monthlyPrice) !== config.data!.monthlyPrice);
-  const copyMismatch =
-    Boolean(config.data) &&
-    (config.data!.setupPrice !== config.data!.codeSetupPrice ||
-      config.data!.monthlyPrice !== config.data!.codeMonthlyPrice);
 
   return (
     <Panel className="space-y-4">
       <SectionHeading
-        eyebrow="Pricing controls"
-        title="Set the rates you charge"
-        action={config.isFetching ? <Pill tone="neutral">Checking Stripe…</Pill> : null}
+        eyebrow="Canonical Revora offer"
+        title="Locked — $750 setup + $100/month"
+        action={<Pill tone="signal">Not editable</Pill>}
       />
       <p className="text-[12px] text-muted-foreground">
-        Saving rewrites both prices in your payment provider behind the same stable keys, so new
-        checkouts charge the new amounts immediately. Existing subscribers keep the price they signed
-        up on until you move them.
+        Revora sells exactly one commercial offer. The amounts below are fixed in the platform
+        itself, mirrored into the database and enforced again by the payment provider before any
+        checkout opens. They cannot be changed from this dashboard.
       </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-md border border-border bg-elevated p-3">
+          <p className="font-display text-[22px] font-semibold">
+            {currency(GROWTH_SYSTEM.setupPrice)}
+          </p>
+          <p className="text-[12px] text-muted-foreground">One-time setup, charged today</p>
+        </div>
+        <div className="rounded-md border border-border bg-elevated p-3">
+          <p className="font-display text-[22px] font-semibold">
+            {currency(GROWTH_SYSTEM.monthlyPrice)}
+            <span className="text-[12px] font-normal text-muted-foreground">/month</span>
+          </p>
+          <p className="text-[12px] text-muted-foreground">
+            First month free · {GROWTH_SYSTEM.trialDays}-day platform trial
+          </p>
+        </div>
+      </div>
+
+      <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.explainer}</p>
 
       {config.isLoading ? (
         <LoadingRows rows={2} />
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="setup-price">One-time setup ($)</Label>
-              <Input
-                id="setup-price"
-                inputMode="numeric"
-                value={setupPrice}
-                onChange={(event) => setSetupPrice(event.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="monthly-price">Monthly ($)</Label>
-              <Input
-                id="monthly-price"
-                inputMode="numeric"
-                value={monthlyPrice}
-                onChange={(event) => setMonthlyPrice(event.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
-              {save.isPending ? "Updating…" : "Save new rates"}
-            </Button>
-            {dirty ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSetupPrice(String(config.data!.setupPrice));
-                  setMonthlyPrice(String(config.data!.monthlyPrice));
-                }}
-              >
-                Reset
-              </Button>
-            ) : null}
-          </div>
-
-          <ul className="space-y-1 border-t border-border pt-3 text-[12px] text-muted-foreground">
-            {config.data!.environments.map((env) => (
-              <li key={env.environment}>
-                {env.environment === "live" ? "Live payments" : "Test payments"}:{" "}
-                {env.reachable
-                  ? `${env.setupAmount === null ? "no setup price" : currency(env.setupAmount)} setup · ${
-                      env.monthlyAmount === null
-                        ? "no monthly price"
-                        : `${currency(env.monthlyAmount)}/mo`
-                    }`
-                  : "not connected yet"}
-              </li>
-            ))}
-          </ul>
-
-          {copyMismatch ? (
-            <p className="rounded-md border border-border bg-card/60 p-3 text-[12px] text-muted-foreground">
-              Heads up: your marketing copy is still written around{" "}
-              {currency(config.data!.codeSetupPrice)} setup +{" "}
-              {currency(config.data!.codeMonthlyPrice)}/month. Checkout now charges the rates above —
-              ask Revora to rewrite the public pricing copy so the two match.
-            </p>
-          ) : null}
-
-          {notes.length ? (
-            <ul className="space-y-1 text-[11px] text-muted-foreground">
-              {notes.map((note) => (
-                <li key={note}>· {note}</li>
-              ))}
-            </ul>
-          ) : null}
-        </>
-      )}
+      ) : config.data ? (
+        <ul className="space-y-1 border-t border-border pt-3 text-[12px] text-muted-foreground">
+          <li>
+            Full-system free access at signup: {config.data.fullAccessDays} days · monthly fee trial:{" "}
+            {config.data.trialDays} days
+          </li>
+          {config.data.environments.map((env) => (
+            <li key={env.environment}>
+              {env.environment === "live" ? "Live payments" : "Test payments"}:{" "}
+              {env.reachable
+                ? `${env.setupAmount === null ? "no setup price" : currency(env.setupAmount)} setup · ${
+                    env.monthlyAmount === null
+                      ? "no monthly price"
+                      : `${currency(env.monthlyAmount)}/mo`
+                  }${env.matchesOffer ? " — matches the offer" : " — does NOT match; checkout is blocked"}`
+                : "not connected yet"}
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </Panel>
   );
 }
