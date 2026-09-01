@@ -212,6 +212,13 @@ function BillingPage() {
           ))}
         </ul>
 
+        {/* Builder usage is included with access: there is no credit or per-build charge. */}
+        <p className="mt-4 rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-[12.5px]">
+          <span className="font-medium text-gold">{BUILDER_INCLUDED_LABEL}.</span>{" "}
+          <span className="text-muted-foreground">{BUILDER_INCLUDED_DETAIL}</span>
+        </p>
+
+
         {!cardsReady ? (
           <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
             Card checkout is not configured for this build yet, so no payment can be taken.
