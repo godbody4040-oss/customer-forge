@@ -1,0 +1,160 @@
+/**
+ * Client portal home: one honest picture of this client's business — is the
+ * website live, what has it captured, what is next. Reads the same workspace
+ * tables the builder writes, so it never disagrees with the live site.
+ */
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, CalendarCheck, ExternalLink, Globe, Users } from "lucide-react";
+import { MetricCard, Panel, Pill } from "@/components/app/Bits";
+import { Button } from "@/components/ui/button";
+import { useAnalytics, useAppointments, useLeads, useWebsiteSettings } from "@/lib/queries";
+import { useWorkspace } from "@/lib/use-tenant";
+import { revoraUrl } from "@/lib/revora-address";
+import { dateLong, relative } from "@/lib/format";
+
+export const Route = createFileRoute("/_authenticated/my/")({
+  head: () => ({
+    meta: [
+      { title: "My portal — website, leads and bookings at a glance" },
+      {
+        name: "description",
+        content:
+          "Your Revora portal home: live website status, leads captured, bookings taken and visits this month.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: PortalHome,
+});
+
+function PortalHome() {
+  const { data: ws } = useWorkspace();
+  const org = ws?.workspace?.organization;
+  const orgId = ws?.workspace?.organizationId;
+  const { data: settings } = useWebsiteSettings(orgId);
+  const { data: leads } = useLeads(orgId);
+  const { data: appointments } = useAppointments(orgId);
+  const { data: events } = useAnalytics(orgId, 30);
+
+  const live = settings?.publish_state === "published";
+  const address =
+    settings?.custom_domain
+      ? `https://${settings.custom_domain}`
+      : (revoraUrl(settings?.subdomain) ?? (org?.slug ? `/s/${org.slug}` : null));
+
+  const now = Date.now();
+  const upcoming = (appointments ?? []).filter((a) => new Date(a.starts_at).getTime() >= now);
+  const visits = (events ?? []).filter((e) => e.event_type === "page_view").length;
+  const newLeads = (leads ?? []).filter((l) => l.status === "new").length;
+
+  return (
+    <div className="space-y-5">
+      <section className="panel p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">Your website</p>
+            <p className="mt-1 truncate text-[15px] font-medium">
+              {settings?.custom_domain ?? settings?.subdomain ?? org?.slug ?? "Not created yet"}
+            </p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">
+              {live
+                ? settings?.last_published_at
+                  ? `Live · published ${relative(new Date(settings.last_published_at))}`
+                  : "Live"
+                : "Not live yet — finish the setup steps and publish"}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone={live ? "signal" : "muted"}>{live ? "Live" : "Draft"}</Pill>
+            {address ? (
+              <Button asChild variant="outline" size="sm">
+                <a href={address} target="_blank" rel="noreferrer">
+                  <ExternalLink className="mr-1.5 h-4 w-4" />
+                  View site
+                </a>
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricCard label="Leads" value={String((leads ?? []).length)} />
+        <MetricCard label="New leads" value={String(newLeads)} />
+        <MetricCard label="Upcoming bookings" value={String(upcoming.length)} />
+        <MetricCard label="Visits (30 days)" value={String(visits)} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Latest leads" icon={Users}>
+          {(leads ?? []).length === 0 ? (
+            <p className="text-[13px] text-muted-foreground">
+              No leads yet. Every form on your live site lands here — and emails you instantly.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {(leads ?? []).slice(0, 5).map((lead) => (
+                <li key={lead.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium">{lead.name}</p>
+                    <p className="truncate text-[12px] text-muted-foreground">
+                      {[lead.service_interest, lead.city, lead.email, lead.phone]
+                        .filter(Boolean)
+                        .join(" · ") || "New enquiry"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[11px] text-muted-foreground">
+                    {relative(new Date(lead.created_at))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/my/activity">
+                All leads & bookings
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </Panel>
+
+        <Panel title="Next bookings" icon={CalendarCheck}>
+          {upcoming.length === 0 ? (
+            <p className="text-[13px] text-muted-foreground">
+              Nothing booked yet. Bookings from your site's Book section appear here with date,
+              time and contact details.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {upcoming.slice(0, 5).map((appointment) => (
+                <li key={appointment.id} className="py-2.5">
+                  <p className="text-[13px] font-medium">{appointment.name}</p>
+                  <p className="text-[12px] text-muted-foreground">
+                    {dateLong(appointment.starts_at)}
+                    {appointment.phone ? ` · ${appointment.phone}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      <Panel title="Your website details" icon={Globe}>
+        <p className="text-[13px] text-muted-foreground">
+          See your pages, what each one says and how visitors reach you.
+        </p>
+        <div className="mt-3">
+          <Button asChild size="sm">
+            <Link to="/my/site">
+              Open my website
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
