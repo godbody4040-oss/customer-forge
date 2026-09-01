@@ -91,8 +91,8 @@ export function RevoraAddressCard({
   return (
     <Panel className="space-y-4 p-5">
       <SectionHeading
-        eyebrow="Included free"
-        title="Your free Revora address"
+        eyebrow="Preview only"
+        title="Your Revora preview address"
         action={
           <Pill tone={published && (hostLive || pathUrl) ? "signal" : "neutral"}>
             {!published
@@ -104,9 +104,9 @@ export function RevoraAddressCard({
         }
       />
       <p className="text-[13px] text-muted-foreground">
-        Every Revora website comes with its own free web address on our domain. You don&apos;t need
-        to buy a domain to launch — and this address keeps working forever, even after you connect a
-        domain of your own.
+        While you build, Revora gives you a preview address so you can review and share your
+        website before your own domain is connected. Your own domain is always your permanent
+        public website address.
       </p>
 
       <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
@@ -201,8 +201,8 @@ export function RevoraAddressCard({
         </p>
         <p className="rounded-md border border-border/60 p-2.5">
           {customLive
-            ? "Your own domain is live, and this address still works."
-            : "Visitors use this address until your own domain is verified."}
+            ? "Your own domain is your public website. This preview address is for your own review."
+            : "Use this while you build. Connect your own domain for your public website."}
         </p>
       </div>
 
@@ -251,7 +251,7 @@ export function RevoraAddressCard({
           </div>
         ) : (
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            Change my free address
+            Change my preview address
           </Button>
         )
       ) : null}

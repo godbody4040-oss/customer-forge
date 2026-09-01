@@ -49,10 +49,10 @@ function MySite() {
   const addresses = [
     custom ? { label: "Your own domain", url: custom, primary: true } : null,
     freeAddress && freeLive
-      ? { label: "Free Revora address (included)", url: freeAddress, primary: !custom }
+      ? { label: "Revora preview address", url: freeAddress, primary: !custom }
       : null,
     shareable
-      ? { label: "Direct Revora link", url: shareable, primary: !custom && !freeLive }
+      ? { label: "Revora preview link", url: shareable, primary: !custom && !freeLive }
       : null,
   ].filter(Boolean) as { label: string; url: string; primary: boolean }[];
 
