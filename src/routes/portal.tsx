@@ -112,6 +112,8 @@ function PortalPage() {
       // signup email): finish the join without making them press anything.
       const pending =
         codeParam ?? window.localStorage.getItem("revora.portal_code") ?? undefined;
+      // Consume it immediately so a failed join can never trap them here.
+      window.localStorage.removeItem("revora.portal_code");
       if (data.session && pending) {
         const normalized = normalizePortalCode(pending);
         if (normalized.length === PORTAL_CODE_LENGTH) {
