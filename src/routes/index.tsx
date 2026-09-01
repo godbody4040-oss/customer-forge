@@ -54,13 +54,28 @@ export const Route = createFileRoute("/")({
     }
     try {
       const response = await getHostSite({ data: {} });
-      return response?.result ?? null;
+      if (response?.result) return response.result;
+      // The address belongs to a client whose website isn't published yet.
+      // Their visitors must never land on Revora's own sales page.
+      if (response?.tenant) return { pending: true as const };
+      return null;
     } catch {
       return null;
     }
   },
   head: ({ loaderData }) =>
-    loaderData
+    loaderData && "pending" in loaderData
+      ? {
+          meta: [
+            { title: "Website coming soon" },
+            {
+              name: "description",
+              content: "This website is being set up and will be online shortly.",
+            },
+            { name: "robots", content: "noindex" },
+          ],
+        }
+      : loaderData
       ? {
           meta: [
             { title: `${loaderData.site.org.name}`.slice(0, 60) },
@@ -127,6 +142,18 @@ export const Route = createFileRoute("/")({
 /** Client website on a client host, Revora's sales site on Revora's host. */
 function HomeRoute() {
   const hostSite = Route.useLoaderData();
+  if (hostSite && "pending" in hostSite) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 text-center">
+        <div>
+          <h1 className="font-display text-[22px] font-semibold">Website coming soon</h1>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            This website is being set up and will be online shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (hostSite?.site)
     return (
       <SiteAddressProvider ownAddress>

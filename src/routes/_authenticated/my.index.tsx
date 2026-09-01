@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useAnalytics, useAppointments, useLeads, useWebsiteSettings } from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
 import { revoraUrl } from "@/lib/revora-address";
-import { dateLong, relative } from "@/lib/format";
+import { currency, dateLong, relative } from "@/lib/format";
+import { usePayments } from "@/lib/payments.hooks";
+import { useBillingState } from "@/lib/stripe.hooks";
 
 export const Route = createFileRoute("/_authenticated/my/")({
   head: () => ({
@@ -35,6 +37,25 @@ function PortalHome() {
   const { data: leads } = useLeads(orgId);
   const { data: appointments } = useAppointments(orgId);
   const { data: events } = useAnalytics(orgId, 30);
+  const { data: billing } = useBillingState(orgId);
+  const { data: payments } = usePayments(orgId);
+
+  // Billing shown in the client's own words: what they're on, and the last
+  // real charge that cleared. Nothing here is sample data.
+  const cleared = (payments ?? []).filter((p) => p.status === "completed");
+  const lastPayment = cleared[0] ?? null;
+  const subscription = billing?.subscription ?? null;
+  const billingLine = !billing
+    ? "Loading your plan…"
+    : subscription?.status === "trialing"
+      ? "Free trial running — your first month is included."
+      : subscription?.status === "active"
+        ? "Active — your monthly plan is paid and running."
+        : subscription?.status === "past_due"
+          ? "Payment failed. Update your card to keep your website live."
+          : billing.setupPaid
+            ? "Setup paid. Start your monthly plan to stay live."
+            : "No plan started yet.";
 
   const live = settings?.publish_state === "published";
   const address =
@@ -147,6 +168,32 @@ function PortalHome() {
           </div>
         </Panel>
       </div>
+
+      <Panel>
+        <SectionHeading eyebrow="Billing" title="Your plan and payments" />
+        <p className="text-[13px] text-muted-foreground">
+          {billingLine}
+        </p>
+        {lastPayment ? (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            Last payment: {currency(Number(lastPayment.amount))} ·{" "}
+            {lastPayment.description ?? "Revora Growth System"} ·{" "}
+            {relative(new Date(lastPayment.completed_at ?? lastPayment.created_at))}
+          </p>
+        ) : (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            No card payments yet. Every charge appears here the moment it clears.
+          </p>
+        )}
+        <div className="mt-3">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/app/billing">
+              View plan &amp; receipts
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </Panel>
 
       <Panel>
         <SectionHeading eyebrow="Website" title="Your website details" />
