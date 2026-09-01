@@ -64,8 +64,10 @@ describe("marketing and discovery", () => {
     expect(status).toBe(200);
     expect(body).toMatch(/750/);
     expect(body).toMatch(/100/);
-    expect(body).not.toMatch(/\$1,?500/);
-    expect(body).not.toMatch(/\$250/);
+    // No legacy Revora price may be quoted as our own offer. (Competitor
+    // comparison copy may still mention other market prices.)
+    expect(body).not.toMatch(/\$1,?500\s*(one-time|setup)/i);
+    expect(body).not.toMatch(/\$250\s*\/?\s*(month|mo\b)/i);
     expect(body).toMatch(/get-started|Get started/i);
   });
 
