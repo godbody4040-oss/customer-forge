@@ -35,7 +35,12 @@ import { RevoraAddressCard } from "@/components/app/RevoraAddressCard";
 import { revoraHost } from "@/lib/revora-address";
 import { dateLong } from "@/lib/format";
 
-type Availability = { domain: string; state: "available" | "taken" | "unknown" | "invalid" };
+type Availability = {
+  domain: string;
+  state: "available" | "taken" | "unknown" | "invalid";
+  reason?: string | null;
+};
+
 
 function copy(value: string, label: string) {
   void navigator.clipboard?.writeText(value).then(
