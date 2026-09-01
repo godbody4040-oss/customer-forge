@@ -43,14 +43,19 @@ export const getHostSite = createServerFn({ method: "GET" })
     } catch {
       host = null;
     }
-    // The bare client-hosting root belongs to no client: show the neutral
-    // holding page rather than Revora's marketing site or a redirect.
+// The client-hosting domain only ever serves client websites. The bare
+    // root belongs to no client, and neither does an unclaimed label on it
+    // (including when it arrives through the Cloudflare proxy) — both show the
+    // neutral holding page, never Revora's marketing site.
     const bare = normalizeHost(host);
     if (bare === SITE_ROOT || bare === `www.${SITE_ROOT}`) {
       return { tenant: true, result: null };
     }
     const tenant = await resolveTenantHost(host);
-    if (!tenant) return { tenant: false, result: null };
+    if (!tenant) {
+      if (bare.endsWith(`.${SITE_ROOT}`)) return { tenant: true, result: null };
+      return { tenant: false, result: null };
+    }
 
     // Published-only: `loadSite` refuses drafts unless an authorised preview
     // token is presented, which never happens on a public host.
