@@ -124,7 +124,7 @@ function AdminPayments() {
             <EmptyState
               icon={<Receipt className="size-5" />}
               title="No payments recorded yet."
-              description="Confirmed PayPal transactions from any client workspace will appear here."
+              description="Confirmed Stripe transactions from any client workspace will appear here."
             />
           </div>
         ) : (
