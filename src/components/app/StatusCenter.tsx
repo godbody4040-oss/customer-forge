@@ -13,6 +13,7 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { useAppointments, useAutomationRuns, useAutomations, useLeads, useWebsiteSettings } from "@/lib/queries";
 import { useProductionStatus } from "@/lib/production.hooks";
 import { useTrialCountdown } from "@/lib/trial-clock";
+import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import type { Tone } from "@/lib/domain";
 
 type Tile = {
@@ -77,7 +78,7 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
       hint: paid
         ? "Setup paid — production features are available."
         : countdown && !countdown.expired
-          ? "Time left in your 3-day full-system access."
+          ? `Time left in your ${GROWTH_SYSTEM.fullAccessTrialDays}-day full-system access.`
           : "Your work is saved. Pay the setup fee to launch it.",
       to: "/app/billing",
     };
@@ -185,7 +186,7 @@ export function StatusCenter({ organizationId }: { organizationId: string | unde
       to: "/app/automations",
     };
 
-    return [website, trial, billing, domain, ssl, launch, leadTile, bookingTile, automationTile];
+    return [website, trial, billing, builder, domain, ssl, launch, leadTile, bookingTile, automationTile];
   }, [production, productionPending, settings, leads, appointments, automations, runs, countdown]);
 
   return (
