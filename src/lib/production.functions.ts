@@ -268,7 +268,7 @@ export const activateProduction = createServerFn({ method: "POST" })
         action,
         entity: "website",
         entity_id: orgId,
-        metadata,
+        metadata: metadata as never,
       });
     };
 
