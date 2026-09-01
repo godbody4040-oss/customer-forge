@@ -31,6 +31,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WebsiteAuditRouteImport } from './routes/website-audit'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
@@ -178,6 +179,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMyRoute = AuthenticatedMyRouteImport.update({
+  id: '/my',
+  path: '/my',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -413,6 +419,7 @@ export interface FileRoutesByFullPath {
   '/website-audit': typeof WebsiteAuditRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
+  '/my': typeof AuthenticatedMyRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -471,6 +478,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/website-audit': typeof WebsiteAuditRoute
+  '/my': typeof AuthenticatedMyRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/website-audit': typeof WebsiteAuditRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/my': typeof AuthenticatedMyRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/website-audit'
     | '/admin'
     | '/app'
+    | '/my'
     | '/onboarding'
     | '/demo/dashboard'
     | '/industries/$slug'
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/website-audit'
+    | '/my'
     | '/onboarding'
     | '/demo/dashboard'
     | '/industries/$slug'
@@ -720,6 +731,7 @@ export interface FileRouteTypes {
     | '/website-audit'
     | '/_authenticated/admin'
     | '/_authenticated/app'
+    | '/_authenticated/my'
     | '/_authenticated/onboarding'
     | '/demo/dashboard'
     | '/industries/$slug'
@@ -947,6 +959,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/my': {
+      id: '/_authenticated/my'
+      path: '/my'
+      fullPath: '/my'
+      preLoaderRoute: typeof AuthenticatedMyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -1306,12 +1325,14 @@ const AuthenticatedAppRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
+  AuthenticatedMyRoute: typeof AuthenticatedMyRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
+  AuthenticatedMyRoute: AuthenticatedMyRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
 }
 
