@@ -105,7 +105,10 @@ function AuthPage() {
         if (signUpError) throw signUpError;
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
+          const message = `Account created for ${email}. Confirm your email address using the link we just sent, then sign in here — your progress is saved.`;
           toast.success("Account created. Check your email to confirm, then sign in.");
+          setNotice(message);
+          setPassword("");
           setIsSignup(false);
           return;
         }
