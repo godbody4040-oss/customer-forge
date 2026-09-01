@@ -111,28 +111,19 @@ export type PriceVerification = { ok: true } | { ok: false; reason: string };
 
 const money = (cents: number) => usd(cents / 100);
 
-/** The configurable part of the offer. Defaults to the code-level offer. */
-export type OfferRates = { setupPrice: number; monthlyPrice: number };
+/**
+ * The rates Revora charges. Immutable: there is exactly one offer and it is
+ * not configurable from the admin dashboard, the database or the browser.
+ */
+export type OfferRates = { readonly setupPrice: number; readonly monthlyPrice: number };
 
-export const DEFAULT_OFFER_RATES: OfferRates = {
+export const DEFAULT_OFFER_RATES: OfferRates = Object.freeze({
   setupPrice: GROWTH_SYSTEM.setupPrice,
   monthlyPrice: GROWTH_SYSTEM.monthlyPrice,
-};
+});
 
-/** Accepts only sane, whole-dollar rates. Used by the admin pricing controls. */
-export function parseOfferRates(input: { setupPrice: unknown; monthlyPrice: unknown }): OfferRates {
-  const read = (value: unknown, label: string) => {
-    const amount = Number(value);
-    if (!Number.isFinite(amount) || amount < 1 || amount > 100_000)
-      throw new Error(`${label} must be between $1 and $100,000.`);
-    if (Math.round(amount) !== amount) throw new Error(`${label} must be a whole dollar amount.`);
-    return amount;
-  };
-  return {
-    setupPrice: read(input.setupPrice, "The setup price"),
-    monthlyPrice: read(input.monthlyPrice, "The monthly price"),
-  };
-}
+/** Alias that reads as what it is: the one canonical offer. */
+export const CANONICAL_OFFER_RATES = DEFAULT_OFFER_RATES;
 
 /**
  * Verifies the two Revora prices against the offer that is actually configured:
