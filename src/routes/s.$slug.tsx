@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { captureAttribution } from "@/lib/attribution";
 import { useServerFn } from "@tanstack/react-start";
