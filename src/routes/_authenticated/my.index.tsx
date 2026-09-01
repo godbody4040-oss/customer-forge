@@ -5,7 +5,7 @@
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarCheck, ExternalLink, Globe, Users } from "lucide-react";
-import { MetricCard, Panel, Pill } from "@/components/app/Bits";
+import { MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { useAnalytics, useAppointments, useLeads, useWebsiteSettings } from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
@@ -65,7 +65,7 @@ function PortalHome() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Pill tone={live ? "signal" : "muted"}>{live ? "Live" : "Draft"}</Pill>
+            <Pill tone={live ? "signal" : "neutral"}>{live ? "Live" : "Draft"}</Pill>
             {address ? (
               <Button asChild variant="outline" size="sm">
                 <a href={address} target="_blank" rel="noreferrer">
@@ -86,7 +86,9 @@ function PortalHome() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Latest leads" icon={Users}>
+        <Panel>
+          <SectionHeading eyebrow="Leads" title="Latest leads" />
+          <div className="mt-3">
           {(leads ?? []).length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
               No leads yet. Every form on your live site lands here — and emails you instantly.
@@ -110,6 +112,7 @@ function PortalHome() {
               ))}
             </ul>
           )}
+          </div>
           <div className="mt-3">
             <Button asChild variant="ghost" size="sm">
               <Link to="/my/activity">
@@ -120,7 +123,9 @@ function PortalHome() {
           </div>
         </Panel>
 
-        <Panel title="Next bookings" icon={CalendarCheck}>
+        <Panel>
+          <SectionHeading eyebrow="Calendar" title="Next bookings" />
+          <div className="mt-3">
           {upcoming.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
               Nothing booked yet. Bookings from your site's Book section appear here with date,
@@ -139,10 +144,12 @@ function PortalHome() {
               ))}
             </ul>
           )}
+          </div>
         </Panel>
       </div>
 
-      <Panel title="Your website details" icon={Globe}>
+      <Panel>
+        <SectionHeading eyebrow="Website" title="Your website details" />
         <p className="text-[13px] text-muted-foreground">
           See your pages, what each one says and how visitors reach you.
         </p>
