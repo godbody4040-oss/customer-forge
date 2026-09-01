@@ -1483,8 +1483,6 @@ export type Database = {
           metadata: Json
           organization_id: string
           payment_provider: string
-          paypal_capture_id: string | null
-          paypal_order_id: string | null
           period_end: string | null
           period_start: string | null
           plan_id: string | null
@@ -1514,8 +1512,6 @@ export type Database = {
           metadata?: Json
           organization_id: string
           payment_provider?: string
-          paypal_capture_id?: string | null
-          paypal_order_id?: string | null
           period_end?: string | null
           period_start?: string | null
           plan_id?: string | null
@@ -1545,8 +1541,6 @@ export type Database = {
           metadata?: Json
           organization_id?: string
           payment_provider?: string
-          paypal_capture_id?: string | null
-          paypal_order_id?: string | null
           period_end?: string | null
           period_start?: string | null
           plan_id?: string | null
