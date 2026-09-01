@@ -125,17 +125,15 @@ describe("marketing and discovery", () => {
 });
 
 describe("lead capture, quote and booking flows", () => {
-  live("renders a working conversion path on a published tenant site", async () => {
-    if (!publicSite) return; // no tenant has published yet
-    const { status, body } = await get(publicSite);
+  optional("renders a working conversion path on a published tenant site", async () => {
+    const { status, body } = await get(publicSite!);
     expect(status).toBe(200);
     // A visitor must always have at least one way to convert.
     expect(/href=["']tel:|<form\b/i.test(body)).toBe(true);
     expect((body.match(/<h1\b/gi) ?? []).length).toBe(1);
   });
 
-  live("serves the quote and booking pages of a published site", async () => {
-    if (!publicSite) return;
+  optional("serves the quote and booking pages of a published site", async () => {
     for (const suffix of ["/pricing", "/book", "/contact"]) {
       const { status, body } = await get(`${publicSite}${suffix}`);
       expect([200, 404]).toContain(status); // page only exists when generated
