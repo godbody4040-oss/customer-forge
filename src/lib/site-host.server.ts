@@ -30,7 +30,13 @@ export type TenantHost = {
   /** Which address the visitor arrived on. */
   via: "revora" | "custom";
   host: string;
+  /**
+   * Set when the visitor arrived on the free Revora subdomain but the client's
+   * own domain is fully verified — old links keep working and redirect there.
+   */
+  redirectHost?: string | null;
 };
+
 
 /**
  * Resolves which organization owns an incoming host.
