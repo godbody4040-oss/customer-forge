@@ -48,11 +48,14 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
   const host = normalizeHost(rawHost);
   if (!host || isRevoraOwnHost(host)) return null;
 
-  const supabase = publicClient();
+  // Address settings are private, so the lookup runs with server credentials on
+  // the server only. It returns nothing but the owning workspace, and callers
+  // still go through the published-only site reader.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const bare = host.replace(/^www\./, "");
   const subdomain = revoraSubdomainFromHost(host);
 
-  const { data: rows } = await supabase
+  const { data: rows } = await supabaseAdmin
     .from("website_settings")
     .select("organization_id, custom_domain, subdomain, dns_ok, ssl_ok")
     .or(
@@ -62,14 +65,20 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
         `custom_domain.eq.${bare}`,
       ].join(","),
     )
-    .limit(2);
+    .limit(3);
 
-  for (const row of rows ?? []) {
+  const ordered = [...(rows ?? [])].sort((a, b) => {
+    const aRevora = !!subdomain && a.subdomain === subdomain ? 0 : 1;
+    const bRevora = !!subdomain && b.subdomain === subdomain ? 0 : 1;
+    return aRevora - bRevora;
+  });
+
+  for (const row of ordered) {
     if (!row.organization_id) continue;
     const viaRevora = !!subdomain && row.subdomain === subdomain;
     const viaCustom =
       !viaRevora &&
-      (row.custom_domain === host || row.custom_domain === bare) &&
+      (row.custom_domain?.toLowerCase() === host || row.custom_domain?.toLowerCase() === bare) &&
       !!row.dns_ok &&
       !!row.ssl_ok;
     if (!viaRevora && !viaCustom) continue;
@@ -84,6 +93,7 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
   }
   return null;
 }
+
 
 /**
  * Returns the published tenant that owns this host, or null when the host is
