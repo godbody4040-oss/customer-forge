@@ -143,9 +143,14 @@ export function DomainCenter({
 
   const availability = useMutation({
     mutationFn: (domains: string[]) => availabilityFn({ data: { domains } }),
-    onSuccess: (data) => setResults(data.results as Availability[]),
-    onError: (error: Error) => toast.error(error.message),
+    onSuccess: (data) => {
+      setResults(data.results as Availability[]);
+      setLookupIssue(data.unavailable ? (data.reason ?? "The domain registry didn't answer.") : null);
+    },
+    onError: () =>
+      setLookupIssue("We couldn't check availability right now. Please try again in a moment."),
   });
+
 
   const stepDone: Record<string, boolean> = {
     choose: !!connected,
