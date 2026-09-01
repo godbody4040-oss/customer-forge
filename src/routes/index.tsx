@@ -52,7 +52,8 @@ export const Route = createFileRoute("/")({
       return null;
     }
     try {
-      return await getHostSite({ data: {} });
+      const response = await getHostSite({ data: {} });
+      return response?.result ?? null;
     } catch {
       return null;
     }

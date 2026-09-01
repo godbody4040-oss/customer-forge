@@ -20,9 +20,9 @@ export const Route = createFileRoute("/$")({
     if (typeof window !== "undefined" && !isPossibleTenantHost(window.location.hostname)) {
       throw notFound();
     }
-    const result = await getHostSite({ data: { pageSlug } });
-    if (!result?.site?.content) throw notFound();
-    return result;
+    const response = await getHostSite({ data: { pageSlug } });
+    if (!response?.result?.site?.content) throw notFound();
+    return response.result;
   },
   head: ({ loaderData }) => {
     const page = loaderData?.site.content?.page;
