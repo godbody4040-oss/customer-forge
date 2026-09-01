@@ -11,6 +11,10 @@ import {
 import { safeLinkUrl, slugify } from "@/lib/website-content";
 import { readCopy } from "@/lib/site-engine";
 import { useBuilderHistory } from "@/lib/builder-history.hooks";
+import {
+  duplicateComponentPayload,
+  duplicateSectionPayload,
+} from "@/lib/builder-tree";
 
 const KEY = "website_content";
 
@@ -783,4 +787,199 @@ async function uniquePageSlug(organizationId: string, base: string) {
     if (!taken.has(candidate)) return candidate;
   }
   return `${root}-${Date.now()}`;
+}
+
+/* ---------------------------------------------------------------------------
+ * Visual builder element mutations
+ *
+ * The visual canvas needs to add, copy, delete and restore individual elements
+ * as well as whole sections. Each mutation writes through the same organisation
+ * scoped tables (so RLS still decides what is allowed) and returns enough
+ * information for the canvas to keep the client's selection and to offer an
+ * immediate undo of a deletion.
+ * ------------------------------------------------------------------------- */
+
+/** Adds one element inside a section, at the end or after a given item. */
+export function useAddComponent(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async ({
+      sectionId,
+      kind,
+      sortOrder,
+      values,
+    }: {
+      sectionId: string;
+      kind: string;
+      sortOrder: number;
+      values?: Partial<Pick<ContentComponent, "label" | "body" | "link_label" | "link_url">>;
+    }) => {
+      const clean = { ...(values ?? {}) } as Record<string, unknown>;
+      if (clean["link_url"]) {
+        const safe = safeLinkUrl(clean["link_url"] as string);
+        if (!safe) throw new Error("That link isn't allowed.");
+        clean["link_url"] = safe;
+      }
+      const inserted = await supabase
+        .from("website_components")
+        .insert({
+          organization_id: organizationId!,
+          section_id: sectionId,
+          kind,
+          sort_order: sortOrder,
+          ...clean,
+        } as never)
+        .select("id")
+        .single();
+      if (inserted.error) throw inserted.error;
+      return (inserted.data as { id: string }).id;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't add that element."),
+  });
+}
+
+/** Copies one element directly after the original. Never reuses its id. */
+export function useDuplicateComponent(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (component: ContentComponent) => {
+      const inserted = await supabase
+        .from("website_components")
+        .insert(duplicateComponentPayload(component, organizationId!) as never)
+        .select("id")
+        .single();
+      if (inserted.error) throw inserted.error;
+      return (inserted.data as { id: string }).id;
+    },
+    onSuccess: () => {
+      toast.success("Element duplicated.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't duplicate that element."),
+  });
+}
+
+/**
+ * Deletes one element and hands the full row back, so the canvas can offer
+ * "Undo" and put the client's work back exactly as it was.
+ */
+export function useDeleteComponent(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (component: ContentComponent) => {
+      const { error } = await supabase
+        .from("website_components")
+        .delete()
+        .eq("id", component.id)
+        .eq("organization_id", organizationId!);
+      if (error) throw error;
+      return component;
+    },
+    onSuccess: () => void invalidate(),
+    onError: (error: Error) => toast.error(error.message || "Couldn't remove that element."),
+  });
+}
+
+/** Re-inserts a deleted element (undo), keeping its content and design. */
+export function useRestoreComponent(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (component: ContentComponent) => {
+      const payload = duplicateComponentPayload(component, organizationId!);
+      const { error } = await supabase
+        .from("website_components")
+        .insert({ ...payload, sort_order: component.sort_order } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Element restored.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't restore that element."),
+  });
+}
+
+/** Copies a section with all of its elements, immediately after the original. */
+export function useDuplicateSection(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (section: ContentSection) => {
+      const orgId = organizationId!;
+      const inserted = await supabase
+        .from("website_sections")
+        .insert(duplicateSectionPayload(section, orgId) as never)
+        .select("id")
+        .single();
+      if (inserted.error) throw inserted.error;
+      const newSectionId = (inserted.data as { id: string }).id;
+
+      if (section.components.length) {
+        const { error } = await supabase.from("website_components").insert(
+          section.components.map((component) => ({
+            ...duplicateComponentPayload(component, orgId, newSectionId),
+            sort_order: component.sort_order,
+          })) as never,
+        );
+        if (error) throw error;
+      }
+
+      // Renumber the page so the copy sits directly after its original.
+      const rows = await supabase
+        .from("website_sections")
+        .select("id, sort_order")
+        .eq("organization_id", orgId)
+        .eq("page_id", section.page_id)
+        .order("sort_order");
+      if (rows.error) throw rows.error;
+      const ids = (rows.data ?? []).map((row) => (row as { id: string }).id);
+      for (const [index, id] of ids.entries()) {
+        const { error } = await supabase
+          .from("website_sections")
+          .update({ sort_order: index })
+          .eq("id", id)
+          .eq("organization_id", orgId);
+        if (error) throw error;
+      }
+      return newSectionId;
+    },
+    onSuccess: () => {
+      toast.success("Section duplicated.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't duplicate that section."),
+  });
+}
+
+/** Re-inserts a deleted section with its elements (undo for a section delete). */
+export function useRestoreSection(organizationId: string | undefined) {
+  const invalidate = useInvalidateContent(organizationId);
+  return useMutation({
+    mutationFn: async (section: ContentSection) => {
+      const orgId = organizationId!;
+      const inserted = await supabase
+        .from("website_sections")
+        .insert({
+          ...duplicateSectionPayload(section, orgId),
+          sort_order: section.sort_order,
+        } as never)
+        .select("id")
+        .single();
+      if (inserted.error) throw inserted.error;
+      const newSectionId = (inserted.data as { id: string }).id;
+      if (!section.components.length) return;
+      const { error } = await supabase.from("website_components").insert(
+        section.components.map((component) => ({
+          ...duplicateComponentPayload(component, orgId, newSectionId),
+          sort_order: component.sort_order,
+        })) as never,
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Section restored.");
+      void invalidate();
+    },
+    onError: (error: Error) => toast.error(error.message || "Couldn't restore that section."),
+  });
 }
