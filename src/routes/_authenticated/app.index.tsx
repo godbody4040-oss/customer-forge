@@ -12,6 +12,8 @@ import {
 } from "@/components/app/Bits";
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
 import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
+import { StatusCenter } from "@/components/app/StatusCenter";
+
 import { useProductionStatus } from "@/lib/production.hooks";
 
 import { Button } from "@/components/ui/button";
@@ -322,9 +324,12 @@ function Dashboard() {
       </div>
 
 
+      <StatusCenter organizationId={orgId} />
+
       <ProductionSummaryCard status={production} />
 
       <OnboardingJourney />
+
 
 
 
