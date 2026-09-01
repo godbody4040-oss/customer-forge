@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/my/start")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: MyStart;
+  component: MyStart,
 });
 
 const has = (value: unknown) => typeof value === "string" && value.trim().length > 0;
@@ -148,7 +148,7 @@ function MyStart() {
               </div>
               {step.to && step.cta ? (
                 <Button asChild size="sm" variant={step.done ? "outline" : "default"}>
-                  <Link to={step.to}>
+                  <Link to={step.to as "/app"}>
                     {step.cta}
                     <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Link>
