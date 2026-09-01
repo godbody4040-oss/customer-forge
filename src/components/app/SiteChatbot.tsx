@@ -322,10 +322,25 @@ const [autoApply, setAutoApply] = useState(true);
             {propose.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             {messages.length ? "Send" : "Ask Revora"}
           </Button>
+          {propose.isError && lastRequest ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={propose.isPending}
+              onClick={() => propose.mutate(lastRequest)}
+            >
+              <Loader2 className={propose.isPending ? "size-4 animate-spin" : "hidden"} /> Retry that request
+            </Button>
+          ) : null}
           <span className="text-[11px] text-muted-foreground">
             {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()} characters
           </span>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          Unlimited requests, edits, rebuilds and publishes — the builder is included in your Revora subscription. There
+          are no credits, tokens or per-change charges.
+        </p>
+
         <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-primary/30 bg-primary/5 p-3">
           <input
             type="checkbox"
