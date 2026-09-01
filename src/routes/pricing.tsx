@@ -11,7 +11,10 @@ import {
   ValueSplit,
   WhyRevora,
 } from "@/components/marketing/OfferSections";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { getPublicOfferRates } from "@/lib/offer.functions";
 import { GROWTH_SYSTEM_SCHEMA, breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
 import { useExperiment } from "@/lib/experiments.hooks";
 import { trackConversion } from "@/lib/conversion";
@@ -117,14 +120,14 @@ function Pricing() {
               <div className="mt-7 flex flex-wrap items-end gap-x-8 gap-y-5">
                 <div>
                   <p className="tnum gold-text font-display text-[40px] leading-none font-semibold">
-                    {usdExact(GROWTH_SYSTEM.setupPrice)}
+                    {usdExact(setupPrice)}
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Setup</p>
                   <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
                 </div>
                 <div>
                   <p className="tnum font-display text-[40px] leading-none font-semibold">
-                    <span className="gold-text">{usdExact(GROWTH_SYSTEM.monthlyPrice)}</span>
+                    <span className="gold-text">{usdExact(monthlyPrice)}</span>
                     <span className="text-[14px] font-normal text-muted-foreground">/month</span>
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Ongoing</p>
