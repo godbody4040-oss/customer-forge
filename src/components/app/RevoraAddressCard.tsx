@@ -66,6 +66,17 @@ export function RevoraAddressCard({
     onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
+  // The honest state of the free address: proven by a real DNS + HTTPS lookup.
+  const liveFn = useServerFn(checkRevoraAddressLive);
+  const verify = useMutation({
+    mutationFn: () => liveFn({ data: { organizationId: organizationId! } }),
+    onSuccess: (result) => {
+      if (result.live) toast.success(result.detail);
+      else toast.message("Not live yet", { description: result.detail });
+    },
+    onError: (error: Error) => toast.error(friendlyError(error)),
+  });
+
   return (
     <Panel className="space-y-4 p-5">
       <SectionHeading
