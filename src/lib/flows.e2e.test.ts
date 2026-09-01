@@ -38,11 +38,21 @@ beforeAll(async () => {
   publicSite = /<loc>[^<]*(\/s\/[a-z0-9-]+)<\/loc>/i.exec(sitemap.body)?.[1] ?? null;
 }, 60_000);
 
+const REQUIRE_SERVER =
+  process.env["E2E_REQUIRE_SERVER"] === "1" || process.env["CI"] === "true";
+
 const live = (name: string, fn: () => Promise<void>, timeout = 30_000) =>
   it(
     name,
     async () => {
-      if (!reachable) return;
+      if (!reachable) {
+        if (REQUIRE_SERVER) {
+          throw new Error(
+            `E2E server unreachable at ${BASE}. Start the app or unset E2E_REQUIRE_SERVER/CI.`,
+          );
+        }
+        return;
+      }
       await fn();
     },
     timeout,
@@ -53,7 +63,9 @@ describe("marketing and discovery", () => {
     const { status, body } = await get("/");
     expect(status).toBe(200);
     expect(body).toMatch(/750/);
-    expect(body).toMatch(/250/);
+    expect(body).toMatch(/100/);
+    expect(body).not.toMatch(/\$1,?500/);
+    expect(body).not.toMatch(/\$250/);
     expect(body).toMatch(/get-started|Get started/i);
   });
 
