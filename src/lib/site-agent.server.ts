@@ -284,8 +284,10 @@ export async function transcribeVoice(attachment: AgentAttachment): Promise<stri
     if (response.status === 429)
       throw new AiGatewayError(429, "Voice is busy right now. Try again in a moment.", Number(response.headers.get("retry-after")) || null);
     if (response.status === 402)
-      throw new AiGatewayError(402, "AI credits are exhausted for this workspace. Top up to keep using voice.");
-    if (response.status === 403) throw new AiGatewayError(403, "AI is blocked for this workspace by a policy or spend limit.");
+      throw new AiGatewayError(402, "Voice input is paused right now. Type your request instead — nothing else is limited.");
+    if (response.status === 403)
+      throw new AiGatewayError(403, "Voice input is unavailable right now. Type your request instead — nothing else is limited.");
+
     console.error("[site-agent] transcribe error", response.status, body.slice(0, 300));
     throw new AiGatewayError(response.status, "Couldn't transcribe that recording. Try again or type the request.");
   }
