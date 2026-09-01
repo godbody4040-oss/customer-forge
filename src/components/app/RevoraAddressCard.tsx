@@ -11,12 +11,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/user-error";
-import { Check, Copy, ExternalLink, Gift, Loader2, ShieldCheck } from "lucide-react";
+import { Check, Copy, ExternalLink, Gift, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { claimRevoraAddress } from "@/lib/revora-address.functions";
+import { checkRevoraAddressLive, claimRevoraAddress } from "@/lib/revora-address.functions";
 import {
   SITE_ROOT,
   customDomainIsLive,
