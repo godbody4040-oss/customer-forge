@@ -24,6 +24,8 @@ export type ReadinessInput = {
         template?: string | null;
         seo?: unknown;
         custom_domain?: string | null;
+        subdomain?: string | null;
+
         domain_status?: string | null;
         publish_state?: string | null;
         published?: boolean | null;
