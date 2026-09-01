@@ -12,6 +12,7 @@ import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/app/Bits";
 import { BookingForm, QuoteCalculator } from "@/components/site/SiteForms";
+import { DirectContact, telHref } from "@/components/site/ContactDetails";
 import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
