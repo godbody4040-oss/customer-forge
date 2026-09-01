@@ -395,7 +395,13 @@ export function SiteAuditor({
         <div className="border-b border-border px-3.5 py-3">
           <p className="eyebrow">Structure findings</p>
         </div>
-        <IssueList issues={structureIssues} />
+        <FixList
+          targets={structureTargets}
+          canManage={canManage}
+          busyProposalId={applyingId}
+          onFixAutomatically={fixOne}
+        />
+
       </section>
 
       <section className="panel p-0">
