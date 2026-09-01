@@ -43,11 +43,22 @@ const customDomainRedirect = createMiddleware().server(async ({ next, request })
 
   try {
     const { resolveTenantHost } = await import("./lib/site-host.server");
+    const { isRevoraOwnHost, normalizeHost } = await import("./lib/revora-address");
     const tenant = await resolveTenantHost(request.headers.get("host"));
-    if (tenant?.via === "revora" && tenant.redirectHost) {
+    const target = tenant?.redirectHost ? normalizeHost(tenant.redirectHost) : null;
+    // Only ever redirect a client subdomain to that client's OWN verified
+    // domain. Never to a Revora host, and never to the host already being
+    // requested — either would create a redirect loop with the hosting layer's
+    // own primary-domain redirect.
+    if (
+      tenant?.via === "revora" &&
+      target &&
+      target !== normalizeHost(url.hostname) &&
+      !isRevoraOwnHost(target)
+    ) {
       return new Response(null, {
         status: 301,
-        headers: { location: `https://${tenant.redirectHost}${url.pathname}${url.search}` },
+        headers: { location: `https://${target}${url.pathname}${url.search}` },
       });
     }
   } catch {
