@@ -386,6 +386,42 @@ function Dashboard() {
         </div>
       </div>
 
+      <Panel className="p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">Leads over {window.label.toLowerCase()}</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {stats.leads === 0
+                ? "No leads captured in this range yet."
+                : `Busiest stretch: ${peak.count} lead${peak.count === 1 ? "" : "s"} around ${dateShort(new Date(peak.start).toISOString())}.`}
+            </p>
+          </div>
+          <span className="tnum shrink-0 text-[11px] text-muted-foreground">
+            {stats.trend.length} pts
+          </span>
+        </div>
+        <div className="mt-4 flex h-24 items-end gap-1.5" aria-hidden="true">
+          {stats.trend.map((b) => (
+            <div
+              key={b.start}
+              className={cn(
+                "flex-1 rounded-sm transition-colors",
+                b.count > 0 && b.count === peak.count ? "bg-primary" : "bg-primary/30",
+              )}
+              style={{
+                height: `${peak.count > 0 ? Math.max(3, (b.count / peak.count) * 100) : 3}%`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="mt-2 flex justify-between text-[10.5px] text-muted-foreground">
+          <span>{dateShort(window.from.toISOString())}</span>
+          <span>{dateShort(window.to.toISOString())}</span>
+        </div>
+      </Panel>
+
+
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Bookings"
