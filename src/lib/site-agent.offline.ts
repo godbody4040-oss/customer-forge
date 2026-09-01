@@ -175,13 +175,14 @@ export function planWithoutAi(instruction: string, context: OfflineContext, reas
   return {
     reply: built
       ? `Done — I ${done.join(", ")}. Review the steps below and apply them.`
-      : "I can do this without using any AI credits, but I need it in Revora's own terms: name a section (reviews, pricing, FAQ, gallery, booking), a background (starfield, aurora, nebula, tech grid, spotlight, gradient mesh) or a motion effect (3D float, 3D tilt, frosted glass, gold glow, rise, parallax, shine). You can also use Effect Studio and Upgrade Studio below — both work with zero credits.",
+      : "I can build this straight away, but I need it in Revora's own terms: name a section (reviews, pricing, FAQ, gallery, booking), a background (starfield, aurora, nebula, tech grid, spotlight, gradient mesh) or a motion effect (3D float, 3D tilt, frosted glass, gold glow, rise, parallax, shine). Effect Studio and Upgrade Studio below do the same job with buttons.",
     summary: built ? `${done.length} change${done.length === 1 ? "" : "s"} planned by Revora's built-in builder.` : "",
     actions,
     questions: built ? [] : ["Which section, background or effect do you want changed?"],
     notes: [
-      `Built by Revora's own engine, so this used no AI credits (${reason}).`,
+      `Built by Revora's own engine, included in your subscription (${reason}).`,
       "It arranges what Revora already knows how to build and never invents reviews, awards or prices.",
     ],
+
   };
 }
