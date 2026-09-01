@@ -239,3 +239,57 @@ export const acceptTeamInvitation = createServerFn({ method: "POST" })
       };
     },
   );
+
+/**
+ * Lists teammates for a workspace. Teammate names/emails live in `profiles`,
+ * which is self-read only under RLS, so this runs server-side: it confirms the
+ * caller is a member with their own (RLS-bound) client, then reads the roster
+ * with the privileged client. No SECURITY DEFINER function is exposed to the
+ * browser for this.
+ */
+export const listTeamMembers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { organizationId: string }) => ({
+    organizationId: parseWorkspaceId(input?.organizationId),
+  }))
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<
+      {
+        id: string;
+        role: string;
+        created_at: string;
+        user_id: string;
+        profiles: { full_name: string | null; email: string | null; avatar_url: string | null };
+      }[]
+    > => {
+      const { data: me } = await context.supabase
+        .from("memberships")
+        .select("id")
+        .eq("organization_id", data.organizationId)
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      if (!me) return [];
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: rows } = await supabaseAdmin
+        .from("memberships")
+        .select("id, role, created_at, user_id, profiles(full_name, email, avatar_url)")
+        .eq("organization_id", data.organizationId)
+        .order("created_at");
+
+      return (rows ?? []).map((row: any) => ({
+        id: row.id as string,
+        role: String(row.role),
+        created_at: row.created_at as string,
+        user_id: row.user_id as string,
+        profiles: {
+          full_name: row.profiles?.full_name ?? null,
+          email: row.profiles?.email ?? null,
+          avatar_url: row.profiles?.avatar_url ?? null,
+        },
+      }));
+    },
+  );
