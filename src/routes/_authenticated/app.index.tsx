@@ -222,10 +222,25 @@ function Dashboard() {
           : 0
         : Math.round(((rangeLeads.length - prevLeads.length) / prevLeads.length) * 100);
 
+    // Lead volume split into equal buckets across the selected range.
+    const buckets = Math.min(12, Math.max(4, window.days));
+    const bucketMs = span / buckets;
+    const trend = Array.from({ length: buckets }, (_, i) => {
+      const start = fromMs + i * bucketMs;
+      const end = i === buckets - 1 ? toMs + 1 : start + bucketMs;
+      const count = rangeLeads.filter((l) => {
+        const t = new Date(l.created_at).getTime();
+        return t >= start && t < end;
+      }).length;
+      return { start, count };
+    });
+
     return {
       leads: rangeLeads.length,
       prevLeads: prevLeads.length,
       delta,
+      trend,
+
       views,
       calls,
       visitorConversion: views > 0 ? (rangeLeads.length / views) * 100 : 0,
