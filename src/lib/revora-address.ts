@@ -121,14 +121,21 @@ export function isPossibleTenantHost(rawHost: string | null | undefined) {
   return !isRevoraOwnHost(rawHost);
 }
 
-/** The subdomain part of a Revora address, or null for any other host. */
+/**
+ * The subdomain part of a client website address, or null for any other host.
+ * Both the hosting domain and the older platform-domain addresses resolve, so
+ * links handed out before the split keep working.
+ */
 export function revoraSubdomainFromHost(rawHost: string | null | undefined) {
   const host = normalizeHost(rawHost);
-  const suffix = `.${REVORA_ROOT}`;
-  if (!host.endsWith(suffix)) return null;
-  const label = host.slice(0, -suffix.length);
-  if (!label || label.includes(".")) return null;
-  return label;
+  for (const root of SITE_ROOTS) {
+    const suffix = `.${root}`;
+    if (!host.endsWith(suffix)) continue;
+    const label = host.slice(0, -suffix.length);
+    if (!label || label.includes(".")) continue;
+    return label;
+  }
+  return null;
 }
 
 /**
