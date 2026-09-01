@@ -600,9 +600,7 @@ export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
     const { assertSuperAdmin } = await import("@/lib/admin.server");
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { buildMonthlyReport, recentMonths, windowStart } = await import(
-      "@/lib/monthly-report"
-    );
+    const { buildMonthlyReport, recentMonths, windowStart } = await import("@/lib/monthly-report");
 
     const months = recentMonths(data.months);
     const since = windowStart(months);
@@ -625,7 +623,9 @@ export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
       supabaseAdmin
         .from("organizations")
         .select("id, name, slug, industry, subscription_status, is_suspended, is_demo, created_at"),
-      supabaseAdmin.from("website_settings").select("organization_id, publish_state, custom_domain"),
+      supabaseAdmin
+        .from("website_settings")
+        .select("organization_id, publish_state, custom_domain"),
     ]);
 
     const report = buildMonthlyReport({

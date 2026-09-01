@@ -210,8 +210,7 @@ export function buttonCss(style: BlockStyle): React.CSSProperties {
   if (style.buttonTextColor) css.color = style.buttonTextColor;
   if (style.buttonBgColor && style.buttonStyle === "solid")
     css.backgroundColor = style.buttonBgColor;
-  if (style.buttonBgColor && style.buttonStyle === "outline")
-    css.borderColor = style.buttonBgColor;
+  if (style.buttonBgColor && style.buttonStyle === "outline") css.borderColor = style.buttonBgColor;
   return css;
 }
 

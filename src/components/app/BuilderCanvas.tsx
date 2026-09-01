@@ -386,7 +386,9 @@ export function BuilderCanvas({
                             key={item.id}
                             item={item}
                             editable={canManage}
-                            selected={selection?.type === "component" && selection.componentId === item.id}
+                            selected={
+                              selection?.type === "component" && selection.componentId === item.id
+                            }
                             onSelect={() =>
                               setSelection({
                                 type: "component",
@@ -463,7 +465,10 @@ export function BuilderCanvas({
                   }
                 />
               </Field>
-              <Field label="Link target" hint="A page like /contact, a full https link, tel: or mailto:">
+              <Field
+                label="Link target"
+                hint="A page like /contact, a full https link, tel: or mailto:"
+              >
                 <Input
                   defaultValue={selectedComponent.link_url ?? ""}
                   disabled={!canManage}
@@ -685,7 +690,10 @@ function StyleControls({
     </Field>
   );
 
-  const color = (label: string, key: "textColor" | "bgColor" | "buttonTextColor" | "buttonBgColor") => (
+  const color = (
+    label: string,
+    key: "textColor" | "bgColor" | "buttonTextColor" | "buttonBgColor",
+  ) => (
     <Field label={label} key={key}>
       <span className="flex items-center gap-2">
         <input

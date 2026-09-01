@@ -120,8 +120,8 @@ function PricingControls() {
       ) : config.data ? (
         <ul className="space-y-1 border-t border-border pt-3 text-[12px] text-muted-foreground">
           <li>
-            Full-system free access at signup: {config.data.fullAccessDays} days · monthly fee trial:{" "}
-            {config.data.trialDays} days
+            Full-system free access at signup: {config.data.fullAccessDays} days · monthly fee
+            trial: {config.data.trialDays} days
           </li>
           {config.data.environments.map((env) => (
             <li key={env.environment}>
