@@ -8,22 +8,31 @@
  * should never see Revora's pricing page.
  */
 import type { ReactNode } from "react";
+import { notFound } from "@tanstack/react-router";
 import { getHostSite, type HostSiteResult } from "@/lib/host-site.functions";
 import { isPossibleTenantHost } from "@/lib/revora-address";
 import { PublicSiteView } from "@/routes/s.$slug";
 
-/** Loads the client page for this host, or null on Revora's own hosts. */
+/**
+ * Loads the client page for this address, or null on Revora's own addresses.
+ * On a client address a page that doesn't exist is a plain "page not found" —
+ * Revora's marketing page is never shown on a client's website.
+ */
 export async function loadTenantPage(pageSlug: string): Promise<HostSiteResult> {
   if (typeof window !== "undefined" && !isPossibleTenantHost(window.location.hostname)) {
     return null;
   }
+  let response: Awaited<ReturnType<typeof getHostSite>> | null = null;
   try {
-    const result = await getHostSite({ data: { pageSlug } });
-    return result?.site?.content ? result : null;
+    response = await getHostSite({ data: { pageSlug } });
   } catch {
     return null;
   }
+  if (!response?.tenant) return null;
+  if (!response.result?.site?.content) throw notFound();
+  return response.result;
 }
+
 
 /** Metadata for a client page, so shares and search results show the business. */
 export function tenantPageHead(result: HostSiteResult) {
