@@ -149,6 +149,32 @@ function PortalHome() {
       </div>
 
       <Panel>
+        <SectionHeading eyebrow="Billing" title="Your plan and payments" />
+        <p className="text-[13px] text-muted-foreground">
+          {billingLine}
+        </p>
+        {lastPayment ? (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            Last payment: {money(Number(lastPayment.amount), lastPayment.currency)} ·{" "}
+            {lastPayment.description ?? "Revora Growth System"} ·{" "}
+            {relative(new Date(lastPayment.completed_at ?? lastPayment.created_at))}
+          </p>
+        ) : (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            No card payments yet. Every charge appears here the moment it clears.
+          </p>
+        )}
+        <div className="mt-3">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/app/billing">
+              View plan &amp; receipts
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </Panel>
+
+      <Panel>
         <SectionHeading eyebrow="Website" title="Your website details" />
         <p className="text-[13px] text-muted-foreground">
           See your pages, what each one says and how visitors reach you.
