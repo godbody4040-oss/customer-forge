@@ -287,7 +287,7 @@ function WebsitePage() {
             />
             <BusinessBriefPanel brief={brief} />
           </Disclosure>
-          <Disclosure label="This website" hint="Project details and your Revora score">
+          <Disclosure label="Advanced" hint="Project details and your Revora score">
             <WebsiteProject
               organizationId={orgId}
               businessName={org?.name ?? null}
@@ -313,6 +313,7 @@ function WebsitePage() {
               recommendations={recommendations}
             />
           </Disclosure>
+
         </div>
       ),
     },
