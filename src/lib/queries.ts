@@ -176,16 +176,27 @@ export function useTeam(organizationId: string | undefined) {
     queryKey: ["team", organizationId],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("memberships")
-        .select("id, role, created_at, user_id, profiles(full_name, email, avatar_url)")
-        .eq("organization_id", organizationId!)
-        .order("created_at");
+      // Teammate names/emails live in `profiles`, which is self-read only under
+      // RLS, so they are read through a membership-scoped security definer RPC.
+      const { data, error } = await supabase.rpc("org_team_members", {
+        _organization_id: organizationId!,
+      });
       if (error) throw error;
-      return data;
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        role: row.role,
+        created_at: row.created_at,
+        user_id: row.user_id,
+        profiles: {
+          full_name: row.full_name,
+          email: row.email,
+          avatar_url: row.avatar_url,
+        },
+      }));
     },
   });
 }
+
 
 export function useQuoteRequests(organizationId: string | undefined) {
   return useQuery({
