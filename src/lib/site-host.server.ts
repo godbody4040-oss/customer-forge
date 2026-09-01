@@ -61,23 +61,33 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
   const bare = host.replace(/^www\./, "");
   const subdomain = revoraSubdomainFromHost(host);
 
-  const { data: rows } = await supabaseAdmin
-    .from("website_settings")
-    .select("organization_id, custom_domain, subdomain, dns_ok, ssl_ok")
-    .or(
-      [
-        ...(subdomain ? [`subdomain.eq.${subdomain}`] : []),
-        `custom_domain.eq.${host}`,
-        `custom_domain.eq.${bare}`,
-      ].join(","),
-    )
-    .limit(3);
+  // Host headers are attacker-controlled, so every candidate is looked up with a
+  // parameterized .eq() filter. Nothing from the header is ever spliced into a
+  // filter expression string, where commas or parentheses could restructure the
+  // query.
+  const columns = "organization_id, custom_domain, subdomain, dns_ok, ssl_ok";
+  const lookups = [
+    ...(subdomain
+      ? [supabaseAdmin.from("website_settings").select(columns).eq("subdomain", subdomain).limit(2)]
+      : []),
+    supabaseAdmin.from("website_settings").select(columns).eq("custom_domain", host).limit(2),
+    ...(bare !== host
+      ? [supabaseAdmin.from("website_settings").select(columns).eq("custom_domain", bare).limit(2)]
+      : []),
+  ];
 
-  const ordered = [...(rows ?? [])].sort((a, b) => {
-    const aRevora = !!subdomain && a.subdomain === subdomain ? 0 : 1;
-    const bRevora = !!subdomain && b.subdomain === subdomain ? 0 : 1;
-    return aRevora - bRevora;
-  });
+  const results = await Promise.all(lookups);
+  const seen = new Set<string>();
+  // Revora-subdomain matches come first because that address is always live.
+  const ordered = results
+    .flatMap((result) => result.data ?? [])
+    .filter((row) => {
+      const key = `${row.organization_id}:${row.subdomain ?? ""}:${row.custom_domain ?? ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
 
   for (const row of ordered) {
     if (!row.organization_id) continue;
