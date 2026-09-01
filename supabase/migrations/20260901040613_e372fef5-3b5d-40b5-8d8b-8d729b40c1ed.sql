@@ -1,0 +1,2 @@
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS portal_code text;
+CREATE UNIQUE INDEX IF NOT EXISTS organizations_portal_code_key ON public.organizations (portal_code) WHERE portal_code IS NOT NULL;
