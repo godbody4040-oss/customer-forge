@@ -54,13 +54,28 @@ export const Route = createFileRoute("/")({
     }
     try {
       const response = await getHostSite({ data: {} });
-      return response?.result ?? null;
+      if (response?.result) return response.result;
+      // The address belongs to a client whose website isn't published yet.
+      // Their visitors must never land on Revora's own sales page.
+      if (response?.tenant) return { pending: true as const };
+      return null;
     } catch {
       return null;
     }
   },
   head: ({ loaderData }) =>
-    loaderData
+    loaderData && "pending" in loaderData
+      ? {
+          meta: [
+            { title: "Website coming soon" },
+            {
+              name: "description",
+              content: "This website is being set up and will be online shortly.",
+            },
+            { name: "robots", content: "noindex" },
+          ],
+        }
+      : loaderData
       ? {
           meta: [
             { title: `${loaderData.site.org.name}`.slice(0, 60) },
