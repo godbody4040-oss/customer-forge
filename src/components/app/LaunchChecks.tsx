@@ -71,9 +71,23 @@ export function LaunchChecks({
             <Pill tone={state.tone}>{state.label}</Pill>
             {canManage ? (
               live ? (
-                <Button variant="outline" onClick={onUnpublish} disabled={isPublishing}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Taking a live site offline hides it from every visitor —
+                    // never do it on a single stray click.
+                    if (
+                      window.confirm(
+                        "Take your website offline? Visitors will no longer be able to see it until you publish again.",
+                      )
+                    )
+                      onUnpublish();
+                  }}
+                  disabled={isPublishing}
+                >
                   Take offline
                 </Button>
+
               ) : (
                 <Button variant="signal" onClick={onPublish} disabled={isPublishing || !passed}>
                   {isPublishing ? (
