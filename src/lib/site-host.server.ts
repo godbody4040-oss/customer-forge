@@ -145,10 +145,15 @@ export async function resolveHostSite(
     (sections ?? []).filter((s) => s.is_visible !== false).map((s) => s.page_id as string),
   );
 
+  // Live sites are always served over HTTPS; only local development is http, so
+  // never publish an http:// canonical or sitemap URL for a real hostname.
+  const scheme = /^(localhost|127\.0\.0\.1)(:|$)/.test(tenant.host) ? protocol : "https";
+
   return {
     slug: tenant.slug,
-    origin: `${protocol}://${tenant.host}`,
+    origin: `${scheme}://${tenant.host}`,
     noindex: false,
+
     pages: (pages ?? [])
       .filter((p) => !p.noindex && populated.has(p.id as string))
       .map((p) => ({ slug: p.slug, updatedAt: p.updated_at ?? null })),
