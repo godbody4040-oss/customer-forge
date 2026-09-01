@@ -150,19 +150,9 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       if (!monthly || !setup) {
         return { error: "Revora Growth System pricing is not set up in the payment provider yet." };
       }
-      // The rates the admin pricing page configured are the source of truth for
-      // what a customer may be charged; the code-level offer is the fallback.
-      const { data: configured } = await context.supabase
-        .from("offer_config")
-        .select("setup_price, monthly_price")
-        .eq("id", "growth_system")
-        .maybeSingle();
-      const rates = configured
-        ? {
-            setupPrice: Number(configured.setup_price),
-            monthlyPrice: Number(configured.monthly_price),
-          }
-        : DEFAULT_OFFER_RATES;
+      // ONE canonical source of truth: the immutable code-level offer. Neither
+      // the browser nor a database row may influence what is charged.
+      const rates = DEFAULT_OFFER_RATES;
 
       // Never open a session against a price that disagrees with the published
       // offer — a mis-set price would charge the customer the wrong amount.

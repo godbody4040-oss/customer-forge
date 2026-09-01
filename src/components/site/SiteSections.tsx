@@ -5,6 +5,7 @@
  * claims. Lead-capture blocks (quote, booking, sticky call bar) render the same
  * forms used on the home page, so any page can convert a visitor.
  */
+import { blockCss, readBlockStyle, textClasses } from "@/lib/site-style";
 import { Link } from "@tanstack/react-router";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,27 @@ function SectionButtons({ site, components }: { site: Site; components: Componen
  */
 export function SiteSection({ site, section }: { site: Site; section: Section }) {
   const effect = readSectionEffect(section.settings);
-  const inner = <SiteSectionBody site={site} section={section} />;
+  const style = readBlockStyle(section.settings);
+  let inner = <SiteSectionBody site={site} section={section} />;
+
+  // Client-chosen colours, background image, font and alignment from the visual
+  // builder. Only explicitly set values are applied, so untouched sections keep
+  // the generated template exactly as it was.
+  const css = blockCss(style);
+  const typography = [
+    style.font !== "inherit" ? textClasses(style).replace(/text-\[[^\]]+\]/g, "") : "",
+    style.align === "center" ? "text-center" : style.align === "right" ? "text-right" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  if (Object.keys(css).length || typography) {
+    inner = (
+      <div className={typography || undefined} style={css}>
+        {inner}
+      </div>
+    );
+  }
+
   if (effect === "none") return inner;
   return <div className={sectionEffectClass(effect)}>{inner}</div>;
 }
