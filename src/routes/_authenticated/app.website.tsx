@@ -36,6 +36,8 @@ import { SiteChatbot } from "@/components/app/SiteChatbot";
 import { UpgradeStudio } from "@/components/app/UpgradeStudio";
 import { RevoraGenius } from "@/components/app/RevoraGenius";
 import { BuilderAudit } from "@/components/app/BuilderAudit";
+import { BuilderCanvas } from "@/components/app/BuilderCanvas";
+import { ClientOnboardingFlow } from "@/components/app/ClientOnboardingFlow";
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
@@ -212,6 +214,20 @@ function WebsitePage() {
       node: (
         <div className="space-y-5">
           <EnvironmentBanner status={production} />
+          <ClientOnboardingFlow
+            organizationId={orgId}
+            canManage={manage}
+            setupPaid={(org?.setup_payment_status ?? "unpaid") === "paid"}
+            publishState={settings?.publish_state ?? "draft"}
+            buildReady={requiredCount === 0 && visibleSections > 0}
+            requiredAnswers={requiredCount}
+            isPublishing={launchFlow.isLaunching || saveSettings.isPending}
+            onPublish={() => {
+              trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
+              launchFlow.launch();
+            }}
+            onGoTo={setSection}
+          />
           <WebsiteProject
             organizationId={orgId}
             businessName={org?.name ?? null}
@@ -311,6 +327,12 @@ function WebsitePage() {
           <BusinessBriefPanel brief={brief} />
         </div>
       ),
+    },
+    {
+      key: "canvas",
+      label: "Visual canvas",
+      hint: "Click any element, edit it in place",
+      node: <BuilderCanvas organizationId={orgId} pages={pages ?? []} canManage={manage} />,
     },
     {
       key: "design",
