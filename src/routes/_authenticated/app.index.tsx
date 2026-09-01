@@ -13,6 +13,8 @@ import {
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
 import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
 import { StatusCenter } from "@/components/app/StatusCenter";
+import { ClientWebsiteSummary } from "@/components/app/ClientWebsiteSummary";
+
 
 import { useProductionStatus } from "@/lib/production.hooks";
 
