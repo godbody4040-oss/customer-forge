@@ -782,8 +782,8 @@ export function BuilderCanvas({
             <>
               <p className="text-[13px] font-medium">Nothing selected</p>
               <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                Click any section or card on the canvas, or pick one from the layers list. Text edits
-                happen right in place; the rest of its settings appear here.
+                Click any section or card on the canvas, or pick one from the layers list. Text
+                edits happen right in place; the rest of its settings appear here.
               </p>
             </>
           ) : selectedComponent ? (
@@ -1143,8 +1143,8 @@ function StyleControls({
       </div>
       {device !== "desktop" ? (
         <p className="text-[11px] leading-relaxed text-muted-foreground">
-          Changes here apply on {DEVICE_META[device].label.toLowerCase()} screens only. Anything left
-          on Default follows your desktop design.
+          Changes here apply on {DEVICE_META[device].label.toLowerCase()} screens only. Anything
+          left on Default follows your desktop design.
         </p>
       ) : null}
 
@@ -1163,7 +1163,7 @@ function StyleControls({
         {color("Background", "bgColor")}
         {scope === "component" ? color("Button text", "buttonTextColor") : null}
         {scope === "component" ? color("Button fill", "buttonBgColor") : null}
-        {choose("Border colour", "borderColor", [])}
+        {color("Border colour", "borderColor")}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -1184,7 +1184,9 @@ function StyleControls({
         {choose("Border width", "borderWidth", BORDER_WIDTHS, px)}
         {choose("Shadow", "shadow", SHADOWS)}
         {choose("Opacity", "opacity", OPACITIES, (v) => `${v}%`)}
-        {scope === "section" ? choose("Image darkening", "overlay", OVERLAYS, (v) => `${v}%`) : null}
+        {scope === "section"
+          ? choose("Image darkening", "overlay", OVERLAYS, (v) => `${v}%`)
+          : null}
         {scope === "component" ? choose("Image fit", "objectFit", OBJECT_FITS) : null}
         {scope === "component" ? choose("Button style", "buttonStyle", BUTTON_STYLES) : null}
         {scope === "component" ? choose("Button size", "buttonSize", BUTTON_SIZES) : null}

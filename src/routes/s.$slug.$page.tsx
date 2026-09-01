@@ -215,7 +215,9 @@ export function SiteNav({ site, current }: { site: NonNullable<PublicSite>; curr
  * checked block id, so nothing a client typed can inject CSS here.
  */
 function ResponsiveStyles({ sections }: { sections: { id: string; settings: unknown }[] }) {
-  const css = styleSheet(sections.map((section) => ({ id: section.id, settings: section.settings })));
+  const css = styleSheet(
+    sections.map((section) => ({ id: section.id, settings: section.settings })),
+  );
   if (!css) return null;
   return <style>{css}</style>;
 }

@@ -11,10 +11,7 @@ import {
 import { safeLinkUrl, slugify } from "@/lib/website-content";
 import { readCopy } from "@/lib/site-engine";
 import { useBuilderHistory } from "@/lib/builder-history.hooks";
-import {
-  duplicateComponentPayload,
-  duplicateSectionPayload,
-} from "@/lib/builder-tree";
+import { duplicateComponentPayload, duplicateSectionPayload } from "@/lib/builder-tree";
 
 const KEY = "website_content";
 
