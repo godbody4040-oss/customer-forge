@@ -10,7 +10,7 @@ import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-s
 import { currency, dateShort } from "@/lib/format";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
-import { SiteNav } from "@/routes/s.$slug.$page";
+import { SiteNav, SitePageView } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
 import { siteThemeStyle } from "@/lib/site-theme";
@@ -118,7 +118,7 @@ export function PublicSiteView({
  * The rendered business website. Shared by the live site and by time-limited
  * draft preview links, which pass `preview` so nothing is tracked as real traffic.
  */
-export function PublicSiteView({
+function TemplateSiteView({
   site,
   preview = false,
 }: {
