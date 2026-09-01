@@ -59,7 +59,10 @@ export function normalizeSubdomain(value: string | null | undefined) {
     .toLowerCase()
     .replace(/^https?:\/\//, "")
     .replace(/\/.*$/, "")
-    .replace(new RegExp(`\\.${REVORA_ROOT.replace(/\./g, "\\.")}$`), "")
+    .replace(
+      new RegExp(`\\.(${SITE_ROOTS.map((root) => root.replace(/\./g, "\\.")).join("|")})$`),
+      "",
+    )
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/-{2,}/g, "-")
     .replace(/^-+|-+$/g, "")
