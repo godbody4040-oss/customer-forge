@@ -151,7 +151,7 @@ export function DomainOperations({
   canManage: boolean;
 }) {
   const qc = useQueryClient();
-  const refresh = () => void qc.invalidateQueries({ queryKey: ["website-settings"] });
+  const refresh = () => void qc.invalidateQueries({ queryKey: ["website_settings"] });
 
   const domain = settings?.custom_domain ?? null;
   const preference: HostPreference = settings?.domain_primary_host === "www" ? "www" : "root";

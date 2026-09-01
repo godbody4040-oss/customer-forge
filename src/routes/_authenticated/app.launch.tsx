@@ -72,7 +72,7 @@ function Launch() {
       toast.message(DOMAIN_STATES[result.status]?.label ?? result.status, {
         description: result.detail,
       });
-      await queryClient.invalidateQueries({ queryKey: ["website-settings"] });
+      await queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
