@@ -395,7 +395,8 @@ export function DomainCenter({
       </Panel>
 
       {/* Connect a domain you own */}
-      <Panel className="space-y-4 p-5">
+      <Panel id="connect-own-domain" className="scroll-mt-24 space-y-4 p-5">
+
         <SectionHeading eyebrow="Connect a domain" title="Use a domain you already own" />
         <p className="text-[13px] text-muted-foreground">
           Save it here first. We keep checking your DNS in the background and only report it live
