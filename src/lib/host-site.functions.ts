@@ -35,12 +35,19 @@ export const getHostSite = createServerFn({ method: "GET" })
     const { getRequestHost } = await import("@tanstack/react-start/server");
     const { resolveTenantHost } = await import("@/lib/site-host.server");
     const { loadSite } = await import("@/lib/public-site.server");
+    const { SITE_ROOT, normalizeHost } = await import("@/lib/revora-address");
 
     let host: string | null = null;
     try {
       host = getRequestHost({ xForwardedHost: true }) ?? null;
     } catch {
       host = null;
+    }
+    // The bare client-hosting root belongs to no client: show the neutral
+    // holding page rather than Revora's marketing site or a redirect.
+    const bare = normalizeHost(host);
+    if (bare === SITE_ROOT || bare === `www.${SITE_ROOT}`) {
+      return { tenant: true, result: null };
     }
     const tenant = await resolveTenantHost(host);
     if (!tenant) return { tenant: false, result: null };
