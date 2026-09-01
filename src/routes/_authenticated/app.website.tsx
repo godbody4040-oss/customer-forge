@@ -410,7 +410,9 @@ function WebsitePage() {
             isLaunching={launchFlow.isLaunching}
             canManage={manage}
             result={launchFlow.result}
+          />
           <InteractionHealth
+
             pages={pages ?? []}
             onFix={() => {
               setSection("pages");
