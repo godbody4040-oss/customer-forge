@@ -142,6 +142,18 @@ export const Route = createFileRoute("/")({
 /** Client website on a client host, Revora's sales site on Revora's host. */
 function HomeRoute() {
   const hostSite = Route.useLoaderData();
+  if (hostSite && "pending" in hostSite) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 text-center">
+        <div>
+          <h1 className="font-display text-[22px] font-semibold">Website coming soon</h1>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            This website is being set up and will be online shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (hostSite?.site)
     return (
       <SiteAddressProvider ownAddress>
