@@ -488,10 +488,13 @@ function WebsitePage() {
                 : "Changes save automatically"
           }
           activeKey={section}
-          onActiveKeyChange={setSection}
+          onActiveKeyChange={goTo}
           sections={sections}
           actions={
             <>
+              <Button size="sm" variant="outline" onClick={() => setHistoryOpen(true)}>
+                History
+              </Button>
               {org ? (
                 <PreviewSiteButton
                   organizationId={orgId}
@@ -517,7 +520,46 @@ function WebsitePage() {
             </>
           }
         />
+
+        <OverlayPanel
+          open={historyOpen}
+          title="History"
+          description="Every change Revora and your team made — restore any earlier version."
+          onClose={() => setHistoryOpen(false)}
+        >
+          <VersionHistory organizationId={orgId} canManage={manage} />
+          <VersionDiff organizationId={orgId} />
+        </OverlayPanel>
       </BuilderHistoryProvider>
+
+      <OverlayPanel
+        open={setupOpen}
+        title="Setup"
+        description="Answer these once. Revora reuses them across your whole website."
+        onClose={() => setSetupOpen(false)}
+      >
+        <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
+        <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
+        <BuilderWizard
+          organizationId={orgId}
+          org={org}
+          profile={profile}
+          servicesCount={servicesCount}
+          pricedCount={pricedCount}
+          canManage={manage}
+          jumpTo={jump}
+          structureSlot={pointer(
+            "Pages & content",
+            "Your pages, sections, copy and lead capture live in Build.",
+            "build",
+          )}
+          launchSlot={pointer(
+            "Launch",
+            "Readiness checks, previews and going live are handled in Launch.",
+            "launch",
+          )}
+        />
+      </OverlayPanel>
 
       <ProductionLaunchModal
         open={launchFlow.lockedOpen}
@@ -527,3 +569,28 @@ function WebsitePage() {
     </>
   );
 }
+
+/** Old builder destinations now live inside Build / Design / AI / Launch. */
+const SECTION_ALIAS: Record<string, string> = {
+  overview: "build",
+  pages: "build",
+  canvas: "build",
+  content: "build",
+  structure: "build",
+  assistant: "ai",
+  growth: "ai",
+  audit: "ai",
+  upgrades: "ai",
+  media: "design",
+  effects: "design",
+  build: "build",
+  design: "design",
+  ai: "ai",
+  launch: "launch",
+};
+
+function normalizeSection(key: string | undefined): string {
+  if (!key) return "build";
+  return SECTION_ALIAS[key] ?? "build";
+}
+
