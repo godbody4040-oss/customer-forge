@@ -194,10 +194,14 @@ function CommandCenterPage() {
   const [liveNote, setLiveNote] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [lastApplied, setLastApplied] = useState<AppliedUpgrade | null>(null);
+  const saveProfile = useSaveBusinessProfile(orgId);
+  const updateOrg = useUpdateOrganization();
 
   // Every hook above runs on every render; the loading gate must come after them
   // so hook order stays identical before and after the workspace queries settle.
   if (isLoadingWorkspace) return <LoadingRows rows={5} />;
+
+
 
 
 
