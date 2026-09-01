@@ -11,12 +11,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/user-error";
-import { Check, Copy, ExternalLink, Gift, Loader2, ShieldCheck } from "lucide-react";
+import { Check, Copy, ExternalLink, Gift, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { claimRevoraAddress } from "@/lib/revora-address.functions";
+import { checkRevoraAddressLive, claimRevoraAddress } from "@/lib/revora-address.functions";
 import {
   SITE_ROOT,
   customDomainIsLive,
@@ -66,6 +66,17 @@ export function RevoraAddressCard({
     onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
+  // The honest state of the free address: proven by a real DNS + HTTPS lookup.
+  const liveFn = useServerFn(checkRevoraAddressLive);
+  const verify = useMutation({
+    mutationFn: () => liveFn({ data: { organizationId: organizationId! } }),
+    onSuccess: (result) => {
+      if (result.live) toast.success(result.detail);
+      else toast.message("Not live yet", { description: result.detail });
+    },
+    onError: (error: Error) => toast.error(friendlyError(error)),
+  });
+
   return (
     <Panel className="space-y-4 p-5">
       <SectionHeading
@@ -110,6 +121,36 @@ export function RevoraAddressCard({
           </div>
         ) : null}
       </div>
+
+      {host ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={verify.isPending || !organizationId}
+            onClick={() => verify.mutate()}
+          >
+            {verify.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3.5" />
+            )}
+            Check my address
+          </Button>
+          {verify.data ? (
+            <Pill tone={verify.data.live ? "signal" : "attention"}>
+              {verify.data.live ? "DNS + HTTPS verified" : "Not answering yet"}
+            </Pill>
+          ) : null}
+          {verify.data ? (
+            <span className="min-w-0 flex-1 text-[11.5px] text-muted-foreground">
+              {verify.data.detail}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
+
 
       <div className="grid gap-2 text-[12px] text-muted-foreground sm:grid-cols-3">
         <p className="rounded-md border border-border/60 p-2.5">
