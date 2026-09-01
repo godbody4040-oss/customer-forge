@@ -106,16 +106,24 @@ export function DomainOperations({
   const domain = settings?.custom_domain ?? null;
   const preference: HostPreference = settings?.domain_primary_host === "www" ? "www" : "root";
   const forceHttps = settings?.domain_force_https !== false;
-  const transfer = (settings?.domain_transfer ?? {}) as DomainTransfer;
-  const forwarding = (settings?.email_forwarding ?? {}) as EmailForwarding;
-  const savedReport = (settings?.domain_seo_report ?? null) as SeoReport | null;
+  const transfer = (isRecord(settings?.domain_transfer)
+    ? settings?.domain_transfer
+    : {}) as DomainTransfer;
+  const forwarding = (isRecord(settings?.email_forwarding)
+    ? settings?.email_forwarding
+    : {}) as EmailForwarding;
+  const savedReport = normalizeReport(settings?.domain_seo_report);
 
   const [host, setHost] = useState<HostPreference>(preference);
   const [https, setHttps] = useState(forceHttps);
   const [newDomain, setNewDomain] = useState("");
   const [alias, setAlias] = useState(forwarding.alias ?? "contact");
   const [forwardTo, setForwardTo] = useState(forwarding.forward_to ?? "");
-  const [provider, setProvider] = useState<EmailForwardProvider>(forwarding.provider ?? "improvmx");
+  const [provider, setProvider] = useState<EmailForwardProvider>(
+    EMAIL_PROVIDERS.some((p) => p.id === forwarding.provider)
+      ? (forwarding.provider as EmailForwardProvider)
+      : "improvmx",
+  );
   const [report, setReport] = useState<SeoReport | null>(savedReport);
 
   const saveRouting = useServerFn(saveDomainRouting);
