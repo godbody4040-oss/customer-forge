@@ -38,18 +38,49 @@ beforeAll(async () => {
   publicSite = /<loc>[^<]*(\/s\/[a-z0-9-]+)<\/loc>/i.exec(sitemap.body)?.[1] ?? null;
 }, 60_000);
 
-const REQUIRE_SERVER = process.env["E2E_REQUIRE_SERVER"] === "1" || process.env["CI"] === "true";
+/**
+ * Critical production flows are NEVER optional: an unreachable app FAILS the
+ * suite so a green run can never be mistaken for a verified app. The single
+ * escape hatch must be requested deliberately (E2E_ALLOW_OFFLINE=1) and is
+ * refused in CI, so it cannot be left on by accident.
+ */
+const ALLOW_OFFLINE = process.env["E2E_ALLOW_OFFLINE"] === "1" && process.env["CI"] !== "true";
 
+const unreachable = () =>
+  new Error(
+    `E2E server unreachable at ${BASE}. Start the app (bun run dev) or set E2E_BASE_URL. ` +
+      `Critical payment and production flows are not allowed to skip silently.`,
+  );
+
+/** A required flow. Unreachable app = failure, never a silent pass. */
 const live = (name: string, fn: () => Promise<void>, timeout = 30_000) =>
   it(
     name,
     async () => {
       if (!reachable) {
-        if (REQUIRE_SERVER) {
-          throw new Error(
-            `E2E server unreachable at ${BASE}. Start the app or unset E2E_REQUIRE_SERVER/CI.`,
-          );
+        if (ALLOW_OFFLINE) {
+          console.warn(`[e2e] SKIPPED (E2E_ALLOW_OFFLINE=1, NOT VERIFIED): ${name}`);
+          return;
         }
+        throw unreachable();
+      }
+      await fn();
+    },
+    timeout,
+  );
+
+/**
+ * An explicitly optional flow: it depends on state no test can create from
+ * outside (a tenant having published a site). It still fails when the app is
+ * unreachable — only the missing tenant state may skip it, and every skip is
+ * announced so it can never be read as a pass.
+ */
+const optional = (name: string, fn: () => Promise<void>, timeout = 30_000) =>
+  live(
+    `${name} [optional: needs a published tenant site]`,
+    async () => {
+      if (!publicSite) {
+        console.warn(`[e2e] SKIPPED (no published tenant site, NOT VERIFIED): ${name}`);
         return;
       }
       await fn();
@@ -94,17 +125,15 @@ describe("marketing and discovery", () => {
 });
 
 describe("lead capture, quote and booking flows", () => {
-  live("renders a working conversion path on a published tenant site", async () => {
-    if (!publicSite) return; // no tenant has published yet
-    const { status, body } = await get(publicSite);
+  optional("renders a working conversion path on a published tenant site", async () => {
+    const { status, body } = await get(publicSite!);
     expect(status).toBe(200);
     // A visitor must always have at least one way to convert.
     expect(/href=["']tel:|<form\b/i.test(body)).toBe(true);
     expect((body.match(/<h1\b/gi) ?? []).length).toBe(1);
   });
 
-  live("serves the quote and booking pages of a published site", async () => {
-    if (!publicSite) return;
+  optional("serves the quote and booking pages of a published site", async () => {
     for (const suffix of ["/pricing", "/book", "/contact"]) {
       const { status, body } = await get(`${publicSite}${suffix}`);
       expect([200, 404]).toContain(status); // page only exists when generated
