@@ -146,6 +146,13 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       if (!monthly || !setup) {
         return { error: "Revora Growth System pricing is not set up in the payment provider yet." };
       }
+      // Never open a session against a price that disagrees with the published
+      // offer — a mis-set price would charge the customer the wrong amount.
+      const verified = verifyGrowthPrices(setup, monthly);
+      if (!verified.ok) {
+        return { error: `${verified.reason} Checkout is paused until this is corrected.` };
+      }
+
 
       const found = await stripe.customers.search({
         query: `metadata['organizationId']:'${data.organizationId}'`,
