@@ -42,6 +42,7 @@ import { BuilderCanvas } from "@/components/app/BuilderCanvas";
 import { ClientOnboardingFlow } from "@/components/app/ClientOnboardingFlow";
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
+import { PortalAccess } from "@/components/app/PortalAccess";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
 import { PlatformEngine } from "@/components/app/PlatformEngine";
@@ -427,6 +428,13 @@ function WebsitePage() {
             }
           />
           <PreviewLinks organizationId={orgId} canManage={manage} />
+          <Disclosure
+            label="Client portal access"
+            hint="Let your client log in and see their own dashboard, pages and live site"
+          >
+            <PortalAccess organizationId={orgId} canManage={manage} />
+          </Disclosure>
+
           <Disclosure label="Fix what needs attention" hint="Buttons, forms and links on your pages">
             <InteractionHealth pages={pages ?? []} onFix={() => goTo("build")} />
           </Disclosure>
