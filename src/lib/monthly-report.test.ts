@@ -156,9 +156,7 @@ describe("monthly report", () => {
   });
 
   it("counts visits and de-duplicates visitors by session", () => {
-    const augA = report().rows.find(
-      (r) => r.month === "2026-08" && r.organizationId === "org-a",
-    )!;
+    const augA = report().rows.find((r) => r.month === "2026-08" && r.organizationId === "org-a")!;
     expect(augA.visits).toBe(3);
     expect(augA.visitors).toBe(2);
   });

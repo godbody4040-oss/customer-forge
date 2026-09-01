@@ -135,7 +135,6 @@ function normalizeReport(value: unknown): SeoReport | null {
 }
 
 const copyValue = (value: string, label: string) =>
-
   void navigator.clipboard?.writeText(value).then(
     () => toast.success(`${label} copied`),
     () => toast.error("Copy failed — select the text instead."),
@@ -156,12 +155,12 @@ export function DomainOperations({
   const domain = settings?.custom_domain ?? null;
   const preference: HostPreference = settings?.domain_primary_host === "www" ? "www" : "root";
   const forceHttps = settings?.domain_force_https !== false;
-  const transfer = (isRecord(settings?.domain_transfer)
-    ? settings?.domain_transfer
-    : {}) as DomainTransfer;
-  const forwarding = (isRecord(settings?.email_forwarding)
-    ? settings?.email_forwarding
-    : {}) as EmailForwarding;
+  const transfer = (
+    isRecord(settings?.domain_transfer) ? settings?.domain_transfer : {}
+  ) as DomainTransfer;
+  const forwarding = (
+    isRecord(settings?.email_forwarding) ? settings?.email_forwarding : {}
+  ) as EmailForwarding;
   const savedReport = normalizeReport(settings?.domain_seo_report);
 
   const [host, setHost] = useState<HostPreference>(preference);

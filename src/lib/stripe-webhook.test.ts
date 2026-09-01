@@ -85,9 +85,9 @@ describe("payment webhook signature verification", () => {
     const tampered = eventBody({
       data: { object: { id: "cs_test_1", payment_status: "paid", amount_total: 1 } },
     });
-    await expect(
-      verifyWebhook(await request(tampered, { header }), "sandbox"),
-    ).rejects.toThrow(/Invalid webhook signature/);
+    await expect(verifyWebhook(await request(tampered, { header }), "sandbox")).rejects.toThrow(
+      /Invalid webhook signature/,
+    );
   });
 
   it("rejects an event signed with the wrong secret", async () => {
@@ -110,10 +110,7 @@ describe("payment webhook signature verification", () => {
   });
 
   it("accepts a live-signed event on the live endpoint", async () => {
-    const event = await verifyWebhook(
-      await request(eventBody(), { secret: LIVE_SECRET }),
-      "live",
-    );
+    const event = await verifyWebhook(await request(eventBody(), { secret: LIVE_SECRET }), "live");
     expect(event.type).toBe("checkout.session.completed");
   });
 

@@ -76,8 +76,8 @@ function AcceptInvitePage() {
       {state.step === "signin" ? (
         <>
           <p className="mt-3 text-[14px] text-muted-foreground">
-            Sign in — or create your account with the email this invite was sent to — and you'll join
-            the workspace automatically.
+            Sign in — or create your account with the email this invite was sent to — and you'll
+            join the workspace automatically.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild>

@@ -29,12 +29,14 @@ export const DEVICES = ["desktop", "tablet", "mobile"] as const;
 export type Device = (typeof DEVICES)[number];
 
 /** Editing width of each tier, and the breakpoint it publishes under. */
-export const DEVICE_META: Record<Device, { label: string; width: number; maxWidth: number | null }> =
-  {
-    desktop: { label: "Desktop", width: 1180, maxWidth: null },
-    tablet: { label: "Tablet", width: 834, maxWidth: 1023 },
-    mobile: { label: "Mobile", width: 390, maxWidth: 639 },
-  };
+export const DEVICE_META: Record<
+  Device,
+  { label: string; width: number; maxWidth: number | null }
+> = {
+  desktop: { label: "Desktop", width: 1180, maxWidth: null },
+  tablet: { label: "Tablet", width: 834, maxWidth: 1023 },
+  mobile: { label: "Mobile", width: 390, maxWidth: 639 },
+};
 
 /* ------------------------------ allowed values ----------------------------- */
 
@@ -175,7 +177,10 @@ export function safeImageUrl(value: unknown): string | null {
   return /^(https?:\/\/|\/)/i.test(url) ? url : null;
 }
 
-function inList<T extends readonly (string | number)[]>(allowed: T, value: unknown): T[number] | null {
+function inList<T extends readonly (string | number)[]>(
+  allowed: T,
+  value: unknown,
+): T[number] | null {
   if (typeof value === "number" && (allowed as readonly unknown[]).includes(value))
     return value as T[number];
   if (typeof value === "string" && (allowed as readonly unknown[]).includes(value))
@@ -215,7 +220,8 @@ const LEGACY_FONT: Record<string, (typeof FONT_FAMILIES)[number]> = {
  * one so websites styled before this upgrade keep rendering identically.
  */
 function readLayer(raw: unknown): Partial<BlockStyle> {
-  const s = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  const s =
+    raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
   const out: Partial<BlockStyle> = {};
   const set = <K extends StyleKey>(key: K, value: BlockStyle[K] | null) => {
     if (value !== null && value !== undefined) out[key] = value;
@@ -247,7 +253,8 @@ function readLayer(raw: unknown): Partial<BlockStyle> {
 
   set(
     "columns",
-    inList(COLUMNS, s["columns"]) ?? inList(COLUMNS, legacy(LEGACY_COLUMNS, s["layout"]) ?? undefined),
+    inList(COLUMNS, s["columns"]) ??
+      inList(COLUMNS, legacy(LEGACY_COLUMNS, s["layout"]) ?? undefined),
   );
   set("gap", inList(SPACES, s["gap"]));
   set("maxWidth", inList(MAX_WIDTHS, s["maxWidth"]));
@@ -394,7 +401,8 @@ export function blockCss(style: BlockStyle): React.CSSProperties {
     css.backgroundSize = "cover";
     css.backgroundPosition = "center";
   }
-  if (style.radius !== null) css.borderRadius = style.radius >= 999 ? "9999px" : `${style.radius}px`;
+  if (style.radius !== null)
+    css.borderRadius = style.radius >= 999 ? "9999px" : `${style.radius}px`;
   if (style.borderWidth !== null) {
     css.borderWidth = `${style.borderWidth}px`;
     css.borderStyle = "solid";
@@ -424,8 +432,7 @@ function backgroundImageCss(style: BlockStyle): string {
 /** Grid CSS for a block's child items (service cards, reviews, gallery…). */
 export function itemsCss(style: BlockStyle): React.CSSProperties {
   const css: React.CSSProperties = {};
-  if (style.columns !== null)
-    css.gridTemplateColumns = `repeat(${style.columns}, minmax(0, 1fr))`;
+  if (style.columns !== null) css.gridTemplateColumns = `repeat(${style.columns}, minmax(0, 1fr))`;
   if (style.gap !== null) css.gap = `${style.gap}px`;
   return css;
 }
