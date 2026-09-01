@@ -120,7 +120,7 @@ const RANGE_KEY = "revora.dashboard.range";
 
 function Dashboard() {
   const { data: ws } = useWorkspace();
-  const { data: production } = useProductionStatus(ws?.organization?.id);
+  const { data: production } = useProductionStatus(ws?.workspace?.organizationId);
   const orgId = ws?.workspace?.organizationId;
   const org = ws?.workspace?.organization;
 
