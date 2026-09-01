@@ -95,6 +95,7 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
       const seo = (settings.data?.seo ?? {}) as Record<string, unknown>;
 
       const blueprint = buildContentBlueprint({
+        organizationId: orgId,
         businessName: org.data?.name ?? "",
         industry: org.data?.industry ?? null,
         city: (p["city"] as string) ?? null,
