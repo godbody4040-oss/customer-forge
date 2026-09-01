@@ -857,12 +857,21 @@ export function BuilderCanvas({
               </Field>
               <StyleControls
                 scope="component"
-                style={readBlockStyle(selectedComponent.settings)}
+                device={device}
+                settings={selectedComponent.settings}
                 disabled={!canManage}
                 onChange={(patch) =>
                   saveComponent.mutate({
                     id: selectedComponent.id,
-                    patch: { settings: writeBlockStyle(selectedComponent.settings, patch) },
+                    patch: {
+                      settings: writeBlockStyle(selectedComponent.settings, patch, device),
+                    },
+                  })
+                }
+                onResetDevice={() =>
+                  saveComponent.mutate({
+                    id: selectedComponent.id,
+                    patch: { settings: clearDeviceLayer(selectedComponent.settings, device) },
                   })
                 }
               />
@@ -947,12 +956,19 @@ export function BuilderCanvas({
               </Field>
               <StyleControls
                 scope="section"
-                style={readBlockStyle(selectedSection.settings)}
+                device={device}
+                settings={selectedSection.settings}
                 disabled={!canManage}
                 onChange={(patch) =>
                   saveSection.mutate({
                     id: selectedSection.id,
-                    patch: { settings: writeBlockStyle(selectedSection.settings, patch) },
+                    patch: { settings: writeBlockStyle(selectedSection.settings, patch, device) },
+                  })
+                }
+                onResetDevice={() =>
+                  saveSection.mutate({
+                    id: selectedSection.id,
+                    patch: { settings: clearDeviceLayer(selectedSection.settings, device) },
                   })
                 }
               />
@@ -1026,86 +1042,154 @@ function Field({
   );
 }
 
-/** Closed-list visual controls. Every option maps to a validated style value. */
+/**
+ * Closed-list visual controls for the selected block.
+ *
+ * Every control writes into the current device layer, so a client can style
+ * desktop once and then tune phone or tablet without touching the other tiers.
+ * A dot marks any property this device overrides, and one button clears the
+ * whole device layer back to inheriting desktop.
+ */
 function StyleControls({
   scope,
-  style,
+  device,
+  settings,
   disabled,
   onChange,
+  onResetDevice,
 }: {
   scope: "section" | "component";
-  style: BlockStyle;
+  device: Device;
+  settings: unknown;
   disabled: boolean;
-  onChange: (patch: Partial<BlockStyle>) => void;
+  onChange: (patch: Partial<Record<StyleKey, unknown>>) => void;
+  onResetDevice: () => void;
 }) {
-  const select = <K extends keyof BlockStyle>(
-    label: string,
-    key: K,
-    options: readonly string[],
+  const style = readBlockStyle(settings, device);
+  const overridden = (key: StyleKey) => isOverridden(settings, device, key);
+
+  const label = (text: string, key: StyleKey) => (
+    <span className="flex items-center gap-1">
+      {text}
+      {overridden(key) ? (
+        <span
+          className="size-1.5 rounded-full bg-primary"
+          title={`Set for ${DEVICE_META[device].label.toLowerCase()} only`}
+        />
+      ) : null}
+    </span>
+  );
+
+  /** A closed option list. Empty value means "inherit / not set". */
+  const choose = (
+    text: string,
+    key: StyleKey,
+    options: readonly (string | number)[],
+    format: (value: string | number) => string = String,
   ) => (
-    <Field label={label} key={String(key)}>
+    <label className="block" key={key}>
+      <span className="text-[12px] text-muted-foreground">{label(text, key)}</span>
       <select
-        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[13px]"
-        value={String(style[key] ?? "")}
+        className="mt-1 h-9 w-full rounded-md border border-border bg-background px-2 text-[13px]"
+        value={style[key] === null ? "" : String(style[key])}
         disabled={disabled}
-        onChange={(event) => onChange({ [key]: event.target.value } as Partial<BlockStyle>)}
+        onChange={(event) => onChange({ [key]: event.target.value || null })}
       >
+        <option value="">Default</option>
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={String(option)} value={String(option)}>
+            {format(option)}
           </option>
         ))}
       </select>
-    </Field>
+    </label>
   );
 
-  const color = (
-    label: string,
-    key: "textColor" | "bgColor" | "buttonTextColor" | "buttonBgColor",
-  ) => (
-    <Field label={label} key={key}>
-      <span className="flex items-center gap-2">
+  const color = (text: string, key: StyleKey) => (
+    <label className="block" key={key}>
+      <span className="text-[12px] text-muted-foreground">{label(text, key)}</span>
+      <span className="mt-1 flex items-center gap-2">
         <input
           type="color"
           className="h-9 w-12 rounded-md border border-border bg-background"
-          value={style[key] ?? "#000000"}
+          value={(style[key] as string | null) ?? "#000000"}
           disabled={disabled}
-          onChange={(event) => onChange({ [key]: event.target.value } as Partial<BlockStyle>)}
-          aria-label={label}
+          onChange={(event) => onChange({ [key]: event.target.value })}
+          aria-label={text}
         />
         <Button
           size="sm"
           variant="ghost"
-          disabled={disabled || !style[key]}
-          onClick={() => onChange({ [key]: null } as Partial<BlockStyle>)}
+          disabled={disabled || style[key] === null}
+          onClick={() => onChange({ [key]: null })}
         >
           Clear
         </Button>
       </span>
-    </Field>
+    </label>
   );
+
+  const px = (value: string | number) => `${value}px`;
 
   return (
     <div className="space-y-3 border-t border-border pt-3">
-      <p className="text-[12px] font-medium">Design</p>
-      <div className="grid grid-cols-2 gap-2">
-        {select("Font", "font", FONT_FAMILIES)}
-        {select("Text size", "size", TEXT_SIZES)}
-        {select("Weight", "weight", FONT_WEIGHTS)}
-        {select("Alignment", "align", ALIGNMENTS)}
-        {select("Line height", "lineHeight", LINE_HEIGHTS)}
-        {scope === "section" ? select("Padding", "padding", SPACING) : null}
-        {scope === "section" ? select("Card layout", "layout", LAYOUTS) : null}
-        {scope === "component" ? select("Image fit", "objectFit", OBJECT_FITS) : null}
-        {scope === "component" ? select("Button style", "buttonStyle", BUTTON_STYLES) : null}
-        {scope === "component" ? select("Button size", "buttonSize", BUTTON_SIZES) : null}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[12px] font-medium">Design · {DEVICE_META[device].label}</p>
+        {device !== "desktop" ? (
+          <Button size="sm" variant="ghost" disabled={disabled} onClick={onResetDevice}>
+            Reset {DEVICE_META[device].label.toLowerCase()}
+          </Button>
+        ) : null}
       </div>
+      {device !== "desktop" ? (
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          Changes here apply on {DEVICE_META[device].label.toLowerCase()} screens only. Anything left
+          on Default follows your desktop design.
+        </p>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-2">
+        {choose("Font", "font", FONT_FAMILIES)}
+        {choose("Text size", "size", TEXT_SIZES, px)}
+        {choose("Weight", "weight", FONT_WEIGHTS)}
+        {choose("Alignment", "align", ALIGNMENTS)}
+        {choose("Line height", "lineHeight", LINE_HEIGHTS)}
+        {choose("Letter spacing", "letterSpacing", LETTER_SPACINGS, (v) => `${v}em`)}
+        {choose("Capitalisation", "textTransform", TEXT_TRANSFORMS)}
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
         {color("Text colour", "textColor")}
         {color("Background", "bgColor")}
         {scope === "component" ? color("Button text", "buttonTextColor") : null}
         {scope === "component" ? color("Button fill", "buttonBgColor") : null}
+        {choose("Border colour", "borderColor", [])}
       </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {choose("Space above", "padTop", SPACES, px)}
+        {choose("Space below", "padBottom", SPACES, px)}
+        {choose("Space left", "padLeft", SPACES, px)}
+        {choose("Space right", "padRight", SPACES, px)}
+        {choose("Gap before block", "marginTop", SPACES, px)}
+        {choose("Gap after block", "marginBottom", SPACES, px)}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {scope === "section" ? choose("Columns", "columns", COLUMNS) : null}
+        {scope === "section" ? choose("Column gap", "gap", SPACES, px) : null}
+        {scope === "section" ? choose("Content width", "maxWidth", MAX_WIDTHS, px) : null}
+        {scope === "section" ? choose("Content position", "contentAlign", ALIGNMENTS) : null}
+        {choose("Corner rounding", "radius", RADII, (v) => (v === 999 ? "Pill" : `${v}px`))}
+        {choose("Border width", "borderWidth", BORDER_WIDTHS, px)}
+        {choose("Shadow", "shadow", SHADOWS)}
+        {choose("Opacity", "opacity", OPACITIES, (v) => `${v}%`)}
+        {scope === "section" ? choose("Image darkening", "overlay", OVERLAYS, (v) => `${v}%`) : null}
+        {scope === "component" ? choose("Image fit", "objectFit", OBJECT_FITS) : null}
+        {scope === "component" ? choose("Button style", "buttonStyle", BUTTON_STYLES) : null}
+        {scope === "component" ? choose("Button size", "buttonSize", BUTTON_SIZES) : null}
+      </div>
+
       {scope === "section" ? (
         <Field label="Background image" hint="An https image link; leave empty for none">
           <Input
@@ -1116,6 +1200,16 @@ function StyleControls({
           />
         </Field>
       ) : null}
+
+      <label className="flex items-center gap-2 text-[12px]">
+        <input
+          type="checkbox"
+          checked={style.hidden === true}
+          disabled={disabled}
+          onChange={(event) => onChange({ hidden: event.target.checked ? true : null })}
+        />
+        {label(`Hide on ${DEVICE_META[device].label.toLowerCase()}`, "hidden")}
+      </label>
     </div>
   );
 }
