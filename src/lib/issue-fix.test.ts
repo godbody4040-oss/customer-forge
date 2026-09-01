@@ -48,17 +48,33 @@ describe("issue → fix routing", () => {
   });
 
   it("sends publishing failures to Launch and alt text to Design", () => {
-    const targets = fixTargets(
-      [
-        issue({ key: "live-status-/", upgrade: "publish_site", pageId: undefined }),
-        issue({ key: "live-alt-/", upgrade: undefined, severity: "warning", pageId: undefined }),
-      ],
-      [],
-    );
+    const statusIssue: AuditIssue = {
+      key: "live-status-/",
+      scope: "/",
+      title: "Page doesn't load",
+      detail: "HTTP 500.",
+      action: "Republish.",
+      severity: "critical",
+      points: 0,
+      max: 8,
+      upgrade: "publish_site",
+    };
+    const altIssue: AuditIssue = {
+      key: "live-alt-/",
+      scope: "/",
+      title: "Images missing alt text",
+      detail: "2 of 5 images have no alt text.",
+      action: "Describe each photo.",
+      severity: "warning",
+      points: 0,
+      max: 2,
+    };
+    const targets = fixTargets([statusIssue, altIssue], []);
     expect(targets[0]?.area).toBe("launch");
     expect(targets[1]?.area).toBe("design");
     expect(targets[1]?.category).toBe("accessibility");
   });
+
 
   it("routes missing contact facts to the business answers area", () => {
     const [target] = gapTargets([
