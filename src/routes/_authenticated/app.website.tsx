@@ -110,11 +110,26 @@ function WebsitePage() {
   const [jump, setJump] = useState<{ step: WizardStepKey; anchor?: string; nonce: number } | null>(
     null,
   );
-  const [section, setSection] = useState(sectionParam ?? "overview");
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [section, setSection] = useState(normalizeSection(sectionParam));
+  /** Older deep links (and panels that ask to jump) resolve to the four areas. */
+  const goTo = (key: string) => {
+    if (key === "answers" || key === "setup") {
+      setSetupOpen(true);
+      return;
+    }
+    if (key === "versions" || key === "history") {
+      setHistoryOpen(true);
+      return;
+    }
+    setSection(normalizeSection(key));
+  };
   // A finding elsewhere can deep-link straight into the area that fixes it.
   useEffect(() => {
-    if (sectionParam) setSection(sectionParam);
+    if (sectionParam) setSection(normalizeSection(sectionParam));
   }, [sectionParam]);
+
 
   const requiredCount = (readiness?.requiredGaps ?? []).length;
 
