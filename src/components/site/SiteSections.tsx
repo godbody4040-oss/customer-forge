@@ -91,7 +91,7 @@ export function SiteSection({ site, section }: { site: Site; section: Section })
   const css = blockCss(style);
   const typography = [
     style.font !== "inherit" ? textClasses(style).replace(/text-\[[^\]]+\]/g, "") : "",
-    style.align !== "left" ? `text-${style.align}` : "",
+    style.align === "center" ? "text-center" : style.align === "right" ? "text-right" : "",
   ]
     .filter(Boolean)
     .join(" ");
