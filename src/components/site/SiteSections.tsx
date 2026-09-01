@@ -85,19 +85,14 @@ export function SiteSection({ site, section }: { site: Site; section: Section })
   const style = readBlockStyle(section.settings);
   let inner = <SiteSectionBody site={site} section={section} />;
 
-  // Client-chosen colours, background image, font and alignment from the visual
+  // Client-chosen typography, colours, spacing and background from the visual
   // builder. Only explicitly set values are applied, so untouched sections keep
-  // the generated template exactly as it was.
+  // the generated template exactly as it was. The `data-rvb` hook lets the
+  // page's stylesheet apply that block's tablet and phone overrides.
   const css = blockCss(style);
-  const typography = [
-    style.font !== "inherit" ? textClasses(style).replace(/text-\[[^\]]+\]/g, "") : "",
-    style.align === "center" ? "text-center" : style.align === "right" ? "text-right" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-  if (Object.keys(css).length || typography) {
+  if (Object.keys(css).length) {
     inner = (
-      <div className={typography || undefined} style={css}>
+      <div data-rvb={section.id} style={css}>
         {inner}
       </div>
     );
