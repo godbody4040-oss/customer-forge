@@ -200,10 +200,29 @@ export async function checkDomain(
       };
     }
 
-    // Now prove HTTPS actually works on that hostname.
+    // Now prove HTTPS actually works on that hostname. The probe re-validates
+    // the URL and every resolved address, so it can never reach a private,
+    // loopback or metadata endpoint (SSRF guard).
     try {
-      const res = await fetch(`https://${domain}/`, { method: "GET", redirect: "manual" });
-records.httpsStatus = res.status;
+      const res = await guardedFetch(
+        `https://${encodeURIComponent(domain)}/`.replace(
+          `https://${encodeURIComponent(domain)}/`,
+          `https://${domain}/`,
+        ),
+        { method: "GET" },
+        async (hostname) => {
+          const [a, aaaa] = await Promise.all([
+            dnsQuery(hostname, "A").catch(() => [] as DnsAnswer[]),
+            dnsQuery(hostname, "AAAA").catch(() => [] as DnsAnswer[]),
+          ]);
+          return [
+            ...a.filter((r) => r.type === 1).map((r) => r.data.trim()),
+            ...aaaa.filter((r) => r.type === 28).map((r) => r.data.trim()),
+          ];
+        },
+      );
+      records.httpsStatus = res.status;
+
       // Through a reverse proxy a 404 means the Worker/route isn't serving the
       // app yet, so "live" requires a real success response (or a deliberate
       // redirect, such as to a client's own custom domain).
