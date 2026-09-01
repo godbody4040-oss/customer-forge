@@ -11,6 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteSection, StickyCallBar } from "@/components/site/SiteSections";
+import { telHref } from "@/components/site/ContactDetails";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
 import { siteThemeStyle } from "@/lib/site-theme";
 import { readComposition } from "@/lib/visual-composition";
@@ -141,7 +142,7 @@ export function SitePageView({
               {profile?.phone ? (
                 <Button asChild variant="outline" size="sm">
                   <a
-                    href={`tel:${profile.phone}`}
+                    href={telHref(profile.phone)}
                     onClick={() =>
                       void track({ data: { slug: org.slug, eventType: "call_click" } }).catch(
                         () => undefined,

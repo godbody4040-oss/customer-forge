@@ -12,6 +12,8 @@ import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
 import { SiteNav, SitePageView } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
+import { telHref } from "@/components/site/ContactDetails";
+import { safeLinkUrl } from "@/lib/website-content";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
 import { siteThemeStyle } from "@/lib/site-theme";
 import { readComposition } from "@/lib/visual-composition";
@@ -239,7 +241,7 @@ function TemplateSiteView({
               {profile?.phone ? (
                 <Button asChild variant="outline" size="sm">
                   <a
-                    href={`tel:${profile.phone}`}
+                    href={telHref(profile.phone)}
                     onClick={() =>
                       void track({ data: { slug: org.slug, eventType: "call_click" } }).catch(
                         () => undefined,
@@ -521,7 +523,7 @@ function TemplateSiteView({
               {profile?.phone ? (
                 <p className="mt-6 text-[13px] text-muted-foreground">
                   Prefer to talk?{" "}
-                  <a href={`tel:${profile.phone}`} className="text-primary underline">
+                  <a href={telHref(profile.phone)} className="text-primary underline">
                     {profile.phone}
                   </a>
                 </p>
@@ -539,17 +541,17 @@ function TemplateSiteView({
             </p>
             <div className="flex gap-4">
               {social?.google_business ? (
-                <a href={social.google_business} className="hover:text-foreground">
+                <a href={safeLinkUrl(social.google_business) ?? "#"} className="hover:text-foreground">
                   Google
                 </a>
               ) : null}
               {social?.facebook ? (
-                <a href={social.facebook} className="hover:text-foreground">
+                <a href={safeLinkUrl(social.facebook) ?? "#"} className="hover:text-foreground">
                   Facebook
                 </a>
               ) : null}
               {social?.instagram ? (
-                <a href={social.instagram} className="hover:text-foreground">
+                <a href={safeLinkUrl(social.instagram) ?? "#"} className="hover:text-foreground">
                   Instagram
                 </a>
               ) : null}
