@@ -205,10 +205,8 @@ export async function checkDomain(
     // loopback or metadata endpoint (SSRF guard).
     try {
       const res = await guardedFetch(
-        `https://${encodeURIComponent(domain)}/`.replace(
-          `https://${encodeURIComponent(domain)}/`,
-          `https://${domain}/`,
-        ),
+        `https://${domain}/`,
+
         { method: "GET" },
         async (hostname) => {
           const [a, aaaa] = await Promise.all([
