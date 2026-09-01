@@ -173,19 +173,11 @@ export function DomainCenter({
 
   return (
     <div className="space-y-6">
-      {/* FREE REVORA ADDRESS — always included, never blocked on a purchase */}
-      <RevoraAddressCard
-        organizationId={organizationId}
-        orgSlug={slug ?? null}
-        settings={settings}
-        canManage={canManage}
-      />
-
-      {/* CUSTOM DOMAIN — optional, and only ever active once verified */}
+      {/* YOUR OWN DOMAIN — the client's permanent public website address */}
       <Panel className="space-y-4 p-5">
         <SectionHeading
-          eyebrow="Optional — your own domain"
-          title={connected || "No custom domain connected"}
+          eyebrow="Your website address"
+          title={connected || "No domain connected yet"}
           action={
             <Pill tone={DOMAIN_STATES[status]?.tone ?? "neutral"}>
               {DOMAIN_STATES[status]?.label ?? status}
@@ -195,25 +187,25 @@ export function DomainCenter({
         <p className="text-[13px] text-muted-foreground">{DOMAIN_STATES[status]?.help}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           <div className="rounded-md border border-primary/40 bg-primary/5 p-3">
-            <p className="text-[12px] font-medium">Free Revora address</p>
+            <p className="text-[12px] font-medium">Preview address (while you build)</p>
             <p className="mt-1 font-mono text-[12px] text-muted-foreground">
-              {revoraHost(settings?.subdomain) ?? revoraSubdomain(slug ?? "")}
+              {previewPath ?? "Created with your website"}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Included with your website — you never have to buy a domain to go live. Once your own
-              domain is verified, this address permanently redirects to it, so old links still work.
+              Use this to review and share your site before your domain is connected. Your own
+              domain becomes the public address as soon as it is verified.
             </p>
 
           </div>
           <div className="rounded-md border border-border/60 p-3">
-            <p className="text-[12px] font-medium">Your own domain (optional)</p>
+            <p className="text-[12px] font-medium">Your own domain (public website)</p>
             <p className="mt-1 font-mono text-[12px] text-muted-foreground">
               {connected || "Not connected yet"}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {connected && dnsOk && sslOk
                 ? "Verified and live with HTTPS."
-                : "It only goes live after DNS and HTTPS both pass — until then your free Revora address serves the site."}
+                : "It only goes live after DNS and HTTPS both pass — until then use your preview address."}
             </p>
           </div>
         </div>

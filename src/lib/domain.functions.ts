@@ -30,6 +30,24 @@ export const saveOwnDomain = createServerFn({ method: "POST" })
     if (domain && !isValidDomain(domain))
       throw new Error("That doesn't look like a valid domain name.");
 
+    // CLIENT ISOLATION: one domain belongs to exactly one workspace. The other
+    // workspace's row is invisible under RLS, so the conflict is looked up with
+    // server credentials AFTER the caller's own access has been confirmed.
+    if (domain && domain !== (settings.custom_domain ?? "").toLowerCase()) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: taken } = await supabaseAdmin
+        .from("website_settings")
+        .select("organization_id")
+        .eq("custom_domain", domain)
+        .neq("organization_id", data.organizationId)
+        .limit(1);
+      if (taken?.length) {
+        throw new Error(
+          "That domain is already connected to another Revora account. Disconnect it there first, or contact support.",
+        );
+      }
+    }
+
     const check = domain
       ? await checkDomain(domain)
       : {
