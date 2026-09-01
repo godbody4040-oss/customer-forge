@@ -450,7 +450,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                   <Phone className="size-3.5" aria-hidden="true" /> Phone
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={`tel:${profile.phone}`} className="text-primary underline">
+                  <a href={telHref(profile.phone)} className="text-primary underline">
                     {profile.phone}
                   </a>
                 </dd>
@@ -534,7 +534,7 @@ export function StickyCallBar({ site, label }: { site: Site; label: string }) {
       <div className="flex gap-2">
         {phone ? (
           <Button asChild variant="outline" className="flex-1">
-            <a href={`tel:${phone}`}>
+            <a href={telHref(phone)}>
               <Phone className="size-4" /> Call
             </a>
           </Button>
