@@ -32,8 +32,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       environment: StripeEnv;
       intake: GrowthSystemIntake;
     }) => {
-      const returnUrl = cleanText(input?.returnUrl, 500);
-      if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
+      const returnUrl = parseReturnUrl(input?.returnUrl);
       const raw = input?.intake ?? ({} as GrowthSystemIntake);
       const intake: GrowthSystemIntake = {
         fullName: cleanText(raw.fullName, 120),
@@ -239,8 +238,7 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       const productId = String(input?.productId ?? "").slice(0, 80);
       // Catalog rows use either a UUID or a readable slug id, so accept both.
       if (!/^[0-9a-zA-Z_-]{3,80}$/.test(productId)) throw new Error("Choose a service to pay for");
-      const returnUrl = String(input?.returnUrl ?? "").slice(0, 500);
-      if (!/^https?:\/\//.test(returnUrl)) throw new Error("Invalid return URL");
+      const returnUrl = parseReturnUrl(input?.returnUrl);
       return {
         organizationId: parseWorkspaceId(input?.organizationId),
         productId,
