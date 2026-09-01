@@ -50,6 +50,15 @@ import {
   type BlockStyle,
 } from "@/lib/site-style";
 
+/** Alt text lives in the component's settings JSONB; always read it as text. */
+function readAlt(settings: unknown): string {
+  if (settings && typeof settings === "object" && !Array.isArray(settings)) {
+    const value = (settings as Record<string, unknown>)["alt"];
+    if (typeof value === "string") return value.slice(0, 160);
+  }
+  return "";
+}
+
 type Device = "mobile" | "tablet" | "desktop";
 
 const DEVICES: { key: Device; label: string; width: number; icon: typeof Monitor }[] = [
@@ -152,7 +161,7 @@ function ItemCard({
       {item.media_url ? (
         <img
           src={item.media_url}
-          alt={typeof item.settings?.["alt"] === "string" ? String(item.settings["alt"]) : ""}
+          alt={readAlt(item.settings)}
           loading="lazy"
           className="mb-2 h-28 w-full rounded-md"
           style={{ objectFit: style.objectFit }}
@@ -484,11 +493,7 @@ export function BuilderCanvas({
               <Field label="Image description (alt text)">
                 <Input
                   key={`alt-${selectedComponent.id}`}
-                  defaultValue={
-                    typeof selectedComponent.settings?.["alt"] === "string"
-                      ? String(selectedComponent.settings["alt"])
-                      : ""
-                  }
+                  defaultValue={readAlt(selectedComponent.settings)}
                   disabled={!canManage}
                   onBlur={(event) =>
                     saveComponent.mutate({
