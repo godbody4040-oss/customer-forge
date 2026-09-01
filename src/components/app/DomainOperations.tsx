@@ -85,7 +85,57 @@ type SeoReport = {
   issues: { label: string; fix: string }[];
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Saved reports come from a JSON column, so an older or partial shape must
+ * never crash the page. Anything unrecognised is treated as "no report yet".
+ */
+function normalizeReport(value: unknown): SeoReport | null {
+  if (!isRecord(value)) return null;
+  const raw = value as Record<string, any>;
+  if (typeof raw["canonicalOrigin"] !== "string") return null;
+  const redirects = isRecord(raw["redirects"]) ? (raw["redirects"] as Record<string, any>) : {};
+  const crawl = isRecord(raw["crawl"]) ? (raw["crawl"] as Record<string, any>) : {};
+  const robots = isRecord(crawl["robots"]) ? (crawl["robots"] as Record<string, any>) : {};
+  const sitemap = isRecord(crawl["sitemap"]) ? (crawl["sitemap"] as Record<string, any>) : {};
+  const home = isRecord(crawl["home"]) ? (crawl["home"] as Record<string, any>) : {};
+  return {
+    canonicalOrigin: raw["canonicalOrigin"] as string,
+    canonicalMatches: !!raw["canonicalMatches"],
+    checkedAt: typeof raw["checkedAt"] === "string" ? raw["checkedAt"] : new Date().toISOString(),
+    redirects: {
+      allCanonical: !!redirects["allCanonical"],
+      detail: typeof redirects["detail"] === "string" ? redirects["detail"] : "",
+      results: (Array.isArray(redirects["results"]) ? redirects["results"] : [])
+        .filter((row: unknown) => isRecord(row) && typeof row["url"] === "string")
+        .map((row: Record<string, any>) => ({
+          url: row["url"] as string,
+          canonical: !!row["canonical"],
+          status: typeof row["status"] === "number" ? row["status"] : null,
+        })),
+    },
+    crawl: {
+      robots: { reachable: !!robots["reachable"], blocksEverything: !!robots["blocksEverything"] },
+      sitemap: { reachable: !!sitemap["reachable"], urls: Number(sitemap["urls"]) || 0 },
+      home: {
+        reachable: !!home["reachable"],
+        canonical: typeof home["canonical"] === "string" ? home["canonical"] : null,
+      },
+    },
+    issues: (Array.isArray(raw["issues"]) ? raw["issues"] : [])
+      .filter((row: unknown) => isRecord(row) && typeof row["label"] === "string")
+      .map((row: Record<string, any>) => ({
+        label: row["label"] as string,
+        fix: typeof row["fix"] === "string" ? row["fix"] : "",
+      })),
+  };
+}
+
 const copyValue = (value: string, label: string) =>
+
   void navigator.clipboard?.writeText(value).then(
     () => toast.success(`${label} copied`),
     () => toast.error("Copy failed — select the text instead."),
@@ -106,16 +156,24 @@ export function DomainOperations({
   const domain = settings?.custom_domain ?? null;
   const preference: HostPreference = settings?.domain_primary_host === "www" ? "www" : "root";
   const forceHttps = settings?.domain_force_https !== false;
-  const transfer = (settings?.domain_transfer ?? {}) as DomainTransfer;
-  const forwarding = (settings?.email_forwarding ?? {}) as EmailForwarding;
-  const savedReport = (settings?.domain_seo_report ?? null) as SeoReport | null;
+  const transfer = (isRecord(settings?.domain_transfer)
+    ? settings?.domain_transfer
+    : {}) as DomainTransfer;
+  const forwarding = (isRecord(settings?.email_forwarding)
+    ? settings?.email_forwarding
+    : {}) as EmailForwarding;
+  const savedReport = normalizeReport(settings?.domain_seo_report);
 
   const [host, setHost] = useState<HostPreference>(preference);
   const [https, setHttps] = useState(forceHttps);
   const [newDomain, setNewDomain] = useState("");
   const [alias, setAlias] = useState(forwarding.alias ?? "contact");
   const [forwardTo, setForwardTo] = useState(forwarding.forward_to ?? "");
-  const [provider, setProvider] = useState<EmailForwardProvider>(forwarding.provider ?? "improvmx");
+  const [provider, setProvider] = useState<EmailForwardProvider>(
+    EMAIL_PROVIDERS.some((p) => p.id === forwarding.provider)
+      ? (forwarding.provider as EmailForwardProvider)
+      : "improvmx",
+  );
   const [report, setReport] = useState<SeoReport | null>(savedReport);
 
   const saveRouting = useServerFn(saveDomainRouting);
@@ -199,7 +257,7 @@ export function DomainOperations({
   const reportMutation = useMutation({
     mutationFn: () => runReport({ data: { organizationId: organizationId! } }),
     onSuccess: (result) => {
-      setReport(result as SeoReport);
+      setReport(normalizeReport(result));
       toast.success("Search visibility report updated");
       refresh();
     },
@@ -577,7 +635,10 @@ export function DomainOperations({
                 </Button>
                 <Button asChild variant="ghost">
                   <a
-                    href={EMAIL_PROVIDERS.find((p) => p.id === provider)!.setupUrl}
+                    href={
+                      EMAIL_PROVIDERS.find((p) => p.id === provider)?.setupUrl ??
+                      "https://improvmx.com/"
+                    }
                     target="_blank"
                     rel="noreferrer"
                   >

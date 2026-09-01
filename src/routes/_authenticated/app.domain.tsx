@@ -1,5 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LoadingRows } from "@/components/app/Bits";
+import { useState } from "react";
+import { CatchBoundary, createFileRoute } from "@tanstack/react-router";
+import { RefreshCw } from "lucide-react";
+import { ErrorNote, LoadingRows, Panel } from "@/components/app/Bits";
+import { Button } from "@/components/ui/button";
 import { DomainCenter } from "@/components/app/DomainCenter";
 import { DomainOperations } from "@/components/app/DomainOperations";
 import { useBusinessProfile, useWebsiteSettings } from "@/lib/queries";
@@ -21,15 +24,58 @@ export const Route = createFileRoute("/_authenticated/app/domain")({
   component: DomainPage,
 });
 
+/**
+ * One panel failing must never take the whole domain page down: the owner still
+ * needs the parts that work, plus a way to retry the part that didn't.
+ */
+function SafeSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  const [attempt, setAttempt] = useState(0);
+  return (
+    <CatchBoundary
+      getResetKey={() => `domain-${title}-${attempt}`}
+      errorComponent={({ error, reset }) => (
+        <Panel className="space-y-3 p-5">
+          <p className="text-[13px] font-medium">{title} couldn&apos;t load</p>
+          <p className="text-[12px] text-muted-foreground">
+            {error instanceof Error && error.message
+              ? error.message
+              : "Something went wrong while loading this section."}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setAttempt((value) => value + 1);
+              reset();
+            }}
+          >
+            <RefreshCw className="size-4" /> Try again
+          </Button>
+        </Panel>
+      )}
+    >
+      {children}
+    </CatchBoundary>
+  );
+}
+
 function DomainPage() {
-  const { data: ws } = useWorkspace();
+  const workspaceQuery = useWorkspace();
+  const ws = workspaceQuery.data;
   const org = ws?.workspace?.organization;
   const orgId = ws?.workspace?.organizationId;
   const settingsQuery = useWebsiteSettings(orgId);
   const profileQuery = useBusinessProfile(orgId);
   const profile = profileQuery.data as Record<string, unknown> | null | undefined;
+  const role = canManage(ws?.workspace?.role ?? "viewer");
 
-  if (settingsQuery.isLoading) return <LoadingRows rows={5} />;
+  const loading = workspaceQuery.isLoading || (!!orgId && settingsQuery.isLoading);
 
   return (
     <div className="space-y-6">
@@ -42,21 +88,37 @@ function DomainPage() {
         </p>
       </div>
 
-      <DomainCenter
-        organizationId={orgId}
-        slug={org?.slug}
-        businessName={org?.name ?? null}
-        city={(profile?.["city"] as string) ?? null}
-        industry={org?.industry ?? null}
-        settings={settingsQuery.data}
-        canManage={canManage(ws?.workspace?.role ?? "viewer")}
-      />
+      {workspaceQuery.error ? (
+        <ErrorNote message={(workspaceQuery.error as Error).message} />
+      ) : settingsQuery.error ? (
+        <ErrorNote message={(settingsQuery.error as Error).message} />
+      ) : null}
 
-      <DomainOperations
-        organizationId={orgId}
-        settings={settingsQuery.data}
-        canManage={canManage(ws?.workspace?.role ?? "viewer")}
-      />
+      {loading ? (
+        <LoadingRows rows={5} />
+      ) : (
+        <>
+          <SafeSection title="Domain setup">
+            <DomainCenter
+              organizationId={orgId}
+              slug={org?.slug}
+              businessName={org?.name ?? null}
+              city={(profile?.["city"] as string) ?? null}
+              industry={org?.industry ?? null}
+              settings={settingsQuery.data}
+              canManage={role}
+            />
+          </SafeSection>
+
+          <SafeSection title="Certificate, routing and email">
+            <DomainOperations
+              organizationId={orgId}
+              settings={settingsQuery.data}
+              canManage={role}
+            />
+          </SafeSection>
+        </>
+      )}
     </div>
   );
 }
