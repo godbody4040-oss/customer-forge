@@ -4,7 +4,7 @@
  * tables the builder writes, so it never disagrees with the live site.
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarCheck, ExternalLink, Globe, Users } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { useAnalytics, useAppointments, useLeads, useWebsiteSettings } from "@/lib/queries";
