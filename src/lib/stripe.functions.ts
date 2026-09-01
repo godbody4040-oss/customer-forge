@@ -205,7 +205,20 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         // The $750 setup is charged today. The first month of the $100/month fee
         // is FREE: the recurring price is on a 30-day trial, so the first monthly
         // charge lands 30 days later (i.e. the second month is the first paid one).
-        subscription_data: { metadata, trial_period_days: GROWTH_SYSTEM.trialDays },
+        // The card used for the setup fee is stored as the subscription's default
+        // payment method, so the monthly charge renews automatically after the
+        // free month without asking the customer for anything again.
+        subscription_data: {
+          metadata,
+          trial_period_days: GROWTH_SYSTEM.trialDays,
+          payment_settings: { save_default_payment_method: "on_subscription" as const },
+          trial_settings: {
+            end_behavior: { missing_payment_method: "cancel" as const },
+          },
+        },
+        payment_method_collection: "always" as const,
+        
+
       };
 
       // Live accounts run with full compliance handling, which rejects
