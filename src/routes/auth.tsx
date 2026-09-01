@@ -417,6 +417,14 @@ function AuthPage() {
                   </label>
                 )}
                 {error ? <ErrorNote message={error} /> : null}
+                {notice ? (
+                  <p
+                    role="status"
+                    className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground"
+                  >
+                    {notice}
+                  </p>
+                ) : null}
                 {magicSent && magicMode && !isSignup ? (
                   <p className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2.5 text-center text-[12.5px] text-foreground">
                     Link sent to <span className="gold-hl">{email}</span>. Open it on this device
