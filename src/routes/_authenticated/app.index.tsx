@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import {
   MetricCard,
@@ -114,6 +114,8 @@ function startOfToday() {
   return d;
 }
 
+const RANGE_KEY = "revora.dashboard.range";
+
 function Dashboard() {
   const { data: ws } = useWorkspace();
   const orgId = ws?.workspace?.organizationId;
@@ -124,6 +126,16 @@ function Dashboard() {
     () => new Date(Date.now() - 14 * DAY).toISOString().slice(0, 10),
   );
   const [customTo, setCustomTo] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // Remember the range the owner last looked at (client-only, avoids hydration mismatch).
+  useEffect(() => {
+    const saved = globalThis.localStorage.getItem(RANGE_KEY);
+    if (saved && RANGES.some((r) => r.value === saved)) setRange(saved as RangeValue);
+  }, []);
+  useEffect(() => {
+    globalThis.localStorage.setItem(RANGE_KEY, range);
+  }, [range]);
+
 
   const window = useMemo(() => {
     if (range === "custom") {
@@ -210,10 +222,25 @@ function Dashboard() {
           : 0
         : Math.round(((rangeLeads.length - prevLeads.length) / prevLeads.length) * 100);
 
+    // Lead volume split into equal buckets across the selected range.
+    const buckets = Math.min(12, Math.max(4, window.days));
+    const bucketMs = span / buckets;
+    const trend = Array.from({ length: buckets }, (_, i) => {
+      const start = fromMs + i * bucketMs;
+      const end = i === buckets - 1 ? toMs + 1 : start + bucketMs;
+      const count = rangeLeads.filter((l) => {
+        const t = new Date(l.created_at).getTime();
+        return t >= start && t < end;
+      }).length;
+      return { start, count };
+    });
+
     return {
       leads: rangeLeads.length,
       prevLeads: prevLeads.length,
       delta,
+      trend,
+
       views,
       calls,
       visitorConversion: views > 0 ? (rangeLeads.length / views) * 100 : 0,
@@ -238,20 +265,40 @@ function Dashboard() {
     { done: !!profileQuery.data?.description, label: "Write your About section", to: "/app/website" },
     { done: !!org?.conversion_goal, label: "Pick your main conversion goal", to: "/app/settings" },
   ];
+  const peak = stats.trend.reduce(
+    (best, b) => (b.count > best.count ? b : best),
+    stats.trend[0] ?? { start: Date.now(), count: 0 },
+  );
   const remaining = checklist.filter((c) => !c.done);
+
 
   if (leadsQuery.isLoading || !orgId) return <LoadingRows rows={5} />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow">Business growth center</p>
-          <h1 className="mt-1 font-display text-[24px] font-semibold">
-            {org?.name ?? "Your business"}
-          </h1>
+    <div className="space-y-5 sm:space-y-6">
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">Business growth center</p>
+            <h1 className="mt-1 font-display text-[22px] leading-tight font-semibold text-balance sm:text-[26px]">
+              {org?.name ?? "Your business"}
+            </h1>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {window.label} · updated {relative(new Date())}
+            </p>
+          </div>
+          <Button asChild size="sm" variant="signal" className="shrink-0">
+            <Link to="/app/leads">
+              Work leads <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+
+        <div
+          role="group"
+          aria-label="Date range"
+          className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+        >
           {RANGES.map((r) => (
             <button
               key={r.value}
@@ -259,10 +306,10 @@ function Dashboard() {
               onClick={() => setRange(r.value)}
               aria-pressed={range === r.value}
               className={cn(
-                "cursor-pointer rounded-full border px-3 py-1 text-[12px]",
+                "shrink-0 cursor-pointer snap-start rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
                 range === r.value
-                  ? "border-primary text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground",
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
               )}
             >
               {r.label}
@@ -270,6 +317,7 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
 
       <OnboardingJourney />
 
@@ -342,6 +390,42 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      <Panel className="p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="eyebrow">Leads over {window.label.toLowerCase()}</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {stats.leads === 0
+                ? "No leads captured in this range yet."
+                : `Busiest stretch: ${peak.count} lead${peak.count === 1 ? "" : "s"} around ${dateShort(new Date(peak.start).toISOString())}.`}
+            </p>
+          </div>
+          <span className="tnum shrink-0 text-[11px] text-muted-foreground">
+            {stats.trend.length} pts
+          </span>
+        </div>
+        <div className="mt-4 flex h-24 items-end gap-1.5" aria-hidden="true">
+          {stats.trend.map((b) => (
+            <div
+              key={b.start}
+              className={cn(
+                "flex-1 rounded-sm transition-colors",
+                b.count > 0 && b.count === peak.count ? "bg-primary" : "bg-primary/30",
+              )}
+              style={{
+                height: `${peak.count > 0 ? Math.max(3, (b.count / peak.count) * 100) : 3}%`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="mt-2 flex justify-between text-[10.5px] text-muted-foreground">
+          <span>{dateShort(window.from.toISOString())}</span>
+          <span>{dateShort(window.to.toISOString())}</span>
+        </div>
+      </Panel>
+
+
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
