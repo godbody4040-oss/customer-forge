@@ -337,7 +337,16 @@ function Dashboard() {
 
       <StatusCenter organizationId={orgId} />
 
+      <ClientWebsiteSummary
+        organizationId={orgId}
+        slug={org?.slug ?? null}
+        leads={leads.length}
+        bookings={appts.filter((a) => a.status !== "cancelled").length}
+        visits={events.filter((e) => e.event_type === "page_view").length}
+      />
+
       <ProductionSummaryCard status={production} />
+
 
       <OnboardingJourney />
 
