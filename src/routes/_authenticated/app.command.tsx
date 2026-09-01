@@ -74,7 +74,9 @@ function CommandCenterPage() {
   const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
   const copy = readCopy(generation?.["copy"]);
 
-  if (profileQuery.isLoading || settingsQuery.isLoading) return <LoadingRows rows={5} />;
+  const isLoadingWorkspace = profileQuery.isLoading || settingsQuery.isLoading;
+
+
 
   const visibleSections = (pages ?? []).reduce(
     (sum, page) => sum + page.sections.filter((section) => section.is_visible).length,
