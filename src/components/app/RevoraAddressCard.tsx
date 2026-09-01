@@ -138,7 +138,7 @@ export function RevoraAddressCard({
             Check my address
           </Button>
           {verify.data ? (
-            <Pill tone={verify.data.live ? "signal" : "warn"}>
+            <Pill tone={verify.data.live ? "signal" : "attention"}>
               {verify.data.live ? "DNS + HTTPS verified" : "Not answering yet"}
             </Pill>
           ) : null}
