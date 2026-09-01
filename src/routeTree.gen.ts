@@ -66,6 +66,7 @@ import { Route as AuthenticatedAppWelcomeRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMyIndexRouteImport } from './routes/_authenticated/my.index'
 import { Route as AuthenticatedMyActivityRouteImport } from './routes/_authenticated/my.activity'
 import { Route as AuthenticatedMySiteRouteImport } from './routes/_authenticated/my.site'
+import { Route as AuthenticatedMyStartRouteImport } from './routes/_authenticated/my.start'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
@@ -370,6 +371,11 @@ const AuthenticatedMySiteRoute = AuthenticatedMySiteRouteImport.update({
   path: '/site',
   getParentRoute: () => AuthenticatedMyRoute,
 } as any)
+const AuthenticatedMyStartRoute = AuthenticatedMyStartRouteImport.update({
+  id: '/start',
+  path: '/start',
+  getParentRoute: () => AuthenticatedMyRoute,
+} as any)
 const SSlugPageRoute = SSlugPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -469,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/app/welcome': typeof AuthenticatedAppWelcomeRoute
   '/my/activity': typeof AuthenticatedMyActivityRoute
   '/my/site': typeof AuthenticatedMySiteRoute
+  '/my/start': typeof AuthenticatedMyStartRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -530,6 +537,7 @@ export interface FileRoutesByTo {
   '/app/welcome': typeof AuthenticatedAppWelcomeRoute
   '/my/activity': typeof AuthenticatedMyActivityRoute
   '/my/site': typeof AuthenticatedMySiteRoute
+  '/my/start': typeof AuthenticatedMyStartRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -598,6 +606,7 @@ export interface FileRoutesById {
   '/_authenticated/app/welcome': typeof AuthenticatedAppWelcomeRoute
   '/_authenticated/my/activity': typeof AuthenticatedMyActivityRoute
   '/_authenticated/my/site': typeof AuthenticatedMySiteRoute
+  '/_authenticated/my/start': typeof AuthenticatedMyStartRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -666,6 +675,7 @@ export interface FileRouteTypes {
     | '/app/welcome'
     | '/my/activity'
     | '/my/site'
+    | '/my/start'
     | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
@@ -727,6 +737,7 @@ export interface FileRouteTypes {
     | '/app/welcome'
     | '/my/activity'
     | '/my/site'
+    | '/my/start'
     | '/s/$slug/$page'
     | '/admin'
     | '/app'
@@ -794,6 +805,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/welcome'
     | '/_authenticated/my/activity'
     | '/_authenticated/my/site'
+    | '/_authenticated/my/start'
     | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
@@ -1240,6 +1252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMySiteRouteImport
       parentRoute: typeof AuthenticatedMyRoute
     }
+    '/_authenticated/my/start': {
+      id: '/_authenticated/my/start'
+      path: '/start'
+      fullPath: '/my/start'
+      preLoaderRoute: typeof AuthenticatedMyStartRouteImport
+      parentRoute: typeof AuthenticatedMyRoute
+    }
     '/s/$slug/$page': {
       id: '/s/$slug/$page'
       path: '/$page'
@@ -1380,12 +1399,14 @@ const AuthenticatedAppRouteWithChildren =
 interface AuthenticatedMyRouteChildren {
   AuthenticatedMyActivityRoute: typeof AuthenticatedMyActivityRoute
   AuthenticatedMySiteRoute: typeof AuthenticatedMySiteRoute
+  AuthenticatedMyStartRoute: typeof AuthenticatedMyStartRoute
   AuthenticatedMyIndexRoute: typeof AuthenticatedMyIndexRoute
 }
 
 const AuthenticatedMyRouteChildren: AuthenticatedMyRouteChildren = {
   AuthenticatedMyActivityRoute: AuthenticatedMyActivityRoute,
   AuthenticatedMySiteRoute: AuthenticatedMySiteRoute,
+  AuthenticatedMyStartRoute: AuthenticatedMyStartRoute,
   AuthenticatedMyIndexRoute: AuthenticatedMyIndexRoute,
 }
 
