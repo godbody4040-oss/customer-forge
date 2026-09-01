@@ -7,6 +7,8 @@
  * blocks with no data are simply left out.
  */
 
+import { siteVariation } from "./site-variation";
+
 export type PageKind =
   | "home"
   | "services"
@@ -213,6 +215,8 @@ export type SectionTextField = (typeof SECTION_TEXT_FIELDS)[number];
 /* ------------------------------- Blueprint -------------------------------- */
 
 export type BlueprintInput = {
+  /** Workspace id — seeds this client's unique layout and wording variation. */
+  organizationId?: string | null;
   businessName: string;
   industry: string | null;
   city: string | null;
@@ -295,6 +299,14 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
   const cta = input.ctaLabel || "Get my price";
   const areas = splitAreas(input.serviceArea, input.city);
   const services = input.services.slice(0, 12);
+  // Same engine, different site: layout + wording vary per business.
+  const v = siteVariation({
+    organizationId: input.organizationId ?? null,
+    businessName: input.businessName,
+    industry: input.industry,
+    city: input.city,
+  });
+  const headlineFacts = { name, trade, area };
 
   const quoteButton = { kind: "button", label: cta, link_url: "#quote" };
   const bookButton = { kind: "button", label: "Book online", link_url: "#book" };
@@ -321,13 +333,10 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
 
   const processSteps: BlueprintSection = {
     kind: "process",
-    heading: "How it works",
+    variant: v.id,
+    heading: v.heading("process"),
     subheading: "Three steps, no phone tag.",
-    components: [
-      { kind: "step", label: "1. Tell us what you need", body: "Answer a few questions and get an instant price range." },
-      { kind: "step", label: "2. We confirm the details", body: "We check the job, confirm the price and hold your slot." },
-      { kind: "step", label: "3. We get it done", body: "You get a confirmation, a reminder and the work on the day." },
-    ],
+    components: v.processSteps.map((step) => ({ kind: "step", label: step.label, body: step.body })),
   };
 
   const stickyCta: BlueprintSection = {
@@ -349,8 +358,11 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
   const home: BlueprintSection[] = [
     {
       kind: "hero",
-      heading: area ? `${trade} in ${area}` : `${trade} from ${name}`,
-      subheading: input.description ? (input.description.split(/(?<=\.)\s/)[0] ?? null) : null,
+      variant: v.heroVariant,
+      heading: v.headline(headlineFacts),
+      subheading: input.description
+        ? (input.description.split(/(?<=\.)\s/)[0] ?? null)
+        : v.subheadline(headlineFacts),
       components: captureButtons,
     },
   ];
@@ -371,25 +383,44 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
     components: [quoteButton],
   });
 
-  if (input.description) home.push({ kind: "intro", heading: `About ${name}`, body: input.description });
+  if (input.description)
+    home.push({ kind: "intro", heading: v.heading("intro", { name }), body: input.description });
   if (serviceComponents.length)
-    home.push({ kind: "services", heading: "What we do", components: serviceComponents });
-  home.push(processSteps);
-  if (input.benefits.length)
     home.push({
-      kind: "benefits",
-      heading: "Why customers choose us",
-      components: input.benefits.slice(0, 6).map((b) => ({ kind: "benefit", label: b })),
+      kind: "services",
+      variant: v.serviceVariant,
+      heading: v.heading("services"),
+      components: serviceComponents,
     });
-  if (priceComponents.length)
-    home.push({
-      kind: "pricing",
-      heading: "Starting prices",
-      subheading: "Every job is quoted on the details you give us.",
-      components: priceComponents,
-    });
-  if (input.photoCount > 0) home.push({ kind: "gallery", heading: "Recent work" });
-  if (input.reviewCount > 0) home.push({ kind: "reviews", heading: "What customers say" });
+
+  // Optional proof/detail blocks appear in this business's own order.
+  const optionalBlocks: Record<string, BlueprintSection | null> = {
+    process: processSteps,
+    benefits: input.benefits.length
+      ? {
+          kind: "benefits",
+          heading: v.heading("benefits"),
+          components: input.benefits.slice(0, 6).map((b) => ({ kind: "benefit", label: b })),
+        }
+      : null,
+    pricing: priceComponents.length
+      ? {
+          kind: "pricing",
+          heading: v.heading("pricing"),
+          subheading: "Every job is quoted on the details you give us.",
+          components: priceComponents,
+        }
+      : null,
+    gallery: input.photoCount > 0 ? { kind: "gallery", heading: v.heading("gallery") } : null,
+    reviews:
+      input.reviewCount > 0
+        ? { kind: "reviews", variant: v.proofVariant, heading: v.heading("reviews") }
+        : null,
+  };
+  for (const key of v.optionalOrder) {
+    const block = optionalBlocks[key];
+    if (block) home.push(block);
+  }
   home.push({
     kind: "guarantee",
     heading: "Our promise",
@@ -400,20 +431,21 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
   if (areas.length > 1)
     home.push({
       kind: "areas",
-      heading: "Areas we cover",
+      heading: v.heading("areas"),
       components: areas.map((a) => ({ kind: "area_link", label: a, link_url: `/${slugify(a)}` })),
     });
   else if (area) home.push({ kind: "area", heading: `Serving ${area}` });
   if (input.faqs.length)
     home.push({
       kind: "faq",
-      heading: "Questions we get asked",
+      heading: v.heading("faq"),
       components: input.faqs.slice(0, 8).map((f) => ({ kind: "faq_item", label: f.question, body: f.answer })),
     });
-  home.push({ kind: "quote", heading: "Get your price now", components: [] });
-  home.push({ kind: "booking", heading: "Or book a time", components: [] });
-  home.push({ kind: "cta", heading: "Ready to get started?", components: captureButtons });
-  if (input.phone || input.email || input.hasHours) home.push({ kind: "contact", heading: "Get in touch" });
+  home.push({ kind: "quote", heading: v.heading("quote"), components: [] });
+  home.push({ kind: "booking", heading: v.heading("booking"), components: [] });
+  home.push({ kind: "cta", variant: v.ctaVariant, heading: v.heading("cta"), components: captureButtons });
+  if (input.phone || input.email || input.hasHours)
+    home.push({ kind: "contact", heading: v.heading("contact") });
   home.push(stickyCta);
 
   const pages: BlueprintPage[] = [
