@@ -24,10 +24,12 @@ import { conversionGaps, normalizeGoal, type ConversionContext } from "@/lib/con
 import { proposeUpgrades, type UpgradeProposal } from "@/lib/auto-upgrade";
 import {
   useApplyUpgrade,
+  useBatchFix,
   useUndoUpgrade,
   useLiveAudit,
   type AppliedUpgrade,
 } from "@/lib/auto-upgrade.hooks";
+
 import type { IntakeValues } from "@/lib/intake-map";
 
 export const Route = createFileRoute("/_authenticated/app/command")({
