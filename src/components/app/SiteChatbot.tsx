@@ -71,6 +71,8 @@ export function SiteChatbot({
   const [attachments, setAttachments] = useState<AgentAttachment[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [lastRequest, setLastRequest] = useState<{ text: string; attachments: AgentAttachment[] } | null>(null);
+
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   /** When on, safe plans (nothing removed, nothing missing) are written the moment they're ready. */
 const [autoApply, setAutoApply] = useState(true);
