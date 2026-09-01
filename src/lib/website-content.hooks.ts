@@ -10,6 +10,7 @@ import {
 } from "@/lib/website-content";
 import { safeLinkUrl, slugify } from "@/lib/website-content";
 import { readCopy } from "@/lib/site-engine";
+import { useBuilderHistory } from "@/lib/builder-history.hooks";
 
 const KEY = "website_content";
 
@@ -464,6 +465,8 @@ export function useReorderComponents(organizationId: string | undefined) {
 
 export function useSaveComponent(organizationId: string | undefined) {
   const invalidate = useInvalidateContent(organizationId);
+  const history = useBuilderHistory();
+  const cachedRow = useCachedRow(organizationId);
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
       // Link targets end up as hrefs on the public site: only safe schemes save.
@@ -476,6 +479,12 @@ export function useSaveComponent(organizationId: string | undefined) {
           );
         clean["link_url"] = safe;
       }
+      history.capture({
+        table: "website_components",
+        rowId: id,
+        row: cachedRow("website_components", id),
+        patch: clean,
+      });
       const { error } = await supabase
         .from("website_components")
         .update(clean as never)
