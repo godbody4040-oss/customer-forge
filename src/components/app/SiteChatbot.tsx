@@ -71,6 +71,8 @@ export function SiteChatbot({
   const [attachments, setAttachments] = useState<AgentAttachment[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [lastRequest, setLastRequest] = useState<{ text: string; attachments: AgentAttachment[] } | null>(null);
+
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   /** When on, safe plans (nothing removed, nothing missing) are written the moment they're ready. */
 const [autoApply, setAutoApply] = useState(true);
@@ -111,15 +113,17 @@ const [autoApply, setAutoApply] = useState(true);
   const chosen = useMemo(() => (plan?.steps ?? []).filter((step) => !skipped.has(step.key)), [plan, skipped]);
 
   const propose = useMutation({
-    mutationFn: (input: { text: string; attachments: AgentAttachment[] }) =>
-      ask({
+    mutationFn: (input: { text: string; attachments: AgentAttachment[] }) => {
+      setLastRequest(input);
+      return ask({
         data: {
           organizationId: organizationId!,
           instruction: input.text,
           history,
           attachments: input.attachments,
         },
-      }),
+      });
+    },
     onSuccess: (result) => {
       const steps = result.steps as AgentStep[];
       const next = { summary: result.summary, steps, questions: result.questions, notes: result.notes };
@@ -130,12 +134,19 @@ const [autoApply, setAutoApply] = useState(true);
       const safe = steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
       if (autoApply && canManage && safe) apply.mutate(steps);
     },
-    onError: (error: Error) =>
+    // Nothing here is charged or metered, so a failure is never a paywall: the
+    // site is left exactly as it was and the same request can be retried.
+    onError: () =>
       setMessages((prior) => [
         ...prior,
-        { role: "assistant", content: error.message || "I couldn't work that out. Try rewording it." },
+        {
+          role: "assistant",
+          content:
+            "Revora couldn't complete that change yet. Your website has been left exactly as it was — retry below, or reword the request.",
+        },
       ]),
   });
+
 
   const apply = useMutation({
     mutationFn: (steps?: AgentStep[]) =>
@@ -311,10 +322,25 @@ const [autoApply, setAutoApply] = useState(true);
             {propose.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             {messages.length ? "Send" : "Ask Revora"}
           </Button>
+          {propose.isError && lastRequest ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={propose.isPending}
+              onClick={() => propose.mutate(lastRequest)}
+            >
+              <Loader2 className={propose.isPending ? "size-4 animate-spin" : "hidden"} /> Retry that request
+            </Button>
+          ) : null}
           <span className="text-[11px] text-muted-foreground">
             {instruction.length.toLocaleString()} / {PLAN_INSTRUCTION_LIMIT.toLocaleString()} characters
           </span>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          Unlimited requests, edits, rebuilds and publishes — the builder is included in your Revora subscription. There
+          are no credits, tokens or per-change charges.
+        </p>
+
         <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-primary/30 bg-primary/5 p-3">
           <input
             type="checkbox"
