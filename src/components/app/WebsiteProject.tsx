@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { revoraHost } from "@/lib/revora-address";
 import { siteVariation } from "@/lib/site-variation";
 
 type Props = {
@@ -50,13 +51,12 @@ export function WebsiteProject(props: Props) {
     industry: props.industry ?? null,
     city: props.city ?? null,
   });
-  const address = props.customDomain
-    ? props.customDomain
-    : props.subdomain
-      ? `${props.subdomain}.revoragrowthsystems.com`
-      : props.slug
-        ? `/site/${props.slug}`
-        : "Address set when you publish";
+  // Client websites live on the hosting domain, never on Revora's platform
+  // domain. The path address is the fallback that always works.
+  const address =
+    props.customDomain ||
+    revoraHost(props.subdomain) ||
+    (props.slug ? `/s/${props.slug}` : "Address set when you publish");
 
   const stats = [
     { label: "Pages", value: String(props.pagesCount) },

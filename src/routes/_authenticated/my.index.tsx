@@ -9,7 +9,7 @@ import { MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { useAnalytics, useAppointments, useLeads, useWebsiteSettings } from "@/lib/queries";
 import { useWorkspace } from "@/lib/use-tenant";
-import { revoraUrl } from "@/lib/revora-address";
+import { liveAddressUrl } from "@/lib/revora-address";
 import { currency, dateLong, relative } from "@/lib/format";
 import { usePayments } from "@/lib/payments.hooks";
 import { useBillingState } from "@/lib/stripe.hooks";
@@ -58,10 +58,10 @@ function PortalHome() {
             : "No plan started yet.";
 
   const live = settings?.publish_state === "published";
-  const address =
-    settings?.custom_domain
-      ? `https://${settings.custom_domain}`
-      : (revoraUrl(settings?.subdomain) ?? (org?.slug ? `/s/${org.slug}` : null));
+  // Show only an address that is proven to work: a verified domain or free
+  // Revora hostname, otherwise the platform path address.
+  const liveAt = liveAddressUrl(settings ?? {}, org?.slug ?? null);
+  const address = liveAt.url;
 
   const now = Date.now();
   const upcoming = (appointments ?? []).filter((a) => new Date(a.starts_at).getTime() >= now);
@@ -75,7 +75,7 @@ function PortalHome() {
           <div className="min-w-0">
             <p className="eyebrow">Your website</p>
             <p className="mt-1 truncate text-[15px] font-medium">
-              {settings?.custom_domain ?? settings?.subdomain ?? org?.slug ?? "Not created yet"}
+              {liveAt.label ?? "Not created yet"}
             </p>
             <p className="mt-0.5 text-[12px] text-muted-foreground">
               {live

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useWebsiteSettings } from "@/lib/queries";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { useWorkspace } from "@/lib/use-tenant";
-import { revoraUrl } from "@/lib/revora-address";
+import { revoraHostIsLive, revoraUrl } from "@/lib/revora-address";
 import { relative } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/my/site")({
@@ -42,12 +42,18 @@ function MySite() {
   const custom = settings?.custom_domain ? `https://${settings.custom_domain}` : null;
   const shareable = org?.slug ? `/s/${org.slug}` : null;
 
+  // A short hostname is only listed once it has been verified to resolve and
+  // serve HTTPS; the direct Revora link always works, so it is the fallback
+  // primary address.
+  const freeLive = revoraHostIsLive(settings ?? {});
   const addresses = [
     custom ? { label: "Your own domain", url: custom, primary: true } : null,
-    freeAddress
+    freeAddress && freeLive
       ? { label: "Free Revora address (included)", url: freeAddress, primary: !custom }
       : null,
-    shareable ? { label: "Direct Revora link", url: shareable, primary: false } : null,
+    shareable
+      ? { label: "Direct Revora link", url: shareable, primary: !custom && !freeLive }
+      : null,
   ].filter(Boolean) as { label: string; url: string; primary: boolean }[];
 
   return (

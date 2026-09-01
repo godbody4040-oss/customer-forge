@@ -19,24 +19,29 @@ import { Label } from "@/components/ui/label";
 import { checkRevoraAddressLive, claimRevoraAddress } from "@/lib/revora-address.functions";
 import {
   SITE_ROOT,
+  clientSiteUrl,
   customDomainIsLive,
   normalizeSubdomain,
   revoraHost,
+  revoraHostIsLive,
   validateSubdomain,
 } from "@/lib/revora-address";
 
 export function RevoraAddressCard({
   organizationId,
+  orgSlug,
   settings,
   canManage,
 }: {
   organizationId: string | undefined;
+  orgSlug?: string | null;
   settings:
     | {
         subdomain?: string | null;
         custom_domain?: string | null;
         dns_ok?: boolean | null;
         ssl_ok?: boolean | null;
+        revora_host_ok?: boolean | null;
         publish_state?: string | null;
       }
     | null
@@ -53,6 +58,12 @@ export function RevoraAddressCard({
   const url = host ? `https://${host}` : null;
   const published = settings?.publish_state === "published";
   const customLive = customDomainIsLive(settings ?? {});
+  // The hostname address is only advertised as live once a real DNS + HTTPS
+  // probe has confirmed it. Until then the platform path address is the one we
+  // hand out — it needs no DNS and no certificate, so it always works.
+  const hostLive = revoraHostIsLive(settings ?? {});
+  const pathUrl = clientSiteUrl(orgSlug);
+  const liveNow = hostLive ? url : pathUrl;
   const check = validateSubdomain(value);
 
   const claim = useMutation({
@@ -83,8 +94,12 @@ export function RevoraAddressCard({
         eyebrow="Included free"
         title="Your free Revora address"
         action={
-          <Pill tone={published ? "signal" : "neutral"}>
-            {published ? "Live with HTTPS" : "Ready — live when you publish"}
+          <Pill tone={published && (hostLive || pathUrl) ? "signal" : "neutral"}>
+            {!published
+              ? "Ready — live when you publish"
+              : hostLive
+                ? "Live with HTTPS"
+                : "Live at your Revora web address"}
           </Pill>
         }
       />
@@ -121,6 +136,29 @@ export function RevoraAddressCard({
           </div>
         ) : null}
       </div>
+
+      {pathUrl ? (
+        <div className="space-y-1.5 rounded-md border border-border/60 p-3">
+          <p className="text-[12px] font-medium">
+            {hostLive ? "Also always available" : "Your live web address today"}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="min-w-0 flex-1 break-all font-mono text-[12px] text-muted-foreground">
+              {pathUrl.replace(/^https:\/\//, "")}
+            </span>
+            <Button asChild variant="outline" size="sm">
+              <a href={liveNow ?? pathUrl} target="_blank" rel="noreferrer">
+                <ExternalLink className="size-3.5" /> Open my website
+              </a>
+            </Button>
+          </div>
+          <p className="text-[11.5px] text-muted-foreground">
+            {hostLive
+              ? "This address works alongside your short address, with the same website."
+              : "This address is secured and works immediately — no DNS setup needed. Your short address switches on automatically once it is verified below."}
+          </p>
+        </div>
+      ) : null}
 
       {host ? (
         <div className="flex flex-wrap items-center gap-2">

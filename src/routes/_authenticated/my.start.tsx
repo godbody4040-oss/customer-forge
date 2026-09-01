@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useBusinessProfile, useServices, useWebsiteSettings } from "@/lib/queries";
 import { useWebsiteContent } from "@/lib/website-content.hooks";
 import { useWorkspace } from "@/lib/use-tenant";
-import { revoraHost, revoraUrl } from "@/lib/revora-address";
+import { liveAddressUrl } from "@/lib/revora-address";
 
 export const Route = createFileRoute("/_authenticated/my/start")({
   head: () => ({
@@ -45,9 +45,8 @@ function MyStart() {
     0,
   );
   const live = settings?.publish_state === "published";
-  const address =
-    (settings?.custom_domain ? `https://${settings.custom_domain}` : null) ??
-    revoraUrl(settings?.subdomain);
+  const liveAt = liveAddressUrl(settings ?? {}, org?.slug ?? null);
+  const address = liveAt.url;
 
   const steps = [
     {
@@ -80,8 +79,8 @@ function MyStart() {
     },
     {
       title: "Publish it",
-      body: `Go live on your free address${
-        revoraHost(settings?.subdomain) ? ` — ${revoraHost(settings?.subdomain)}` : ""
+      body: `Go live on your free Revora address${
+        liveAt.label ? ` — ${liveAt.label}` : ""
       }. No domain purchase needed.`,
 
 
