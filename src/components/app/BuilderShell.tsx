@@ -1,0 +1,238 @@
+/**
+ * Builder workspace shell.
+ *
+ * Turns the builder from one very long page into an application workspace:
+ * a compact top bar (project + save/publish state + actions), a persistent
+ * left workspace nav on desktop, one focused panel area, and a real mobile
+ * layout (compact toolbar + bottom nav + sheet) instead of a stacked desktop.
+ *
+ * It only arranges existing, already-working panels — no feature is replaced.
+ */
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export type BuilderSection = {
+  key: string;
+  label: string;
+  /** Short hint shown in the nav on desktop. Keep it to a few words. */
+  hint?: string;
+  /** Optional count/dot badge, e.g. required answers left. */
+  badge?: number;
+  node: ReactNode;
+};
+
+export type BuilderShellProps = {
+  projectName: string;
+  /** e.g. "Draft", "Published", "Preview only" */
+  statusLabel: string;
+  statusTone?: "draft" | "live" | "warn";
+  /** e.g. "Saved", "Saving…", "Unsaved changes" */
+  saveLabel?: string;
+  actions?: ReactNode;
+  sections: BuilderSection[];
+  /** Controlled active section key (so other panels can deep-link). */
+  activeKey?: string;
+  onActiveKeyChange?: (key: string) => void;
+};
+
+const toneClass: Record<NonNullable<BuilderShellProps["statusTone"]>, string> = {
+  draft: "border-border text-muted-foreground",
+  live: "border-primary/40 text-primary",
+  warn: "border-accent/50 text-accent",
+};
+
+export function BuilderShell({
+  projectName,
+  statusLabel,
+  statusTone = "draft",
+  saveLabel,
+  actions,
+  sections,
+  activeKey,
+  onActiveKeyChange,
+}: BuilderShellProps) {
+  const first = sections[0]?.key ?? "";
+  const [internal, setInternal] = useState(first);
+  const active = activeKey ?? internal;
+  const [navOpen, setNavOpen] = useState(false);
+
+  const setActive = (key: string) => {
+    setInternal(key);
+    onActiveKeyChange?.(key);
+    setNavOpen(false);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Keep the mobile sheet from leaving the page scroll-locked.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = navOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [navOpen]);
+
+  const current = useMemo(
+    () => sections.find((section) => section.key === active) ?? sections[0],
+    [sections, active],
+  );
+
+  return (
+    <div className="-mt-1">
+      {/* ---------------------------- Top bar ---------------------------- */}
+      <div className="sticky top-0 z-30 -mx-4 mb-4 border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Open builder sections"
+            onClick={() => setNavOpen(true)}
+            className="grid size-8 shrink-0 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground lg:hidden"
+          >
+            <Menu className="size-4" aria-hidden />
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-medium">{projectName}</p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <span
+                className={cn(
+                  "rounded-full border px-1.5 py-px text-[10px] tracking-wide uppercase",
+                  toneClass[statusTone],
+                )}
+              >
+                {statusLabel}
+              </span>
+              {saveLabel ? (
+                <span className="truncate text-[11px] text-muted-foreground">{saveLabel}</span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">{actions}</div>
+        </div>
+      </div>
+
+      <div className="flex gap-6">
+        {/* -------------------------- Left nav -------------------------- */}
+        <nav className="hidden w-56 shrink-0 lg:block">
+          <div className="sticky top-24 space-y-1">
+            {sections.map((section) => (
+              <NavItem
+                key={section.key}
+                section={section}
+                active={section.key === active}
+                onSelect={() => setActive(section.key)}
+                showHint
+              />
+            ))}
+          </div>
+        </nav>
+
+        {/* --------------------------- Canvas --------------------------- */}
+        <div className="min-w-0 flex-1 pb-24 lg:pb-6">
+          <div className="mb-3 lg:hidden">
+            <p className="eyebrow">{current?.label}</p>
+          </div>
+          {current?.node}
+        </div>
+      </div>
+
+      {/* --------------------- Mobile section sheet -------------------- */}
+      {navOpen ? (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close builder sections"
+            onClick={() => setNavOpen(false)}
+            className="absolute inset-0 bg-black/70"
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-border bg-surface p-4 pb-8">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="eyebrow">Builder sections</p>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setNavOpen(false)}
+                className="grid size-8 place-items-center rounded-md border border-border text-muted-foreground"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </div>
+            <div className="space-y-1">
+              {sections.map((section) => (
+                <NavItem
+                  key={section.key}
+                  section={section}
+                  active={section.key === active}
+                  onSelect={() => setActive(section.key)}
+                  showHint
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ------------------ Mobile bottom quick switcher ---------------- */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur lg:hidden">
+        <div className="flex gap-1 overflow-x-auto px-2 py-2">
+          {sections.map((section) => (
+            <button
+              key={section.key}
+              type="button"
+              onClick={() => setActive(section.key)}
+              className={cn(
+                "shrink-0 rounded-md border px-2.5 py-1.5 text-[11.5px] whitespace-nowrap transition-colors",
+                section.key === active
+                  ? "border-primary/50 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground",
+              )}
+            >
+              {section.label}
+              {section.badge ? ` · ${section.badge}` : ""}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NavItem({
+  section,
+  active,
+  onSelect,
+  showHint,
+}: {
+  section: BuilderSection;
+  active: boolean;
+  onSelect: () => void;
+  showHint?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "w-full cursor-pointer rounded-md border px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        active
+          ? "border-primary/50 bg-primary/10"
+          : "border-transparent hover:border-border hover:bg-elevated",
+      )}
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className={cn("text-[13px] font-medium", active ? "text-primary" : "text-foreground")}>
+          {section.label}
+        </span>
+        {section.badge ? (
+          <span className="rounded-full bg-accent/15 px-1.5 text-[10px] text-accent">{section.badge}</span>
+        ) : null}
+      </span>
+      {showHint && section.hint ? (
+        <span className="mt-0.5 block text-[11px] text-muted-foreground">{section.hint}</span>
+      ) : null}
+    </button>
+  );
+}
