@@ -69,7 +69,9 @@ export const Route = createFileRoute("/_authenticated/app/website")({
 
 
 function WebsitePage() {
+  const { section: sectionParam } = Route.useSearch();
   const { data: ws } = useWorkspace();
+
   const org = ws?.workspace?.organization;
   const orgId = ws?.workspace?.organizationId;
   const profileQuery = useBusinessProfile(orgId);
