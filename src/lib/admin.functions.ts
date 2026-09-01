@@ -661,32 +661,31 @@ export const getMonthlyBusinessReport = createServerFn({ method: "GET" })
     return { ...report, workspaces, generatedAt: new Date().toISOString() };
   });
 
-/** The offer rates the platform is currently selling on, for the admin pricing page. */
+/**
+ * Read-only report of the canonical Revora offer plus what the payment provider
+ * currently has on file. Revora's commercial offer is immutable ($750 setup +
+ * $100/month with the first month free) and cannot be changed from the admin
+ * dashboard — this function never writes.
+ */
 export const getOfferConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { assertSuperAdmin } = await import("@/lib/admin.server");
     await assertSuperAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { GROWTH_SYSTEM } = await import("@/lib/offer");
-
-    const { data } = await supabaseAdmin
-      .from("offer_config")
-      .select("*")
-      .eq("id", "growth_system")
-      .maybeSingle();
 
     const environments: Array<{
       environment: "live" | "sandbox";
       setupAmount: number | null;
       monthlyAmount: number | null;
       reachable: boolean;
+      matchesOffer: boolean;
     }> = [];
 
     for (const environment of ["live", "sandbox"] as const) {
       try {
         const { createStripeClient } = await import("@/lib/stripe.server");
-        const stripe = createStripeClient(environment === "live" ? "live" : "sandbox");
+        const stripe = createStripeClient(environment);
         const found = await stripe.prices.list({
           lookup_keys: [GROWTH_SYSTEM.setupPriceKey, GROWTH_SYSTEM.monthlyPriceKey],
           active: true,
@@ -696,11 +695,16 @@ export const getOfferConfig = createServerFn({ method: "GET" })
           const price = found.data.find((p) => p.lookup_key === key);
           return typeof price?.unit_amount === "number" ? price.unit_amount / 100 : null;
         };
+        const setupAmount = pick(GROWTH_SYSTEM.setupPriceKey);
+        const monthlyAmount = pick(GROWTH_SYSTEM.monthlyPriceKey);
         environments.push({
           environment,
-          setupAmount: pick(GROWTH_SYSTEM.setupPriceKey),
-          monthlyAmount: pick(GROWTH_SYSTEM.monthlyPriceKey),
+          setupAmount,
+          monthlyAmount,
           reachable: true,
+          matchesOffer:
+            setupAmount === GROWTH_SYSTEM.setupPrice &&
+            monthlyAmount === GROWTH_SYSTEM.monthlyPrice,
         });
       } catch {
         environments.push({
@@ -708,94 +712,17 @@ export const getOfferConfig = createServerFn({ method: "GET" })
           setupAmount: null,
           monthlyAmount: null,
           reachable: false,
+          matchesOffer: false,
         });
       }
     }
 
     return {
-      setupPrice: Number(data?.setup_price ?? GROWTH_SYSTEM.setupPrice),
-      monthlyPrice: Number(data?.monthly_price ?? GROWTH_SYSTEM.monthlyPrice),
-      updatedAt: data?.updated_at ?? null,
-      codeSetupPrice: GROWTH_SYSTEM.setupPrice,
-      codeMonthlyPrice: GROWTH_SYSTEM.monthlyPrice,
+      setupPrice: GROWTH_SYSTEM.setupPrice,
+      monthlyPrice: GROWTH_SYSTEM.monthlyPrice,
+      trialDays: GROWTH_SYSTEM.trialDays,
+      fullAccessDays: GROWTH_SYSTEM.fullAccessTrialDays,
+      locked: true as const,
       environments,
     };
-  });
-
-/**
- * Changes what Revora charges: rewrites both Stripe prices behind the stable
- * lookup keys and stores the new rates, so checkout, verification and the admin
- * views all move together. Super admin only.
- */
-export const updateOfferRates = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: { setupPrice: number; monthlyPrice: number }) => input)
-  .handler(async ({ data, context }) => {
-    const { assertSuperAdmin } = await import("@/lib/admin.server");
-    await assertSuperAdmin(context.supabase, context.userId);
-    const { GROWTH_SYSTEM, parseOfferRates } = await import("@/lib/offer");
-    const rates = parseOfferRates(data);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
-
-    const notes: string[] = [];
-
-    for (const environment of ["live", "sandbox"] as const) {
-      try {
-        const stripe = createStripeClient(environment);
-        const existing = await stripe.prices.list({
-          lookup_keys: [GROWTH_SYSTEM.setupPriceKey, GROWTH_SYSTEM.monthlyPriceKey],
-          active: true,
-          limit: 10,
-        });
-
-        const rewrite = async (key: string, amount: number, monthly: boolean) => {
-          const current = existing.data.find((p) => p.lookup_key === key);
-          const product =
-            typeof current?.product === "string" ? current.product : current?.product?.id;
-          if (!product) {
-            notes.push(`${environment}: ${key} is not set up yet, so it was left untouched.`);
-            return;
-          }
-          if (current && current.unit_amount === Math.round(amount * 100)) return;
-          await stripe.prices.create({
-            product,
-            currency: "usd",
-            unit_amount: Math.round(amount * 100),
-            lookup_key: key,
-            transfer_lookup_key: true,
-            ...(monthly ? { recurring: { interval: "month" as const } } : {}),
-          });
-          if (current) await stripe.prices.update(current.id, { active: false });
-          notes.push(`${environment}: ${key} now charges $${amount}.`);
-        };
-
-        await rewrite(GROWTH_SYSTEM.setupPriceKey, rates.setupPrice, false);
-        await rewrite(GROWTH_SYSTEM.monthlyPriceKey, rates.monthlyPrice, true);
-      } catch (error) {
-        notes.push(`${environment}: not updated — ${getStripeErrorMessage(error)}`);
-      }
-    }
-
-    const { error } = await supabaseAdmin.from("offer_config").upsert(
-      {
-        id: "growth_system",
-        setup_price: rates.setupPrice,
-        monthly_price: rates.monthlyPrice,
-        updated_by: context.userId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" },
-    );
-    if (error) throw new Error("The new rates could not be saved. Nothing was changed.");
-
-    await supabaseAdmin.from("audit_logs").insert({
-      actor_id: context.userId,
-      action: "offer.rates_updated",
-      entity: "offer_config",
-      entity_id: "growth_system",
-      metadata: { ...rates, notes },
-    });
-
-    return { ...rates, notes };
   });
