@@ -14,12 +14,28 @@
  * constraint, so the two can never disagree.
  */
 
+/**
+ * Revora's own platform domain: dashboard, builder, billing, CRM. Client
+ * websites are NEVER served from here.
+ */
 export const REVORA_ROOT = "revoragrowthsystems.com";
+
+/**
+ * The client website hosting domain. Every client website gets a free address
+ * at `clientname.revoraweb.site`, kept completely separate from the platform
+ * domain above so client traffic can never reach the dashboard host.
+ */
+export const SITE_ROOT = "revoraweb.site";
+
+/** Roots whose subdomains are client website addresses (newest first). */
+export const SITE_ROOTS = [SITE_ROOT, REVORA_ROOT];
 
 /** Hosts that belong to Revora itself, never to a client site. */
 export const REVORA_OWN_HOSTS = [
   REVORA_ROOT,
   `www.${REVORA_ROOT}`,
+  SITE_ROOT,
+  `www.${SITE_ROOT}`,
   "customer-forge.lovable.app",
 ];
 
@@ -43,7 +59,10 @@ export function normalizeSubdomain(value: string | null | undefined) {
     .toLowerCase()
     .replace(/^https?:\/\//, "")
     .replace(/\/.*$/, "")
-    .replace(new RegExp(`\\.${REVORA_ROOT.replace(/\./g, "\\.")}$`), "")
+    .replace(
+      new RegExp(`\\.(${SITE_ROOTS.map((root) => root.replace(/\./g, "\\.")).join("|")})$`),
+      "",
+    )
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/-{2,}/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -67,10 +86,10 @@ export function validateSubdomain(value: string | null | undefined): AddressChec
   return { ok: true, value: clean };
 }
 
-/** `clientname.revoragrowthsystems.com` */
+/** `clientname.revoraweb.site` — the free client website address. */
 export function revoraHost(subdomain: string | null | undefined) {
   const clean = normalizeSubdomain(subdomain);
-  return clean ? `${clean}.${REVORA_ROOT}` : null;
+  return clean ? `${clean}.${SITE_ROOT}` : null;
 }
 
 export function revoraUrl(subdomain: string | null | undefined) {
@@ -102,14 +121,21 @@ export function isPossibleTenantHost(rawHost: string | null | undefined) {
   return !isRevoraOwnHost(rawHost);
 }
 
-/** The subdomain part of a Revora address, or null for any other host. */
+/**
+ * The subdomain part of a client website address, or null for any other host.
+ * Both the hosting domain and the older platform-domain addresses resolve, so
+ * links handed out before the split keep working.
+ */
 export function revoraSubdomainFromHost(rawHost: string | null | undefined) {
   const host = normalizeHost(rawHost);
-  const suffix = `.${REVORA_ROOT}`;
-  if (!host.endsWith(suffix)) return null;
-  const label = host.slice(0, -suffix.length);
-  if (!label || label.includes(".")) return null;
-  return label;
+  for (const root of SITE_ROOTS) {
+    const suffix = `.${root}`;
+    if (!host.endsWith(suffix)) continue;
+    const label = host.slice(0, -suffix.length);
+    if (!label || label.includes(".")) continue;
+    return label;
+  }
+  return null;
 }
 
 /**

@@ -36,6 +36,18 @@ const customDomainRedirect = createMiddleware().server(async ({ next, request })
   ) {
     return next();
   }
+  // The hosting domain only ever serves client websites on their own
+  // subdomain. Its bare root is not a product page, so send visitors who type
+  // it to the Revora platform instead of showing them a client-less site.
+  const { REVORA_ROOT, SITE_ROOT, normalizeHost } = await import("./lib/revora-address");
+  const rawHost = normalizeHost(request.headers.get("host"));
+  if (rawHost === SITE_ROOT || rawHost === `www.${SITE_ROOT}`) {
+    return new Response(null, {
+      status: 301,
+      headers: { location: `https://${REVORA_ROOT}${url.pathname}${url.search}` },
+    });
+  }
+
   try {
     const { resolveTenantHost } = await import("./lib/site-host.server");
     const tenant = await resolveTenantHost(request.headers.get("host"));

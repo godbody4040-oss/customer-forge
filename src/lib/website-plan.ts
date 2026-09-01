@@ -12,7 +12,8 @@ import type { Tone } from "@/lib/domain";
 import { INDUSTRIES } from "@/lib/domain";
 import { slugify } from "@/lib/format";
 
-export const REVORA_HOST = "revoragrowthsystems.com";
+/** Client websites are hosted on their own domain, never the platform domain. */
+export const REVORA_HOST = "revoraweb.site";
 
 /** Slugs we never hand to a client subdomain. */
 export const RESERVED_SLUGS = [

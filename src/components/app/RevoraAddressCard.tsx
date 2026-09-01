@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { claimRevoraAddress } from "@/lib/revora-address.functions";
 import {
-  REVORA_ROOT,
+  SITE_ROOT,
   customDomainIsLive,
   normalizeSubdomain,
   revoraHost,
@@ -139,7 +139,7 @@ export function RevoraAddressCard({
                 className="max-w-56"
                 aria-label="Free Revora address"
               />
-              <span className="font-mono text-[12px] text-muted-foreground">.{REVORA_ROOT}</span>
+              <span className="font-mono text-[12px] text-muted-foreground">.{SITE_ROOT}</span>
               <Button
                 variant="signal"
                 size="sm"
@@ -166,7 +166,7 @@ export function RevoraAddressCard({
             </div>
             <p className="text-[11.5px] text-muted-foreground">
               {check.ok
-                ? `Your site will be at ${check.value}.${REVORA_ROOT}`
+                ? `Your site will be at ${check.value}.${SITE_ROOT}`
                 : check.error}
             </p>
           </div>

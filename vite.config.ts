@@ -21,7 +21,15 @@ export default defineConfig({
   vite: {
     // Dev only: client sites are served on their own host, so the dev server has
     // to accept Revora subdomains and connected client domains as well.
-    server: { allowedHosts: [".revoragrowthsystems.com", ".lovable.app", "localhost"] },
+    server: {
+      allowedHosts: [
+        ".revoraweb.site",
+        "revoraweb.site",
+        ".revoragrowthsystems.com",
+        ".lovable.app",
+        "localhost",
+      ],
+    },
     resolve: {
       alias: {
         "entities/lib/decode.js": path.resolve(import.meta.dirname, "node_modules/entities/lib/decode.js"),
