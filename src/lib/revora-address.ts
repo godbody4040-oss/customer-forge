@@ -86,10 +86,10 @@ export function validateSubdomain(value: string | null | undefined): AddressChec
   return { ok: true, value: clean };
 }
 
-/** `clientname.revoragrowthsystems.com` */
+/** `clientname.revoraweb.site` — the free client website address. */
 export function revoraHost(subdomain: string | null | undefined) {
   const clean = normalizeSubdomain(subdomain);
-  return clean ? `${clean}.${REVORA_ROOT}` : null;
+  return clean ? `${clean}.${SITE_ROOT}` : null;
 }
 
 export function revoraUrl(subdomain: string | null | undefined) {
