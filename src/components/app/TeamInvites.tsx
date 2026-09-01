@@ -77,7 +77,10 @@ export function MemberControls({
       .update({ role: next as InvitableRole })
       .eq("id", membershipId);
     setBusy(false);
-    if (error) return toast.error("Could not change that role");
+    if (error) {
+      toast.error("Could not change that role");
+      return;
+    }
     toast.success(`Access set to ${roleLabel(next)}`);
     refresh();
   }
@@ -86,7 +89,10 @@ export function MemberControls({
     setBusy(true);
     const { error } = await supabase.from("memberships").delete().eq("id", membershipId);
     setBusy(false);
-    if (error) return toast.error("Could not remove that teammate");
+    if (error) {
+      toast.error("Could not remove that teammate");
+      return;
+    }
     toast.success("Teammate removed");
     refresh();
   }
