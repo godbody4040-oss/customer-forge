@@ -112,9 +112,9 @@ describe("describeChange", () => {
   });
 
   it("summarises long patches", () => {
-    expect(describeChange("website_sections", { heading: 1, body: 1, settings: 1, variant: 1 })).toBe(
-      "heading and text +2 more on section",
-    );
+    expect(
+      describeChange("website_sections", { heading: 1, body: 1, settings: 1, variant: 1 }),
+    ).toBe("heading and text +2 more on section");
   });
 
   it("falls back gracefully for an empty patch", () => {

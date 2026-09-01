@@ -27,14 +27,7 @@ import { type ContentPage, type ContentSection, safeLinkUrl } from "@/lib/websit
 export type InteractionStatus = "ok" | "warn" | "broken";
 
 export type InteractionKind =
-  | "internal_link"
-  | "anchor"
-  | "phone"
-  | "email"
-  | "sms"
-  | "external_link"
-  | "conversion"
-  | "form";
+  "internal_link" | "anchor" | "phone" | "email" | "sms" | "external_link" | "conversion" | "form";
 
 export type InteractionCheck = {
   /** Stable id so the UI can key rows and deep-link to the owning section. */
@@ -112,9 +105,7 @@ function sectionControls(section: ContentSection): Control[] {
     controls.push({
       id: component.id,
       label:
-        component.link_label?.trim() ||
-        component.label?.trim() ||
-        `${component.kind} (no label)`,
+        component.link_label?.trim() || component.label?.trim() || `${component.kind} (no label)`,
       rawTarget: component.link_url ?? null,
       sectionId: section.id,
       conversion: /quote|book|checkout|lead/i.test(component.kind),
@@ -225,7 +216,9 @@ function checkControl(
       detail: exists
         ? `Goes to the "${slug}" page on this website.`
         : `Points at "/${slug}", which is not a page on this website — visitors get a not-found page.`,
-      ...(exists ? {} : { fix: `Create the "${slug}" page, or point this button at an existing page.` }),
+      ...(exists
+        ? {}
+        : { fix: `Create the "${slug}" page, or point this button at an existing page.` }),
     };
   }
 
@@ -236,9 +229,7 @@ function checkControl(
       status: ok ? "ok" : "broken",
       kind: "phone",
       target: safe,
-      detail: ok
-        ? "Starts a phone call on mobile."
-        : "The phone number is too short to dial.",
+      detail: ok ? "Starts a phone call on mobile." : "The phone number is too short to dial.",
       ...(ok ? {} : { fix: "Enter the full business phone number, including area code." }),
     };
   }
@@ -250,7 +241,9 @@ function checkControl(
       status: ok ? "ok" : "broken",
       kind: "sms",
       target: safe,
-      detail: ok ? "Opens a text message to the business." : "The text number is too short to send to.",
+      detail: ok
+        ? "Opens a text message to the business."
+        : "The text number is too short to send to.",
       ...(ok ? {} : { fix: "Enter the full number that can receive texts." }),
     };
   }
@@ -314,7 +307,10 @@ export function scanInteractions(pages: ContentPage[]): InteractionReport {
     const anchors = new Set<string>();
     for (const section of visibleSections) {
       anchors.add(section.kind.toLowerCase());
-      const slug = (section.heading ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const slug = (section.heading ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-");
       if (slug) anchors.add(slug);
     }
 
