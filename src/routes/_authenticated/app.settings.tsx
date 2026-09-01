@@ -160,6 +160,13 @@ function SettingsPage() {
           </p>
           <TeamInvites organizationId={orgId} canManage={canManage} />
         </div>
+        <div className="mt-5 border-t border-border pt-5">
+          <p className="eyebrow">Client portal access</p>
+          <p className="mt-1 mb-4 text-[12px] text-muted-foreground">
+            Share one link and a client signs themselves up and joins this workspace as a viewer.
+          </p>
+          <PortalAccess organizationId={orgId} canManage={canManage} />
+        </div>
       </Panel>
     </div>
   );
