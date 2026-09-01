@@ -122,6 +122,36 @@ export function RevoraAddressCard({
         ) : null}
       </div>
 
+      {host ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={verify.isPending || !organizationId}
+            onClick={() => verify.mutate()}
+          >
+            {verify.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3.5" />
+            )}
+            Check my address
+          </Button>
+          {verify.data ? (
+            <Pill tone={verify.data.live ? "signal" : "warn"}>
+              {verify.data.live ? "DNS + HTTPS verified" : "Not answering yet"}
+            </Pill>
+          ) : null}
+          {verify.data ? (
+            <span className="min-w-0 flex-1 text-[11.5px] text-muted-foreground">
+              {verify.data.detail}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
+
+
       <div className="grid gap-2 text-[12px] text-muted-foreground sm:grid-cols-3">
         <p className="rounded-md border border-border/60 p-2.5">
           <ShieldCheck className="mb-1 size-3.5 text-primary" aria-hidden="true" />
