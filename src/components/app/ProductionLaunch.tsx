@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { GROWTH_SYSTEM } from "@/lib/offer";
+import { GROWTH_SYSTEM, usd } from "@/lib/offer";
 import type { ActivationResult, ProductionReadiness, ProductionStatus } from "@/lib/production.functions";
 
 /* ------------------------------ environment ------------------------------- */
