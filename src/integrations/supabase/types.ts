@@ -3101,14 +3101,6 @@ export type Database = {
         }[]
       }
       revora_reserved_subdomains: { Args: never; Returns: string[] }
-      revora_site_for_host: {
-        Args: { _host: string }
-        Returns: {
-          organization_id: string
-          organization_slug: string
-          via: string
-        }[]
-      }
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"

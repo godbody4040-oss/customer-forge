@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.revora_site_for_host(text);
