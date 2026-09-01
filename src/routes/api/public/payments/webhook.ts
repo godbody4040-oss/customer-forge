@@ -298,7 +298,23 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           };
           const claim = await claimEvent(event, rawEnv);
           if (!claim.claimed) return Response.json({ received: true, duplicate: true });
-          await handleEvent(event, rawEnv);
+          try {
+            await handleEvent(event, rawEnv);
+          } catch (failure) {
+            // The claim exists but processing failed. Release it so Stripe's
+            // retry is not silently deduplicated into a lost payment event,
+            // and answer 500 so Stripe actually retries.
+            console.error("[payments:webhook] processing failed", (failure as Error).message);
+            if (claim.eventId) {
+              await claim.admin
+                .from("payment_events")
+                .delete()
+                .eq("provider", "stripe")
+                .eq("provider_event_id", claim.eventId)
+                .eq("processed", false);
+            }
+            return new Response("Webhook processing failed", { status: 500 });
+          }
           if (claim.eventId) {
             await claim.admin
               .from("payment_events")
@@ -308,6 +324,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           }
           return Response.json({ received: true });
         } catch (error) {
+          // Signature/parse failures: never retryable, never processed.
           console.error("[payments:webhook] error", (error as Error).message);
           return new Response("Webhook error", { status: 400 });
         }
