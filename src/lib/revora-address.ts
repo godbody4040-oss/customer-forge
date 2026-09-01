@@ -173,13 +173,29 @@ export function clientSiteUrl(orgSlug: string | null | undefined) {
 }
 
 /**
+ * PRODUCTION CLIENT MODEL.
+ *
+ * A client's permanent public website address is the domain THEY own. The older
+ * `name.revoraweb.site` hosting idea is kept for internal previews only: it is
+ * never advertised as a client's required or permanent address, and it can
+ * never override, replace or redirect a verified client domain.
+ *
+ * Flip this to true only if Revora-branded hosting is ever offered again as a
+ * public product (it also requires wildcard DNS + certificates at the edge).
+ */
+export const REVORA_SUBDOMAIN_HOSTING_ENABLED = false;
+
+/**
  * True once the free `name.revoraweb.site` address has been proven to resolve
  * AND serve HTTPS. Stored on the workspace by the live check, never assumed.
+ * Always false while Revora-branded hosting is deactivated, so no UI can ever
+ * present it as the client's public address.
  */
 export function revoraHostIsLive(settings: {
   subdomain?: string | null;
   revora_host_ok?: boolean | null;
 }) {
+  if (!REVORA_SUBDOMAIN_HOSTING_ENABLED) return false;
   return !!settings.subdomain && !!settings.revora_host_ok;
 }
 
