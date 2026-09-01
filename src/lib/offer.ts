@@ -111,12 +111,39 @@ export type PriceVerification = { ok: true } | { ok: false; reason: string };
 
 const money = (cents: number) => usd(cents / 100);
 
+/** The configurable part of the offer. Defaults to the code-level offer. */
+export type OfferRates = { setupPrice: number; monthlyPrice: number };
+
+export const DEFAULT_OFFER_RATES: OfferRates = {
+  setupPrice: GROWTH_SYSTEM.setupPrice,
+  monthlyPrice: GROWTH_SYSTEM.monthlyPrice,
+};
+
+/** Accepts only sane, whole-dollar rates. Used by the admin pricing controls. */
+export function parseOfferRates(input: { setupPrice: unknown; monthlyPrice: unknown }): OfferRates {
+  const read = (value: unknown, label: string) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount < 1 || amount > 100_000)
+      throw new Error(`${label} must be between $1 and $100,000.`);
+    if (Math.round(amount) !== amount) throw new Error(`${label} must be a whole dollar amount.`);
+    return amount;
+  };
+  return {
+    setupPrice: read(input.setupPrice, "The setup price"),
+    monthlyPrice: read(input.monthlyPrice, "The monthly price"),
+  };
+}
+
 /**
- * Verifies the two Revora prices against the canonical offer: currency, exact
- * amount, one-time vs monthly recurring, and active state. Returns a
- * customer-safe reason on failure — never a raw provider payload.
+ * Verifies the two Revora prices against the offer that is actually configured:
+ * currency, exact amount, one-time vs monthly recurring, and active state.
+ * Returns a customer-safe reason on failure — never a raw provider payload.
  */
-export function verifyGrowthPrices(setup: PriceShape, monthly: PriceShape): PriceVerification {
+export function verifyGrowthPrices(
+  setup: PriceShape,
+  monthly: PriceShape,
+  expected: OfferRates = DEFAULT_OFFER_RATES,
+): PriceVerification {
   const check = (
     price: PriceShape,
     label: string,
@@ -144,7 +171,7 @@ export function verifyGrowthPrices(setup: PriceShape, monthly: PriceShape): Pric
   };
 
   const reason =
-    check(setup, "The one-time setup", GROWTH_SYSTEM.setupPrice, false) ??
-    check(monthly, "The monthly subscription", GROWTH_SYSTEM.monthlyPrice, true);
+    check(setup, "The one-time setup", expected.setupPrice, false) ??
+    check(monthly, "The monthly subscription", expected.monthlyPrice, true);
   return reason ? { ok: false, reason } : { ok: true };
 }

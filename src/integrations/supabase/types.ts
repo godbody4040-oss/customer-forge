@@ -1239,6 +1239,39 @@ export type Database = {
           },
         ]
       }
+      offer_config: {
+        Row: {
+          created_at: string
+          full_access_days: number
+          id: string
+          monthly_price: number
+          setup_price: number
+          trial_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_access_days?: number
+          id: string
+          monthly_price: number
+          setup_price: number
+          trial_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_access_days?: number
+          id?: string
+          monthly_price?: number
+          setup_price?: number
+          trial_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       onboarding_drafts: {
         Row: {
           created_at: string

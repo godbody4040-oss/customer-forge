@@ -7,7 +7,7 @@ import {
   parseStripeEnvironment,
   parseWorkspaceId,
 } from "@/lib/stripe-input";
-import { GROWTH_SYSTEM, verifyGrowthPrices } from "@/lib/offer";
+import { DEFAULT_OFFER_RATES, GROWTH_SYSTEM, verifyGrowthPrices } from "@/lib/offer";
 
 export type GrowthSystemIntake = {
   fullName: string;
@@ -150,9 +150,23 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
       if (!monthly || !setup) {
         return { error: "Revora Growth System pricing is not set up in the payment provider yet." };
       }
+      // The rates the admin pricing page configured are the source of truth for
+      // what a customer may be charged; the code-level offer is the fallback.
+      const { data: configured } = await context.supabase
+        .from("offer_config")
+        .select("setup_price, monthly_price")
+        .eq("id", "growth_system")
+        .maybeSingle();
+      const rates = configured
+        ? {
+            setupPrice: Number(configured.setup_price),
+            monthlyPrice: Number(configured.monthly_price),
+          }
+        : DEFAULT_OFFER_RATES;
+
       // Never open a session against a price that disagrees with the published
       // offer — a mis-set price would charge the customer the wrong amount.
-      const verified = verifyGrowthPrices(setup, monthly);
+      const verified = verifyGrowthPrices(setup, monthly, rates);
       if (!verified.ok) {
         return { error: `${verified.reason} Checkout is paused until this is corrected.` };
       }
@@ -183,8 +197,8 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         organizationId: data.organizationId,
         planId: GROWTH_PLAN_ID,
         userId: context.userId,
-        setupAmount: String(GROWTH_SYSTEM.setupPrice),
-        monthlyAmount: String(GROWTH_SYSTEM.monthlyPrice),
+        setupAmount: String(rates.setupPrice),
+        monthlyAmount: String(rates.monthlyPrice),
       };
       const base = {
         // One-time setup line is billed on the FIRST invoice only; the
