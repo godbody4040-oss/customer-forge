@@ -60,6 +60,8 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState<"email" | "google" | "reset" | "magic" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Persistent (non-toast) notice, e.g. "confirm your email" after signup.
+  const [notice, setNotice] = useState<string | null>(null);
 
   const goToWorkspace = useCallback(
     async (fallback?: string) => {
