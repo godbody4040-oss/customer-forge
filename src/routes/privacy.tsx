@@ -41,7 +41,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
       "Customer records your workspace collects: leads, quote requests, appointments, messages and reviews submitted through your Revora site and forms.",
       "Usage and technical data: pages viewed, actions taken in the app, device and browser information, IP address and approximate location, plus attribution details such as referrer and UTM parameters.",
       "Assessment and audit submissions: the answers and email address you enter into our free Growth Assessment or Website Audit forms.",
-      "Billing data: subscription and payment status. Card details are processed and stored by our payment processors (Stripe and PayPal) — Revora never stores full card numbers.",
+      "Billing data: subscription and payment status. Card details are processed and stored by our payment processor, Stripe — Revora never stores full card numbers.",
     ],
   },
   {
@@ -65,7 +65,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "Service providers",
     body: [
-      "We use vetted providers to deliver the platform: cloud hosting and database, authentication, email delivery, AI content generation, analytics and payment processing (Stripe, PayPal). Providers receive only what they need to perform their function.",
+      "We use vetted providers to deliver the platform: cloud hosting and database, authentication, email delivery, AI content generation, analytics and payment processing (Stripe). Providers receive only what they need to perform their function.",
     ],
   },
   {
