@@ -78,7 +78,17 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
 
   const results = await Promise.all(lookups);
   const seen = new Set<string>();
-  // Revora-subdomain matches come first because that address is always live.
+  // A verified client-owned domain always wins: it is the client's permanent
+  // public address and must never be overridden by legacy Revora hosting rows.
+  results.sort((a, b) => {
+    const custom = (rows: { data?: unknown[] | null }) =>
+      (rows.data ?? []).some(
+        (row) => (row as { custom_domain?: string | null }).custom_domain?.toLowerCase() === host,
+      )
+        ? 0
+        : 1;
+    return custom(a) - custom(b);
+  });
   const ordered = results
     .flatMap((result) => result.data ?? [])
     .filter((row) => {
