@@ -1,17 +1,34 @@
 /**
  * Visual builder canvas.
  *
- * A live, click-to-edit view of the selected page: sections render as the
- * visitor will see them (heading / subheading / body / items), clicking any
- * element selects it, text is edited inline in place, and the right-side
- * inspector exposes the rest of that element's settings. A device switcher
- * renders the same canvas at phone, tablet and desktop widths.
+ * A live, click-to-edit view of the selected page. Sections render as the
+ * visitor will see them, clicking any element selects it, text is edited inline
+ * in place, a layers panel mirrors the real page tree, sections and elements can
+ * be dragged into a new order, and the right-side inspector exposes the rest of
+ * the selected element's settings. A device switcher renders the same canvas at
+ * phone, tablet and desktop widths.
  *
  * Everything writes through the existing content mutations, so undo/redo,
- * autosave invalidation and link-safety rules all still apply.
+ * autosave invalidation and link-safety rules all still apply. Deleting a
+ * section or an element keeps the removed row in memory so the client can put it
+ * straight back.
  */
 import * as React from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Monitor, Smartphone, Tablet, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Layers,
+  Monitor,
+  Plus,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,11 +39,29 @@ import {
   type ContentSection,
 } from "@/lib/website-content";
 import {
+  useAddComponent,
+  useDeleteComponent,
   useDeleteSection,
+  useDuplicateComponent,
+  useDuplicateSection,
   useMoveSection,
+  useReorderComponents,
+  useReorderSections,
+  useRestoreComponent,
+  useRestoreSection,
   useSaveComponent,
   useSaveSection,
 } from "@/lib/website-content.hooks";
+import {
+  COMPONENT_LIBRARY,
+  breadcrumb,
+  elementLabel,
+  layers,
+  orderedComponents,
+  orderedSections,
+  reorder,
+  type Selection,
+} from "@/lib/builder-tree";
 import { cn } from "@/lib/utils";
 import {
   ALIGNMENTS,
@@ -67,10 +102,13 @@ const DEVICES: { key: Device; label: string; width: number; icon: typeof Monitor
   { key: "desktop", label: "Desktop", width: 1180, icon: Monitor },
 ];
 
-type Selection =
-  | { type: "section"; sectionId: string }
-  | { type: "component"; sectionId: string; componentId: string }
-  | null;
+/** Where a dragged row would land relative to the row it is hovering over. */
+type DropHint = { id: string; position: "before" | "after" } | null;
+
+function dropPosition(event: React.DragEvent<HTMLElement>): "before" | "after" {
+  const box = event.currentTarget.getBoundingClientRect();
+  return event.clientY < box.top + box.height / 2 ? "before" : "after";
+}
 
 /** contentEditable text that saves on blur and never injects markup. */
 function InlineText({
@@ -130,21 +168,53 @@ function ItemCard({
   item,
   selected,
   editable,
+  dragging,
+  hint,
   onSelect,
   onCommit,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  actions,
 }: {
   item: ContentComponent;
   selected: boolean;
   editable: boolean;
+  dragging: boolean;
+  hint: "before" | "after" | null;
   onSelect: () => void;
   onCommit: (patch: Record<string, unknown>) => void;
+  onDragStart: () => void;
+  onDragOver: (position: "before" | "after") => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
+  actions?: React.ReactNode;
 }) {
   const style = readBlockStyle(item.settings);
   return (
     <div
-      style={blockCss(style)}
       role="button"
       tabIndex={0}
+      draggable={editable}
+      onDragStart={(event) => {
+        event.stopPropagation();
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDragOver={(event) => {
+        if (!editable) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDragOver(dropPosition(event));
+      }}
+      onDrop={(event) => {
+        if (!editable) return;
+        event.preventDefault();
+        event.stopPropagation();
+        onDrop();
+      }}
+      onDragEnd={onDragEnd}
       onClick={(event) => {
         event.stopPropagation();
         onSelect();
@@ -152,10 +222,14 @@ function ItemCard({
       onKeyDown={(event) => {
         if (event.key === "Enter") onSelect();
       }}
+      style={blockCss(style)}
       className={cn(
-        "rounded-lg border p-3 text-left transition-colors",
+        "relative rounded-lg border p-3 text-left transition-colors",
         selected ? "border-primary bg-primary/5" : "border-border/70 hover:border-primary/40",
         !item.is_visible && "opacity-50",
+        dragging && "opacity-40",
+        hint === "before" && "ring-2 ring-primary/70 ring-offset-1",
+        hint === "after" && "ring-2 ring-primary/70 ring-offset-1",
       )}
     >
       {item.media_url ? (
@@ -186,6 +260,7 @@ function ItemCard({
           {item.link_label}
         </span>
       ) : null}
+      {selected && actions ? <div className="mt-2 flex flex-wrap gap-1">{actions}</div> : null}
     </div>
   );
 }
@@ -202,29 +277,48 @@ export function BuilderCanvas({
   const [pageId, setPageId] = React.useState<string | null>(null);
   const [device, setDevice] = React.useState<Device>("desktop");
   const [selection, setSelection] = React.useState<Selection>(null);
+  const [showLayers, setShowLayers] = React.useState(true);
+  const [addKind, setAddKind] = React.useState(COMPONENT_LIBRARY[0]!.kind);
+  const [dragId, setDragId] = React.useState<string | null>(null);
+  const [hint, setHint] = React.useState<DropHint>(null);
+  const [undoable, setUndoable] = React.useState<
+    { kind: "section"; row: ContentSection } | { kind: "component"; row: ContentComponent } | null
+  >(null);
 
   const saveSection = useSaveSection(organizationId);
   const saveComponent = useSaveComponent(organizationId);
   const moveSection = useMoveSection(organizationId);
   const deleteSection = useDeleteSection(organizationId);
+  const reorderSections = useReorderSections(organizationId);
+  const reorderComponents = useReorderComponents(organizationId);
+  const duplicateSection = useDuplicateSection(organizationId);
+  const restoreSection = useRestoreSection(organizationId);
+  const addComponent = useAddComponent(organizationId);
+  const duplicateComponent = useDuplicateComponent(organizationId);
+  const deleteComponent = useDeleteComponent(organizationId);
+  const restoreComponent = useRestoreComponent(organizationId);
 
   const ordered = React.useMemo(
     () => [...pages].sort((a, b) => a.sort_order - b.sort_order),
     [pages],
   );
   const page = ordered.find((p) => p.id === pageId) ?? ordered[0] ?? null;
-  const sections = React.useMemo(
-    () => (page ? [...page.sections].sort((a, b) => a.sort_order - b.sort_order) : []),
-    [page],
-  );
+  const sections = React.useMemo(() => (page ? orderedSections(page) : []), [page]);
 
-  const selectedSection: ContentSection | null = selection
-    ? (sections.find((s) => s.id === selection.sectionId) ?? null)
+  const selectedSectionId =
+    selection && selection.type !== "page" ? selection.sectionId : (null as string | null);
+  const selectedSection: ContentSection | null = selectedSectionId
+    ? (sections.find((s) => s.id === selectedSectionId) ?? null)
     : null;
   const selectedComponent: ContentComponent | null =
     selection?.type === "component" && selectedSection
       ? (selectedSection.components.find((c) => c.id === selection.componentId) ?? null)
       : null;
+
+  const clearDrag = () => {
+    setDragId(null);
+    setHint(null);
+  };
 
   if (!page) {
     return (
@@ -239,6 +333,8 @@ export function BuilderCanvas({
   }
 
   const width = DEVICES.find((d) => d.key === device)!.width;
+  const trail = breadcrumb(page, selectedSection, selectedComponent);
+  const layerNodes = layers(page);
 
   const move = (index: number, direction: -1 | 1) => {
     const a = sections[index];
@@ -247,6 +343,54 @@ export function BuilderCanvas({
     moveSection.mutate({
       a: { id: a.id, sort_order: a.sort_order },
       b: { id: b.id, sort_order: b.sort_order },
+    });
+  };
+
+  /** Applies a section drag, or an element drag inside its own section. */
+  const commitDrag = (overId: string, position: "before" | "after") => {
+    if (!dragId || dragId === overId) return clearDrag();
+    const sectionIds = sections.map((s) => s.id);
+    if (sectionIds.includes(dragId) && sectionIds.includes(overId)) {
+      const next = reorder(sectionIds, dragId, overId, position);
+      if (next !== sectionIds) reorderSections.mutate(next);
+      return clearDrag();
+    }
+    const owner = sections.find((s) => s.components.some((c) => c.id === dragId));
+    if (owner && owner.components.some((c) => c.id === overId)) {
+      const ids = orderedComponents(owner).map((c) => c.id);
+      const next = reorder(ids, dragId, overId, position);
+      if (next !== ids) reorderComponents.mutate(next);
+    }
+    clearDrag();
+  };
+
+  const removeSection = (section: ContentSection) => {
+    setUndoable({ kind: "section", row: section });
+    deleteSection.mutate(section.id);
+    setSelection(null);
+  };
+
+  const removeComponent = (component: ContentComponent) => {
+    setUndoable({ kind: "component", row: component });
+    deleteComponent.mutate(component);
+    setSelection({ type: "section", pageId: page.id, sectionId: component.section_id });
+  };
+
+  const undo = () => {
+    if (!undoable) return;
+    if (undoable.kind === "section") restoreSection.mutate(undoable.row);
+    else restoreComponent.mutate(undoable.row);
+    setUndoable(null);
+  };
+
+  const addElement = (section: ContentSection) => {
+    const preset = COMPONENT_LIBRARY.find((entry) => entry.kind === addKind);
+    if (!preset) return;
+    addComponent.mutate({
+      sectionId: section.id,
+      kind: preset.kind,
+      sortOrder: section.components.length,
+      values: preset.defaults,
     });
   };
 
@@ -269,6 +413,21 @@ export function BuilderCanvas({
           ))}
         </select>
 
+        <Button
+          size="sm"
+          variant={showLayers ? "secondary" : "outline"}
+          onClick={() => setShowLayers((open) => !open)}
+          aria-pressed={showLayers}
+        >
+          <Layers className="mr-1.5 size-3.5" aria-hidden /> Layers
+        </Button>
+
+        {undoable ? (
+          <Button size="sm" variant="outline" onClick={undo}>
+            <Undo2 className="mr-1.5 size-3.5" aria-hidden /> Undo delete
+          </Button>
+        ) : null}
+
         <div className="ml-auto flex items-center gap-1">
           {DEVICES.map((option) => (
             <button
@@ -290,7 +449,70 @@ export function BuilderCanvas({
         </div>
       </header>
 
-      <div className="grid gap-0 lg:grid-cols-[1fr_300px]">
+      {trail.length ? (
+        <nav
+          aria-label="Selected element"
+          className="flex flex-wrap items-center gap-1 border-b border-border/70 px-3 py-1.5 text-[11px] text-muted-foreground"
+        >
+          {trail.map((crumb, index) => (
+            <span key={`${crumb}-${index}`} className="flex items-center gap-1">
+              {index > 0 ? <span aria-hidden>→</span> : null}
+              <span className={index === trail.length - 1 ? "text-foreground" : undefined}>
+                {crumb}
+              </span>
+            </span>
+          ))}
+        </nav>
+      ) : null}
+
+      <div
+        className={cn(
+          "grid gap-0",
+          showLayers ? "lg:grid-cols-[220px_1fr_300px]" : "lg:grid-cols-[1fr_300px]",
+        )}
+      >
+        {/* Layers */}
+        {showLayers ? (
+          <aside className="max-h-[70vh] overflow-auto border-b border-border bg-card/30 p-2 lg:border-r lg:border-b-0">
+            <p className="px-1 pb-1 text-[11px] tracking-wide text-muted-foreground uppercase">
+              Page structure
+            </p>
+            {layerNodes.length === 0 ? (
+              <p className="px-1 text-[12px] text-muted-foreground">No sections yet.</p>
+            ) : null}
+            <ul className="space-y-0.5">
+              {layerNodes.map((node) => {
+                const active =
+                  node.selection.type === "component"
+                    ? selection?.type === "component" && selection.componentId === node.id
+                    : selection?.type === "section" && selection.sectionId === node.id;
+                return (
+                  <li key={node.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelection(node.selection)}
+                      className={cn(
+                        "flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-[12px] transition-colors",
+                        node.depth === 1 && "pl-5 text-muted-foreground",
+                        active ? "bg-primary/10 text-primary" : "hover:bg-muted/60",
+                        !node.visible && "opacity-50",
+                      )}
+                    >
+                      <span className="truncate">{node.label}</span>
+                      {node.children ? (
+                        <span className="ml-auto text-[10px] text-muted-foreground">
+                          {node.children}
+                        </span>
+                      ) : null}
+                      {!node.visible ? <EyeOff className="size-3" aria-hidden /> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </aside>
+        ) : null}
+
         {/* Canvas */}
         <div
           className="max-h-[70vh] overflow-auto bg-background/40 p-4"
@@ -307,19 +529,36 @@ export function BuilderCanvas({
             ) : null}
 
             {sections.map((section, index) => {
-              const isSelected = selection?.sectionId === section.id;
+              const isSelected = selectedSectionId === section.id;
+              const sectionHint = hint?.id === section.id ? hint.position : null;
               return (
                 <div
                   key={section.id}
                   role="button"
                   tabIndex={0}
+                  draggable={canManage}
+                  onDragStart={(event) => {
+                    event.dataTransfer.effectAllowed = "move";
+                    setDragId(section.id);
+                  }}
+                  onDragOver={(event) => {
+                    if (!canManage || !dragId) return;
+                    event.preventDefault();
+                    setHint({ id: section.id, position: dropPosition(event) });
+                  }}
+                  onDrop={(event) => {
+                    if (!canManage) return;
+                    event.preventDefault();
+                    commitDrag(section.id, dropPosition(event));
+                  }}
+                  onDragEnd={clearDrag}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setSelection({ type: "section", sectionId: section.id });
+                    setSelection({ type: "section", pageId: page.id, sectionId: section.id });
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter")
-                      setSelection({ type: "section", sectionId: section.id });
+                      setSelection({ type: "section", pageId: page.id, sectionId: section.id });
                   }}
                   style={blockCss(readBlockStyle(section.settings))}
                   className={cn(
@@ -329,10 +568,16 @@ export function BuilderCanvas({
                       ? "border-primary ring-1 ring-primary/40"
                       : "border-border hover:border-primary/40",
                     !section.is_visible && "opacity-50",
+                    dragId === section.id && "opacity-40",
+                    sectionHint === "before" && "border-t-2 border-t-primary",
+                    sectionHint === "after" && "border-b-2 border-b-primary",
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] tracking-wide text-muted-foreground uppercase">
+                    <span className="flex items-center gap-1 text-[11px] tracking-wide text-muted-foreground uppercase">
+                      {canManage ? (
+                        <GripVertical className="size-3.5 cursor-grab" aria-hidden />
+                      ) : null}
                       {sectionLabel(section.kind)}
                     </span>
                     {!section.is_visible ? (
@@ -379,52 +624,133 @@ export function BuilderCanvas({
                               "sm:grid-cols-2",
                       )}
                     >
-                      {[...section.components]
-                        .sort((a, b) => a.sort_order - b.sort_order)
-                        .map((item) => (
-                          <ItemCard
-                            key={item.id}
-                            item={item}
-                            editable={canManage}
-                            selected={
-                              selection?.type === "component" && selection.componentId === item.id
-                            }
-                            onSelect={() =>
-                              setSelection({
-                                type: "component",
-                                sectionId: section.id,
-                                componentId: item.id,
-                              })
-                            }
-                            onCommit={(patch) => saveComponent.mutate({ id: item.id, patch })}
-                          />
-                        ))}
+                      {orderedComponents(section).map((item) => (
+                        <ItemCard
+                          key={item.id}
+                          item={item}
+                          editable={canManage}
+                          dragging={dragId === item.id}
+                          hint={hint?.id === item.id ? hint.position : null}
+                          selected={
+                            selection?.type === "component" && selection.componentId === item.id
+                          }
+                          onSelect={() =>
+                            setSelection({
+                              type: "component",
+                              pageId: page.id,
+                              sectionId: section.id,
+                              componentId: item.id,
+                            })
+                          }
+                          onCommit={(patch) => saveComponent.mutate({ id: item.id, patch })}
+                          onDragStart={() => setDragId(item.id)}
+                          onDragOver={(position) => setHint({ id: item.id, position })}
+                          onDrop={() => commitDrag(item.id, hint?.position ?? "after")}
+                          onDragEnd={clearDrag}
+                          actions={
+                            canManage ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title={`Duplicate ${elementLabel(item)}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    duplicateComponent.mutate(item);
+                                  }}
+                                >
+                                  <Copy className="size-3.5" aria-hidden />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title={item.is_visible ? "Hide element" : "Show element"}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    saveComponent.mutate({
+                                      id: item.id,
+                                      patch: { is_visible: !item.is_visible },
+                                    });
+                                  }}
+                                >
+                                  {item.is_visible ? (
+                                    <EyeOff className="size-3.5" aria-hidden />
+                                  ) : (
+                                    <Eye className="size-3.5" aria-hidden />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  title="Delete element"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    removeComponent(item);
+                                  }}
+                                >
+                                  <Trash2 className="size-3.5" aria-hidden />
+                                </Button>
+                              </>
+                            ) : null
+                          }
+                        />
+                      ))}
                     </div>
                   ) : null}
 
                   {isSelected && canManage ? (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
+                    <div
+                      className="mt-3 flex flex-wrap items-center gap-1.5"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <Button
                         size="sm"
                         variant="outline"
+                        title="Move section up"
                         disabled={index === 0}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          move(index, -1);
-                        }}
+                        onClick={() => move(index, -1)}
                       >
                         <ArrowUp className="size-3.5" aria-hidden />
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
+                        title="Move section down"
                         disabled={index === sections.length - 1}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          move(index, 1);
-                        }}
+                        onClick={() => move(index, 1)}
                       >
                         <ArrowDown className="size-3.5" aria-hidden />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        title="Duplicate section"
+                        onClick={() => duplicateSection.mutate(section)}
+                      >
+                        <Copy className="size-3.5" aria-hidden />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Delete section"
+                        onClick={() => removeSection(section)}
+                      >
+                        <Trash2 className="size-3.5" aria-hidden />
+                      </Button>
+                      <select
+                        aria-label="Element to add"
+                        value={addKind}
+                        onChange={(event) => setAddKind(event.target.value)}
+                        className="h-8 rounded-md border border-border bg-background px-2 text-[12px]"
+                      >
+                        {COMPONENT_LIBRARY.map((entry) => (
+                          <option key={entry.kind} value={entry.kind}>
+                            {entry.label}
+                          </option>
+                        ))}
+                      </select>
+                      <Button size="sm" variant="secondary" onClick={() => addElement(section)}>
+                        <Plus className="mr-1.5 size-3.5" aria-hidden /> Add
                       </Button>
                     </div>
                   ) : null}
@@ -440,14 +766,14 @@ export function BuilderCanvas({
             <>
               <p className="text-[13px] font-medium">Nothing selected</p>
               <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                Click any section or card on the canvas. Text edits happen right in place; the rest
-                of its settings appear here.
+                Click any section or card on the canvas, or pick one from the layers list. Text edits
+                happen right in place; the rest of its settings appear here.
               </p>
             </>
           ) : selectedComponent ? (
             <div className="space-y-3">
               <div>
-                <p className="text-[13px] font-medium">Item settings</p>
+                <p className="text-[13px] font-medium">{elementLabel(selectedComponent)}</p>
                 <p className="mt-0.5 text-[12px] text-muted-foreground">
                   In {sectionLabel(selectedSection.kind)}
                 </p>
@@ -524,27 +850,45 @@ export function BuilderCanvas({
                   })
                 }
               />
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!canManage}
-                onClick={() =>
-                  saveComponent.mutate({
-                    id: selectedComponent.id,
-                    patch: { is_visible: !selectedComponent.is_visible },
-                  })
-                }
-              >
-                {selectedComponent.is_visible ? (
-                  <>
-                    <EyeOff className="mr-1.5 size-3.5" aria-hidden /> Hide item
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-1.5 size-3.5" aria-hidden /> Show item
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!canManage}
+                  onClick={() =>
+                    saveComponent.mutate({
+                      id: selectedComponent.id,
+                      patch: { is_visible: !selectedComponent.is_visible },
+                    })
+                  }
+                >
+                  {selectedComponent.is_visible ? (
+                    <>
+                      <EyeOff className="mr-1.5 size-3.5" aria-hidden /> Hide item
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="mr-1.5 size-3.5" aria-hidden /> Show item
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!canManage}
+                  onClick={() => duplicateComponent.mutate(selectedComponent)}
+                >
+                  <Copy className="mr-1.5 size-3.5" aria-hidden /> Duplicate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={!canManage}
+                  onClick={() => removeComponent(selectedComponent)}
+                >
+                  <Trash2 className="mr-1.5 size-3.5" aria-hidden /> Delete
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -620,17 +964,26 @@ export function BuilderCanvas({
                 </Button>
                 <Button
                   size="sm"
+                  variant="outline"
+                  disabled={!canManage}
+                  onClick={() => duplicateSection.mutate(selectedSection)}
+                >
+                  <Copy className="mr-1.5 size-3.5" aria-hidden /> Duplicate
+                </Button>
+                <Button
+                  size="sm"
                   variant="ghost"
                   disabled={!canManage}
-                  onClick={() => {
-                    if (!window.confirm("Remove this section from the page?")) return;
-                    deleteSection.mutate(selectedSection.id);
-                    setSelection(null);
-                  }}
+                  onClick={() => removeSection(selectedSection)}
                 >
                   <Trash2 className="mr-1.5 size-3.5" aria-hidden /> Remove
                 </Button>
               </div>
+              {undoable ? (
+                <Button size="sm" variant="outline" onClick={undo}>
+                  <Undo2 className="mr-1.5 size-3.5" aria-hidden /> Undo last delete
+                </Button>
+              ) : null}
             </div>
           )}
         </aside>
