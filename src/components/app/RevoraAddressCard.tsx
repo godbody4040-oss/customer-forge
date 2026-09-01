@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Check, Copy, ExternalLink, Gift, Loader2, ShieldCheck } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ export function RevoraAddressCard({
       setEditing(false);
       void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   return (

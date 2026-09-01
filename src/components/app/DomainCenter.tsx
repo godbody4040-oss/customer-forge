@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import {
   CheckCircle2,
   Circle,
@@ -122,7 +123,7 @@ export function DomainCenter({
       });
       void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const recheck = useMutation({
@@ -140,7 +141,7 @@ export function DomainCenter({
       });
       void queryClient.invalidateQueries({ queryKey: ["website_settings", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const availability = useMutation({

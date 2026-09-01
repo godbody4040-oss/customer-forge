@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Globe, RefreshCw } from "lucide-react";
 import { EmptyState, LoadingRows, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ function AdminDomains() {
       });
       await queryClient.invalidateQueries({ queryKey: ["admin"] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const rows = (clients.data ?? []).filter((client) => client.custom_domain);

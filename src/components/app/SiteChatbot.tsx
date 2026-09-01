@@ -3,6 +3,7 @@ import { onAssistantPrompt } from "@/lib/assistant-bridge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import {
   AlertTriangle,
   Bot,
@@ -202,7 +203,7 @@ export function SiteChatbot({
       void queryClient.invalidateQueries({ queryKey: ["website-versions", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["business-profile", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't apply those changes."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't apply those changes.")),
   });
 
   const submit = (event: React.FormEvent) => {

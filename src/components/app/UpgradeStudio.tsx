@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Check, History, Loader2, RefreshCw, Sparkles, Wand2 } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -101,7 +102,7 @@ export function UpgradeStudio({
       void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't install those upgrades."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't install those upgrades.")),
   });
 
   return (

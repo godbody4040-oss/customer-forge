@@ -9,6 +9,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { BellRing, CheckCircle2, Loader2, Mail, Send, XCircle } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -84,7 +85,7 @@ export function LeadNotifications({
       toast.success("Notification inbox saved");
       void queryClient.invalidateQueries({ queryKey: ["notify_profile", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   const test = useMutation({
@@ -94,7 +95,7 @@ export function LeadNotifications({
       void queryClient.invalidateQueries({ queryKey: ["lead_alert_log", organizationId] });
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      toast.error(friendlyError(error));
       void queryClient.invalidateQueries({ queryKey: ["lead_alert_log", organizationId] });
     },
   });

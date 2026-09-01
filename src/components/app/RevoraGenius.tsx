@@ -22,6 +22,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import {
   ArrowRight,
   Gem,
@@ -172,7 +173,7 @@ export function RevoraGenius({
       void queryClient.invalidateQueries({ queryKey: ["business_profile", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't apply that yet."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't apply that yet.")),
   });
 
   const busy = apply.isPending;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Copy, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,7 +96,7 @@ export function NewClientDialog({
       toast.success("Client workspace created.");
       onCreated();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't create that client."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't create that client.")),
   });
 
   const close = () => {

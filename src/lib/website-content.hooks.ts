@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
 import {
   buildContentBlueprint,
@@ -197,7 +198,7 @@ export function useBuildWebsiteStructure(organizationId: string | undefined) {
       void invalidate();
     },
     onError: (error: Error) =>
-      toast.error(error.message || "Couldn't build your website structure."),
+      toast.error(friendlyError(error, "Couldn't build your website structure.")),
   });
 }
 
@@ -248,7 +249,7 @@ export function useSaveSection(organizationId: string | undefined) {
       if (error) throw error;
     },
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that section."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that section.")),
   });
 }
 
@@ -272,7 +273,7 @@ export function useSavePage(organizationId: string | undefined) {
       if (error) throw error;
     },
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that page."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that page.")),
   });
 }
 
@@ -301,7 +302,7 @@ export function useMoveSection(organizationId: string | undefined) {
       if (second.error) throw second.error;
     },
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't reorder the sections."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't reorder the sections.")),
   });
 }
 
@@ -329,7 +330,7 @@ export function useAddSection(organizationId: string | undefined) {
       toast.success("Section added.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't add that section."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't add that section.")),
   });
 }
 
@@ -348,7 +349,7 @@ export function useDeleteSection(organizationId: string | undefined) {
       toast.success("Section removed.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't remove that section."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that section.")),
   });
 }
 
@@ -386,7 +387,7 @@ export function useApplySectionEdits(organizationId: string | undefined) {
       toast.success(`${count} change${count === 1 ? "" : "s"} applied to your website.`);
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't apply those changes."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't apply those changes.")),
   });
 }
 
@@ -405,7 +406,7 @@ export function useAutosaveProfile(organizationId: string | undefined) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["business_profile", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save your latest edit."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save your latest edit.")),
   });
 }
 
@@ -423,7 +424,7 @@ export function useAutosaveOrganization(organizationId: string | undefined) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["workspace"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save your latest edit."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save your latest edit.")),
   });
 }
 
@@ -494,7 +495,7 @@ export function useSaveComponent(organizationId: string | undefined) {
     },
 
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that item."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that item.")),
   });
 }
 
@@ -558,7 +559,7 @@ export function useCreatePreviewLink(organizationId: string | undefined) {
       toast.success("Preview link created.");
       void queryClient.invalidateQueries({ queryKey: [PREVIEW_KEY, organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't create a preview link."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't create a preview link.")),
   });
 }
 
@@ -577,7 +578,7 @@ export function useRevokePreviewLink(organizationId: string | undefined) {
       toast.success("Preview link switched off.");
       void queryClient.invalidateQueries({ queryKey: [PREVIEW_KEY, organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't revoke that link."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't revoke that link.")),
   });
 }
 
@@ -602,7 +603,7 @@ export function useReorderPages(organizationId: string | undefined) {
       return orderedIds.length;
     },
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't reorder your pages."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't reorder your pages.")),
   });
 }
 
@@ -635,7 +636,7 @@ export function useAddPage(organizationId: string | undefined) {
       toast.success("Page added.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't add that page."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't add that page.")),
   });
 }
 
@@ -711,7 +712,7 @@ export function useDuplicatePage(organizationId: string | undefined) {
       toast.success("Page duplicated — it stays hidden until you show it.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't duplicate that page."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't duplicate that page.")),
   });
 }
 
@@ -746,7 +747,7 @@ export function useSetHomePage(organizationId: string | undefined) {
       toast.success("Home page updated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't set that home page."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't set that home page.")),
   });
 }
 
@@ -766,7 +767,7 @@ export function useDeletePage(organizationId: string | undefined) {
       toast.success("Page deleted.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't delete that page."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't delete that page.")),
   });
 }
 
@@ -832,7 +833,7 @@ export function useAddComponent(organizationId: string | undefined) {
       return (inserted.data as { id: string }).id;
     },
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't add that element."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't add that element.")),
   });
 }
 
@@ -853,7 +854,7 @@ export function useDuplicateComponent(organizationId: string | undefined) {
       toast.success("Element duplicated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't duplicate that element."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't duplicate that element.")),
   });
 }
 
@@ -874,7 +875,7 @@ export function useDeleteComponent(organizationId: string | undefined) {
       return component;
     },
     onSuccess: () => void invalidate(),
-    onError: (error: Error) => toast.error(error.message || "Couldn't remove that element."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that element.")),
   });
 }
 
@@ -893,7 +894,7 @@ export function useRestoreComponent(organizationId: string | undefined) {
       toast.success("Element restored.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't restore that element."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't restore that element.")),
   });
 }
 
@@ -944,7 +945,7 @@ export function useDuplicateSection(organizationId: string | undefined) {
       toast.success("Section duplicated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't duplicate that section."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't duplicate that section.")),
   });
 }
 
@@ -977,6 +978,6 @@ export function useRestoreSection(organizationId: string | undefined) {
       toast.success("Section restored.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't restore that section."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't restore that section.")),
   });
 }

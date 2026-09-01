@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { CheckCircle2, Circle, ExternalLink, RefreshCw } from "lucide-react";
 import { LoadingRows, MetricCard, Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
@@ -74,7 +75,7 @@ function Launch() {
       });
       await queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
   if (loadingProfile || !orgId) return <LoadingRows rows={5} />;
@@ -114,7 +115,7 @@ function Launch() {
       },
       {
         onSuccess: () => toast.success(`Website ${PUBLISH_STATES[state]?.label.toLowerCase()}.`),
-        onError: (error: Error) => toast.error(error.message),
+        onError: (error: Error) => toast.error(friendlyError(error)),
       },
     );
   };

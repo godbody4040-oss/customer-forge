@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { nextPublishState } from "@/lib/publish-state";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppointmentStatus, LeadStatus } from "@/lib/domain";
 import { generateWebsitePlan, type GoalKey } from "@/lib/website-plan";
@@ -241,7 +242,7 @@ export function useUpdateLead(organizationId: string | undefined) {
     onSuccess: () => {
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update that lead."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update that lead.")),
   });
 }
 
@@ -266,7 +267,7 @@ export function useCreateLead(organizationId: string | undefined) {
       toast.success("Lead added.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't add that lead."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't add that lead.")),
   });
 }
 
@@ -281,7 +282,7 @@ export function useUpdateAppointment(organizationId: string | undefined) {
       toast.success("Appointment updated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update that appointment."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update that appointment.")),
   });
 }
 
@@ -319,7 +320,7 @@ export function useSaveService(organizationId: string | undefined) {
       toast.success("Service saved.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that service."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that service.")),
   });
 }
 
@@ -334,7 +335,7 @@ export function useDeleteService(organizationId: string | undefined) {
       toast.success("Service removed.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't remove that service."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that service.")),
   });
 }
 
@@ -353,7 +354,7 @@ export function useSaveBusinessProfile(organizationId: string | undefined) {
       toast.success("Business details saved.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save your details."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save your details.")),
   });
 }
 
@@ -372,7 +373,7 @@ export function useSaveWebsiteSettings(organizationId: string | undefined) {
       toast.success("Website updated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update your website."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update your website.")),
   });
 }
 
@@ -389,7 +390,7 @@ export function useUpdateOrganization() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["workspace"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that change."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that change.")),
   });
 }
 
@@ -503,7 +504,7 @@ export function useLeadAction(organizationId: string | undefined, businessName?:
       void queryClient.invalidateQueries({ queryKey: ["automation_runs", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["notifications", organizationId] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that.")),
   });
 }
 
@@ -554,7 +555,7 @@ export function useConvertLeadToCustomer(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["customers", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["lead_activities"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't convert that lead."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't convert that lead.")),
   });
 }
 
@@ -656,7 +657,7 @@ export function useCreateAppointment(
       }
       void queryClient.invalidateQueries({ queryKey: ["lead_activities"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't create that booking."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't create that booking.")),
   });
 }
 
@@ -743,7 +744,7 @@ export function useSaveAppointment(
       }
       void queryClient.invalidateQueries({ queryKey: ["lead_activities"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update that booking."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update that booking.")),
   });
 }
 
@@ -821,7 +822,7 @@ export function useSaveAutomation(organizationId: string | undefined) {
     onSuccess: () => {
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that automation."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that automation.")),
   });
 }
 
@@ -836,7 +837,7 @@ export function useDeleteAutomation(organizationId: string | undefined) {
       toast.success("Automation removed.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't remove that automation."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that automation.")),
   });
 }
 
@@ -871,7 +872,7 @@ export function useSaveAutomationStep(organizationId: string | undefined) {
       toast.success("Step saved.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't save that step."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that step.")),
   });
 }
 
@@ -885,7 +886,7 @@ export function useDeleteAutomationStep(organizationId: string | undefined) {
     onSuccess: () => {
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't remove that step."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that step.")),
   });
 }
 
@@ -922,7 +923,7 @@ export function useInstallRecipe(organizationId: string | undefined) {
       toast.success("Automation added and switched on.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't add that automation."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't add that automation.")),
   });
 }
 
@@ -1002,7 +1003,7 @@ export function useQuoteBuilderMutations(organizationId: string | undefined) {
         if (success) toast.success(success);
         void invalidate();
       },
-      onError: (error: Error) => toast.error(error.message || "Couldn't save that."),
+      onError: (error: Error) => toast.error(friendlyError(error, "Couldn't save that.")),
     });
 
   const saveForm = useWrapped(
@@ -1178,7 +1179,7 @@ export function useCreateWebsiteRequest(organizationId: string | undefined) {
       toast.success("Request sent to the Revora team.");
       void queryClient.invalidateQueries({ queryKey: ["website_requests"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't send that request."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't send that request.")),
   });
 }
 
@@ -1196,7 +1197,7 @@ export function useUpdateWebsiteRequest() {
       toast.success("Request updated.");
       void queryClient.invalidateQueries({ queryKey: ["website_requests"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update that request."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update that request.")),
   });
 }
 
@@ -1275,7 +1276,7 @@ export function useGenerateWebsite(organizationId: string | undefined) {
       toast.success("Website generated. Review it before launch.");
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't generate the website."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't generate the website.")),
   });
 }
 
@@ -1301,6 +1302,6 @@ export function useSetWebsiteReviewState(organizationId: string | undefined) {
       toast.success(message || "Website status updated.");
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Couldn't update the website status."),
+    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update the website status.")),
   });
 }

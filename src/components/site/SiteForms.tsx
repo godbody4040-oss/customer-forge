@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { friendlyError } from "@/lib/user-error";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -238,7 +239,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
               },
             })
               .then(() => setDone(true))
-              .catch((error: Error) => toast.error(error.message))
+              .catch((error: Error) => toast.error(friendlyError(error)))
               .finally(() => setPending(false));
           }}
         >
@@ -348,7 +349,7 @@ export function BookingForm({ site }: { site: Site }) {
           },
         })
           .then(() => setDone(true))
-          .catch((error: Error) => toast.error(error.message))
+          .catch((error: Error) => toast.error(friendlyError(error)))
           .finally(() => setPending(false));
       }}
     >
