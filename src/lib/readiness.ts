@@ -120,12 +120,19 @@ export function readiness(input: ReadinessInput) {
       to: "/app/website",
     },
     {
+      // A workspace always gets a free Revora web address, so this item tracks
+      // "the site has a working address" — it must not sit permanently
+      // incomplete just because the owner hasn't bought a domain of their own.
       key: "domain",
-      label: "Domain",
-      done: s?.domain_status === "connected" || s?.domain_status === "ssl_active",
-      fix: "Connect your own domain, or launch on your free web address first.",
+      label: "Web address",
+      done:
+        hasText(s?.subdomain) ||
+        s?.domain_status === "connected" ||
+        s?.domain_status === "ssl_active",
+      fix: "Pick your free Revora web address, or connect a domain you own.",
       to: "/app/launch",
     },
+
     {
       key: "analytics",
       label: "Analytics",
