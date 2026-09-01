@@ -27,9 +27,7 @@ import { canManage } from "@/lib/domain";
 
 export const Route = createFileRoute("/_authenticated/app/launch")({
   head: () => ({
-    meta: [{ title: "Launch — Revora" }, { name: "robots", content: "noindex, nofollow" }],
-  }),
-  head: () => ({
+
     meta: [
       { title: "Launch checklist — get your site live" },
       {
