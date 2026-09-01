@@ -550,7 +550,7 @@ const ACTIVITY: Omit<DemoActivity, "id">[] = [
     minutesAgo: 180,
     kind: "payment",
     title: "Deposit recorded",
-    detail: "Ceramic coating · $250 deposit",
+    detail: "Ceramic coating · sample customer deposit (demo data)",
   },
   {
     minutesAgo: 265,

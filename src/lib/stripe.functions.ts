@@ -173,8 +173,8 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         organizationId: data.organizationId,
         planId: GROWTH_PLAN_ID,
         userId: context.userId,
-        setupAmount: "750",
-        monthlyAmount: "100",
+        setupAmount: String(GROWTH_SYSTEM.setupPrice),
+        monthlyAmount: String(GROWTH_SYSTEM.monthlyPrice),
       };
       const base = {
         // One-time setup line is billed on the FIRST invoice only; the
