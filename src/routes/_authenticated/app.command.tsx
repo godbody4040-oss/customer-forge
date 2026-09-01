@@ -175,6 +175,8 @@ function CommandCenterPage() {
   const liveAudit = useLiveAudit(orgId);
   const applyUpgrade = useApplyUpgrade(orgId, seo as unknown as Record<string, unknown>);
   const undoUpgrade = useUndoUpgrade(orgId);
+  const batchFix = useBatchFix(orgId, seo as unknown as Record<string, unknown>);
+
   const [live, setLive] = useState<LivePageResult[] | null>(null);
   const [liveNote, setLiveNote] = useState<string | null>(null);
   const [applyingId, setApplyingId] = useState<string | null>(null);
