@@ -15,6 +15,7 @@ import { readSeo } from "@/lib/site-seo";
 import { trackConversion } from "@/lib/conversion";
 
 import { WebsiteReview } from "@/components/app/WebsiteReview";
+import { InteractionHealth } from "@/components/app/InteractionHealth";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { BuilderShell, type BuilderSection } from "@/components/app/BuilderShell";
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
