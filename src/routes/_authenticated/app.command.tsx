@@ -76,8 +76,6 @@ function CommandCenterPage() {
 
   const isLoadingWorkspace = profileQuery.isLoading || settingsQuery.isLoading;
 
-
-
   const visibleSections = (pages ?? []).reduce(
     (sum, page) => sum + page.sections.filter((section) => section.is_visible).length,
     0,
@@ -201,10 +199,6 @@ function CommandCenterPage() {
   // so hook order stays identical before and after the workspace queries settle.
   if (isLoadingWorkspace) return <LoadingRows rows={5} />;
 
-
-
-
-
   const scanLive = async () => {
     const result = await liveAudit.mutateAsync();
     setLive(result.pages ?? []);
@@ -246,8 +240,6 @@ function CommandCenterPage() {
   };
 
   /* ------------------------------ One-input intake ---------------------------- */
-
-
 
   const intakeValues: IntakeValues = {
     name: org?.name ?? "",
