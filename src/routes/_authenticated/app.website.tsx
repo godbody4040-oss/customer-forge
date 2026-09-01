@@ -18,7 +18,9 @@ import { WebsiteReview } from "@/components/app/WebsiteReview";
 import { InteractionHealth } from "@/components/app/InteractionHealth";
 import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { BuilderShell, type BuilderSection } from "@/components/app/BuilderShell";
+import { Disclosure, OverlayPanel } from "@/components/app/BuilderTools";
 import { BuilderHistoryProvider } from "@/lib/builder-history.hooks";
+
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
 import { WebsiteProject } from "@/components/app/WebsiteProject";
