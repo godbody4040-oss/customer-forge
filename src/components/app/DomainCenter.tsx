@@ -157,8 +157,10 @@ export function DomainCenter({
               {revoraHost(settings?.subdomain) ?? revoraSubdomain(slug ?? "")}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Included with your website. It keeps working even after your own domain goes live.
+              Included with your website — you never have to buy a domain to go live. Once your own
+              domain is verified, this address permanently redirects to it, so old links still work.
             </p>
+
           </div>
           <div className="rounded-md border border-border/60 p-3">
             <p className="text-[12px] font-medium">Your own domain (optional)</p>
