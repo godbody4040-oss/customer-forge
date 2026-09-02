@@ -232,60 +232,24 @@ export function DomainCenter({
       </Panel>
 
 
-      {/* Buy a new domain */}
+      {/* Buy a domain at a registrar */}
       <Panel className="space-y-4 p-5">
-        <SectionHeading eyebrow="Buy a domain" title="Find a name that's still available" />
+        <SectionHeading eyebrow="Buy a domain" title="Register your own domain name" />
         <p className="text-[13px] text-muted-foreground">
-          We check the official registry directory for each name. When one is free, register it at
-          any registrar below, then come back and connect it — it takes a couple of minutes.
+          You buy your domain directly from a registrar — that keeps you the owner of it. Type the
+          name you want, open any registrar below to check the price and register it, then come back
+          and connect it in the next step.
         </p>
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-56 flex-1">
-            <Label className="mb-1.5 block text-[12px]">Business name or domain idea</Label>
-            <Input
-              value={idea}
-              onChange={(event) => setIdea(event.target.value)}
-              placeholder={businessName ?? "e.g. elite mobile detailing"}
-            />
-          </div>
-          <Button
-            variant="signal"
-            disabled={availability.isPending}
-            onClick={() => availability.mutate(ideaTargets())}
-          >
-            {availability.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Search className="size-4" />
-            )}
-            Check availability
-          </Button>
+        <div className="min-w-56">
+          <Label className="mb-1.5 block text-[12px]">Domain name you want</Label>
+          <Input
+            value={idea}
+            onChange={(event) => setIdea(event.target.value)}
+            placeholder={businessName ? `${businessName} .com` : "e.g. elitemobiledetailing.com"}
+          />
         </div>
 
-        {lookupIssue ? (
-          <div className="space-y-2 rounded-md border border-border/60 bg-elevated/40 p-4">
-            <p className="text-[13px] font-medium">Availability couldn't be verified right now.</p>
-            <p className="text-[12px] text-muted-foreground">{lookupIssue}</p>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="signal"
-                disabled={availability.isPending}
-                onClick={() => availability.mutate(ideaTargets())}
-              >
-                {availability.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="size-4" />
-                )}
-                Try again
-              </Button>
-              <Button size="sm" variant="outline" asChild>
-                <a href="#connect-own-domain">Connect a domain you already own</a>
-              </Button>
-            </div>
-          </div>
-        ) : !results.length ? (
+        {suggestions.length ? (
           <div className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <button
@@ -298,90 +262,20 @@ export function DomainCenter({
               </button>
             ))}
           </div>
-        ) : (
-          <div className="space-y-2">
-            {results
-              // A name we genuinely couldn't check is never listed as a result —
-              // showing a column of "couldn't confirm" rows tells the owner nothing.
-              .filter((result) => result.state !== "unknown")
-              .map((result) => (
-                <div
-                  key={result.domain}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/60 p-3"
-                >
-                  <div className="flex items-center gap-2">
-                    <Globe className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    <span className="font-mono text-[12px]">{result.domain}</span>
-                    <Pill
-                      tone={
-                        result.state === "available"
-                          ? "signal"
-                          : result.state === "taken"
-                            ? "neutral"
-                            : "attention"
-                      }
-                    >
-                      {result.state === "available"
-                        ? "Looks available"
-                        : result.state === "taken"
-                          ? "Already registered"
-                          : "Not a valid name"}
-                    </Pill>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {result.state === "available" ? (
-                      <>
-                        {REGISTRARS.slice(0, 3).map((r) => (
-                          <Button key={r.id} size="sm" variant="outline" asChild>
-                            <a
-                              href={r.search(result.domain)}
-                              target="_blank"
-                              rel="noreferrer noopener"
-                            >
-                              {r.name.split(" ")[0]} <ExternalLink className="size-3.5" />
-                            </a>
-                          </Button>
-                        ))}
-                        <Button
-                          size="sm"
-                          variant="signal"
-                          disabled={!canManage || save.isPending}
-                          onClick={() => {
-                            setInput(result.domain);
-                            save.mutate(result.domain);
-                          }}
-                        >
-                          Use this
-                        </Button>
-                      </>
-                    ) : result.state === "taken" ? (
-                      <span className="text-[11px] text-muted-foreground">
-                        Try a different word or ending
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            <p className="text-[11px] text-muted-foreground">
-              Availability is a strong hint from the registry directory — the registrar's checkout
-              is the final word on price and availability.
-            </p>
-          </div>
-        )}
-
+        ) : null}
 
         <div className="grid gap-2 sm:grid-cols-2">
           {REGISTRARS.map((r) => (
             <div key={r.id} className="rounded-md border border-border/60 p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[12px] font-medium">{r.name}</p>
-                <Button size="sm" variant="ghost" asChild>
+                <Button size="sm" variant="outline" asChild>
                   <a
                     href={r.search(normalizeInput(idea) || suggestions[0] || "")}
                     target="_blank"
                     rel="noreferrer noopener"
                   >
-                    Open <ExternalLink className="size-3.5" />
+                    Buy here <ExternalLink className="size-3.5" />
                   </a>
                 </Button>
               </div>
@@ -389,7 +283,16 @@ export function DomainCenter({
             </div>
           ))}
         </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          The registrar's checkout shows the real price and whether the name is still available.
+          Once you own it, connect it below — nothing else to buy, HTTPS is included.
+        </p>
+        <Button variant="ghost" size="sm" asChild className="w-fit">
+          <a href="#connect-own-domain">I already own a domain — connect it</a>
+        </Button>
       </Panel>
+
 
       {/* Connect a domain you own */}
       <Panel id="connect-own-domain" className="scroll-mt-24 space-y-4 p-5">
