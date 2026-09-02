@@ -18,7 +18,7 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { checkDomainAvailability, recheckDomain, saveOwnDomain } from "@/lib/domain.functions";
+import { recheckDomain, saveOwnDomain } from "@/lib/domain.functions";
 import {
   DNS_HELP,
   DOMAIN_FAQ,
@@ -34,13 +34,6 @@ import { DOMAIN_STATES } from "@/lib/readiness";
 import { RevoraAddressCard } from "@/components/app/RevoraAddressCard";
 import { clientSitePath } from "@/lib/revora-address";
 import { dateLong } from "@/lib/format";
-
-type Availability = {
-  domain: string;
-  state: "available" | "taken" | "unknown" | "invalid";
-  reason?: string | null;
-};
-
 
 function copy(value: string, label: string) {
   void navigator.clipboard?.writeText(value).then(
@@ -85,14 +78,11 @@ export function DomainCenter({
 }) {
   const queryClient = useQueryClient();
   const saveFn = useServerFn(saveOwnDomain);
-  const availabilityFn = useServerFn(checkDomainAvailability);
   const recheckFn = useServerFn(recheckDomain);
 
   const connected = settings?.custom_domain ?? "";
   const [input, setInput] = useState(connected);
   const [idea, setIdea] = useState("");
-  const [results, setResults] = useState<Availability[]>([]);
-  const [lookupIssue, setLookupIssue] = useState<string | null>(null);
 
   const [registrar, setRegistrar] = useState("godaddy");
   const [lastCheck, setLastCheck] = useState<{
@@ -147,15 +137,6 @@ export function DomainCenter({
     onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
-  const availability = useMutation({
-    mutationFn: (domains: string[]) => availabilityFn({ data: { domains } }),
-    onSuccess: (data) => {
-      setResults(data.results as Availability[]);
-      setLookupIssue(data.unavailable ? (data.reason ?? "The domain registry didn't answer.") : null);
-    },
-    onError: () =>
-      setLookupIssue("We couldn't check availability right now. Please try again in a moment."),
-  });
 
 
   const stepDone: Record<string, boolean> = {
@@ -167,12 +148,6 @@ export function DomainCenter({
   };
 
   const rows = dnsRows(connected);
-  const ideaTargets = () => {
-    const typed = normalizeInput(idea);
-    if (!typed) return suggestions;
-    if (looksLikeDomain(typed)) return [typed];
-    return domainSuggestions({ businessName: typed, city, industry }).slice(0, 8);
-  };
 
   return (
     <div className="space-y-6">
