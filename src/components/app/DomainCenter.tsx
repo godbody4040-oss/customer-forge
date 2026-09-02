@@ -11,7 +11,6 @@ import {
   Globe,
   Loader2,
   RefreshCw,
-  Search,
   ShieldCheck,
 } from "lucide-react";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
