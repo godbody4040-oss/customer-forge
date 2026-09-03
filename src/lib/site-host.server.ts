@@ -176,6 +176,7 @@ export async function resolveHostSite(
 export function sitemapUrls(site: HostSite | null, origin: string) {
   if (!site) {
     const industryPaths = INDUSTRIES.map((i) => `/industries/${industrySlug(i.name)}`);
+    const locationPaths = NC_LOCATIONS.map((l) => `/locations/${l.slug}`);
     return [
       "",
       "/pricing",
@@ -185,6 +186,8 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/website-audit",
       "/industries",
       ...industryPaths,
+      "/locations",
+      ...locationPaths,
       "/crm-for-contractors",
       "/about",
       "/contact",
