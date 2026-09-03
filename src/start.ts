@@ -50,6 +50,14 @@ const trafficDomainRedirect = createMiddleware().server(async ({ next, request }
   const url = new URL(request.url);
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
   if (!isTrafficDomainHost(host)) return next();
+  // Only the apex and `www` redirect. Any other label under the traffic domain
+  // is refused outright so it can never resemble tenant hosting.
+  if (!isTrafficRedirectHost(host)) {
+    return new Response("Not found", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+    }) as never;
+  }
   return new Response(null, {
     status: request.method === "GET" || request.method === "HEAD" ? 301 : 308,
     headers: {
