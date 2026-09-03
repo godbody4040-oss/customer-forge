@@ -168,6 +168,16 @@ const FOOTER_GROUPS = [
     ],
   },
   {
+    heading: "Free resources",
+    links: [
+      { to: "/tools", label: "Free calculators" },
+      { to: "/guides", label: "Growth guides" },
+      { to: "/compare", label: "Compare options" },
+      { to: "/local", label: "By trade & state" },
+    ],
+  },
+
+  {
     heading: "Company",
     links: [
       { to: "/about", label: "About" },

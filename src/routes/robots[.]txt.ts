@@ -29,6 +29,7 @@ export const Route = createFileRoute("/robots.txt")({
 
           "",
           `Sitemap: ${site ? site.origin : origin}/sitemap.xml`,
+          ...(site ? [] : [`# AI crawler summary: ${origin}/llms.txt`]),
           "",
         ];
 

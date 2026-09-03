@@ -10,6 +10,10 @@ import { publicClient, publicOrganization } from "@/lib/public-site.server";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { US_STATES } from "@/lib/us-states";
 import { NC_LOCATIONS } from "@/lib/business-identity";
+import { localPaths } from "@/lib/local-pages";
+import { comparePaths } from "@/lib/compare";
+import { guidePaths } from "@/lib/guides";
+
 import {
   REVORA_OWN_HOSTS,
   isRevoraOwnHost,
@@ -182,12 +186,18 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/share",
       "/growth-assessment",
       "/website-audit",
+      "/tools",
       "/industries",
       ...industryPaths,
       "/locations",
       ...locationPaths,
       "/states",
       ...statePaths,
+      ...localPaths(),
+      "/compare",
+      ...comparePaths(),
+      "/guides",
+      ...guidePaths(),
       "/crm-for-contractors",
       "/about",
       "/contact",

@@ -20,6 +20,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -29,16 +30,22 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as WebsiteAuditRouteImport } from './routes/website-audit'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as CompareIndexRouteImport } from './routes/compare.index'
+import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as LocalIndexRouteImport } from './routes/local.index'
 import { Route as LocationsIndexRouteImport } from './routes/locations.index'
 import { Route as LocationsCityRouteImport } from './routes/locations.$city'
 import { Route as PTokenRouteImport } from './routes/p.$token'
@@ -74,6 +81,8 @@ import { Route as AuthenticatedMyIndexRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMyActivityRouteImport } from './routes/_authenticated/my.activity'
 import { Route as AuthenticatedMySiteRouteImport } from './routes/_authenticated/my.site'
 import { Route as AuthenticatedMyStartRouteImport } from './routes/_authenticated/my.start'
+import { Route as LocalIndustryIndexRouteImport } from './routes/local.$industry.index'
+import { Route as LocalIndustryStateRouteImport } from './routes/local.$industry.$state'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
@@ -137,6 +146,11 @@ const IndustriesRoute = IndustriesRouteImport.update({
   path: '/industries',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
   id: '/manifest.webmanifest',
   path: '/manifest.webmanifest',
@@ -182,6 +196,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WebsiteAuditRoute = WebsiteAuditRouteImport.update({
   id: '/website-audit',
   path: '/website-audit',
@@ -207,6 +226,16 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CompareIndexRoute = CompareIndexRouteImport.update({
+  id: '/compare/',
+  path: '/compare/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareSlugRoute = CompareSlugRouteImport.update({
+  id: '/compare/$slug',
+  path: '/compare/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -216,6 +245,16 @@ const DemoDashboardRoute = DemoDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => DemoRoute,
+} as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
   id: '/',
@@ -230,6 +269,11 @@ const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalIndexRoute = LocalIndexRouteImport.update({
+  id: '/local/',
+  path: '/local/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocationsIndexRoute = LocationsIndexRouteImport.update({
@@ -420,6 +464,16 @@ const AuthenticatedMyStartRoute = AuthenticatedMyStartRouteImport.update({
   path: '/start',
   getParentRoute: () => AuthenticatedMyRoute,
 } as any)
+const LocalIndustryIndexRoute = LocalIndustryIndexRouteImport.update({
+  id: '/local/$industry/',
+  path: '/local/$industry/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalIndustryStateRoute = LocalIndustryStateRouteImport.update({
+  id: '/local/$industry/$state',
+  path: '/local/$industry/$state',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugPageRoute = SSlugPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -476,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
+  '/llms.txt': typeof LlmsDottxtRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
@@ -485,20 +540,26 @@ export interface FileRoutesByFullPath {
   '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/tools': typeof ToolsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/my': typeof AuthenticatedMyRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
+  '/compare/': typeof CompareIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/locations/': typeof LocationsIndexRoute
   '/states/': typeof StatesIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -527,10 +588,12 @@ export interface FileRoutesByFullPath {
   '/my/activity': typeof AuthenticatedMyActivityRoute
   '/my/site': typeof AuthenticatedMySiteRoute
   '/my/start': typeof AuthenticatedMyStartRoute
+  '/local/$industry/$state': typeof LocalIndustryStateRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/my/': typeof AuthenticatedMyIndexRoute
+  '/local/$industry/': typeof LocalIndustryIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -548,6 +611,7 @@ export interface FileRoutesByTo {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
@@ -557,17 +621,23 @@ export interface FileRoutesByTo {
   '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/tools': typeof ToolsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
+  '/compare': typeof CompareIndexRoute
   '/demo': typeof DemoIndexRoute
+  '/guides': typeof GuidesIndexRoute
   '/industries': typeof IndustriesIndexRoute
+  '/local': typeof LocalIndexRoute
   '/locations': typeof LocationsIndexRoute
   '/states': typeof StatesIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -596,10 +666,12 @@ export interface FileRoutesByTo {
   '/my/activity': typeof AuthenticatedMyActivityRoute
   '/my/site': typeof AuthenticatedMySiteRoute
   '/my/start': typeof AuthenticatedMyStartRoute
+  '/local/$industry/$state': typeof LocalIndustryStateRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/my': typeof AuthenticatedMyIndexRoute
+  '/local/$industry': typeof LocalIndustryIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -621,6 +693,7 @@ export interface FileRoutesById {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
+  '/llms.txt': typeof LlmsDottxtRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
@@ -630,20 +703,26 @@ export interface FileRoutesById {
   '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/tools': typeof ToolsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/my': typeof AuthenticatedMyRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
+  '/compare/': typeof CompareIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/locations/': typeof LocationsIndexRoute
   '/states/': typeof StatesIndexRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -672,10 +751,12 @@ export interface FileRoutesById {
   '/_authenticated/my/activity': typeof AuthenticatedMyActivityRoute
   '/_authenticated/my/site': typeof AuthenticatedMySiteRoute
   '/_authenticated/my/start': typeof AuthenticatedMyStartRoute
+  '/local/$industry/$state': typeof LocalIndustryStateRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/my/': typeof AuthenticatedMyIndexRoute
+  '/local/$industry/': typeof LocalIndustryIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -697,6 +778,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/industries'
+    | '/llms.txt'
     | '/manifest.webmanifest'
     | '/portal'
     | '/pricing'
@@ -706,20 +788,26 @@ export interface FileRouteTypes {
     | '/share'
     | '/sitemap.xml'
     | '/terms'
+    | '/tools'
     | '/website-audit'
     | '/admin'
     | '/app'
     | '/my'
     | '/onboarding'
+    | '/compare/$slug'
     | '/demo/dashboard'
+    | '/guides/$slug'
     | '/industries/$slug'
     | '/invite/$token'
     | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/states/$state'
+    | '/compare/'
     | '/demo/'
+    | '/guides/'
     | '/industries/'
+    | '/local/'
     | '/locations/'
     | '/states/'
     | '/admin/analytics'
@@ -748,10 +836,12 @@ export interface FileRouteTypes {
     | '/my/activity'
     | '/my/site'
     | '/my/start'
+    | '/local/$industry/$state'
     | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
     | '/my/'
+    | '/local/$industry/'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -769,6 +859,7 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/get-started'
     | '/growth-assessment'
+    | '/llms.txt'
     | '/manifest.webmanifest'
     | '/portal'
     | '/pricing'
@@ -778,17 +869,23 @@ export interface FileRouteTypes {
     | '/share'
     | '/sitemap.xml'
     | '/terms'
+    | '/tools'
     | '/website-audit'
     | '/onboarding'
+    | '/compare/$slug'
     | '/demo/dashboard'
+    | '/guides/$slug'
     | '/industries/$slug'
     | '/invite/$token'
     | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/states/$state'
+    | '/compare'
     | '/demo'
+    | '/guides'
     | '/industries'
+    | '/local'
     | '/locations'
     | '/states'
     | '/admin/analytics'
@@ -817,10 +914,12 @@ export interface FileRouteTypes {
     | '/my/activity'
     | '/my/site'
     | '/my/start'
+    | '/local/$industry/$state'
     | '/s/$slug/$page'
     | '/admin'
     | '/app'
     | '/my'
+    | '/local/$industry'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -841,6 +940,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/industries'
+    | '/llms.txt'
     | '/manifest.webmanifest'
     | '/portal'
     | '/pricing'
@@ -850,20 +950,26 @@ export interface FileRouteTypes {
     | '/share'
     | '/sitemap.xml'
     | '/terms'
+    | '/tools'
     | '/website-audit'
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/my'
     | '/_authenticated/onboarding'
+    | '/compare/$slug'
     | '/demo/dashboard'
+    | '/guides/$slug'
     | '/industries/$slug'
     | '/invite/$token'
     | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/states/$state'
+    | '/compare/'
     | '/demo/'
+    | '/guides/'
     | '/industries/'
+    | '/local/'
     | '/locations/'
     | '/states/'
     | '/_authenticated/admin/analytics'
@@ -892,10 +998,12 @@ export interface FileRouteTypes {
     | '/_authenticated/my/activity'
     | '/_authenticated/my/site'
     | '/_authenticated/my/start'
+    | '/local/$industry/$state'
     | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/my/'
+    | '/local/$industry/'
     | '/_authenticated/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -917,6 +1025,7 @@ export interface RootRouteChildren {
   GetStartedRoute: typeof GetStartedRoute
   GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   PortalRoute: typeof PortalRoute
   PricingRoute: typeof PricingRoute
@@ -926,14 +1035,22 @@ export interface RootRouteChildren {
   ShareRoute: typeof ShareRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ToolsRoute: typeof ToolsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
+  CompareSlugRoute: typeof CompareSlugRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   LocationsCityRoute: typeof LocationsCityRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   StatesStateRoute: typeof StatesStateRoute
+  CompareIndexRoute: typeof CompareIndexRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
+  LocalIndexRoute: typeof LocalIndexRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
+  LocalIndustryStateRoute: typeof LocalIndustryStateRoute
+  LocalIndustryIndexRoute: typeof LocalIndustryIndexRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1021,6 +1138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndustriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manifest.webmanifest': {
       id: '/manifest.webmanifest'
       path: '/manifest.webmanifest'
@@ -1084,6 +1208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/website-audit': {
       id: '/website-audit'
       path: '/website-audit'
@@ -1119,6 +1250,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/compare/': {
+      id: '/compare/'
+      path: '/compare'
+      fullPath: '/compare/'
+      preLoaderRoute: typeof CompareIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/$slug': {
+      id: '/compare/$slug'
+      path: '/compare/$slug'
+      fullPath: '/compare/$slug'
+      preLoaderRoute: typeof CompareSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/': {
       id: '/demo/'
       path: '/'
@@ -1132,6 +1277,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/dashboard'
       preLoaderRoute: typeof DemoDashboardRouteImport
       parentRoute: typeof DemoRoute
+    }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/industries/': {
       id: '/industries/'
@@ -1152,6 +1311,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/': {
+      id: '/local/'
+      path: '/local'
+      fullPath: '/local/'
+      preLoaderRoute: typeof LocalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/locations/': {
@@ -1399,6 +1565,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyStartRouteImport
       parentRoute: typeof AuthenticatedMyRoute
     }
+    '/local/$industry/': {
+      id: '/local/$industry/'
+      path: '/local/$industry'
+      fullPath: '/local/$industry/'
+      preLoaderRoute: typeof LocalIndustryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/$industry/$state': {
+      id: '/local/$industry/$state'
+      path: '/local/$industry/$state'
+      fullPath: '/local/$industry/$state'
+      preLoaderRoute: typeof LocalIndustryStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug/$page': {
       id: '/s/$slug/$page'
       path: '/$page'
@@ -1623,6 +1803,7 @@ const rootRouteChildren: RootRouteChildren = {
   GetStartedRoute: GetStartedRoute,
   GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   PortalRoute: PortalRoute,
   PricingRoute: PricingRoute,
@@ -1632,14 +1813,22 @@ const rootRouteChildren: RootRouteChildren = {
   ShareRoute: ShareRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ToolsRoute: ToolsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
+  CompareSlugRoute: CompareSlugRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   LocationsCityRoute: LocationsCityRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   StatesStateRoute: StatesStateRoute,
+  CompareIndexRoute: CompareIndexRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
+  LocalIndexRoute: LocalIndexRoute,
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
+  LocalIndustryStateRoute: LocalIndustryStateRoute,
+  LocalIndustryIndexRoute: LocalIndustryIndexRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
