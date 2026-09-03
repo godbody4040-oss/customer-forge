@@ -79,7 +79,7 @@ function MyStart() {
     },
     {
       title: "Publish it",
-      body: `Go live on your free Revora address${
+      body: `Go live on your Revora share link${
         liveAt.label ? ` — ${liveAt.label}` : ""
       }. No domain purchase needed.`,
 

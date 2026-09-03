@@ -584,7 +584,7 @@ export function preflight(input: PreflightInput): PreflightResult {
       "Web address",
       `Your site will answer on ${input.publicHost}.`,
       "No verified web address is connected yet.",
-      "Connect the domain you own, or use your Revora preview address for now.",
+      "Connect the domain you own, or use your Revora share link for now.",
       "warning",
       "/app/domain",
     ),
