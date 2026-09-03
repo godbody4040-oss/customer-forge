@@ -88,17 +88,17 @@ export function buildFullSnapshot(
   const componentsBySection = new Map<string, FullComponent[]>();
   for (const raw of components) {
     const component: FullComponent = {
-      id: String(raw.id ?? ""),
-      section_id: String(raw.section_id ?? ""),
-      kind: String(raw.kind ?? "text"),
-      label: (raw.label as string | null) ?? null,
-      body: (raw.body as string | null) ?? null,
-      link_label: (raw.link_label as string | null) ?? null,
-      link_url: (raw.link_url as string | null) ?? null,
-      media_url: (raw.media_url as string | null) ?? null,
-      settings: asRecord(raw.settings),
-      sort_order: Number(raw.sort_order ?? 0),
-      is_visible: raw.is_visible !== false,
+      id: String(raw["id"] ?? ""),
+      section_id: String(raw["section_id"] ?? ""),
+      kind: String(raw["kind"] ?? "text"),
+      label: (raw["label"] as string | null) ?? null,
+      body: (raw["body"] as string | null) ?? null,
+      link_label: (raw["link_label"] as string | null) ?? null,
+      link_url: (raw["link_url"] as string | null) ?? null,
+      media_url: (raw["media_url"] as string | null) ?? null,
+      settings: asRecord(raw["settings"]),
+      sort_order: Number(raw["sort_order"] ?? 0),
+      is_visible: raw["is_visible"] !== false,
     };
     if (!component.id || !component.section_id) continue;
     const list = componentsBySection.get(component.section_id) ?? [];
@@ -108,20 +108,20 @@ export function buildFullSnapshot(
 
   const sectionsByPage = new Map<string, FullSection[]>();
   for (const raw of sections) {
-    const id = String(raw.id ?? "");
-    const pageId = String(raw.page_id ?? "");
+    const id = String(raw["id"] ?? "");
+    const pageId = String(raw["page_id"] ?? "");
     if (!id || !pageId) continue;
     const section: FullSection = {
       id,
       page_id: pageId,
-      kind: String(raw.kind ?? "text"),
-      variant: String(raw.variant ?? "default"),
-      heading: (raw.heading as string | null) ?? null,
-      subheading: (raw.subheading as string | null) ?? null,
-      body: (raw.body as string | null) ?? null,
-      settings: asRecord(raw.settings),
-      sort_order: Number(raw.sort_order ?? 0),
-      is_visible: raw.is_visible !== false,
+      kind: String(raw["kind"] ?? "text"),
+      variant: String(raw["variant"] ?? "default"),
+      heading: (raw["heading"] as string | null) ?? null,
+      subheading: (raw["subheading"] as string | null) ?? null,
+      body: (raw["body"] as string | null) ?? null,
+      settings: asRecord(raw["settings"]),
+      sort_order: Number(raw["sort_order"] ?? 0),
+      is_visible: raw["is_visible"] !== false,
       components: (componentsBySection.get(id) ?? []).sort((a, b) => a.sort_order - b.sort_order),
     };
     const list = sectionsByPage.get(pageId) ?? [];
@@ -131,21 +131,21 @@ export function buildFullSnapshot(
 
   const fullPages: FullPage[] = pages
     .map((raw) => {
-      const id = String(raw.id ?? "");
+      const id = String(raw["id"] ?? "");
       return {
         id,
-        slug: String(raw.slug ?? ""),
-        title: String(raw.title ?? ""),
-        kind: String(raw.kind ?? "custom"),
-        seo_title: (raw.seo_title as string | null) ?? null,
-        seo_description: (raw.seo_description as string | null) ?? null,
-        seo_canonical: (raw.seo_canonical as string | null) ?? null,
-        og_title: (raw.og_title as string | null) ?? null,
-        og_description: (raw.og_description as string | null) ?? null,
-        og_image_url: (raw.og_image_url as string | null) ?? null,
-        noindex: raw.noindex === true,
-        sort_order: Number(raw.sort_order ?? 0),
-        is_visible: raw.is_visible !== false,
+        slug: String(raw["slug"] ?? ""),
+        title: String(raw["title"] ?? ""),
+        kind: String(raw["kind"] ?? "custom"),
+        seo_title: (raw["seo_title"] as string | null) ?? null,
+        seo_description: (raw["seo_description"] as string | null) ?? null,
+        seo_canonical: (raw["seo_canonical"] as string | null) ?? null,
+        og_title: (raw["og_title"] as string | null) ?? null,
+        og_description: (raw["og_description"] as string | null) ?? null,
+        og_image_url: (raw["og_image_url"] as string | null) ?? null,
+        noindex: raw["noindex"] === true,
+        sort_order: Number(raw["sort_order"] ?? 0),
+        is_visible: raw["is_visible"] !== false,
         sections: (sectionsByPage.get(id) ?? []).sort((a, b) => a.sort_order - b.sort_order),
       };
     })
@@ -158,11 +158,11 @@ export function buildFullSnapshot(
 export function readFullSnapshot(value: unknown): FullSnapshot | null {
   if (!value || typeof value !== "object") return null;
   const record = value as Record<string, unknown>;
-  if (record.format !== 1 || !Array.isArray(record.pages)) return null;
+  if (record["format"] !== 1 || !Array.isArray(record["pages"])) return null;
   return {
     format: 1,
-    takenAt: typeof record.takenAt === "string" ? record.takenAt : "",
-    pages: record.pages as FullPage[],
+    takenAt: typeof record["takenAt"] === "string" ? record["takenAt"] : "",
+    pages: record["pages"] as FullPage[],
   };
 }
 
