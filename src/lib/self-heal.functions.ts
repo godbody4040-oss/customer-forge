@@ -19,6 +19,7 @@ import {
   type Repair,
 } from "@/lib/self-heal";
 import { readSeo } from "@/lib/site-seo";
+import { safeLinkUrl } from "@/lib/website-content";
 
 export type SelfHealResult = {
   planned: number;
@@ -221,9 +222,12 @@ export const runSelfHeal = createServerFn({ method: "POST" })
       const component = state.components.find((c) => c.id === repair.id)!;
       const field = repair.kind === "component_alt" ? "label" : "link_url";
       const before = repair.kind === "component_alt" ? component.label : component.link_url;
+      // Link targets are rendered as hrefs on the public site: re-sanitize on
+      // write so only http(s)/mailto/tel/sms/relative targets can ever persist.
+      const value = field === "link_url" ? safeLinkUrl(repair.value) : repair.value;
       const result = await supabase
         .from("website_components")
-        .update({ [field]: repair.value })
+        .update({ [field]: value })
         .eq("id", repair.id)
         .eq("organization_id", orgId);
       if (result?.error) throw result.error;
