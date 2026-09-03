@@ -84,64 +84,35 @@ export const restoreSiteState = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const supabase = context.supabase as never as {
       from: (table: string) => any;
+      rpc: (
+        name: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
     };
     const orgId = data.organizationId;
-    const current = await readState(supabase as never as Parameters<typeof readState>[0], orgId);
-    const plan = planRestore(current, data.snapshot);
+    const before = await readState(supabase as never as Parameters<typeof readState>[0], orgId);
+    const plan = planRestore(before, data.snapshot);
 
-    // Newer rows first: components, then sections, then pages, so nothing is
-    // orphaned if a later step fails.
-    if (plan.deleteComponentIds.length) {
-      const { error } = await supabase
-        .from("website_components")
-        .delete()
-        .eq("organization_id", orgId)
-        .in("id", plan.deleteComponentIds);
-      if (error) throw new Error("Couldn't remove the newer elements.");
-    }
-    if (plan.deleteSectionIds.length) {
-      const { error } = await supabase
-        .from("website_sections")
-        .delete()
-        .eq("organization_id", orgId)
-        .in("id", plan.deleteSectionIds);
-      if (error) throw new Error("Couldn't remove the newer sections.");
-    }
-    if (plan.deletePageIds.length) {
-      const { error } = await supabase
-        .from("website_pages")
-        .delete()
-        .eq("organization_id", orgId)
-        .in("id", plan.deletePageIds);
-      if (error) throw new Error("Couldn't remove the newer pages.");
-    }
-
-    if (plan.pages.length) {
-      const { error } = await supabase
-        .from("website_pages")
-        .upsert(
-          plan.pages.map((page) => ({ ...page, organization_id: orgId })),
-          { onConflict: "id" },
-        );
-      if (error) throw new Error("Couldn't put your pages back.");
-    }
-    if (plan.sections.length) {
-      const { error } = await supabase
-        .from("website_sections")
-        .upsert(
-          plan.sections.map((section) => ({ ...section, organization_id: orgId })),
-          { onConflict: "id" },
-        );
-      if (error) throw new Error("Couldn't put your sections back.");
-    }
-    if (plan.components.length) {
-      const { error } = await supabase
-        .from("website_components")
-        .upsert(
-          plan.components.map((component) => ({ ...component, organization_id: orgId })),
-          { onConflict: "id" },
-        );
-      if (error) throw new Error("Couldn't put your page elements back.");
+    // One database transaction: the restore either lands completely or not at
+    // all. A half-restored website is never possible, even if a single row
+    // fails, because Postgres rolls the whole function back.
+    const { error } = await supabase.rpc("restore_website_state", {
+      _organization_id: orgId,
+      _snapshot: data.snapshot as never,
+    });
+    if (error) {
+      await supabase.from("audit_logs").insert({
+        organization_id: orgId,
+        action: "SITE_STATE_RESTORE_FAILED",
+        entity_type: "website",
+        entity_id: orgId,
+        metadata: { reason: error.message.slice(0, 300) } as never,
+      });
+      throw new Error(
+        error.message.includes("FORBIDDEN") || error.message.includes("row-level security")
+          ? "You don't have permission to restore this website."
+          : "The restore didn't run, so nothing was changed. Your website is exactly as it was.",
+      );
     }
 
     // Verify the restore really landed instead of reporting success blindly.
@@ -164,3 +135,4 @@ export const restoreSiteState = createServerFn({ method: "POST" })
       counts: countSnapshot(after),
     };
   });
+
