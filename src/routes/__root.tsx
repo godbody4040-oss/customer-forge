@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, enforceSessionPolicy, resolvePostLoginPath } from "@/lib/auth-session";
 import { ORGANIZATION_SCHEMA, WEBSITE_SCHEMA } from "@/lib/seo";
 import { RouteError, RouteNotFound } from "@/components/app/RouteStates";
+import { PlatformAnalytics } from "@/components/marketing/PlatformAnalytics";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -128,6 +129,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <PlatformAnalytics />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-right" />
