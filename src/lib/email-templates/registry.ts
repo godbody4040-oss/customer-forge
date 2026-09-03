@@ -18,7 +18,9 @@ import {
 } from "./billing-lifecycle";
 
 export interface TemplateEntry {
-  component: ComponentType<Record<string, unknown>>;
+  // Templates have differing prop shapes; the registry is intentionally generic.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  component: ComponentType<any>;
   subject: string | ((data: Record<string, unknown>) => string);
   displayName?: string;
   previewData?: Record<string, unknown>;
