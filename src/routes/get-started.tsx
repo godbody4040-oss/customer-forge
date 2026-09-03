@@ -164,6 +164,7 @@ function GetStarted() {
 
   const signedIn = Boolean(session.data?.userId);
   const cardsReady = isPaymentsConfigured();
+  const alreadySubscribed = Boolean(session.data?.hasActiveSubscription);
 
   /**
    * A brand-new account has no workspace yet (that normally happens during
