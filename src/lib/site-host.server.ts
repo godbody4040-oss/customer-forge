@@ -222,7 +222,7 @@ export function xmlSitemap(urls: { loc: string; lastmod: string | null }[]) {
  * crawlers never index or follow a throwaway build host.
  */
 export function platformOrigin(host: string | null, protocol = "https") {
-  const bare = (host ?? "").split(":")[0].toLowerCase();
+  const bare = ((host ?? "").split(":")[0] ?? "").toLowerCase();
   if (/^(localhost|127\.0\.0\.1)$/.test(bare)) return `${protocol}://${host}`;
   return "https://revoragrowthsystems.com";
 }
