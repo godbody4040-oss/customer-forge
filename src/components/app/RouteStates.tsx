@@ -14,6 +14,14 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 export function RouteNotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      {/*
+        React hoists these into <head>, which is the only reliable way to set
+        not-found metadata: a route that throws notFound() never runs its own
+        head(), so without this a 404 would inherit the site's real title and
+        "index, follow" directive and get indexed as a live page.
+      */}
+      <title>Page not found — Revora</title>
+      <meta name="robots" content="noindex" />
       <div className="max-w-md text-center">
         <p className="eyebrow">Error 404</p>
         <h1 className="mt-3 text-3xl font-semibold text-foreground">This page doesn't exist</h1>
