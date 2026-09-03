@@ -47,10 +47,12 @@ const PILLARS = [
 ] as const;
 
 export const Route = createFileRoute("/states/$state")({
-  beforeLoad: ({ params }) => {
-    const state = findState(params.state);
-    if (!state) throw notFound();
-    return { state };
+  // Resolved here (not thrown here) so head() still runs for unknown slugs and
+  // can emit real not-found metadata instead of inheriting the site defaults.
+  beforeLoad: ({ params }) => ({ state: findState(params.state) ?? null }),
+  loader: ({ context }) => {
+    if (!context.state) throw notFound();
+    return null;
   },
   head: ({ match }) => {
     const state = (match.context as { state?: UsState }).state;
