@@ -132,11 +132,12 @@ describe("client website canonical urls", () => {
   });
 });
 
-describe("cloudflare hosting worker", () => {
+describe("cloudflare traffic-domain worker", () => {
   const call = (url: string, init?: RequestInit) => worker.fetch(new Request(url, init));
 
-  it("refuses hosts that are not one-level client addresses", async () => {
+  it("refuses every host except the traffic domain and its www form", async () => {
     for (const url of [
+      `https://business.${SITE_ROOT}/`,
       `https://a.b.${SITE_ROOT}/`,
       `https://evil${SITE_ROOT}/`,
       `https://-bad.${SITE_ROOT}/`,
@@ -147,15 +148,15 @@ describe("cloudflare hosting worker", () => {
     }
   });
 
-  it("refuses unsupported methods", async () => {
-    // `Request` itself forbids TRACE, so the edge case is exercised with the
-    // same shape the Worker runtime hands the handler.
+  it("redirects non-idempotent methods without losing the target", async () => {
+    // Worker-shaped request: the runtime passes methods `Request` may reject.
     const res = await worker.fetch({
-      method: "TRACE",
-      url: `https://business.${SITE_ROOT}/`,
+      method: "POST",
+      url: `https://${SITE_ROOT}/pricing`,
       headers: new Headers(),
     } as unknown as Request);
-    expect(res.status).toBe(405);
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe("https://revoragrowthsystems.com/pricing");
   });
 });
 
