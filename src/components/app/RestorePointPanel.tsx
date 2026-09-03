@@ -1,4 +1,4 @@
-import { History, RotateCcw, Save } from "lucide-react";
+import { RotateCcw, Save } from "lucide-react";
 import { Panel, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { dateShort } from "@/lib/format";

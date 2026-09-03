@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, CheckCircle2, HelpCircle, Plug, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, HelpCircle, XCircle } from "lucide-react";
 import { Panel, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import {
