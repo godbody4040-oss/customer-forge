@@ -21,7 +21,7 @@ export type FullComponent = {
   link_label: string | null;
   link_url: string | null;
   media_url: string | null;
-  settings: unknown;
+  settings: Record<string, unknown>;
   sort_order: number;
   is_visible: boolean;
 };
@@ -34,7 +34,7 @@ export type FullSection = {
   heading: string | null;
   subheading: string | null;
   body: string | null;
-  settings: unknown;
+  settings: Record<string, unknown>;
   sort_order: number;
   is_visible: boolean;
   components: FullComponent[];

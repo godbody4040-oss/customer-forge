@@ -45,10 +45,9 @@ export function useRestorePoint(organizationId: string | undefined) {
 
   const save = useMutation({
     mutationFn: async (label?: string) => {
-      const result = await capture({
+      return (await capture({
         data: { organizationId: organizationId!, label: label ?? "Restore point" },
-      });
-      return result;
+      })) as { snapshot: FullSnapshot; label: string };
     },
     onSuccess: (result) => {
       const next: RestorePoint = {
@@ -76,7 +75,8 @@ export function useRestorePoint(organizationId: string | undefined) {
       if (!point) throw new Error("There's no restore point saved yet.");
       return restore({ data: { organizationId: organizationId!, snapshot: point.snapshot } });
     },
-    onSuccess: (result) => {
+    onSuccess: (raw) => {
+      const result = raw as { exact: boolean; summary: string };
       if (result.exact) toast.success(result.summary);
       else toast.warning(result.summary);
       void queryClient.invalidateQueries({ queryKey: ["website_pages"] });

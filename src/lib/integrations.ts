@@ -79,7 +79,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
           ? `Setup fee paid and the monthly plan is ${sub === "trialing" ? "in its free month" : "active"}.`
           : `Setup fee paid, but the monthly plan is ${sub || "not active"}.`
         : "The one-time setup payment hasn't gone through yet, so the live website stays locked.",
-      action: paid && subOk ? undefined : { label: "Open billing", to: "/app/billing" },
+      ...(paid && subOk ? {} : { action: { label: "Open billing", to: "/app/billing" } }),
     });
   }
 
@@ -146,7 +146,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
         ? "DNS points to Revora and HTTPS is active, so your domain serves your website."
         : facts.domainError ||
           `Still finishing: DNS ${facts.dnsOk ? "verified" : "not verified"}, HTTPS ${facts.sslOk ? "active" : "not active"}.`,
-      action: live ? undefined : { label: "Finish setup", to: "/app/domain" },
+      ...(live ? {} : { action: { label: "Finish setup", to: "/app/domain" } }),
     });
   }
 
@@ -174,7 +174,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
       detail: facts.seoIndexable
         ? "Published with a sitemap and robots.txt search engines can read."
         : "Published, but pages are set to stay out of search results.",
-      action: facts.seoIndexable ? undefined : { label: "Review SEO", to: "/app/website" },
+      ...(facts.seoIndexable ? {} : { action: { label: "Review SEO", to: "/app/website" } }),
     });
   }
 
@@ -204,10 +204,9 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
         facts.automationFailures > 0
           ? `${facts.activeAutomations} running, but ${facts.automationFailures} recent message${facts.automationFailures === 1 ? "" : "s"} failed to send.`
           : `${facts.activeAutomations} automation${facts.activeAutomations === 1 ? "" : "s"} running and delivering.`,
-      action:
-        facts.automationFailures > 0
-          ? { label: "See what failed", to: "/app/automations" }
-          : undefined,
+      ...(facts.automationFailures > 0
+        ? { action: { label: "See what failed", to: "/app/automations" } }
+        : {}),
     });
   }
 
