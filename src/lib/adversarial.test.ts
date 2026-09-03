@@ -112,10 +112,8 @@ describe("tenant hostnames cannot be spoofed", () => {
     expect(
       customDomainIsLive({
         custom_domain: "client.com",
-        domain_verified: true,
         dns_ok: true,
         ssl_ok: true,
-        https_ok: true,
       }),
     ).toBe(true);
   });
