@@ -16,7 +16,12 @@ async function flushAutomations(organizationId: string) {
   try {
     return await runDueAutomations({ data: { organizationId } });
   } catch (error) {
-    console.error("automation delivery pass failed", error);
+    // Delivery retries on the next pass, so a dropped request (navigating away,
+    // offline tab) is expected and must not surface as an application error.
+    const transient =
+      error instanceof TypeError ||
+      (error instanceof DOMException && error.name === "AbortError");
+    if (!transient) console.warn("automation delivery pass deferred", error);
     return null;
   }
 }
