@@ -6,6 +6,7 @@ import {
   CreditCard,
   Globe2,
   LayoutGrid,
+  LineChart,
   LifeBuoy,
   Receipt,
   ShieldCheck,
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutGrid, exact: true },
+  { to: "/admin/analytics", label: "Analytics", icon: LineChart, exact: false },
   { to: "/admin/monthly", label: "Monthly", icon: BarChart3, exact: false },
   { to: "/admin/clients", label: "Clients", icon: Building2, exact: false },
   { to: "/admin/websites", label: "Websites", icon: ClipboardList, exact: false },
