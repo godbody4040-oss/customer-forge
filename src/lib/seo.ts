@@ -31,21 +31,129 @@ export const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "@id": `${SITE_URL}/#organization`,
-  name: "Revora Growth Systems",
+  name: BUSINESS.legalName,
+  legalName: BUSINESS.legalName,
   url: SITE_URL,
+  telephone: BUSINESS.tel,
+  email: BUSINESS.email,
   description:
     "Revora builds local service businesses a complete customer acquisition system: website, lead capture, CRM, quotes, booking, follow-up, reviews, local SEO and analytics.",
   founder: { "@type": "Person", name: REVORA.founder.name },
-  areaServed: "Worldwide",
+  areaServed: BUSINESS.areasServed.map((name) => ({ "@type": "AdministrativeArea", name })),
   contactPoint: [
     {
       "@type": "ContactPoint",
       contactType: "sales",
-      email: REVORA.email,
-      telephone: REVORA.phone,
-      availableLanguage: ["English"],
+      email: BUSINESS.email,
+      telephone: BUSINESS.tel,
+      availableLanguage: BUSINESS.languages,
+      areaServed: ["US", "Worldwide"],
+      hoursAvailable: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+        opens: "00:00",
+        closes: "23:59",
+      },
     },
   ],
+};
+
+/**
+ * The business entity Google uses for the knowledge panel and local results:
+ * name, phone, email, 24/7 hours and the areas served.
+ *
+ * Revora is a service-area business with no public street address, so no
+ * `address.streetAddress` is emitted — only the region it is based in. Never
+ * invent a street address here: an unverifiable address is a listing risk.
+ */
+export const LOCAL_BUSINESS_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "@id": `${SITE_URL}/#business`,
+  name: BUSINESS.displayName,
+  legalName: BUSINESS.legalName,
+  url: SITE_URL,
+  telephone: BUSINESS.tel,
+  email: BUSINESS.email,
+  image: `${SITE_URL}/favicon.png`,
+  priceRange: BUSINESS.priceRange,
+  currenciesAccepted: "USD",
+  paymentAccepted: "Credit Card, Debit Card, Apple Pay, Google Pay",
+  founder: { "@type": "Person", name: BUSINESS.founder },
+  parentOrganization: { "@id": `${SITE_URL}/#organization` },
+  address: {
+    "@type": "PostalAddress",
+    addressRegion: BUSINESS.region.code,
+    addressCountry: BUSINESS.region.country,
+  },
+  areaServed: BUSINESS.areasServed.map((name) => ({ "@type": "AdministrativeArea", name })),
+  serviceType: "Website design, lead generation and customer acquisition systems",
+  knowsLanguage: BUSINESS.languages,
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      opens: "00:00",
+      closes: "23:59",
+    },
+  ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Revora Growth System",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Lead-generating business website",
+          description:
+            "A conversion-built website with services, pricing, instant quotes and online booking.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Lead capture and CRM",
+          description:
+            "Every enquiry captured into one pipeline with automated first reply and follow-up.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Online booking and quotes",
+          description: "Real-time booking on your availability plus instant on-site quotes.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Local SEO and analytics",
+          description:
+            "Local search pages, structured data and reporting on which channels produce paying customers.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Review generation",
+          description: "Automated review requests after every completed job.",
+        },
+      },
+    ],
+  },
 };
 
 /** Sitewide site entity, including the in-site search action. */
@@ -54,10 +162,11 @@ export const WEBSITE_SCHEMA = {
   "@type": "WebSite",
   "@id": `${SITE_URL}/#website`,
   url: SITE_URL,
-  name: "Revora Growth Systems",
+  name: BUSINESS.displayName,
   inLanguage: "en",
   publisher: { "@id": `${SITE_URL}/#organization` },
 };
+
 
 /** The single canonical offer, expressed for search engines. */
 export const GROWTH_SYSTEM_SCHEMA = {
