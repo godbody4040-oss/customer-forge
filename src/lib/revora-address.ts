@@ -71,12 +71,18 @@ export function normalizeHost(host: string | null | undefined) {
     .replace(/\.+$/, "");
 }
 
-/** Revora's marketing site, previews and local development are never tenants. */
+/**
+ * Revora's marketing site, previews and local development are never tenants.
+ * Every label under the platform domain belongs to Revora too, so no
+ * `something.revoragrowthsystems.com` host can ever be claimed as a client
+ * website address.
+ */
 export function isRevoraOwnHost(rawHost: string | null | undefined) {
   const host = normalizeHost(rawHost);
   if (!host) return true;
   if (host.startsWith("localhost") || host.startsWith("127.0.0.1")) return true;
   if (host.endsWith("lovable.app") || host.endsWith("lovableproject.com")) return true;
+  if (host === REVORA_ROOT || host.endsWith(`.${REVORA_ROOT}`)) return true;
   return REVORA_OWN_HOSTS.includes(host);
 }
 

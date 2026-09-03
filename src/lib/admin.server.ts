@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NewClientInput } from "@/lib/admin-types";
 import { seedQuoteCalculator } from "@/lib/quote-seed";
 import { areAddressesPublic, guardedFetch, isFetchableHostname } from "@/lib/net-guard.server";
+import { isRevoraOwnHost, isTrafficDomainHost } from "@/lib/revora-address";
 
 /** Where clients point their domain. Both records are checked automatically. */
 export const DOMAIN_TARGET = "revoragrowthsystems.com";
@@ -43,10 +44,15 @@ export function normalizeDomain(value: string) {
 
 export function isValidDomain(value: string) {
   // Also rejects IP literals and internal/reserved names (see net-guard.server).
+  // Revora's own hosts can never be claimed as a client website address: the
+  // platform domain (and every label under it) is platform-only, and
+  // revoraweb.site is redirect-only.
   return (
     isFetchableHostname(value) &&
     /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) &&
-    value.length <= 253
+    value.length <= 253 &&
+    !isRevoraOwnHost(value) &&
+    !isTrafficDomainHost(value)
   );
 }
 
@@ -367,7 +373,6 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
       subheadline: input.description ?? null,
       meta_description: input.tagline ?? null,
     },
-    subdomain: slug,
     custom_domain: domain && isValidDomain(domain) ? domain : null,
     domain_status: domain && isValidDomain(domain) ? "dns_pending" : "not_connected",
     domain_target: DOMAIN_TARGET,

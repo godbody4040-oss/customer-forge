@@ -57,6 +57,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ai_generations_job_same_org_fkey"
+            columns: ["job_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "generation_jobs"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "ai_generations_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -187,11 +194,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_customer_same_org_fkey"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "appointments_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_lead_same_org_fkey"
+            columns: ["lead_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "appointments_organization_id_fkey"
@@ -213,6 +234,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_same_org_fkey"
+            columns: ["service_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -325,6 +353,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "automation_runs_appointment_same_org_fkey"
+            columns: ["appointment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "automation_runs_automation_id_fkey"
             columns: ["automation_id"]
             isOneToOne: false
@@ -332,11 +367,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "automation_runs_automation_same_org_fkey"
+            columns: ["automation_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "automation_runs_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_lead_same_org_fkey"
+            columns: ["lead_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "automation_runs_organization_id_fkey"
@@ -358,6 +407,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "automation_steps"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_runs_step_same_org_fkey"
+            columns: ["step_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "automation_steps"
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -405,6 +461,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "automations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_steps_automation_same_org_fkey"
+            columns: ["automation_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "automation_steps_organization_id_fkey"
@@ -1020,11 +1083,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lead_activities_appointment_same_org_fkey"
+            columns: ["appointment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "lead_activities_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_activities_lead_same_org_fkey"
+            columns: ["lead_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "lead_activities_organization_id_fkey"
@@ -1166,6 +1243,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_customer_same_org_fkey"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "leads_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -1185,6 +1269,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_service_same_org_fkey"
+            columns: ["service_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
@@ -2210,11 +2301,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quote_requests_form_same_org_fkey"
+            columns: ["form_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "quote_forms"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "quote_requests_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_lead_same_org_fkey"
+            columns: ["lead_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "quote_requests_organization_id_fkey"
@@ -2278,11 +2383,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_appointment_same_org_fkey"
+            columns: ["appointment_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "reviews_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_customer_same_org_fkey"
+            columns: ["customer_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "reviews_organization_id_fkey"
@@ -3013,7 +3132,6 @@ export type Database = {
           ssl_issued_at: string | null
           ssl_last_ok_at: string | null
           ssl_ok: boolean
-          subdomain: string | null
           template: string
           traffic_alerts_enabled: boolean
           traffic_checked_at: string | null
@@ -3054,7 +3172,6 @@ export type Database = {
           ssl_issued_at?: string | null
           ssl_last_ok_at?: string | null
           ssl_ok?: boolean
-          subdomain?: string | null
           template?: string
           traffic_alerts_enabled?: boolean
           traffic_checked_at?: string | null
@@ -3095,7 +3212,6 @@ export type Database = {
           ssl_issued_at?: string | null
           ssl_last_ok_at?: string | null
           ssl_ok?: boolean
-          subdomain?: string | null
           template?: string
           traffic_alerts_enabled?: boolean
           traffic_checked_at?: string | null
@@ -3339,7 +3455,6 @@ export type Database = {
           publish_state: Database["public"]["Enums"]["publish_state"] | null
           published: boolean | null
           seo: Json | null
-          subdomain: string | null
           template: string | null
           updated_at: string | null
         }
@@ -3354,7 +3469,6 @@ export type Database = {
           publish_state?: Database["public"]["Enums"]["publish_state"] | null
           published?: boolean | null
           seo?: Json | null
-          subdomain?: string | null
           template?: string | null
           updated_at?: string | null
         }
@@ -3369,7 +3483,6 @@ export type Database = {
           publish_state?: Database["public"]["Enums"]["publish_state"] | null
           published?: boolean | null
           seo?: Json | null
-          subdomain?: string | null
           template?: string | null
           updated_at?: string | null
         }
@@ -3409,7 +3522,6 @@ export type Database = {
         Args: { _organization_id: string; _snapshot: Json }
         Returns: Json
       }
-      revora_reserved_subdomains: { Args: never; Returns: string[] }
       submit_public_conversion: {
         Args: {
           _activity?: Json

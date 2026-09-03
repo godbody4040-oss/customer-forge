@@ -24,7 +24,6 @@ export type ReadinessInput = {
         template?: string | null;
         seo?: unknown;
         custom_domain?: string | null;
-        subdomain?: string | null;
 
         domain_status?: string | null;
         publish_state?: string | null;
@@ -122,16 +121,13 @@ export function readiness(input: ReadinessInput) {
       to: "/app/website",
     },
     {
-      // A workspace always gets a free Revora web address, so this item tracks
+      // A published site always has a working platform address, so this item tracks
       // "the site has a working address" — it must not sit permanently
       // incomplete just because the owner hasn't bought a domain of their own.
       key: "domain",
       label: "Web address",
-      done:
-        hasText(s?.subdomain) ||
-        s?.domain_status === "connected" ||
-        s?.domain_status === "ssl_active",
-      fix: "Pick your free Revora web address, or connect a domain you own.",
+      done: s?.domain_status === "connected" || s?.domain_status === "ssl_active" || !!s?.template,
+      fix: "Publish your site, or connect a domain you own.",
       to: "/app/launch",
     },
 

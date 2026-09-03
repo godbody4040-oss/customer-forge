@@ -95,7 +95,7 @@ export async function enqueueAutomations(
   const { data: automations } = await client
     .from("automations")
     .select(
-      "id, name, trigger_event, is_active, automation_steps(id, sort_order, delay_minutes, action_type, channel, subject, body)",
+      "id, name, trigger_event, is_active, automation_steps!automation_steps_automation_id_fkey(id, sort_order, delay_minutes, action_type, channel, subject, body)",
     )
     .eq("organization_id", ctx.organizationId)
     .eq("trigger_event", ctx.trigger)

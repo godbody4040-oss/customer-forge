@@ -140,7 +140,7 @@ export async function loadSite(
       // (domain_transfer, email_forwarding, ssl_detail, domain_records,
       // domain_seo_report, ...) are never exposed to anonymous visitors.
       .select(
-        "id, organization_id, template, pages, seo, subdomain, custom_domain, published, publish_state, last_published_at, generation, created_at, updated_at",
+        "id, organization_id, template, pages, seo, custom_domain, published, publish_state, last_published_at, generation, created_at, updated_at",
       )
       .eq("organization_id", orgId)
       .maybeSingle(),
