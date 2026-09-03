@@ -254,6 +254,14 @@ export function SiteFooter() {
                 </li>
                 <li>
                   <Link
+                    to="/share"
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
+                  >
+                    Share Revora
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     to="/s/$slug"
                     params={{ slug: "elite-mobile-detailing" }}
                     className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"

@@ -185,6 +185,7 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/pricing",
       "/get-started",
       "/portal",
+      "/share",
       "/growth-assessment",
       "/website-audit",
       "/industries",

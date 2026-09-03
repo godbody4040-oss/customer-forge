@@ -26,6 +26,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as ShareRouteImport } from './routes/share'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WebsiteAuditRouteImport } from './routes/website-audit'
@@ -49,6 +50,7 @@ import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authenticated/admin.domains'
 import { Route as AuthenticatedAdminMonthlyRouteImport } from './routes/_authenticated/admin.monthly'
+import { Route as AuthenticatedAdminOutreachRouteImport } from './routes/_authenticated/admin.outreach'
 import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
 import { Route as AuthenticatedAdminWebsitesRouteImport } from './routes/_authenticated/admin.websites'
@@ -163,6 +165,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareRoute = ShareRouteImport.update({
+  id: '/share',
+  path: '/share',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -282,6 +289,12 @@ const AuthenticatedAdminMonthlyRoute =
   AuthenticatedAdminMonthlyRouteImport.update({
     id: '/monthly',
     path: '/monthly',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminOutreachRoute =
+  AuthenticatedAdminOutreachRouteImport.update({
+    id: '/outreach',
+    path: '/outreach',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminPaymentsRoute =
@@ -469,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/website-audit': typeof WebsiteAuditRoute
@@ -491,6 +505,7 @@ export interface FileRoutesByFullPath {
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
+  '/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
@@ -539,6 +554,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/website-audit': typeof WebsiteAuditRoute
@@ -558,6 +574,7 @@ export interface FileRoutesByTo {
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
+  '/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
@@ -610,6 +627,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/website-audit': typeof WebsiteAuditRoute
@@ -632,6 +650,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/_authenticated/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
+  '/_authenticated/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
   '/_authenticated/admin/websites': typeof AuthenticatedAdminWebsitesRoute
@@ -684,6 +703,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/robots.txt'
+    | '/share'
     | '/sitemap.xml'
     | '/terms'
     | '/website-audit'
@@ -706,6 +726,7 @@ export interface FileRouteTypes {
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/monthly'
+    | '/admin/outreach'
     | '/admin/payments'
     | '/admin/plans'
     | '/admin/websites'
@@ -754,6 +775,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/robots.txt'
+    | '/share'
     | '/sitemap.xml'
     | '/terms'
     | '/website-audit'
@@ -773,6 +795,7 @@ export interface FileRouteTypes {
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/monthly'
+    | '/admin/outreach'
     | '/admin/payments'
     | '/admin/plans'
     | '/admin/websites'
@@ -824,6 +847,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/robots.txt'
+    | '/share'
     | '/sitemap.xml'
     | '/terms'
     | '/website-audit'
@@ -846,6 +870,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
     | '/_authenticated/admin/monthly'
+    | '/_authenticated/admin/outreach'
     | '/_authenticated/admin/payments'
     | '/_authenticated/admin/plans'
     | '/_authenticated/admin/websites'
@@ -898,6 +923,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  ShareRoute: typeof ShareRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
@@ -1035,6 +1061,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share': {
+      id: '/share'
+      path: '/share'
+      fullPath: '/share'
+      preLoaderRoute: typeof ShareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1196,6 +1229,13 @@ declare module '@tanstack/react-router' {
       path: '/monthly'
       fullPath: '/admin/monthly'
       preLoaderRoute: typeof AuthenticatedAdminMonthlyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/outreach': {
+      id: '/_authenticated/admin/outreach'
+      path: '/outreach'
+      fullPath: '/admin/outreach'
+      preLoaderRoute: typeof AuthenticatedAdminOutreachRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/payments': {
@@ -1437,6 +1477,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminDomainsRoute: typeof AuthenticatedAdminDomainsRoute
   AuthenticatedAdminMonthlyRoute: typeof AuthenticatedAdminMonthlyRoute
+  AuthenticatedAdminOutreachRoute: typeof AuthenticatedAdminOutreachRoute
   AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
   AuthenticatedAdminWebsitesRoute: typeof AuthenticatedAdminWebsitesRoute
@@ -1448,6 +1489,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminDomainsRoute: AuthenticatedAdminDomainsRoute,
   AuthenticatedAdminMonthlyRoute: AuthenticatedAdminMonthlyRoute,
+  AuthenticatedAdminOutreachRoute: AuthenticatedAdminOutreachRoute,
   AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
   AuthenticatedAdminWebsitesRoute: AuthenticatedAdminWebsitesRoute,
@@ -1587,6 +1629,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  ShareRoute: ShareRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
