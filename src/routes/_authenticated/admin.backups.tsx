@@ -179,7 +179,7 @@ function AdminBackups() {
   const overview = useQuery({ queryKey: ["admin-backup-overview"], queryFn: () => load({}) });
   const [selected, setSelected] = useState<string | null>(null);
 
-  const orgs = overview.data?.organizations ?? [];
+  const orgs = useMemo(() => overview.data?.organizations ?? [], [overview.data]);
   const stats = useMemo(() => {
     const dayAgo = Date.now() - 86_400_000;
     return {
