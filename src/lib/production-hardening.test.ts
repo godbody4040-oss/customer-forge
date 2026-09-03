@@ -197,9 +197,8 @@ describe("revoraweb.site is a traffic-only redirect domain", () => {
   });
 
   it("keeps Revora-branded client subdomain hosting switched off", async () => {
-    const { REVORA_SUBDOMAIN_HOSTING_ENABLED, revoraHostIsLive } = await import(
-      "@/lib/revora-address"
-    );
+    const { REVORA_SUBDOMAIN_HOSTING_ENABLED, revoraHostIsLive } =
+      await import("@/lib/revora-address");
     expect(REVORA_SUBDOMAIN_HOSTING_ENABLED).toBe(false);
     expect(revoraHostIsLive({ subdomain: "business", revora_host_ok: true })).toBe(false);
   });
