@@ -43,12 +43,10 @@ const BENEFITS = [
 ] as const;
 
 export const Route = createFileRoute("/industries/$slug")({
-  // Resolved here (not thrown here) so head() still runs for unknown slugs and
-  // can emit real not-found metadata instead of inheriting the site defaults.
-  beforeLoad: ({ params }) => ({ industry: INDUSTRIES.find((i) => industrySlug(i.name) === params.slug) ?? null }),
-  loader: ({ context }) => {
-    if (!context.industry) throw notFound();
-    return null;
+  beforeLoad: ({ params }) => {
+    const industry = INDUSTRIES.find((i) => industrySlug(i.name) === params.slug);
+    if (!industry) throw notFound();
+    return { industry };
   },
   head: ({ match }) => {
     const industry = (match.context as { industry?: (typeof INDUSTRIES)[number] }).industry;

@@ -7,12 +7,10 @@ import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
 import { breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
 
 export const Route = createFileRoute("/compare/$slug")({
-  // Resolved here (not thrown here) so head() still runs for unknown slugs and
-  // can emit real not-found metadata instead of inheriting the site defaults.
-  beforeLoad: ({ params }) => ({ comparison: findComparison(params.slug) ?? null }),
-  loader: ({ context }) => {
-    if (!context.comparison) throw notFound();
-    return null;
+  beforeLoad: ({ params }) => {
+    const comparison = findComparison(params.slug);
+    if (!comparison) throw notFound();
+    return { comparison };
   },
   head: ({ match }) => {
     const comparison = (match.context as { comparison?: Comparison }).comparison;

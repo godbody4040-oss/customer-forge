@@ -11,12 +11,10 @@ import { localPageContent, localPath, type LocalPageContent } from "@/lib/local-
 import { trackConversion } from "@/lib/conversion";
 
 export const Route = createFileRoute("/local/$industry/$state")({
-  // Resolved here (not thrown here) so head() still runs for unknown slugs and
-  // can emit real not-found metadata instead of inheriting the site defaults.
-  beforeLoad: ({ params }) => ({ content: localPageContent(params.industry, params.state) ?? null }),
-  loader: ({ context }) => {
-    if (!context.content) throw notFound();
-    return null;
+  beforeLoad: ({ params }) => {
+    const content = localPageContent(params.industry, params.state);
+    if (!content) throw notFound();
+    return { content };
   },
   head: ({ match }) => {
     const content = (match.context as { content?: LocalPageContent }).content;

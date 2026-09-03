@@ -7,12 +7,10 @@ import { BUSINESS } from "@/lib/business-identity";
 import { breadcrumbSchema, canonicalLink, ogUrl, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/guides/$slug")({
-  // Resolved here (not thrown here) so head() still runs for unknown slugs and
-  // can emit real not-found metadata instead of inheriting the site defaults.
-  beforeLoad: ({ params }) => ({ guide: findGuide(params.slug) ?? null }),
-  loader: ({ context }) => {
-    if (!context.guide) throw notFound();
-    return null;
+  beforeLoad: ({ params }) => {
+    const guide = findGuide(params.slug);
+    if (!guide) throw notFound();
+    return { guide };
   },
   head: ({ match }) => {
     const guide = (match.context as { guide?: Guide }).guide;

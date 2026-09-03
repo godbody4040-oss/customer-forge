@@ -8,12 +8,10 @@ import { findLocalIndustry, localPath, type LocalIndustry } from "@/lib/local-pa
 import { US_STATES } from "@/lib/us-states";
 
 export const Route = createFileRoute("/local/$industry/")({
-  // Resolved here (not thrown here) so head() still runs for unknown slugs and
-  // can emit real not-found metadata instead of inheriting the site defaults.
-  beforeLoad: ({ params }) => ({ industry: findLocalIndustry(params.industry) ?? null }),
-  loader: ({ context }) => {
-    if (!context.industry) throw notFound();
-    return null;
+  beforeLoad: ({ params }) => {
+    const industry = findLocalIndustry(params.industry);
+    if (!industry) throw notFound();
+    return { industry };
   },
   head: ({ match }) => {
     const industry = (match.context as { industry?: LocalIndustry }).industry;

@@ -46,12 +46,10 @@ const PILLARS = [
 ] as const;
 
 export const Route = createFileRoute("/locations/$city")({
-  // Resolved here (not thrown here) so head() still runs for unknown slugs and
-  // can emit real not-found metadata instead of inheriting the site defaults.
-  beforeLoad: ({ params }) => ({ location: findLocation(params.city) ?? null }),
-  loader: ({ context }) => {
-    if (!context.location) throw notFound();
-    return null;
+  beforeLoad: ({ params }) => {
+    const location = findLocation(params.city);
+    if (!location) throw notFound();
+    return { location };
   },
   head: ({ match }) => {
     const location = (match.context as { location?: NcLocation }).location;
