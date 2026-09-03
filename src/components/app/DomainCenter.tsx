@@ -68,7 +68,6 @@ export function DomainCenter({
         dns_ok?: boolean | null;
         ssl_ok?: boolean | null;
         publish_state?: string | null;
-        subdomain?: string | null;
       }
     | null
     | undefined;

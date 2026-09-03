@@ -367,7 +367,6 @@ export async function provisionClient(admin: SupabaseClient, input: NewClientInp
       subheadline: input.description ?? null,
       meta_description: input.tagline ?? null,
     },
-    subdomain: slug,
     custom_domain: domain && isValidDomain(domain) ? domain : null,
     domain_status: domain && isValidDomain(domain) ? "dns_pending" : "not_connected",
     domain_target: DOMAIN_TARGET,

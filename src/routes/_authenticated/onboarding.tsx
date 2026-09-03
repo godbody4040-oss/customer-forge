@@ -366,7 +366,6 @@ function Onboarding() {
         {
           organization_id: org.id,
           template: plan.template,
-          subdomain: org.slug,
           publish_state: "preview",
           review_state: "ready_for_review",
           generation: plan as never,
