@@ -74,6 +74,7 @@ import { Route as AuthenticatedMyIndexRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMyActivityRouteImport } from './routes/_authenticated/my.activity'
 import { Route as AuthenticatedMySiteRouteImport } from './routes/_authenticated/my.site'
 import { Route as AuthenticatedMyStartRouteImport } from './routes/_authenticated/my.start'
+import { Route as LocalIndustryIndexRouteImport } from './routes/local.$industry.index'
 import { Route as LocalIndustryStateRouteImport } from './routes/local.$industry.$state'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
@@ -421,6 +422,11 @@ const AuthenticatedMyStartRoute = AuthenticatedMyStartRouteImport.update({
   path: '/start',
   getParentRoute: () => AuthenticatedMyRoute,
 } as any)
+const LocalIndustryIndexRoute = LocalIndustryIndexRouteImport.update({
+  id: '/local/$industry/',
+  path: '/local/$industry/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocalIndustryStateRoute = LocalIndustryStateRouteImport.update({
   id: '/local/$industry/$state',
   path: '/local/$industry/$state',
@@ -538,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/my/': typeof AuthenticatedMyIndexRoute
+  '/local/$industry/': typeof LocalIndustryIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -608,6 +615,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/my': typeof AuthenticatedMyIndexRoute
+  '/local/$industry': typeof LocalIndustryIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/my/': typeof AuthenticatedMyIndexRoute
+  '/local/$industry/': typeof LocalIndustryIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
@@ -762,6 +771,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/my/'
+    | '/local/$industry/'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -832,6 +842,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/my'
+    | '/local/$industry'
     | '/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -908,6 +919,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
     | '/_authenticated/my/'
+    | '/local/$industry/'
     | '/_authenticated/admin/clients/$orgId'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
@@ -947,6 +959,7 @@ export interface RootRouteChildren {
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
   LocalIndustryStateRoute: typeof LocalIndustryStateRoute
+  LocalIndustryIndexRoute: typeof LocalIndustryIndexRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1412,6 +1425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyStartRouteImport
       parentRoute: typeof AuthenticatedMyRoute
     }
+    '/local/$industry/': {
+      id: '/local/$industry/'
+      path: '/local/$industry'
+      fullPath: '/local/$industry/'
+      preLoaderRoute: typeof LocalIndustryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/local/$industry/$state': {
       id: '/local/$industry/$state'
       path: '/local/$industry/$state'
@@ -1661,6 +1681,7 @@ const rootRouteChildren: RootRouteChildren = {
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
   LocalIndustryStateRoute: LocalIndustryStateRoute,
+  LocalIndustryIndexRoute: LocalIndustryIndexRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
