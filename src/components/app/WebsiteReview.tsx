@@ -16,7 +16,7 @@ import {
   readPlan,
   requestStatusMeta,
   reviewStateMeta,
-  revoraSubdomain,
+  revoraShareAddress,
 } from "@/lib/website-plan";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +61,7 @@ export function WebsiteReview({ organizationId, slug, settings, canManage }: Pro
             <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">{state.help}</p>
             {slug ? (
               <p className="mt-2 text-[12px] text-muted-foreground">
-                Free Revora address: {revoraSubdomain(slug)}
+                Revora share link: {revoraShareAddress(slug)}
               </p>
             ) : null}
           </div>
