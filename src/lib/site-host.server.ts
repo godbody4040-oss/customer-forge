@@ -1,10 +1,12 @@
 /**
  * Host resolution for published business websites.
  *
- * A tenant site is reachable at `/s/:slug`, at its Revora subdomain, and at a
- * connected custom domain. `robots.txt` and `sitemap.xml` must describe the
- * business that owns the requested host — not the Revora marketing site — so
- * both are resolved from the incoming Host header.
+ * A tenant site is reachable at `/s/:slug` on the platform domain and at the
+ * customer's OWN verified custom domain. Revora-owned subdomains are not a
+ * hosting product: no host under `revoraweb.site` can ever resolve to a client
+ * organization. `robots.txt` and `sitemap.xml` must describe the business that
+ * owns the requested host — not the Revora marketing site — so both are
+ * resolved from the incoming Host header.
  */
 import { publicClient, publicOrganization } from "@/lib/public-site.server";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
@@ -19,7 +21,6 @@ import {
   isRevoraOwnHost,
   isTrafficDomainHost,
   normalizeHost,
-  revoraSubdomainFromHost,
 } from "@/lib/revora-address";
 
 export const REVORA_HOSTS = REVORA_OWN_HOSTS;
@@ -34,52 +35,43 @@ export type HostSite = {
 export type TenantHost = {
   organizationId: string;
   slug: string;
-  /** Which address the visitor arrived on. */
-  via: "revora" | "custom";
+  /** Which address the visitor arrived on. Only customer-owned domains resolve. */
+  via: "custom";
   host: string;
-  /**
-   * Set when the visitor arrived on the free Revora subdomain but the client's
-   * own domain is fully verified — old links keep working and redirect there.
-   */
-  redirectHost?: string | null;
 };
 
 /**
  * Resolves which organization owns an incoming host.
  *
- * - A Revora subdomain always resolves (it is included with the website).
- * - A custom domain only resolves once DNS **and** HTTPS have been verified, so
- *   a half-configured domain can never serve a client's site over a broken
- *   certificate — the free Revora address stays the working address.
+ * ONLY a customer-owned custom domain can resolve, and only once DNS **and**
+ * HTTPS have been verified — so a half-configured domain can never serve a
+ * client's site over a broken certificate. Revora's own hosts, and every host
+ * under the traffic-only domain, are rejected before any lookup runs, so
+ * `*.revoraweb.site` is structurally incapable of becoming a client website.
  *
- * One host maps to exactly one organization (the subdomain column is unique),
- * which is what keeps one client's host from ever reaching another's website.
+ * One host maps to exactly one organization, which is what keeps one client's
+ * host from ever reaching another's website.
  */
 export async function resolveTenantHost(rawHost: string | null): Promise<TenantHost | null> {
   if (!rawHost) return null;
   const host = normalizeHost(rawHost);
-  if (!host || isRevoraOwnHost(host)) return null;
-  // `revoraweb.site` is traffic-only: no hostname on it may ever resolve to a
-  // client website (the redirect middleware sends those visitors to the
-  // platform domain before this is reached).
-  if (isTrafficDomainHost(host)) return null;
+  if (!host) return null;
+  // Revora's own hosts are not tenants, and `revoraweb.site` is traffic-only:
+  // no hostname on it may ever resolve to a client website.
+  if (isRevoraOwnHost(host) || isTrafficDomainHost(host)) return null;
 
   // Address settings are private, so the lookup runs with server credentials on
   // the server only. It returns nothing but the owning workspace, and callers
   // still go through the published-only site reader.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const bare = host.replace(/^www\./, "");
-  const subdomain = revoraSubdomainFromHost(host);
 
   // Host headers are attacker-controlled, so every candidate is looked up with a
   // parameterized .eq() filter. Nothing from the header is ever spliced into a
   // filter expression string, where commas or parentheses could restructure the
   // query.
-  const columns = "organization_id, custom_domain, subdomain, dns_ok, ssl_ok";
+  const columns = "organization_id, custom_domain, dns_ok, ssl_ok";
   const lookups = [
-    ...(subdomain
-      ? [supabaseAdmin.from("website_settings").select(columns).eq("subdomain", subdomain).limit(2)]
-      : []),
     supabaseAdmin.from("website_settings").select(columns).eq("custom_domain", host).limit(2),
     ...(bare !== host
       ? [supabaseAdmin.from("website_settings").select(columns).eq("custom_domain", bare).limit(2)]
@@ -88,21 +80,10 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
 
   const results = await Promise.all(lookups);
   const seen = new Set<string>();
-  // A verified client-owned domain always wins: it is the client's permanent
-  // public address and must never be overridden by legacy Revora hosting rows.
-  results.sort((a, b) => {
-    const custom = (rows: { data?: unknown[] | null }) =>
-      (rows.data ?? []).some(
-        (row) => (row as { custom_domain?: string | null }).custom_domain?.toLowerCase() === host,
-      )
-        ? 0
-        : 1;
-    return custom(a) - custom(b);
-  });
   const ordered = results
     .flatMap((result) => result.data ?? [])
     .filter((row) => {
-      const key = `${row.organization_id}:${row.subdomain ?? ""}:${row.custom_domain ?? ""}`;
+      const key = `${row.organization_id}:${row.custom_domain ?? ""}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -110,24 +91,16 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
 
   for (const row of ordered) {
     if (!row.organization_id) continue;
-    const viaRevora = !!subdomain && row.subdomain === subdomain;
-    const viaCustom =
-      !viaRevora &&
-      (row.custom_domain?.toLowerCase() === host || row.custom_domain?.toLowerCase() === bare) &&
-      !!row.dns_ok &&
-      !!row.ssl_ok;
-    if (!viaRevora && !viaCustom) continue;
+    const domain = row.custom_domain?.toLowerCase();
+    const verified = (domain === host || domain === bare) && !!row.dns_ok && !!row.ssl_ok;
+    if (!verified) continue;
     const org = await publicOrganization({ id: row.organization_id });
     if (!org?.slug) continue;
     return {
       organizationId: row.organization_id,
       slug: org.slug,
-      via: viaRevora ? "revora" : "custom",
+      via: "custom",
       host,
-      redirectHost:
-        viaRevora && row.custom_domain && row.dns_ok && row.ssl_ok
-          ? normalizeHost(row.custom_domain)
-          : null,
     };
   }
   return null;

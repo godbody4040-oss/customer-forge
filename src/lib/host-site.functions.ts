@@ -1,10 +1,11 @@
 /**
  * Serves a client website from the hostname the visitor typed.
  *
- * `clientname.revoraweb.site` (the free Revora address) and a verified
- * custom domain both land on the same published website, with no redirect and
- * no path prefix. Anything unpublished stays private: the loader reuses the
- * published-only reader, so drafts return nothing here.
+ * The ONLY hostname that serves a client website is the customer's own verified
+ * custom domain — pages land there with no redirect and no path prefix. Hosts
+ * under `revoraweb.site` are traffic-only and never a client website. Anything
+ * unpublished stays private: the loader reuses the published-only reader, so
+ * drafts return nothing here.
  */
 import { createServerFn } from "@tanstack/react-start";
 import type { loadSite } from "@/lib/public-site.server";
@@ -12,7 +13,7 @@ import type { loadSite } from "@/lib/public-site.server";
 export type HostSiteResult = {
   slug: string;
   host: string;
-  via: "revora" | "custom";
+  via: "custom";
   site: NonNullable<Awaited<ReturnType<typeof loadSite>>>;
 } | null;
 
@@ -35,7 +36,7 @@ export const getHostSite = createServerFn({ method: "GET" })
     const { getRequestHost } = await import("@tanstack/react-start/server");
     const { resolveTenantHost } = await import("@/lib/site-host.server");
     const { loadSite } = await import("@/lib/public-site.server");
-    const { SITE_ROOT, normalizeHost } = await import("@/lib/revora-address");
+    const { isTrafficDomainHost } = await import("@/lib/revora-address");
 
     let host: string | null = null;
     try {
@@ -48,8 +49,7 @@ export const getHostSite = createServerFn({ method: "GET" })
     // platform domain before reaching a page; if one is ever rendered anyway
     // (for example after loop protection stops a second redirect), it shows the
     // platform's own page rather than an empty holding page.
-    const bare = normalizeHost(host);
-    if (bare === SITE_ROOT || bare.endsWith(`.${SITE_ROOT}`)) {
+    if (isTrafficDomainHost(host)) {
       return { tenant: false, result: null };
     }
     const tenant = await resolveTenantHost(host);
