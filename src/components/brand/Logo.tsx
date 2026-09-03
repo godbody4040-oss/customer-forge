@@ -1,32 +1,28 @@
 import { cn } from "@/lib/utils";
+import revoraMark from "@/assets/revora-mark.png.asset.json";
 
-/** Geometric "R" mark — favicon / app icon / dashboard safe. */
+/** Revora gold "R" mark — favicon / app icon / dashboard safe. */
 export function LogoMark({ className }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "grid size-8 shrink-0 place-items-center rounded-md border border-primary/35 bg-elevated",
+        "grid size-9 shrink-0 place-items-center overflow-hidden rounded-[10px] border border-primary/40 bg-elevated shadow-[0_0_18px_-6px_var(--color-gold)]",
         className,
       )}
     >
-      <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
-        <path
-          d="M7 20V4h6.6a4.7 4.7 0 0 1 0 9.4H7"
-          stroke="var(--color-gold)"
-          strokeWidth="2.4"
-          strokeLinecap="square"
-        />
-        <path
-          d="M12.4 13.4 18 20"
-          stroke="var(--color-gold-soft)"
-          strokeWidth="2.4"
-          strokeLinecap="square"
-        />
-      </svg>
+      <img
+        src={revoraMark.url}
+        alt=""
+        aria-hidden="true"
+        className="size-full object-contain"
+        loading="eager"
+        decoding="async"
+      />
     </span>
   );
 }
+
 
 export function Logo({
   className,
