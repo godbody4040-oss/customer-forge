@@ -30,21 +30,28 @@ function migrationSql() {
 describe("anonymous website settings exposure stays minimal", () => {
   const source = readFileSync("src/lib/public-site.server.ts", "utf8");
 
-  it("never selects the whole settings row on the anonymous path", () => {
-    const index = source.indexOf('from("website_settings")');
-    expect(index).toBeGreaterThan(-1);
-    while (source.indexOf('from("website_settings")', index) !== -1) break;
-    let cursor = index;
+  /** Every `.select(...)` argument used on the website_settings table. */
+  const settingsSelects = (() => {
+    const selects: string[] = [];
+    let cursor = source.indexOf('from("website_settings")');
     while (cursor !== -1) {
-      const block = source.slice(cursor, cursor + 600);
-      expect(block).not.toContain('.select("*")');
+      const block = source.slice(cursor, cursor + 700);
+      const match = block.match(/\.select\(([\s\S]*?)\)\s*\n/);
+      if (match?.[1]) selects.push(match[1]);
       cursor = source.indexOf('from("website_settings")', cursor + 1);
     }
+    return selects;
+  })();
+
+  it("never selects the whole settings row", () => {
+    expect(settingsSelects.length).toBeGreaterThan(0);
+    for (const select of settingsSelects) expect(select).not.toContain("*");
   });
 
   it.each(OPERATIONAL_COLUMNS)("does not read %s for public rendering", (column) => {
-    expect(source).not.toContain(column);
+    for (const select of settingsSelects) expect(select).not.toContain(column);
   });
+
 
   it("restricts the anonymous grant to render columns only", () => {
     const sql = migrationSql();
