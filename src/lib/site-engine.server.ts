@@ -9,6 +9,7 @@
 import type { SiteCopy } from "@/lib/site-engine";
 import type { SiteBrief } from "@/lib/site-brief";
 import { INTENT_META, readBrief } from "@/lib/site-brief";
+import { businessDna, dnaBrief, screenClaims, type DnaFacts } from "@/lib/business-dna";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 export const COPY_MODEL = "google/gemini-3-flash-preview";
@@ -179,11 +180,44 @@ const factSheet = (facts: CopyFacts) =>
 const str = (value: unknown, fallback = "") =>
   typeof value === "string" && value.trim() ? value.trim() : fallback;
 
+/** Business DNA derived from the same facts the copy pass writes from. */
+export const dnaFor = (facts: CopyFacts): DnaFacts => ({
+  businessName: facts.businessName,
+  industry: facts.industry,
+  services: facts.services.map((s) => s.name),
+  description: facts.description,
+  city: facts.city,
+  region: facts.state,
+  serviceArea: facts.serviceArea,
+  phone: facts.phone,
+  email: facts.email,
+  yearsInBusiness: facts.yearsInBusiness,
+  hasPrices: facts.services.some((s) => s.price != null || s.starting_price != null),
+  goals: facts.goals,
+  hasHours: facts.hasHours,
+});
+
+/**
+ * Removes any sentence that makes a claim the client never supplied. The model
+ * is told not to write them; this is the enforcement so an invented "award
+ * winning" line can never reach a live client site.
+ */
+export function stripUnsupportedClaims(text: string, facts: DnaFacts): string {
+  if (!text.trim()) return text;
+  const kept = text
+    .split(/(?<=[.!?])\s+|\n\n/)
+    .filter((sentence) => screenClaims(sentence, facts).length === 0);
+  const out = kept.join(" ").replace(/\s{2,}/g, " ").trim();
+  return out;
+}
+
 /** Full website copy pass. */
 export async function generateSiteCopy(
   facts: CopyFacts,
   brief?: SiteBrief | null,
 ): Promise<SiteCopy> {
+  const dnaFacts = dnaFor(facts);
+  const dna = businessDna(dnaFacts);
   const data = await chatJson(
     `Return JSON with exactly these keys: heroHeadline (max 70 chars), heroSubheadline (max 160 chars),
 primaryCta (max 24 chars), secondaryCta (max 24 chars), intro (2 sentences),
@@ -192,32 +226,36 @@ serviceCards (array of {name, copy} — one per supplied service, copy max 220 c
 faqs (array of 4-6 {question, answer} relevant to this category, services and area — never promise anything not supplied),
 areaCopy (2 sentences about where they work; omit places not supplied),
 metaTitle (max 60 chars), metaDescription (max 155 chars), ogTitle (max 60 chars), ogDescription (max 155 chars).`,
-    `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.${briefContext(brief)}\n\nFACTS:\n${factSheet(facts)}`,
+    `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.${briefContext(brief)}\n\nBUSINESS DNA (authoritative — follow the strategy and the never-claim list):\n${dnaBrief(dna)}\n\nFACTS:\n${factSheet(facts)}`,
   );
+
 
   const cards = Array.isArray(data["serviceCards"])
     ? (data["serviceCards"] as Record<string, unknown>[])
     : [];
   const faqs = Array.isArray(data["faqs"]) ? (data["faqs"] as Record<string, unknown>[]) : [];
 
+  const clean = (value: string) => stripUnsupportedClaims(value, dnaFacts);
+
   return {
-    heroHeadline: str(data["heroHeadline"], facts.businessName),
-    heroSubheadline: str(data["heroSubheadline"]),
+    heroHeadline: clean(str(data["heroHeadline"], facts.businessName)) || facts.businessName,
+    heroSubheadline: clean(str(data["heroSubheadline"])),
     primaryCta: str(data["primaryCta"], facts.ctaLabel),
     secondaryCta: str(data["secondaryCta"], "See services"),
-    intro: str(data["intro"]),
-    about: str(data["about"], facts.description ?? ""),
+    intro: clean(str(data["intro"])),
+    about: clean(str(data["about"], facts.description ?? "")),
     benefits: (Array.isArray(data["benefits"]) ? (data["benefits"] as unknown[]) : [])
       .filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+      .filter((b) => screenClaims(b, dnaFacts).length === 0)
       .slice(0, 5),
     serviceCards: cards
-      .map((c) => ({ name: str(c["name"]), copy: str(c["copy"]) }))
+      .map((c) => ({ name: str(c["name"]), copy: clean(str(c["copy"])) }))
       .filter((c) => c.name),
     faqs: faqs
-      .map((f) => ({ question: str(f["question"]), answer: str(f["answer"]) }))
+      .map((f) => ({ question: str(f["question"]), answer: clean(str(f["answer"])) }))
       .filter((f) => f.question && f.answer)
       .slice(0, 6),
-    areaCopy: str(data["areaCopy"]),
+    areaCopy: clean(str(data["areaCopy"])),
     metaTitle: str(data["metaTitle"], facts.businessName).slice(0, 60),
     metaDescription: str(data["metaDescription"]).slice(0, 158),
     ogTitle: str(data["ogTitle"], str(data["metaTitle"], facts.businessName)).slice(0, 60),

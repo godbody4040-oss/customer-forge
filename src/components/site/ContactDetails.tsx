@@ -7,14 +7,19 @@
  */
 import { Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { telHref as intlTelHref } from "@/lib/locale";
 
 export type ContactInfo = {
   phone?: string | null;
   email?: string | null;
 };
 
-/** Digits only — `tel:` links break on spaces and formatting characters. */
-export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+/**
+ * Digits only — `tel:` links break on spaces and formatting characters. Numbers
+ * from anywhere in the world are accepted (international `+` prefix kept); a
+ * value that isn't a usable phone number never becomes a dead `tel:` link.
+ */
+export const telHref = (phone: string) => intlTelHref(phone) ?? "#";
 
 /**
  * Only a plain address ever reaches a `mailto:` href, so a saved business

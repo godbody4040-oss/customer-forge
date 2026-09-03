@@ -51,6 +51,10 @@ import { PortalAccess } from "@/components/app/PortalAccess";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
 import { PlatformEngine } from "@/components/app/PlatformEngine";
+import { DesignIdentity } from "@/components/app/DesignIdentity";
+import { recordHealth, snapshotFromPreflight } from "@/lib/site-health";
+import type { Regression } from "@/lib/site-regression";
+import { askAssistant } from "@/lib/assistant-bridge";
 import {
   AiCopyAssistant,
   RevoraScorePanel,
@@ -220,6 +224,48 @@ function WebsitePage() {
     canPublishReason: production?.unlocked === false ? (production?.reason ?? null) : null,
   });
 
+  // Regression watch: compare this real check against the previous one for this
+  // workspace and tell the owner what got worse. Recorded in an effect only.
+  const [regressions, setRegressions] = useState<Regression[]>([]);
+  const preflightReady = !preflightFacts.isLoading && !!orgId && (pages ?? []).length > 0;
+  const healthSignature = `${preflightResult.score}:${(pages ?? []).length}:${visibleSections}:${
+    preflightResult.checks.filter((c) => c.status === "fail").length
+  }`;
+  useEffect(() => {
+    if (!preflightReady || !orgId) return;
+    const snapshot = snapshotFromPreflight(preflightResult, {
+      pages: (pages ?? []).map((page) => ({
+        slug: page.slug,
+        visibleSections: page.sections.filter((section) => section.is_visible).length,
+      })),
+      ctas: (pages ?? []).reduce(
+        (sum, page) =>
+          sum +
+          page.sections.reduce(
+            (inner, section) =>
+              inner +
+              section.components.filter(
+                (component) => component.is_visible && !!component.link_url,
+              ).length,
+            0,
+          ),
+        0,
+      ),
+      forms: (pages ?? []).reduce(
+        (sum, page) =>
+          sum +
+          page.sections.filter(
+            (section) => section.is_visible && /form|book|quote|contact/.test(section.kind),
+          ).length,
+        0,
+      ),
+      publicHttps: domainVerified,
+    });
+    setRegressions(recordHealth(orgId, snapshot).regressions);
+    // Signature keeps this to one record per meaningful health change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId, preflightReady, healthSignature]);
+
   const copyFields = copy
     ? Object.fromEntries(
         EDITABLE_COPY_FIELDS.map((f) => [
@@ -359,6 +405,26 @@ function WebsitePage() {
       hint: "Colours, style and images",
       node: (
         <div className="space-y-5">
+          <DesignIdentity
+            organizationId={orgId ?? ""}
+            facts={{
+              businessName: org?.name ?? null,
+              industry:
+                (org?.industry as string | undefined) ?? (profile?.["industry"] as string) ?? null,
+              city: (profile?.["city"] as string) ?? null,
+              serviceArea: (profile?.["service_area"] as string) ?? null,
+              services: (services ?? []).map((service) => String(service.name ?? "")),
+              certifications: (profile?.["certifications"] as string) ?? null,
+              awards: (profile?.["awards"] as string) ?? null,
+              phone: (profile?.["phone"] as string) ?? null,
+              email: (profile?.["email"] as string) ?? null,
+              hasHours: Boolean(profile?.["hours"]),
+            }}
+            onRestyle={(instruction: string) => {
+              goTo("ai");
+              askAssistant(instruction);
+            }}
+          />
           <EffectStudio
             organizationId={orgId}
             canManage={manage}
@@ -453,6 +519,7 @@ function WebsitePage() {
             {...(manage ? { onSelfHeal: () => selfHeal.mutate() } : {})}
             isHealing={selfHeal.isPending}
             healSummary={selfHeal.data?.summary ?? null}
+            regressions={regressions}
           />
           <ProductionReadinessPanel
             readiness={productionReadiness}
