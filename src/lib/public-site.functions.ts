@@ -267,13 +267,7 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     // to the request that was already saved. The visitor still sees a normal
     // confirmation, and the owner is not alerted or followed up with twice.
     if (saved.duplicate) {
-      return {
-        ok: true as const,
-        leadId,
-        appointmentId: saved.appointment_id ?? null,
-        duplicate: true,
-        notified: true,
-      };
+      return { ok: true, leadId, business: org.name, notified: true, duplicate: true };
     }
 
     // Funnel milestones: recorded only the first time a workspace reaches them,
