@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as CompareIndexRouteImport } from './routes/compare.index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
@@ -209,6 +210,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const CompareIndexRoute = CompareIndexRouteImport.update({
+  id: '/compare/',
+  path: '/compare/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
@@ -515,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
+  '/compare/': typeof CompareIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/local/': typeof LocalIndexRoute
@@ -587,6 +594,7 @@ export interface FileRoutesByTo {
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
+  '/compare': typeof CompareIndexRoute
   '/demo': typeof DemoIndexRoute
   '/industries': typeof IndustriesIndexRoute
   '/local': typeof LocalIndexRoute
@@ -666,6 +674,7 @@ export interface FileRoutesById {
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
+  '/compare/': typeof CompareIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/local/': typeof LocalIndexRoute
@@ -745,6 +754,7 @@ export interface FileRouteTypes {
     | '/p/$token'
     | '/s/$slug'
     | '/states/$state'
+    | '/compare/'
     | '/demo/'
     | '/industries/'
     | '/local/'
@@ -817,6 +827,7 @@ export interface FileRouteTypes {
     | '/p/$token'
     | '/s/$slug'
     | '/states/$state'
+    | '/compare'
     | '/demo'
     | '/industries'
     | '/local'
@@ -895,6 +906,7 @@ export interface FileRouteTypes {
     | '/p/$token'
     | '/s/$slug'
     | '/states/$state'
+    | '/compare/'
     | '/demo/'
     | '/industries/'
     | '/local/'
@@ -968,6 +980,7 @@ export interface RootRouteChildren {
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   StatesStateRoute: typeof StatesStateRoute
+  CompareIndexRoute: typeof CompareIndexRoute
   LocalIndexRoute: typeof LocalIndexRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
@@ -1157,6 +1170,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/compare/': {
+      id: '/compare/'
+      path: '/compare'
+      fullPath: '/compare/'
+      preLoaderRoute: typeof CompareIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/demo/': {
       id: '/demo/'
@@ -1698,6 +1718,7 @@ const rootRouteChildren: RootRouteChildren = {
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   StatesStateRoute: StatesStateRoute,
+  CompareIndexRoute: CompareIndexRoute,
   LocalIndexRoute: LocalIndexRoute,
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
