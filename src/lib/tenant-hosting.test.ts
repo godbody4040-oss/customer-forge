@@ -5,9 +5,11 @@ import {
   isPossibleTenantHost,
   isRevoraOwnHost,
   isTrafficDomainHost,
+  isTrafficRedirectHost,
   REVORA_SUBDOMAIN_HOSTING_ENABLED,
   trafficRedirectUrl,
 } from "@/lib/revora-address";
+import { parseReturnUrl } from "@/lib/stripe-input";
 
 /**
  * The final domain architecture: the platform domain is platform-only, the
