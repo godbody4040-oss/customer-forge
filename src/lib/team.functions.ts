@@ -33,7 +33,7 @@ async function hashToken(token: string): Promise<string> {
 }
 
 async function assertCanManage(
-  supabase: { from: (t: string) => any },
+  supabase: Pick<SupabaseClient, "from">,
   organizationId: string,
   userId: string,
 ) {

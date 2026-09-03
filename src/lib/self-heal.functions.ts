@@ -34,7 +34,7 @@ export type SelfHealResult = {
   remaining: number;
 };
 
-type Db = { from: (table: string) => any };
+type Db = Pick<SupabaseClient, "from">;
 
 const orgIdOf = (input: { organizationId?: unknown }) => {
   const id = String(input?.organizationId ?? "").trim();

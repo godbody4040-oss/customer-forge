@@ -33,7 +33,7 @@ function generateCode(): string {
 }
 
 async function assertCanManage(
-  supabase: { from: (t: string) => any },
+  supabase: Pick<SupabaseClient, "from">,
   organizationId: string,
   userId: string,
 ) {

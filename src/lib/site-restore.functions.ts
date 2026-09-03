@@ -85,7 +85,7 @@ export const restoreSiteState = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const supabase = context.supabase as never as {
-      from: (table: string) => any;
+      from: SupabaseClient["from"];
       rpc: (
         name: string,
         args: Record<string, unknown>,

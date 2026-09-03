@@ -132,7 +132,7 @@ const data = {
 
 export const welcomeTemplate = {
   component: WelcomeEmail,
-  subject: (d: Record<string, any>) =>
+  subject: (d: Record<string, unknown>) =>
     `Welcome to Revora — your ${(d?.["planName"] as string) || "plan"} plan is live`,
   displayName: "Billing: welcome",
   previewData: data,
@@ -140,7 +140,7 @@ export const welcomeTemplate = {
 
 export const saleAlertTemplate = {
   component: SaleAlertEmail,
-  subject: (d: Record<string, any>) =>
+  subject: (d: Record<string, unknown>) =>
     `New sale: ${(d?.["businessName"] as string) || "A customer"} — ${(d?.["planName"] as string) || "subscription"}`,
   displayName: "Billing: new sale alert",
   to: "Revorabusiness0@gmail.com",
@@ -156,7 +156,7 @@ export const canceledTemplate = {
 
 export const planChangedTemplate = {
   component: PlanChangedEmail,
-  subject: (d: Record<string, any>) =>
+  subject: (d: Record<string, unknown>) =>
     `Plan updated: you're now on ${(d?.["newPlan"] as string) || "a new plan"}`,
   displayName: "Billing: plan changed",
   previewData: data,

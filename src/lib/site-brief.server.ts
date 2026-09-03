@@ -11,7 +11,7 @@ import type { CopyFacts } from "@/lib/site-engine.server";
 import type { CaptureQaInput, FactInput } from "@/lib/launch-qa";
 
 type Db = {
-  from: (table: string) => any;
+  from: SupabaseClient["from"];
 };
 
 export type BriefFacts = {

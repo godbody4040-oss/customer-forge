@@ -19,7 +19,7 @@ import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 import { EmailAPIError } from "@lovable.dev/email-js";
 
 type Db = {
-  from: (table: string) => any;
+  from: SupabaseClient["from"];
 };
 
 const DAY = 86_400_000;

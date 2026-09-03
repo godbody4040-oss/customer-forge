@@ -37,7 +37,7 @@ export const getActivityFeed = createServerFn({ method: "GET" })
     organizationId: orgIdOf(input),
   }))
   .handler(async ({ data, context }): Promise<ActivityFeed> => {
-    const supabase = context.supabase as { from: (t: string) => any };
+    const supabase = context.supabase as Pick<SupabaseClient, "from">;
     const orgId = data.organizationId;
 
     const [jobs, runs, audits] = await Promise.all([

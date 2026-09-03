@@ -44,7 +44,7 @@ for (const [pi, page] of bp.entries()) {
       .single();
     if (se) throw se;
     sections++;
-    const cs = (s.components ?? []).map((c: any, ci: number) => ({
+    const cs = (s.components ?? []).map((c: Record<string, unknown>, ci: number) => ({
       organization_id: org,
       section_id: sec!.id,
       kind: c.kind,
