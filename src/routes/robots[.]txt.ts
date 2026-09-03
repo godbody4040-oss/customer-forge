@@ -33,7 +33,6 @@ export const Route = createFileRoute("/robots.txt")({
           "",
         ];
 
-
         return new Response(lines.join("\n"), {
           headers: {
             "content-type": "text/plain; charset=utf-8",

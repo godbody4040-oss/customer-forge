@@ -174,7 +174,7 @@ export const GUIDES: readonly Guide[] = [
     faqs: [
       {
         q: "Is an automatic reply impersonal?",
-        a: "Not if it is honest and specific. Customers accept \"we've got your request and will text you a range within the hour\" far better than silence.",
+        a: 'Not if it is honest and specific. Customers accept "we\'ve got your request and will text you a range within the hour" far better than silence.',
       },
       {
         q: "What if I cannot answer for hours?",
@@ -185,11 +185,12 @@ export const GUIDES: readonly Guide[] = [
   {
     slug: "price-your-services",
     title: "How to publish prices without losing money",
-    metaTitle: "How to price and publish local service prices — starting-at ranges that qualify buyers",
+    metaTitle:
+      "How to price and publish local service prices — starting-at ranges that qualify buyers",
     description:
       "A practical approach to showing prices on a local service website: starting-at ranges, factor-based quoting, what never to publish, and how pricing filters bad jobs.",
     intro:
-      "\"Call for a quote\" costs you the customers who were ready to buy and only wanted to know if you were in range. Publishing something — not everything — is almost always more profitable than publishing nothing.",
+      '"Call for a quote" costs you the customers who were ready to buy and only wanted to know if you were in range. Publishing something — not everything — is almost always more profitable than publishing nothing.',
     readMinutes: 5,
     steps: [
       {
@@ -202,7 +203,7 @@ export const GUIDES: readonly Guide[] = [
       },
       {
         title: "Give a range, then explain the range",
-        body: "A range plus one sentence about what moves it (\"heavier soiling and pet hair move this up\") is credible. A bare number invites an argument later.",
+        body: 'A range plus one sentence about what moves it ("heavier soiling and pet hair move this up") is credible. A bare number invites an argument later.',
       },
       {
         title: "Charge for the visit when the visit is the work",
@@ -242,7 +243,7 @@ export const GUIDES: readonly Guide[] = [
     steps: [
       {
         title: "Say what you do, where, in the first line",
-        body: "A visitor should know your trade and your area without scrolling. \"Fast AC repair across Charlotte and the surrounding counties\" beats any tagline.",
+        body: 'A visitor should know your trade and your area without scrolling. "Fast AC repair across Charlotte and the surrounding counties" beats any tagline.',
       },
       {
         title: "One obvious primary action",

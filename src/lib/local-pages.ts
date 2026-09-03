@@ -36,7 +36,12 @@ const PROFILES: Record<string, Omit<LocalIndustry, "slug" | "name">> = {
   "auto-detailing": {
     owner: "detailer",
     searcher: "car owners searching for mobile detailing near them",
-    jobs: ["interior deep clean", "exterior paint correction", "ceramic coating", "fleet detailing"],
+    jobs: [
+      "interior deep clean",
+      "exterior paint correction",
+      "ceramic coating",
+      "fleet detailing",
+    ],
     leak: "most enquiries arrive while you are mid-detail with wet hands, and a missed text is a booked competitor",
     quoteInputs: ["vehicle size", "condition", "interior or exterior", "add-ons like pet hair"],
   },
@@ -143,7 +148,6 @@ export const LOCAL_INDUSTRIES: readonly LocalIndustry[] = INDUSTRIES.flatMap<Loc
   },
 );
 
-
 export function findLocalIndustry(slug: string): LocalIndustry | null {
   return LOCAL_INDUSTRIES.find((i) => i.slug === slug) ?? null;
 }
@@ -179,7 +183,10 @@ const SETUP = usdExact(GROWTH_SYSTEM.setupPrice);
 const MONTHLY = usdExact(GROWTH_SYSTEM.monthlyPrice);
 
 /** Builds the grounded copy for one industry × state page. */
-export function localPageContent(industrySlugValue: string, stateSlug: string): LocalPageContent | null {
+export function localPageContent(
+  industrySlugValue: string,
+  stateSlug: string,
+): LocalPageContent | null {
   const industry = findLocalIndustry(industrySlugValue);
   const state = findState(stateSlug);
   if (!industry || !state) return null;

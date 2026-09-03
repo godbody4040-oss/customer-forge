@@ -81,9 +81,7 @@ function ComparePage() {
 
         <div className="mt-8 overflow-x-auto rounded-2xl border border-border/60">
           <table className="w-full min-w-[560px] text-left text-[14px]">
-            <caption className="sr-only">
-              Revora compared with {comparison.otherName}
-            </caption>
+            <caption className="sr-only">Revora compared with {comparison.otherName}</caption>
             <thead className="bg-card/60 text-[13px]">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold">

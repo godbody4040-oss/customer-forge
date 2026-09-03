@@ -99,8 +99,7 @@ function ToolsPage() {
   const [averageJobValue, setJobValue] = useState(450);
 
   const missed = useMemo(
-    () =>
-      missedCallImpact({ enquiriesPerWeek, missedPercent, closeRatePercent, averageJobValue }),
+    () => missedCallImpact({ enquiriesPerWeek, missedPercent, closeRatePercent, averageJobValue }),
     [enquiriesPerWeek, missedPercent, closeRatePercent, averageJobValue],
   );
 
@@ -194,7 +193,12 @@ function ToolsPage() {
             Know this number and you can tell instantly whether any marketing spend is sane.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <NumberField id="leads" label="Leads in a typical month" value={leads} onChange={setLeads} />
+            <NumberField
+              id="leads"
+              label="Leads in a typical month"
+              value={leads}
+              onChange={setLeads}
+            />
             <NumberField
               id="customers"
               label="How many became customers"

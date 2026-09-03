@@ -205,7 +205,6 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/demo/dashboard",
       "/privacy",
       "/terms",
-
     ].map((path) => ({
       loc: `${origin}${path}`,
       lastmod: null as string | null,

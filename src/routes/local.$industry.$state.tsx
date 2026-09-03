@@ -125,8 +125,7 @@ function LocalIndustryStatePage() {
             <span className="text-foreground">{state.name}</span>
           </nav>
           <h1 className="mt-4 font-display text-[clamp(1.7rem,4vw,2.6rem)] leading-tight font-semibold">
-            {industry.name} growth system for{" "}
-            <span className="gold-hl">{state.name}</span>
+            {industry.name} growth system for <span className="gold-hl">{state.name}</span>
           </h1>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
             {content.intro}
@@ -151,7 +150,10 @@ function LocalIndustryStatePage() {
         <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6">
           <div className="grid gap-4 sm:grid-cols-2">
             {content.sections.map((section) => (
-              <article key={section.title} className="rounded-2xl border border-border/60 bg-card/40 p-5">
+              <article
+                key={section.title}
+                className="rounded-2xl border border-border/60 bg-card/40 p-5"
+              >
                 <h2 className="font-display text-[17px] font-semibold">{section.title}</h2>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
                   {section.body}
@@ -176,7 +178,9 @@ function LocalIndustryStatePage() {
         </section>
 
         <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6">
-          <h2 className="font-display text-[19px] font-semibold">Metro areas we serve in {state.name}</h2>
+          <h2 className="font-display text-[19px] font-semibold">
+            Metro areas we serve in {state.name}
+          </h2>
           <div className="mt-4 flex flex-wrap gap-2">
             {state.metros.map((metro) => (
               <span
@@ -194,7 +198,9 @@ function LocalIndustryStatePage() {
         </section>
 
         <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6">
-          <h2 className="font-display text-[19px] font-semibold">Questions {state.name} owners ask</h2>
+          <h2 className="font-display text-[19px] font-semibold">
+            Questions {state.name} owners ask
+          </h2>
           <div className="mt-4 space-y-3">
             {content.faqs.map((faq) => (
               <details
@@ -214,8 +220,9 @@ function LocalIndustryStatePage() {
               Ready to stop losing {state.name} jobs to whoever answers first?
             </h2>
             <p className="mx-auto mt-2 max-w-xl text-[14px] text-muted-foreground">
-              Get 3 days of full access, then {usdExact(GROWTH_SYSTEM.setupPrice)} to launch and your
-              first month of the {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month platform fee free.
+              Get 3 days of full access, then {usdExact(GROWTH_SYSTEM.setupPrice)} to launch and
+              your first month of the {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month platform fee
+              free.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Button asChild size="lg">

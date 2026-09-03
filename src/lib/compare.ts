@@ -49,12 +49,14 @@ export const COMPARISONS: readonly Comparison[] = [
     rows: [
       {
         factor: "What you get",
-        revora: "A complete system: website, instant quotes, booking, CRM, follow-up, reviews, local SEO and analytics.",
+        revora:
+          "A complete system: website, instant quotes, booking, CRM, follow-up, reviews, local SEO and analytics.",
         other: "Services around your existing assets — usually ads, content or SEO retainers.",
       },
       {
         factor: "Who owns the assets",
-        revora: "You. The site, the customer list, the leads and the data are yours and exportable.",
+        revora:
+          "You. The site, the customer list, the leads and the data are yours and exportable.",
         other: "Varies. Ad accounts, landing pages and lists are often held inside the agency.",
       },
       {
@@ -64,17 +66,20 @@ export const COMPARISONS: readonly Comparison[] = [
       },
       {
         factor: "Speed to live",
-        revora: "Onboarding generates your site from your real services, area and pricing; 3 days of full access first.",
+        revora:
+          "Onboarding generates your site from your real services, area and pricing; 3 days of full access first.",
         other: "Discovery, design and revision cycles measured in weeks.",
       },
       {
         factor: "What happens to a lead at 9pm",
-        revora: "Instant automatic reply, logged in your pipeline, follow-up scheduled without you.",
+        revora:
+          "Instant automatic reply, logged in your pipeline, follow-up scheduled without you.",
         other: "Usually forwarded to your inbox. Response time is still on you.",
       },
       {
         factor: "Reporting",
-        revora: "Live dashboard tying leads and booked jobs to the page, city and channel that produced them.",
+        revora:
+          "Live dashboard tying leads and booked jobs to the page, city and channel that produced them.",
         other: "Periodic report, typically traffic and campaign metrics.",
       },
     ],
@@ -103,7 +108,8 @@ export const COMPARISONS: readonly Comparison[] = [
     rows: [
       {
         factor: "Website",
-        revora: "Generated from your real services, service area and pricing, then editable in a visual builder.",
+        revora:
+          "Generated from your real services, service area and pricing, then editable in a visual builder.",
         other: "You build it, page by page, from a template.",
       },
       {
