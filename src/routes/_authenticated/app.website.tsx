@@ -39,6 +39,9 @@ import { UpgradeStudio } from "@/components/app/UpgradeStudio";
 import { RevoraGenius } from "@/components/app/RevoraGenius";
 import { BuilderAudit } from "@/components/app/BuilderAudit";
 import { BuilderCanvas } from "@/components/app/BuilderCanvas";
+import { PreFlightPanel } from "@/components/app/PreFlight";
+import { preflight } from "@/lib/preflight";
+import { usePreflightFacts } from "@/lib/preflight.hooks";
 import { ClientOnboardingFlow } from "@/components/app/ClientOnboardingFlow";
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
@@ -105,6 +108,7 @@ function WebsitePage() {
   const seo = readSeo(settings?.seo);
   const { data: readiness } = useBuildReadiness(orgId);
   const facts = useScoreFacts(orgId);
+  const preflightFacts = usePreflightFacts(orgId);
   const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
   const copy = readCopy(generation?.["copy"]);
   const brief = readBrief(generation?.["brief"]);
