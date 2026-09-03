@@ -179,7 +179,7 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
+  async function handleGoogle(intent: "continue" | "switch" = "continue") {
     setError(null);
     setBusy("google");
     try {
@@ -187,6 +187,11 @@ function AuthPage() {
       sessionStorage.setItem("lle:redirect", redirect ?? "/app");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
+        extraParams: {
+          // Always let the client pick which Google account to use, and force
+          // the full consent screen when they explicitly want a different one.
+          prompt: intent === "switch" ? "select_account consent" : "select_account",
+        },
       });
 
       if (result.error) {
@@ -202,6 +207,7 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -325,16 +331,26 @@ function AuthPage() {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={handleGoogle}
+                onClick={() => void handleGoogle("continue")}
                 disabled={busy !== null}
               >
                 {busy === "google" ? <Loader2 className="size-4 animate-spin" /> : null}
-                Continue with Google
+                {isSignup ? "Sign up with Google" : "Continue with Google"}
               </Button>
+              <button
+                type="button"
+                onClick={() => void handleGoogle("switch")}
+                disabled={busy !== null}
+                className="mt-2 w-full cursor-pointer rounded-md py-2 text-[12px] text-primary underline-offset-4 transition-colors hover:underline disabled:opacity-60"
+              >
+                Use a different Google account
+              </button>
               <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">
-                Google shows our secure sign-in provider on the consent screen — you're signing into{" "}
-                <span className="gold-hl">Revora</span>.
+                You can connect as many Google accounts as you like — each one gets its own Revora
+                workspace. Google shows our secure sign-in provider on the consent screen; you're
+                signing into <span className="gold-hl">Revora</span>.
               </p>
+
 
               <div className="my-5 flex items-center gap-3">
                 <span className="h-px flex-1 bg-border" />
