@@ -74,10 +74,26 @@ export function trackConversion(
   } catch {
     /* storage unavailable */
   }
+  const landingPath = attribution?.landingPath ?? window.location.pathname;
+  const metadata = { ...variants, ...(extra?.metadata ?? {}) };
+
+  // Mirror to GA4 when a measurement ID is configured; a no-op otherwise.
+  if (event === "page_view") ga4PageView(window.location.pathname);
+  else {
+    ga4Event(event, {
+      landing_path: landingPath,
+      page_path: window.location.pathname,
+      campaign: attribution?.utmCampaign ?? undefined,
+      source: attribution?.utmSource ?? undefined,
+      value: typeof extra?.amountCents === "number" ? extra.amountCents / 100 : undefined,
+      currency: typeof extra?.amountCents === "number" ? "USD" : undefined,
+    });
+  }
+
   void recordConversion({
     data: {
       event,
-      landingPath: attribution?.landingPath ?? window.location.pathname,
+      landingPath,
       industrySlug: attribution?.industrySlug ?? null,
       referrer: attribution?.referrer ?? null,
       utmSource: attribution?.utmSource ?? null,
@@ -86,7 +102,7 @@ export function trackConversion(
       sessionId: attribution?.sessionId ?? null,
       email: extra?.email ?? null,
       amountCents: extra?.amountCents ?? null,
-      metadata: { ...variants, ...(extra?.metadata ?? {}) },
+      metadata,
     },
   }).catch(() => undefined);
 }
