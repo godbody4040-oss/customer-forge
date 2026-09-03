@@ -15,65 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile, enforceSessionPolicy, resolvePostLoginPath } from "@/lib/auth-session";
 import { ORGANIZATION_SCHEMA, WEBSITE_SCHEMA } from "@/lib/seo";
-
-function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <p className="eyebrow">Error 404</p>
-        <h1 className="mt-3 text-3xl font-semibold text-foreground">This page doesn't exist</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The link may be out of date, or the business page you're looking for has moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Back to Revora
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <p className="eyebrow">Something broke</p>
-        <h1 className="mt-3 text-2xl font-semibold text-foreground">This page didn't load</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          We hit an unexpected error. Try again, or head back to the start.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-elevated"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { RouteError, RouteNotFound } from "@/components/app/RouteStates";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -121,8 +63,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   shellComponent: RootShell,
   component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+  notFoundComponent: RouteNotFound,
+  errorComponent: RouteError,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
