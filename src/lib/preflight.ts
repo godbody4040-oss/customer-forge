@@ -69,7 +69,8 @@ export type PreflightInput = {
   pricedServicesCount: number;
   bookableCount: number;
   quoteFormCount: number;
-  quoteQuestionCount: number;
+  /** `null` when Revora hasn't been able to read the questions yet — never guessed. */
+  quoteQuestionCount: number | null;
   mediaCount: number;
   analyticsConfigured: boolean;
   notifiesOwner: boolean;
