@@ -434,123 +434,258 @@ a[href*="lovable.app"][target="_blank"][class*="fixed"],
   }
 }
 
-/* Starfield */
+/* Backdrop accent hues — support colours around the signature gold.
+   Gold stays dominant; these only add depth and richness. */
+.fx-backdrop {
+  --fx-violet: oklch(0.62 0.19 300);
+  --fx-blue: oklch(0.66 0.17 250);
+  --fx-teal: oklch(0.72 0.13 190);
+  --fx-rose: oklch(0.68 0.17 20);
+}
+
+@keyframes fx-hue {
+  0%,
+  100% {
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  50% {
+    filter: hue-rotate(14deg) saturate(1.15);
+  }
+}
+
+/* Starfield — gold, ice-blue and violet stars over a faint colour haze */
 .fx-backdrop-stars .fx-layer {
   background-image:
     radial-gradient(
-      1.4px 1.4px at 20% 30%,
+      1.5px 1.5px at 20% 30%,
       color-mix(in oklab, var(--color-gold) 75%, white) 50%,
       transparent 55%
     ),
-    radial-gradient(1.2px 1.2px at 70% 60%, rgb(255 255 255 / 0.7) 50%, transparent 55%),
-    radial-gradient(1px 1px at 45% 80%, rgb(255 255 255 / 0.5) 50%, transparent 55%),
-    radial-gradient(1.6px 1.6px at 85% 20%, rgb(255 255 255 / 0.6) 50%, transparent 55%);
+    radial-gradient(
+      1.3px 1.3px at 70% 60%,
+      color-mix(in oklab, var(--fx-blue) 55%, white) 50%,
+      transparent 55%
+    ),
+    radial-gradient(
+      1.1px 1.1px at 45% 80%,
+      color-mix(in oklab, var(--fx-violet) 45%, white) 50%,
+      transparent 55%
+    ),
+    radial-gradient(1.7px 1.7px at 85% 20%, rgb(255 255 255 / 0.65) 50%, transparent 55%),
+    radial-gradient(
+      1.2px 1.2px at 12% 68%,
+      color-mix(in oklab, var(--fx-teal) 50%, white) 50%,
+      transparent 55%
+    );
   background-size:
     320px 320px,
     260px 260px,
     420px 420px,
-    500px 500px;
+    500px 500px,
+    380px 380px;
   animation: fx-drift 90s linear infinite;
-  opacity: 0.6;
+  opacity: 0.65;
 }
 .fx-backdrop-stars .fx-layer-2 {
   animation-duration: 150s;
-  opacity: 0.4;
+  opacity: 0.45;
 }
 .fx-backdrop-stars .fx-layer-3 {
-  animation-duration: 220s;
-  opacity: 0.25;
+  background-image:
+    radial-gradient(
+      55% 45% at 18% 22%,
+      color-mix(in oklab, var(--fx-violet) 16%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      50% 40% at 82% 70%,
+      color-mix(in oklab, var(--fx-blue) 16%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      45% 35% at 50% 100%,
+      color-mix(in oklab, var(--color-gold) 12%, transparent),
+      transparent 72%
+    );
+  background-size: cover;
+  filter: blur(70px);
+  animation: fx-pulse 46s ease-in-out infinite;
+  opacity: 0.55;
 }
 
-/* Aurora */
+/* Aurora — gold, teal and violet ribbons */
 .fx-backdrop-aurora .fx-layer {
   background: linear-gradient(
     100deg,
-    transparent 20%,
-    color-mix(in oklab, var(--color-gold) 22%, transparent) 45%,
-    transparent 70%
+    transparent 18%,
+    color-mix(in oklab, var(--color-gold) 24%, transparent) 42%,
+    color-mix(in oklab, var(--fx-teal) 18%, transparent) 58%,
+    transparent 78%
   );
   filter: blur(60px);
   animation: fx-sweep 26s ease-in-out infinite;
 }
 .fx-backdrop-aurora .fx-layer-2 {
+  background: linear-gradient(
+    80deg,
+    transparent 22%,
+    color-mix(in oklab, var(--fx-violet) 20%, transparent) 48%,
+    color-mix(in oklab, var(--color-gold) 16%, transparent) 66%,
+    transparent 82%
+  );
   animation-duration: 38s;
   animation-direction: reverse;
 }
 .fx-backdrop-aurora .fx-layer-3 {
+  background: linear-gradient(
+    120deg,
+    transparent 25%,
+    color-mix(in oklab, var(--fx-blue) 18%, transparent) 52%,
+    transparent 80%
+  );
   animation-duration: 52s;
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
-/* Nebula */
+/* Nebula — layered colour clouds */
 .fx-backdrop-nebula .fx-layer {
   background: radial-gradient(
     45% 45% at 30% 30%,
-    color-mix(in oklab, var(--color-gold) 20%, transparent),
+    color-mix(in oklab, var(--color-gold) 22%, transparent),
     transparent 70%
   );
   filter: blur(80px);
   animation: fx-pulse 30s ease-in-out infinite;
 }
 .fx-backdrop-nebula .fx-layer-2 {
-  background: radial-gradient(40% 40% at 75% 65%, rgb(70 110 255 / 0.16), transparent 70%);
+  background:
+    radial-gradient(
+      40% 40% at 75% 65%,
+      color-mix(in oklab, var(--fx-blue) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      32% 32% at 18% 78%,
+      color-mix(in oklab, var(--fx-violet) 20%, transparent),
+      transparent 70%
+    );
   animation-duration: 44s;
 }
 .fx-backdrop-nebula .fx-layer-3 {
-  background: radial-gradient(35% 35% at 55% 90%, rgb(255 255 255 / 0.07), transparent 70%);
+  background:
+    radial-gradient(
+      35% 35% at 55% 92%,
+      color-mix(in oklab, var(--fx-teal) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      28% 28% at 88% 14%,
+      color-mix(in oklab, var(--fx-rose) 12%, transparent),
+      transparent 70%
+    );
   animation-duration: 58s;
 }
 
-/* Tech grid */
+/* Tech grid — gold grid, cool colour bloom underneath */
 .fx-backdrop-grid .fx-layer-1 {
   background-image:
     linear-gradient(
       to right,
-      color-mix(in oklab, var(--color-gold) 12%, transparent) 1px,
+      color-mix(in oklab, var(--color-gold) 13%, transparent) 1px,
       transparent 1px
     ),
     linear-gradient(
       to bottom,
-      color-mix(in oklab, var(--color-gold) 12%, transparent) 1px,
+      color-mix(in oklab, var(--color-gold) 13%, transparent) 1px,
       transparent 1px
     );
   background-size: 64px 64px;
   animation: fx-drift 120s linear infinite;
-  opacity: 0.5;
+  opacity: 0.55;
 }
-.fx-backdrop-grid .fx-layer-2,
+.fx-backdrop-grid .fx-layer-2 {
+  background:
+    radial-gradient(
+      50% 40% at 20% 15%,
+      color-mix(in oklab, var(--fx-blue) 16%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      45% 40% at 85% 80%,
+      color-mix(in oklab, var(--fx-teal) 14%, transparent),
+      transparent 72%
+    );
+  filter: blur(70px);
+  animation: fx-pulse 42s ease-in-out infinite;
+}
 .fx-backdrop-grid .fx-layer-3 {
   display: none;
 }
 
-/* Spotlight */
+/* Spotlight — warm gold beam with a cool colour spill */
 .fx-backdrop-spotlight .fx-layer-1 {
   background: radial-gradient(
     60% 40% at 50% 0%,
-    color-mix(in oklab, var(--color-gold) 18%, transparent),
+    color-mix(in oklab, var(--color-gold) 20%, transparent),
     transparent 70%
   );
   animation: fx-pulse 24s ease-in-out infinite;
 }
-.fx-backdrop-spotlight .fx-layer-2,
+.fx-backdrop-spotlight .fx-layer-2 {
+  background:
+    radial-gradient(
+      45% 35% at 12% 10%,
+      color-mix(in oklab, var(--fx-violet) 15%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      45% 35% at 90% 20%,
+      color-mix(in oklab, var(--fx-blue) 14%, transparent),
+      transparent 72%
+    );
+  filter: blur(80px);
+  animation: fx-pulse 36s ease-in-out infinite reverse;
+}
 .fx-backdrop-spotlight .fx-layer-3 {
   display: none;
 }
 
-/* Gradient mesh */
+/* Gradient mesh — full multi-colour wash */
 .fx-backdrop-gradient-mesh .fx-layer-1 {
   background:
     radial-gradient(
       50% 50% at 15% 20%,
-      color-mix(in oklab, var(--color-gold) 16%, transparent),
+      color-mix(in oklab, var(--color-gold) 18%, transparent),
       transparent 70%
     ),
-    radial-gradient(45% 45% at 85% 35%, rgb(60 130 255 / 0.12), transparent 70%),
-    radial-gradient(50% 50% at 50% 95%, rgb(255 255 255 / 0.06), transparent 70%);
+    radial-gradient(
+      45% 45% at 85% 35%,
+      color-mix(in oklab, var(--fx-blue) 18%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 50% at 50% 95%,
+      color-mix(in oklab, var(--fx-violet) 16%, transparent),
+      transparent 70%
+    );
   filter: blur(40px);
   animation: fx-pulse 40s ease-in-out infinite;
 }
-.fx-backdrop-gradient-mesh .fx-layer-2,
+.fx-backdrop-gradient-mesh .fx-layer-2 {
+  background:
+    radial-gradient(
+      40% 40% at 70% 10%,
+      color-mix(in oklab, var(--fx-teal) 14%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      35% 35% at 25% 75%,
+      color-mix(in oklab, var(--fx-rose) 12%, transparent),
+      transparent 72%
+    );
+  filter: blur(60px);
+  animation: fx-hue 34s ease-in-out infinite;
+}
 .fx-backdrop-gradient-mesh .fx-layer-3 {
   display: none;
 }
