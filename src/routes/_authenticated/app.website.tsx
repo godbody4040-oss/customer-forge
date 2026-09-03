@@ -184,6 +184,35 @@ function WebsitePage() {
     reviewState: settings?.review_state ?? null,
   });
 
+  // REVORA PRE-FLIGHT™ — real pre-publish verification over the live workspace.
+  const domainVerified = (settings?.domain_status ?? "") === "verified";
+  const preflightResult = preflight({
+    pages: pages ?? [],
+    businessName: org?.name ?? null,
+    phone: (profile?.["phone"] as string) ?? null,
+    email: (profile?.["email"] as string) ?? null,
+    city: (profile?.["city"] as string) ?? null,
+    serviceArea: (profile?.["service_area"] as string) ?? null,
+    description: (profile?.["description"] as string) ?? null,
+    logoUrl: (profile?.["logo_url"] as string) ?? null,
+    hasHours: preflightFacts.data?.hasHours ?? false,
+    servicesCount,
+    pricedServicesCount: pricedCount,
+    bookableCount: facts.data?.bookableCount ?? 0,
+    quoteFormCount: facts.data?.quoteFormCount ?? 0,
+    quoteQuestionCount: preflightFacts.data?.quoteQuestionCount ?? null,
+    mediaCount: facts.data?.mediaCount ?? 0,
+    analyticsConfigured: (facts.data?.signals?.visitors ?? 0) > 0,
+    notifiesOwner: preflightFacts.data?.notifiesOwner ?? false,
+    followUpAutomations: preflightFacts.data?.followUpAutomations ?? 0,
+    seoTitle: seo.headline ?? copy?.heroHeadline ?? null,
+    seoDescription: seo.meta_description ?? null,
+    publicHost: domainVerified ? (settings?.custom_domain ?? null) : null,
+    httpsVerified: domainVerified,
+    canPublish: production?.unlocked !== false,
+    canPublishReason: production?.unlocked === false ? (production?.reason ?? null) : null,
+  });
+
   const copyFields = copy
     ? Object.fromEntries(
         EDITABLE_COPY_FIELDS.map((f) => [
