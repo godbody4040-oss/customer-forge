@@ -178,9 +178,9 @@ function Dashboard() {
   const profileQuery = useBusinessProfile(orgId);
   const customersQuery = useCustomers(orgId);
 
-  const leads = leadsQuery.data ?? [];
-  const appts = apptsQuery.data ?? [];
-  const events = analyticsQuery.data ?? [];
+  const leads = useMemo(() => leadsQuery.data ?? [], [leadsQuery.data]);
+  const appts = useMemo(() => apptsQuery.data ?? [], [apptsQuery.data]);
+  const events = useMemo(() => analyticsQuery.data ?? [], [analyticsQuery.data]);
 
   const stats = useMemo(() => {
     const fromMs = window.from.getTime();

@@ -18,7 +18,7 @@ import { useWebsiteVersions } from "@/lib/site-engine.hooks";
 export function VersionDiff({ organizationId }: { organizationId: string | undefined }) {
   const { data: versions } = useWebsiteVersions(organizationId);
   const { data: pages } = useWebsiteContent(organizationId);
-  const list = versions ?? [];
+  const list = useMemo(() => versions ?? [], [versions]);
   const [leftId, setLeftId] = useState<string>("");
   const [rightId, setRightId] = useState<string>("draft");
 

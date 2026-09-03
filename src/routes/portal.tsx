@@ -124,6 +124,9 @@ function PortalPage() {
     return () => {
       cancelled = true;
     };
+    // Intentionally runs once on mount: it consumes the one-time invite code and
+    // re-running on `joinCode`/`codeParam` changes would re-attempt the join.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ready = code.length === PORTAL_CODE_LENGTH;

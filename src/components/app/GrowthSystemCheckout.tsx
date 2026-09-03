@@ -56,6 +56,9 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
     }
   }, [organizationId, intake, returnUrl]);
 
+  // `attempt` is deliberately a dependency: bumping it rebuilds the options object
+  // so Stripe mounts a fresh checkout instead of reusing a dead client secret.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const options = useMemo(() => ({ fetchClientSecret }), [fetchClientSecret, attempt]);
 
   return (
