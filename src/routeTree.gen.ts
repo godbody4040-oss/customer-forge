@@ -38,6 +38,7 @@ import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as LocationsIndexRouteImport } from './routes/locations.index'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -219,6 +220,11 @@ const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsIndexRoute = LocationsIndexRouteImport.update({
+  id: '/locations/',
+  path: '/locations/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PTokenRoute = PTokenRouteImport.update({
@@ -459,6 +465,7 @@ export interface FileRoutesByFullPath {
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/locations/': typeof LocationsIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
@@ -522,6 +529,7 @@ export interface FileRoutesByTo {
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo': typeof DemoIndexRoute
   '/industries': typeof IndustriesIndexRoute
+  '/locations': typeof LocationsIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
@@ -592,6 +600,7 @@ export interface FileRoutesById {
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/locations/': typeof LocationsIndexRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
@@ -662,6 +671,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/demo/'
     | '/industries/'
+    | '/locations/'
     | '/admin/analytics'
     | '/admin/clients'
     | '/admin/domains'
@@ -725,6 +735,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/demo'
     | '/industries'
+    | '/locations'
     | '/admin/analytics'
     | '/admin/clients'
     | '/admin/domains'
@@ -794,6 +805,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/demo/'
     | '/industries/'
+    | '/locations/'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
@@ -856,6 +868,7 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
+  LocationsIndexRoute: typeof LocationsIndexRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1067,6 +1080,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/': {
+      id: '/locations/'
+      path: '/locations'
+      fullPath: '/locations/'
+      preLoaderRoute: typeof LocationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$token': {
@@ -1513,6 +1533,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
+  LocationsIndexRoute: LocationsIndexRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
