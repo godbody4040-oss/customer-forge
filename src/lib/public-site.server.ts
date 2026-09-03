@@ -180,6 +180,7 @@ export async function loadSite(
     const { data: qs } = await supabase
       .from("quote_questions")
       .select("id, label, helper_text, sort_order")
+      .eq("organization_id", orgId)
       .eq("form_id", quoteForm.data.id)
       .order("sort_order");
     const ids = (qs ?? []).map((q) => q.id);
@@ -187,6 +188,7 @@ export async function loadSite(
       ? await supabase
           .from("quote_options")
           .select("id, question_id, label, price_modifier, modifier_type, sort_order")
+          .eq("organization_id", orgId)
           .in("question_id", ids)
           .order("sort_order")
       : { data: [] };
@@ -205,6 +207,7 @@ export async function loadSite(
     const { data: adds } = await supabase
       .from("quote_addons")
       .select("id, label, description, price, sort_order")
+      .eq("organization_id", orgId)
       .eq("form_id", quoteForm.data.id)
       .order("sort_order");
     addons = (adds ?? []).map((a) => ({
@@ -275,6 +278,7 @@ export async function loadSite(
     const query = supabase
       .from("website_sections")
       .select("id, kind, variant, heading, subheading, body, settings, sort_order")
+      .eq("organization_id", orgId)
       .eq("page_id", currentPage.id);
     const { data: rows } = await (allowUnpublished
       ? query.order("sort_order")
@@ -287,6 +291,7 @@ export async function loadSite(
     const componentQuery = supabase
       .from("website_components")
       .select("id, section_id, kind, label, body, media_url, link_url, link_label, sort_order")
+      .eq("organization_id", orgId)
       .in(
         "section_id",
         sections.map((section) => section.id),
