@@ -20,6 +20,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as GrowthAssessmentRouteImport } from './routes/growth-assessment'
 import { Route as IndustriesRouteImport } from './routes/industries'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -143,6 +144,11 @@ const GrowthAssessmentRoute = GrowthAssessmentRouteImport.update({
 const IndustriesRoute = IndustriesRouteImport.update({
   id: '/industries',
   path: '/industries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
@@ -524,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
+  '/llms.txt': typeof LlmsDottxtRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
@@ -604,6 +611,7 @@ export interface FileRoutesByTo {
   '/crm-for-contractors': typeof CrmForContractorsRoute
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/get-started': typeof GetStartedRoute
   '/growth-assessment': typeof GrowthAssessmentRoute
   '/industries': typeof IndustriesRouteWithChildren
+  '/llms.txt': typeof LlmsDottxtRoute
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/industries'
+    | '/llms.txt'
     | '/manifest.webmanifest'
     | '/portal'
     | '/pricing'
@@ -849,6 +859,7 @@ export interface FileRouteTypes {
     | '/crm-for-contractors'
     | '/get-started'
     | '/growth-assessment'
+    | '/llms.txt'
     | '/manifest.webmanifest'
     | '/portal'
     | '/pricing'
@@ -929,6 +940,7 @@ export interface FileRouteTypes {
     | '/get-started'
     | '/growth-assessment'
     | '/industries'
+    | '/llms.txt'
     | '/manifest.webmanifest'
     | '/portal'
     | '/pricing'
@@ -1013,6 +1025,7 @@ export interface RootRouteChildren {
   GetStartedRoute: typeof GetStartedRoute
   GrowthAssessmentRoute: typeof GrowthAssessmentRoute
   IndustriesRoute: typeof IndustriesRouteWithChildren
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
   PortalRoute: typeof PortalRoute
   PricingRoute: typeof PricingRoute
@@ -1123,6 +1136,13 @@ declare module '@tanstack/react-router' {
       path: '/industries'
       fullPath: '/industries'
       preLoaderRoute: typeof IndustriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manifest.webmanifest': {
@@ -1783,6 +1803,7 @@ const rootRouteChildren: RootRouteChildren = {
   GetStartedRoute: GetStartedRoute,
   GrowthAssessmentRoute: GrowthAssessmentRoute,
   IndustriesRoute: IndustriesRouteWithChildren,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
   PortalRoute: PortalRoute,
   PricingRoute: PricingRoute,

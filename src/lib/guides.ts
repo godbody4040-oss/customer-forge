@@ -17,7 +17,7 @@ export interface GuideStep {
 }
 
 export interface Guide {
-  slug: string
+  slug: string;
   title: string;
   /** Search-facing page title. */
   metaTitle: string;
