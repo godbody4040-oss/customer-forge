@@ -189,12 +189,12 @@ export function SiteFooter() {
             </p>
             <div className="mt-6">
               <p className="eyebrow">Contact</p>
-              <ul className="mt-2.5 space-y-2 text-[12px]">
+              <ul className="mt-1 text-[12px] sm:mt-2.5 sm:space-y-2">
                 <li className="flex items-center gap-2">
                   <Mail className="size-3.5 text-primary" aria-hidden="true" />
                   <a
                     href={revoraMailto(MAIL_SUBJECTS.inquiry)}
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     {REVORA.email}
                   </a>
@@ -203,7 +203,7 @@ export function SiteFooter() {
                   <Phone className="size-3.5 text-primary" aria-hidden="true" />
                   <a
                     href={revoraTel}
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     {REVORA.phoneDisplay}
                   </a>
@@ -216,12 +216,12 @@ export function SiteFooter() {
             {FOOTER_GROUPS.map((group) => (
               <nav key={group.heading} aria-label={group.heading}>
                 <p className="eyebrow">{group.heading}</p>
-                <ul className="mt-3 space-y-2.5 text-[13px]">
+                <ul className="mt-1 text-[13px] sm:mt-3 sm:space-y-2.5">
                   {group.links.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.to}
-                        className="text-muted-foreground transition-colors hover:text-primary"
+                        className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                       >
                         {link.label}
                       </Link>
@@ -232,11 +232,11 @@ export function SiteFooter() {
             ))}
             <nav aria-label="Get started">
               <p className="eyebrow">Get started</p>
-              <ul className="mt-3 space-y-2.5 text-[13px]">
+              <ul className="mt-1 text-[13px] sm:mt-3 sm:space-y-2.5">
                 <li>
                   <Link
                     to="/get-started"
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     Start my Revora system
                   </Link>
@@ -245,7 +245,7 @@ export function SiteFooter() {
                 <li>
                   <Link
                     to="/auth"
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     Sign in
                   </Link>
@@ -254,7 +254,7 @@ export function SiteFooter() {
                   <Link
                     to="/s/$slug"
                     params={{ slug: "elite-mobile-detailing" }}
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     Live demo site
                   </Link>
