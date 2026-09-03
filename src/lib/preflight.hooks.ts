@@ -26,7 +26,7 @@ export function usePreflightFacts(organizationId: string | undefined) {
       const [forms, profile, automations] = await Promise.all([
         supabase
           .from("quote_forms")
-          .select("id, quote_questions(id)")
+          .select("id, quote_questions!quote_questions_form_id_fkey(id)")
           .eq("organization_id", orgId)
           .eq("is_active", true),
         supabase
