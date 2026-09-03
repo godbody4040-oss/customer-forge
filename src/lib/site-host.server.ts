@@ -8,6 +8,7 @@
  */
 import { publicClient, publicOrganization } from "@/lib/public-site.server";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
+import { NC_LOCATIONS } from "@/lib/business-identity";
 import {
   REVORA_OWN_HOSTS,
   isRevoraOwnHost,
