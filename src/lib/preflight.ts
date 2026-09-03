@@ -388,13 +388,16 @@ export function preflight(input: PreflightInput): PreflightResult {
   ]);
 
   add("quotes", [
-    input.quoteFormCount === 0
+    input.quoteFormCount === 0 || input.quoteQuestionCount === null
       ? {
           key: "quote-depth",
           label: "Quote questions",
           status: "skip",
           severity: "warning",
-          detail: "No quote calculator is in use.",
+          detail:
+            input.quoteFormCount === 0
+              ? "No quote calculator is in use."
+              : "Revora is still reading your quote questions.",
         }
       : decide(
           input.quoteQuestionCount >= 2,
