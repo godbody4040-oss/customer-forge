@@ -66,7 +66,10 @@ export const STRIPE_CATALOG: Record<
 });
 
 export type ProductShape =
-  { id?: string | null; active?: boolean | null; tax_code?: string | null } | null | undefined;
+  | { id?: string | null | undefined; active?: boolean | null | undefined; tax_code?: unknown }
+  | null
+  | undefined;
+
 
 export type CatalogVerification = { ok: true } | { ok: false; reason: string };
 
