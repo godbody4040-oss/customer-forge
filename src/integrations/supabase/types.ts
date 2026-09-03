@@ -1973,6 +1973,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quote_addons_form_same_org_fkey"
+            columns: ["form_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "quote_forms"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
             foreignKeyName: "quote_addons_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -2092,6 +2099,13 @@ export type Database = {
             referencedRelation: "quote_questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "quote_options_question_same_org_fkey"
+            columns: ["question_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "quote_questions"
+            referencedColumns: ["id", "organization_id"]
+          },
         ]
       }
       quote_questions: {
@@ -2132,6 +2146,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "quote_forms"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_questions_form_same_org_fkey"
+            columns: ["form_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "quote_forms"
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "quote_questions_organization_id_fkey"
@@ -2684,6 +2705,13 @@ export type Database = {
             referencedRelation: "website_sections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "website_components_section_same_org_fkey"
+            columns: ["section_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "website_sections"
+            referencedColumns: ["id", "organization_id"]
+          },
         ]
       }
       website_pages: {
@@ -2939,6 +2967,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "website_pages"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_sections_page_same_org_fkey"
+            columns: ["page_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "website_pages"
+            referencedColumns: ["id", "organization_id"]
           },
         ]
       }
