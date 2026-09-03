@@ -67,6 +67,20 @@ describe("subdomain tenant hosting is impossible", () => {
     expect(source).toContain("row.ssl_ok");
   });
 
+  it("refuses to let a Revora-owned host be claimed as a client domain", async () => {
+    const { isValidDomain, normalizeDomain } = await import("@/lib/admin.server");
+    for (const raw of [
+      "REVORAGROWTHSYSTEMS.com",
+      "https://business.revoragrowthsystems.com/",
+      "revoraweb.site.",
+      "business.revoraweb.site",
+      "www.revoraweb.site",
+    ]) {
+      expect(isValidDomain(normalizeDomain(raw))).toBe(false);
+    }
+    expect(isValidDomain(normalizeDomain("HTTPS://Client-Domain.com/path"))).toBe(true);
+  });
+
   it("keeps the retired subdomain field out of the public site reader", () => {
     const reader = readFileSync("src/lib/public-site.server.ts", "utf8");
     expect(reader).not.toContain("subdomain");
