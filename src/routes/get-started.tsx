@@ -79,10 +79,24 @@ function GetStarted() {
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
+      // Already paying? The Pay button must never lead into a Stripe iframe
+      // that can only fail with "workspace already has a subscription".
+      let hasActiveSubscription = false;
+      if (membership?.organization_id) {
+        const { data: sub } = await supabase
+          .from("subscriptions")
+          .select("status")
+          .eq("organization_id", membership.organization_id)
+          .in("status", ["active", "trialing"])
+          .limit(1)
+          .maybeSingle();
+        hasActiveSubscription = Boolean(sub);
+      }
       return {
         userId: data.user.id,
         organizationId: membership?.organization_id ?? null,
         email: data.user.email ?? null,
+        hasActiveSubscription,
       };
     },
   });
@@ -150,6 +164,7 @@ function GetStarted() {
 
   const signedIn = Boolean(session.data?.userId);
   const cardsReady = isPaymentsConfigured();
+  const alreadySubscribed = Boolean(session.data?.hasActiveSubscription);
 
   /**
    * A brand-new account has no workspace yet (that normally happens during
@@ -525,6 +540,19 @@ function GetStarted() {
                       </Button>
                     </div>
                   </div>
+                 ) : alreadySubscribed ? (
+                  <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+                    <p className="text-[13px] font-medium">
+                      Your workspace already has an active Revora subscription.
+                    </p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      There's nothing else to pay here. Manage your plan, payment method or
+                      invoices from billing.
+                    </p>
+                    <Button asChild variant="signal" size="lg" className="mt-3">
+                      <Link to="/app/billing">Manage subscription</Link>
+                    </Button>
+                  </div>
                 ) : !cardsReady ? (
                   <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
                     Card checkout is not configured for this build yet, so no payment can be taken.
@@ -555,7 +583,7 @@ function GetStarted() {
                   </p>
                 ) : null}
 
-                {!payNow ? (
+                {!payNow && !alreadySubscribed ? (
                   <>
                     <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
                       <p className="text-[13px] font-semibold">
@@ -592,7 +620,7 @@ function GetStarted() {
                 ) : null}
               </div>
 
-              {payNow && signedIn && cardsReady && organizationId ? (
+              {payNow && signedIn && cardsReady && !alreadySubscribed && organizationId ? (
                 <GrowthSystemCheckout
                   organizationId={organizationId}
                   intake={intake}
