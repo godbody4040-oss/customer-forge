@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.submit_public_conversion(uuid, jsonb, jsonb, jsonb, jsonb, jsonb) TO anon, authenticated, service_role;

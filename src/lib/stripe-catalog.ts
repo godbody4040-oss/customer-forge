@@ -138,6 +138,14 @@ export function verifyGrowthCatalog(input: {
         return { ok: false, reason: `${label} product does not match the Revora product on file.` };
       if (product?.active === false)
         return { ok: false, reason: `${label} product is archived in the payment provider.` };
+      // Tax category must match the pinned SaaS code when one is set, otherwise
+      // tax would be calculated against the wrong product category.
+      const taxCode =
+        typeof product?.tax_code === "string"
+          ? product.tax_code
+          : ((product?.tax_code as { id?: unknown } | null)?.id ?? null);
+      if (typeof taxCode === "string" && taxCode !== entry.taxCode)
+        return { ok: false, reason: `${label} product has the wrong tax category.` };
     }
   }
 
