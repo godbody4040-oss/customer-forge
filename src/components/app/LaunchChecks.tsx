@@ -2,7 +2,7 @@ import { AlertTriangle, CheckCircle2, Circle, Globe, Loader2 } from "lucide-reac
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import type { QaCheck } from "@/lib/website-content";
-import { revoraSubdomain } from "@/lib/website-plan";
+import { revoraShareAddress } from "@/lib/website-plan";
 
 const STATE_LABELS: Record<
   string,
@@ -57,7 +57,7 @@ export function LaunchChecks({
             <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">{state.help}</p>
             {slug ? (
               <p className="mt-2 text-[12px] text-muted-foreground">
-                Free Revora address: {revoraSubdomain(slug)}
+                Revora share link: {revoraShareAddress(slug)}
                 {live ? "" : " (active once published)"}
               </p>
             ) : null}

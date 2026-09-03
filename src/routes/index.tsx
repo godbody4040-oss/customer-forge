@@ -45,8 +45,8 @@ import { PublicSiteView } from "@/routes/s.$slug";
 export const Route = createFileRoute("/")({
   /**
    * The home address is shared: on Revora's own domain it is the marketing
-   * site, and on a client's address — their free `name.revoraweb.site`
-   * or a verified custom domain — it is that client's published website.
+   * site, and on a client's own verified custom domain it is that client's
+   * published website.
    */
   loader: async () => {
     if (typeof window !== "undefined" && !isPossibleTenantHost(window.location.hostname)) {

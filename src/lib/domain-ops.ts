@@ -97,7 +97,7 @@ export function sslState(input: {
       label: "Not needed yet",
       tone: "neutral",
       detail:
-        "Your free Revora address is already secured. Connect your own domain to get a certificate for it.",
+        "Your Revora share link is already secured. Connect your own domain to get a certificate for it.",
       secure: true,
     };
   if (!input.dnsOk)

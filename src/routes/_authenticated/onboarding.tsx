@@ -24,7 +24,7 @@ import { analyzeSiteBrief, runSiteGeneration, saveSiteBrief } from "@/lib/site-e
 import {
   WEBSITE_GOALS,
   generateWebsitePlan,
-  revoraSubdomain,
+  revoraShareAddress,
   safeSlug,
   type GoalKey,
 } from "@/lib/website-plan";
@@ -505,7 +505,7 @@ function Onboarding() {
                 />
                 {draft.businessName ? (
                   <p className="text-[11px] text-muted-foreground">
-                    Your free Revora address: {revoraSubdomain(slugPreview)}
+                    Your Revora share link: {revoraShareAddress(slugPreview)}
                   </p>
                 ) : null}
               </div>

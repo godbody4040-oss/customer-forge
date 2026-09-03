@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { revoraHost } from "@/lib/revora-address";
 import { siteVariation } from "@/lib/site-variation";
 
 type Props = {
@@ -11,7 +10,6 @@ type Props = {
   publishState?: string | null;
   lastPublishedAt?: string | null;
   customDomain?: string | null;
-  subdomain?: string | null;
   domainStatus?: string | null;
   pagesCount: number;
   visibleSections: number;
@@ -51,12 +49,10 @@ export function WebsiteProject(props: Props) {
     industry: props.industry ?? null,
     city: props.city ?? null,
   });
-  // Client websites live on the hosting domain, never on Revora's platform
-  // domain. The path address is the fallback that always works.
+  // A client website is served from the domain the client owns. The platform
+  // share path is the address that always works until then.
   const address =
-    props.customDomain ||
-    revoraHost(props.subdomain) ||
-    (props.slug ? `/s/${props.slug}` : "Address set when you publish");
+    props.customDomain || (props.slug ? `/s/${props.slug}` : "Address set when you publish");
 
   const stats = [
     { label: "Pages", value: String(props.pagesCount) },

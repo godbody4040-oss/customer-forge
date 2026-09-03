@@ -245,7 +245,7 @@ export const REGISTRAR_GUIDES: {
 export const DOMAIN_FAQ: { q: string; a: string }[] = [
   {
     q: "Will my site go down while I do this?",
-    a: "No. Your free Revora address keeps serving the live site the entire time. Your own domain only takes over after both checks below pass.",
+    a: "No. Your Revora share link keeps serving the live site the entire time. Your own domain only takes over after both checks below pass.",
   },
   {
     q: "How long does it take?",

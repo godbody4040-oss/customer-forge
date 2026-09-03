@@ -19,16 +19,11 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    // Dev only: client sites are served on their own host, so the dev server has
-    // to accept Revora subdomains and connected client domains as well.
+    // Dev only: client sites are served on the customer's own domain, so the dev
+    // server accepts the platform domain, preview hosts and connected client
+    // domains. Revora-owned client subdomains are not a hosting product.
     server: {
-      allowedHosts: [
-        ".revoraweb.site",
-        "revoraweb.site",
-        ".revoragrowthsystems.com",
-        ".lovable.app",
-        "localhost",
-      ],
+      allowedHosts: [".revoragrowthsystems.com", ".lovable.app", "localhost"],
     },
     resolve: {
       alias: {

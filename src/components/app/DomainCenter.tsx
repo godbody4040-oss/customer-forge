@@ -30,7 +30,6 @@ import {
   normalizeInput,
 } from "@/lib/domain-setup";
 import { DOMAIN_STATES } from "@/lib/readiness";
-import { RevoraAddressCard } from "@/components/app/RevoraAddressCard";
 import { clientSitePath } from "@/lib/revora-address";
 import { dateLong } from "@/lib/format";
 
@@ -179,7 +178,7 @@ export function DomainCenter({
             <p className="mt-1 text-[11px] text-muted-foreground">
               {connected && dnsOk && sslOk
                 ? "Verified and live with HTTPS."
-                : "It only goes live after DNS and HTTPS both pass — until then use your preview address."}
+                : "It only goes live after DNS and HTTPS both pass — until then use your Revora share link."}
             </p>
           </div>
         </div>
@@ -516,24 +515,6 @@ export function DomainCenter({
         </Panel>
       ) : null}
 
-      {/* ADVANCED — legacy Revora-hosted preview address. Kept for internal
-          previews only; it never replaces or redirects a verified client domain. */}
-      <details className="rounded-lg border border-border/60 bg-elevated/30 p-4">
-        <summary className="cursor-pointer text-[13px] font-medium">
-          Advanced — Revora preview address
-        </summary>
-        <p className="mt-2 text-[12px] text-muted-foreground">
-          For internal previews only. Your own domain is always your public website address.
-        </p>
-        <div className="mt-3">
-          <RevoraAddressCard
-            organizationId={organizationId}
-            orgSlug={slug ?? null}
-            settings={settings}
-            canManage={canManage}
-          />
-        </div>
-      </details>
     </div>
   );
 }

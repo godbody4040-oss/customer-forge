@@ -20,9 +20,9 @@ import {
   useQuoteBuilder,
   useSetWebsiteReviewState,
 } from "@/lib/queries";
-import { reviewStateMeta, revoraSubdomain } from "@/lib/website-plan";
+import { reviewStateMeta, revoraShareAddress } from "@/lib/website-plan";
 import { saveOwnDomain } from "@/lib/domain.functions";
-import { revoraUrl } from "@/lib/revora-address";
+import { clientSiteUrl } from "@/lib/revora-address";
 
 import { DOMAIN_STATES, PUBLISH_STATES, readiness } from "@/lib/readiness";
 import { dateLong, number } from "@/lib/format";
@@ -96,11 +96,11 @@ function Launch() {
   const domainStatus = settings?.domain_status ?? "not_connected";
   const publishState = settings?.publish_state ?? "draft";
   // The live address an owner should share: their own domain once it is verified
-  // and secure, otherwise the free Revora address included with the website.
+  // and secure, otherwise the Revora share link that always works.
   const siteUrl =
     settings?.custom_domain && settings?.dns_ok && settings?.ssl_ok
       ? `https://${settings.custom_domain}`
-      : (revoraUrl(settings?.subdomain) ?? `/s/${org?.slug ?? ""}`);
+      : (clientSiteUrl(org?.slug) ?? `/s/${org?.slug ?? ""}`);
 
   const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
   const reviewMeta = reviewStateMeta(reviewState);
@@ -214,7 +214,7 @@ function Launch() {
             </p>
           ) : null}
           <p className="mt-2 text-[12px] text-muted-foreground">
-            Free Revora address: {revoraSubdomain(org?.slug ?? "")} (available once published)
+            Revora share link: {revoraShareAddress(org?.slug ?? "")} (available once published)
           </p>
         </div>
         {manage ? (
@@ -344,7 +344,7 @@ function Launch() {
                 const lines = [
                   `Business: ${org?.name ?? ""}`,
                   `Website: ${siteUrl}`,
-                  `Revora address: ${revoraSubdomain(org?.slug ?? "")}`,
+                  `Revora share link: ${revoraShareAddress(org?.slug ?? "")}`,
                   `Website status: ${reviewMeta.label}`,
                   `Publishing: ${PUBLISH_STATES[publishState]?.label ?? publishState}`,
                   `Domain: ${DOMAIN_STATES[domainStatus]?.label ?? domainStatus}`,
@@ -368,7 +368,7 @@ function Launch() {
         />
         <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
           <Row label="Website address" value={siteUrl} />
-          <Row label="Revora address" value={revoraSubdomain(org?.slug ?? "")} />
+          <Row label="Revora share link" value={revoraShareAddress(org?.slug ?? "")} />
           <Row label="Website status" value={reviewMeta.label} />
           <Row label="Login page" value="/auth" />
           <Row label="Business phone" value={profile?.phone ?? "Not set"} />

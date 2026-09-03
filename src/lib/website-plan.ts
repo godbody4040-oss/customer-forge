@@ -12,10 +12,14 @@ import type { Tone } from "@/lib/domain";
 import { INDUSTRIES } from "@/lib/domain";
 import { slugify } from "@/lib/format";
 
-/** Client websites are hosted on their own domain, never the platform domain. */
-export const REVORA_HOST = "revoraweb.site";
+/**
+ * The only Revora-owned host. A client website lives on the domain the client
+ * owns; until then it is reachable at `revoragrowthsystems.com/s/<slug>`.
+ * Revora-branded client subdomains do not exist and must not be reintroduced.
+ */
+export const REVORA_HOST = "revoragrowthsystems.com";
 
-/** Slugs we never hand to a client subdomain. */
+/** Slugs we never hand to a client site path. */
 export const RESERVED_SLUGS = [
   "www",
   "app",
@@ -49,8 +53,9 @@ export function safeSlug(value: string, fallback = "my-business") {
   return base;
 }
 
-export function revoraSubdomain(slug: string | null | undefined) {
-  return `${safeSlug(slug ?? "")}.${REVORA_HOST}`;
+/** The always-working Revora share address for a client website. */
+export function revoraShareAddress(slug: string | null | undefined) {
+  return `${REVORA_HOST}/s/${safeSlug(slug ?? "")}`;
 }
 
 /* ------------------------------ review states ------------------------------ */
@@ -103,8 +108,8 @@ export const REVIEW_STATES: Record<
   domain_setup: {
     label: "Domain setup",
     tone: "info",
-    help: "You can launch on your free Revora address now, or finish connecting your own domain.",
-    clientAction: "Connect a domain or launch on your Revora address",
+    help: "You can launch on your Revora share link now, or finish connecting your own domain.",
+    clientAction: "Connect a domain or launch on your Revora share link",
   },
   publishing: {
     label: "Publishing",
