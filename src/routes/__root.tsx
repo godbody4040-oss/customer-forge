@@ -36,7 +36,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "Revora Growth Systems" },
       { property: "og:locale", content: "en_US" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1" },
+      // Indexing is the crawler default, so this only widens previews/snippets.
+      // Deliberately no "index, follow": that would fight the "noindex" that
+      // not-found and private screens emit, and conflicting directives resolve
+      // to the most restrictive one only by convention, not by spec.
+      { name: "robots", content: "max-image-preview:large, max-snippet:-1" },
       { name: "theme-color", content: "#0A0A0C" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "Revora" },
