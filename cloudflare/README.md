@@ -60,3 +60,45 @@ visitor ──> https://clientname.revoraweb.site
   Cloudflare owns its DNS — Lovable's records for it will no longer exist, and
   the Worker (not Lovable) is what serves client hostnames.
 - Keep `revoragrowthsystems.com` as the project's primary domain.
+
+---
+
+## Turning Revora-branded client addresses back on
+
+`businessname.revoraweb.site` is fully implemented and hardened, but it is
+**deliberately switched off in the product** while client-owned domains are the
+advertised model. The switch is a single constant:
+
+```ts
+// src/lib/revora-address.ts
+export const REVORA_SUBDOMAIN_HOSTING_ENABLED = false;
+```
+
+Flipping it to `true` is safe **only** once all of the following are true at the
+edge — otherwise clients would be shown an address that does not answer:
+
+1. `revoraweb.site` is on Cloudflare with the DNS records above, including the
+   proxied wildcard `A * → 185.158.133.1`.
+2. Cloudflare Universal SSL has issued the `*.revoraweb.site` certificate
+   (SSL/TLS → Edge Certificates shows it active).
+3. The Worker in `cloudflare/worker.js` is deployed on route
+   `*revoraweb.site/*`.
+4. `https://<any-client>.revoraweb.site` returns that client's published site in
+   a browser (the builder's "Check my address" probe reports live).
+
+The platform domain `revoragrowthsystems.com` is never part of this Worker and
+never resolves to a client website.
+
+### What the Worker guarantees
+
+- Only `revoraweb.site` and **one-level** subdomains with a valid DNS label are
+  served; nested (`a.b.revoraweb.site`), malformed (`-bad.…`) and look-alike
+  (`evilrevoraweb.site`) hosts get a 404.
+- Every visitor-supplied `X-Forwarded-Host` / `X-Forwarded-Proto` /
+  `X-Original-Host` / `Forwarded` header is deleted before forwarding, so a
+  visitor can never name a different tenant. The Worker sets those values itself
+  from the real hostname.
+- Responses carry `Vary: X-Forwarded-Host`, so no cache can serve one client's
+  page on another client's address.
+- Only real website HTTP methods are accepted (405 otherwise), and an origin
+  outage returns a plain 502 instead of leaking internals.

@@ -46,39 +46,108 @@
 const ORIGIN = "https://revoragrowthsystems.com";
 const SITE_ROOT = "revoraweb.site";
 
+/** Methods a website is ever served with. Anything else is refused at the edge. */
+const ALLOWED_METHODS = new Set(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]);
+
+/**
+ * Headers a visitor must never be able to set, because the platform trusts them
+ * to decide WHICH client's website to serve. Whatever the browser sent is
+ * dropped and replaced with values this Worker derives from the real hostname.
+ */
+const SPOOFABLE_HEADERS = [
+  "x-forwarded-host",
+  "x-forwarded-proto",
+  "x-forwarded-port",
+  "x-forwarded-server",
+  "x-original-host",
+  "x-host",
+  "forwarded",
+];
+
+/** A single valid DNS label: no dots, no leading/trailing hyphen. */
+function isValidLabel(label) {
+  return /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(label);
+}
+
+function refuse(status, message) {
+  return new Response(message, {
+    status,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "strict-origin-when-cross-origin",
+    },
+  });
+}
+
 export default {
   async fetch(request) {
+    if (!ALLOWED_METHODS.has(request.method)) {
+      return refuse(405, "Method not allowed");
+    }
+
     const url = new URL(request.url);
-    const host = url.hostname.toLowerCase().replace(/\.$/, "");
+    // Strip a trailing dot and any port before matching: `a.revoraweb.site.`
+    // and `a.revoraweb.site:443` are the same host, and only the normalised
+    // form may be compared against the hosting root.
+    const host = url.hostname.toLowerCase().replace(/\.+$/, "");
 
     // Only the hosting domain and its one-level subdomains belong to this
-    // Worker. Anything else is not a Revora client address.
+    // Worker. Anything else — including a nested `a.b.revoraweb.site`, an
+    // invalid label, or a look-alike such as `evilrevoraweb.site` — is not a
+    // Revora client address.
     const bare = host === SITE_ROOT || host === `www.${SITE_ROOT}`;
     const label = host.endsWith(`.${SITE_ROOT}`) ? host.slice(0, -(SITE_ROOT.length + 1)) : null;
-    if (!bare && (!label || label.includes("."))) {
-      return new Response("Not found", { status: 404 });
+    if (!bare && !(label && isValidLabel(label))) {
+      return refuse(404, "Not found");
     }
 
     // Forward to the platform, carrying the real client hostname separately.
     // The Host header must be the platform's own (fetch sets it from ORIGIN) —
     // sending the client subdomain as Host would make the platform's edge
     // treat it as an unknown hostname. X-Forwarded-Host is what the app reads
-    // to resolve which client's website to serve.
+    // to resolve which client's website to serve, so every visitor-supplied
+    // variant is deleted first and cannot influence tenant resolution.
     const headers = new Headers(request.headers);
+    for (const name of SPOOFABLE_HEADERS) headers.delete(name);
+    headers.delete("host");
     headers.set("X-Forwarded-Host", host);
     headers.set("X-Forwarded-Proto", "https");
-    headers.delete("host");
 
-    const upstream = await fetch(ORIGIN + url.pathname + url.search, {
-      method: request.method,
-      headers,
-      body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
-      redirect: "manual",
+    let upstream;
+    try {
+      upstream = await fetch(ORIGIN + url.pathname + url.search, {
+        method: request.method,
+        headers,
+        body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
+        redirect: "manual",
+      });
+    } catch {
+      return refuse(502, "This website is temporarily unavailable. Please try again.");
+    }
+
+    // Pass the origin response through — status, body, streaming, and any
+    // deliberate redirects (e.g. to a client's own verified custom domain) keep
+    // working as-is. Two corrections are applied: responses vary by hostname, so
+    // no cache may ever serve one client's page on another's address, and the
+    // platform's own security headers are backfilled if the edge dropped them.
+    const responseHeaders = new Headers(upstream.headers);
+    const vary = responseHeaders.get("vary");
+    if (!/\bx-forwarded-host\b/i.test(vary ?? "")) {
+      responseHeaders.set("vary", vary ? `${vary}, X-Forwarded-Host` : "X-Forwarded-Host");
+    }
+    if (!responseHeaders.has("x-content-type-options")) {
+      responseHeaders.set("x-content-type-options", "nosniff");
+    }
+    if (!responseHeaders.has("strict-transport-security")) {
+      responseHeaders.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+    }
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders,
     });
-
-    // Pass the origin response through untouched — status, body, headers,
-    // streaming, and any deliberate redirects (e.g. to a client's own
-    // verified custom domain) keep working as-is.
-    return new Response(upstream.body, upstream);
   },
 };
