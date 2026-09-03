@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { AlertTriangle, Check, Loader2, MinusCircle, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PreflightCheck, PreflightGroup, PreflightResult } from "@/lib/preflight";
+import type { Regression } from "@/lib/site-regression";
 import { autoFixable } from "@/lib/preflight";
 import type { ClaimState } from "@/lib/claim-registry";
 
@@ -57,6 +58,7 @@ export function PreFlightPanel({
   onSelfHeal,
   isHealing = false,
   healSummary,
+  regressions = [],
 }: {
   result: PreflightResult;
   isChecking?: boolean;
@@ -68,6 +70,8 @@ export function PreFlightPanel({
   isHealing?: boolean;
   /** Real outcome of the last repair run, in plain language. */
   healSummary?: string | null;
+  /** Anything that got worse since this workspace's previous check. */
+  regressions?: Regression[];
 }) {
   const fixable = autoFixable(result);
 
@@ -127,6 +131,23 @@ export function PreFlightPanel({
             ))}
           </ul>
         </details>
+      ) : null}
+
+      {regressions.length > 0 ? (
+        <div
+          className="mt-3 rounded-md border border-destructive/50 bg-destructive/10 p-3"
+          role="status"
+        >
+          <p className="text-[12px] font-semibold">Changed for the worse since your last check</p>
+          <ul className="mt-1 space-y-1">
+            {regressions.slice(0, 4).map((regression, index) => (
+              <li key={`${regression.kind}-${index}`} className="text-[12px]">
+                {regression.severity === "critical" ? "Critical: " : "Warning: "}
+                {regression.message}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       {fixable.length > 0 || onSelfHeal ? (
