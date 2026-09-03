@@ -35,6 +35,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as CompareIndexRouteImport } from './routes/compare.index'
+import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
@@ -214,6 +215,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
 const CompareIndexRoute = CompareIndexRouteImport.update({
   id: '/compare/',
   path: '/compare/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareSlugRoute = CompareSlugRouteImport.update({
+  id: '/compare/$slug',
+  path: '/compare/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
@@ -514,6 +520,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/my': typeof AuthenticatedMyRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -587,6 +594,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -667,6 +675,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/my': typeof AuthenticatedMyRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -747,6 +756,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/my'
     | '/onboarding'
+    | '/compare/$slug'
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
@@ -820,6 +830,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/website-audit'
     | '/onboarding'
+    | '/compare/$slug'
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
@@ -899,6 +910,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/my'
     | '/_authenticated/onboarding'
+    | '/compare/$slug'
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
@@ -975,6 +987,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
+  CompareSlugRoute: typeof CompareSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   LocationsCityRoute: typeof LocationsCityRoute
   PTokenRoute: typeof PTokenRoute
@@ -1176,6 +1189,13 @@ declare module '@tanstack/react-router' {
       path: '/compare'
       fullPath: '/compare/'
       preLoaderRoute: typeof CompareIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/$slug': {
+      id: '/compare/$slug'
+      path: '/compare/$slug'
+      fullPath: '/compare/$slug'
+      preLoaderRoute: typeof CompareSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/': {
@@ -1713,6 +1733,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
+  CompareSlugRoute: CompareSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   LocationsCityRoute: LocationsCityRoute,
   PTokenRoute: PTokenRoute,
