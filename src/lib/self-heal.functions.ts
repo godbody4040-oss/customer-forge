@@ -19,6 +19,7 @@ import {
   type Repair,
 } from "@/lib/self-heal";
 import { readSeo } from "@/lib/site-seo";
+import { safeLinkUrl } from "@/lib/website-content";
 
 export type SelfHealResult = {
   planned: number;
