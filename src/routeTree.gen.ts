@@ -39,6 +39,7 @@ import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as LocalIndexRouteImport } from './routes/local.index'
 import { Route as LocationsIndexRouteImport } from './routes/locations.index'
 import { Route as LocationsCityRouteImport } from './routes/locations.$city'
 import { Route as PTokenRouteImport } from './routes/p.$token'
@@ -232,6 +233,11 @@ const IndustriesSlugRoute = IndustriesSlugRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalIndexRoute = LocalIndexRouteImport.update({
+  id: '/local/',
+  path: '/local/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocationsIndexRoute = LocationsIndexRouteImport.update({
@@ -511,6 +517,7 @@ export interface FileRoutesByFullPath {
   '/states/$state': typeof StatesStateRoute
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/locations/': typeof LocationsIndexRoute
   '/states/': typeof StatesIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -582,6 +589,7 @@ export interface FileRoutesByTo {
   '/states/$state': typeof StatesStateRoute
   '/demo': typeof DemoIndexRoute
   '/industries': typeof IndustriesIndexRoute
+  '/local': typeof LocalIndexRoute
   '/locations': typeof LocationsIndexRoute
   '/states': typeof StatesIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -660,6 +668,7 @@ export interface FileRoutesById {
   '/states/$state': typeof StatesStateRoute
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/local/': typeof LocalIndexRoute
   '/locations/': typeof LocationsIndexRoute
   '/states/': typeof StatesIndexRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -738,6 +747,7 @@ export interface FileRouteTypes {
     | '/states/$state'
     | '/demo/'
     | '/industries/'
+    | '/local/'
     | '/locations/'
     | '/states/'
     | '/admin/analytics'
@@ -809,6 +819,7 @@ export interface FileRouteTypes {
     | '/states/$state'
     | '/demo'
     | '/industries'
+    | '/local'
     | '/locations'
     | '/states'
     | '/admin/analytics'
@@ -886,6 +897,7 @@ export interface FileRouteTypes {
     | '/states/$state'
     | '/demo/'
     | '/industries/'
+    | '/local/'
     | '/locations/'
     | '/states/'
     | '/_authenticated/admin/analytics'
@@ -956,6 +968,7 @@ export interface RootRouteChildren {
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   StatesStateRoute: typeof StatesStateRoute
+  LocalIndexRoute: typeof LocalIndexRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
   LocalIndustryStateRoute: typeof LocalIndustryStateRoute
@@ -1178,6 +1191,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/local/': {
+      id: '/local/'
+      path: '/local'
+      fullPath: '/local/'
+      preLoaderRoute: typeof LocalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/locations/': {
@@ -1678,6 +1698,7 @@ const rootRouteChildren: RootRouteChildren = {
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   StatesStateRoute: StatesStateRoute,
+  LocalIndexRoute: LocalIndexRoute,
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
   LocalIndustryStateRoute: LocalIndustryStateRoute,
