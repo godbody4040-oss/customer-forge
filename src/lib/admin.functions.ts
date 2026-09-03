@@ -230,10 +230,7 @@ export const getClientDetail = createServerFn({ method: "GET" })
         .eq("organization_id", id)
         .gte("created_at", since)
         .limit(20000),
-      supabaseAdmin
-        .from("memberships")
-        .select("id, role, user_id")
-        .eq("organization_id", id),
+      supabaseAdmin.from("memberships").select("id, role, user_id").eq("organization_id", id),
 
       supabaseAdmin.from("subscriptions").select("*").eq("organization_id", id).maybeSingle(),
       supabaseAdmin

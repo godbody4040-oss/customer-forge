@@ -26,8 +26,6 @@ export const Route = createFileRoute("/$")({
     // it as not published yet instead of serving an empty page.
     if (!response?.result?.site?.content?.sections?.length) throw notFound();
 
-
-
     return response.result;
   },
   head: ({ loaderData }) => {

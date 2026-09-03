@@ -10,25 +10,25 @@ export const Route = createFileRoute("/about")({
   // On a client's own web address this path is THEIR page, not Revora's.
   loader: () => loadTenantPage("about"),
   head: ({ loaderData }) =>
-    tenantPageHead(loaderData ?? null) ?? ({
-    meta: [
-      { title: "About Revora — Built to help businesses grow" },
-      {
-        name: "description",
-        content:
-          "Revora is a business growth platform that helps companies get discovered, capture opportunities, convert leads, manage customers and automate follow-up.",
-      },
-      { property: "og:title", content: "About Revora" },
-      {
-        property: "og:description",
-        content: `Revora is a business growth platform founded by ${REVORA.founder.name}.`,
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      ogUrl("/about"),
-    ],
-    links: [canonicalLink("/about")],
-  }),
+    tenantPageHead(loaderData ?? null) ?? {
+      meta: [
+        { title: "About Revora — Built to help businesses grow" },
+        {
+          name: "description",
+          content:
+            "Revora is a business growth platform that helps companies get discovered, capture opportunities, convert leads, manage customers and automate follow-up.",
+        },
+        { property: "og:title", content: "About Revora" },
+        {
+          property: "og:description",
+          content: `Revora is a business growth platform founded by ${REVORA.founder.name}.`,
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ogUrl("/about"),
+      ],
+      links: [canonicalLink("/about")],
+    },
   component: AboutRoute,
 });
 

@@ -145,7 +145,6 @@ function WebsitePage() {
     if (sectionParam) setSection(normalizeSection(sectionParam));
   }, [sectionParam]);
 
-
   const requiredCount = (readiness?.requiredGaps ?? []).length;
 
   // One server-verified launch path for every publish button on this page.
@@ -245,9 +244,8 @@ function WebsitePage() {
           page.sections.reduce(
             (inner, section) =>
               inner +
-              section.components.filter(
-                (component) => component.is_visible && !!component.link_url,
-              ).length,
+              section.components.filter((component) => component.is_visible && !!component.link_url)
+                .length,
             0,
           ),
         0,
@@ -351,10 +349,7 @@ function WebsitePage() {
             onGoTo={goTo}
           />
           <BuilderCanvas organizationId={orgId} pages={pages ?? []} canManage={manage} />
-          <Disclosure
-            label="Pages & content"
-            hint="Add pages, sections, copy and lead capture"
-          >
+          <Disclosure label="Pages & content" hint="Add pages, sections, copy and lead capture">
             <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
             <WebsiteStructure organizationId={orgId} canManage={manage} />
             <LeadEngine organizationId={orgId} canManage={manage} />
@@ -396,7 +391,6 @@ function WebsitePage() {
               recommendations={recommendations}
             />
           </Disclosure>
-
         </div>
       ),
     },
@@ -555,8 +549,10 @@ function WebsitePage() {
           <Disclosure label="Advanced" hint="Buttons, forms, links, reports and platform checks">
             <InteractionHealth pages={pages ?? []} onFix={() => goTo("build")} />
           </Disclosure>
-          <Disclosure label="Advanced reports & checks" hint="Review, build report and platform checks">
-
+          <Disclosure
+            label="Advanced reports & checks"
+            hint="Review, build report and platform checks"
+          >
             <WebsiteReview
               organizationId={orgId}
               slug={org?.slug}
@@ -591,7 +587,6 @@ function WebsitePage() {
       ),
     },
   ];
-
 
   const publishState = settings?.publish_state ?? "draft";
 
@@ -722,4 +717,3 @@ function normalizeSection(key: string | undefined): string {
   if (!key) return "build";
   return SECTION_ALIAS[key] ?? "build";
 }
-

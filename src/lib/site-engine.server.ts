@@ -207,7 +207,10 @@ export function stripUnsupportedClaims(text: string, facts: DnaFacts): string {
   const kept = text
     .split(/(?<=[.!?])\s+|\n\n/)
     .filter((sentence) => screenClaims(sentence, facts).length === 0);
-  const out = kept.join(" ").replace(/\s{2,}/g, " ").trim();
+  const out = kept
+    .join(" ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
   return out;
 }
 
@@ -228,7 +231,6 @@ areaCopy (2 sentences about where they work; omit places not supplied),
 metaTitle (max 60 chars), metaDescription (max 155 chars), ogTitle (max 60 chars), ogDescription (max 155 chars).`,
     `Write the website copy for this business. The main action visitors should take is: ${facts.ctaLabel}.${briefContext(brief)}\n\nBUSINESS DNA (authoritative — follow the strategy and the never-claim list):\n${dnaBrief(dna)}\n\nFACTS:\n${factSheet(facts)}`,
   );
-
 
   const cards = Array.isArray(data["serviceCards"])
     ? (data["serviceCards"] as Record<string, unknown>[])

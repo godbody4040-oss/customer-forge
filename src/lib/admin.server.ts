@@ -137,7 +137,6 @@ export async function checkDomain(
 
   const records = emptyRecords();
 
-
   try {
     const [aRes, cnameRes, txtRes] = await Promise.all([
       dnsQuery(domain, "A"),
@@ -154,7 +153,7 @@ export async function checkDomain(
     );
     records.txtVerified = records.txt.some((t) => t.toLowerCase().startsWith("lovable_verify="));
 
-// Behind a reverse proxy (Cloudflare) the public answers are the proxy's
+    // Behind a reverse proxy (Cloudflare) the public answers are the proxy's
     // own edge addresses, never the platform record — so a proxied host is
     // judged by "does DNS answer with public addresses at all", and the HTTPS
     // probe below is what actually proves the site is served.

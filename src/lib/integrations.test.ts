@@ -53,7 +53,11 @@ describe("integration center", () => {
   it("warns about failed automation deliveries and missing alert emails", () => {
     const failing = buildIntegrationCards({ ...base, automationFailures: 2 });
     expect(failing.find((card) => card.key === "automations")!.detail).toContain("failed");
-    const noEmail = buildIntegrationCards({ ...base, leadAlertsEmail: null, leadAlertsEnabled: false });
+    const noEmail = buildIntegrationCards({
+      ...base,
+      leadAlertsEmail: null,
+      leadAlertsEnabled: false,
+    });
     expect(noEmail.find((card) => card.key === "lead_alerts")!.status).toBe("not_connected");
   });
 });

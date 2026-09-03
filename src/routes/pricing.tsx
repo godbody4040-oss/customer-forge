@@ -24,38 +24,38 @@ export const Route = createFileRoute("/pricing")({
   // On a client's own web address this path is THEIR page, not Revora's.
   loader: () => loadTenantPage("pricing"),
   head: ({ loaderData }) =>
-    tenantPageHead(loaderData ?? null) ?? ({
-    meta: [
-      { title: "Pricing — Revora Growth System | $750 setup + $100/mo" },
-      {
-        name: "description",
-        content:
-          "$750 one-time setup. Your first month of the $100/month platform fee is free — your first monthly payment is charged 30 days later (month two) and continues at $100/month unless canceled. Website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
-      },
-      { property: "og:title", content: "Pricing — Revora Growth System" },
-      {
-        property: "og:description",
-        content:
-          "$750 one-time setup + first month free + $100/month afterward. One complete growth system.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      ogUrl("/pricing"),
-    ],
-    links: [canonicalLink("/pricing")],
-    scripts: [
-      { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(
-          breadcrumbSchema([
-            { name: "Revora", path: "/" },
-            { name: "Pricing", path: "/pricing" },
-          ]),
-        ),
-      },
-    ],
-  }),
+    tenantPageHead(loaderData ?? null) ?? {
+      meta: [
+        { title: "Pricing — Revora Growth System | $750 setup + $100/mo" },
+        {
+          name: "description",
+          content:
+            "$750 one-time setup. Your first month of the $100/month platform fee is free — your first monthly payment is charged 30 days later (month two) and continues at $100/month unless canceled. Website, lead capture, CRM, booking, quotes, follow-up, reviews, local SEO, analytics and support.",
+        },
+        { property: "og:title", content: "Pricing — Revora Growth System" },
+        {
+          property: "og:description",
+          content:
+            "$750 one-time setup + first month free + $100/month afterward. One complete growth system.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ogUrl("/pricing"),
+      ],
+      links: [canonicalLink("/pricing")],
+      scripts: [
+        { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbSchema([
+              { name: "Revora", path: "/" },
+              { name: "Pricing", path: "/pricing" },
+            ]),
+          ),
+        },
+      ],
+    },
   component: PricingRoute,
 });
 

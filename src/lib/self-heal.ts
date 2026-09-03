@@ -130,7 +130,9 @@ export function repointLink(
     if (services) return services;
   }
   // A contact page is the safest catch-all; the home page is the last resort.
-  return wants(/contact|get-in-touch/) ?? slugs.find((slug) => slug === "/home") ?? slugs[0] ?? null;
+  return (
+    wants(/contact|get-in-touch/) ?? slugs.find((slug) => slug === "/home") ?? slugs[0] ?? null
+  );
 }
 
 /**

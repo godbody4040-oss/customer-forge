@@ -64,11 +64,7 @@ async function loadState(supabase: Db, orgId: string) {
       .select("phone, city, service_area")
       .eq("organization_id", orgId)
       .maybeSingle(),
-    supabase
-      .from("website_settings")
-      .select("id, seo")
-      .eq("organization_id", orgId)
-      .maybeSingle(),
+    supabase.from("website_settings").select("id, seo").eq("organization_id", orgId).maybeSingle(),
     supabase
       .from("services")
       .select("name")
@@ -232,7 +228,10 @@ export const runSelfHeal = createServerFn({ method: "POST" })
         .eq("organization_id", orgId);
       if (result?.error) throw result.error;
       undo.push(() =>
-        supabase.from("website_components").update({ [field]: before }).eq("id", repair.id),
+        supabase
+          .from("website_components")
+          .update({ [field]: before })
+          .eq("id", repair.id),
       );
     };
 

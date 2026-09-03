@@ -89,7 +89,8 @@ const AUDIT_LABELS: Record<string, string> = {
 };
 
 const auditTitle = (row: AuditRow): string =>
-  AUDIT_LABELS[row.action] ?? row.action.replace(/[._]/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+  AUDIT_LABELS[row.action] ??
+  row.action.replace(/[._]/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
 const auditLevel = (action: string): ActivityLevel =>
   /fail|error|rolled_back|declin|past_due/.test(action) ? "problem" : "ok";

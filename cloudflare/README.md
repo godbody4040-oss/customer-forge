@@ -24,8 +24,9 @@ visitor ──> https://clientname.revoraweb.site
    two Cloudflare assigns. `revoragrowthsystems.com` stays untouched at Name.com.
 
 2. **Add DNS records in Cloudflare** (all with the proxy on / orange cloud):
-   | Type | Name | Value | Proxy |
-   |------|------|-------|-------|
+
+   | Type | Name | Value         | Proxy   |
+   | ---- | ---- | ------------- | ------- |
    | A    | @    | 185.158.133.1 | Proxied |
    | A    | *    | 185.158.133.1 | Proxied |
    | A    | www  | 185.158.133.1 | Proxied |

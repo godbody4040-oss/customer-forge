@@ -48,7 +48,14 @@ const SERVICES = ["cards", "grid", "list", "columns", "accordion"] as const;
 const PROOF = ["quotes", "cards", "strip", "portrait"] as const;
 const PRICING = ["table", "cards", "range-band"] as const;
 const GALLERY = ["mosaic", "carousel-grid", "before-after"] as const;
-const BACKDROPS = ["plain", "grid-lines", "soft-glow", "starfield", "gradient-mesh", "paper"] as const;
+const BACKDROPS = [
+  "plain",
+  "grid-lines",
+  "soft-glow",
+  "starfield",
+  "gradient-mesh",
+  "paper",
+] as const;
 const MOTION = ["none", "subtle-fade", "rise", "reveal-lines", "parallax-lite"] as const;
 const ICONS = ["line", "duotone", "solid", "none"] as const;
 const IMAGE_TREATMENTS = ["full-bleed", "framed", "duotone-tint", "rounded-inset"] as const;
@@ -124,19 +131,25 @@ export function designFingerprint(facts: FingerprintSeedFacts): DesignFingerprin
     fontHeading: font.heading,
     fontBody: font.body,
     typeMood: font.mood,
-    typeScale: urgent ? pick(["compact", "dramatic"] as const, seed, "scale") : pick(TYPE_SCALES, seed, "scale"),
+    typeScale: urgent
+      ? pick(["compact", "dramatic"] as const, seed, "scale")
+      : pick(TYPE_SCALES, seed, "scale"),
     density: urgent ? "comfortable" : pick(DENSITIES, seed, "density"),
     radius: pick(RADII, seed, "radius"),
     shadow: pick(SHADOWS, seed, "shadow"),
     button: pick(BUTTONS, seed, "button"),
     nav: pick(NAVS, seed, "nav"),
-    hero: urgent ? pick(["banner", "stacked", "split"] as const, seed, "hero") : pick(HEROES, seed, "hero"),
+    hero: urgent
+      ? pick(["banner", "stacked", "split"] as const, seed, "hero")
+      : pick(HEROES, seed, "hero"),
     services: pick(SERVICES, seed, "services"),
     proof: pick(PROOF, seed, "proof"),
     pricing: pick(PRICING, seed, "pricing"),
     gallery: pick(GALLERY, seed, "gallery"),
     backdrop: pick(BACKDROPS, seed, "backdrop"),
-    motion: urgent ? pick(["none", "subtle-fade"] as const, seed, "motion") : pick(MOTION, seed, "motion"),
+    motion: urgent
+      ? pick(["none", "subtle-fade"] as const, seed, "motion")
+      : pick(MOTION, seed, "motion"),
     icons: pick(ICONS, seed, "icons"),
     imageTreatment: pick(IMAGE_TREATMENTS, seed, "image"),
     blockOrder: pick(BLOCK_ORDERS, seed, "order"),
@@ -194,7 +207,11 @@ export function distinctFingerprint(
   attempts = 8,
 ): { fingerprint: DesignFingerprint; revision: number; worst: number } {
   let best: { fingerprint: DesignFingerprint; revision: number; worst: number } | null = null;
-  for (let revision = facts.revision ?? 0; revision < (facts.revision ?? 0) + attempts; revision += 1) {
+  for (
+    let revision = facts.revision ?? 0;
+    revision < (facts.revision ?? 0) + attempts;
+    revision += 1
+  ) {
     const fingerprint = designFingerprint({ ...facts, revision });
     const { similar, worst } = tooSimilar(fingerprint, others);
     if (!best || worst < best.worst) best = { fingerprint, revision, worst };

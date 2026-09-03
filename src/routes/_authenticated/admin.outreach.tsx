@@ -148,7 +148,9 @@ function AdminOutreach() {
                     <span className="sr-only">{isDone ? "Mark not done" : "Mark done"}</span>
                   </button>
                   <div>
-                    <p className={`text-[13px] ${isDone ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                    <p
+                      className={`text-[13px] ${isDone ? "text-muted-foreground line-through" : "text-foreground"}`}
+                    >
                       {item.task}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
@@ -210,7 +212,11 @@ function AdminOutreach() {
                   <p className="mt-1 text-[12px] text-muted-foreground">{asset.why}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => void copy(asset.id, asset.message)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void copy(asset.id, asset.message)}
+                  >
                     {copied === asset.id ? (
                       <Check className="mr-2 size-4" aria-hidden="true" />
                     ) : (

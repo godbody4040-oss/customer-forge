@@ -29,25 +29,25 @@ export const Route = createFileRoute("/contact")({
   // On a client's own web address this path is THEIR page, not Revora's.
   loader: () => loadTenantPage("contact"),
   head: ({ loaderData }) =>
-    tenantPageHead(loaderData ?? null) ?? ({
-    meta: [
-      { title: "Contact Revora — Build your customer growth system" },
-      {
-        name: "description",
-        content:
-          "Questions about Revora, want to see the platform in action, or ready to build a customer acquisition system? Email Revorabusiness0@gmail.com or call (919) 622-6620.",
-      },
-      { property: "og:title", content: "Contact Revora" },
-      {
-        property: "og:description",
-        content: "Get in touch with the Revora team about your customer acquisition system.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      ogUrl("/contact"),
-    ],
-    links: [canonicalLink("/contact")],
-  }),
+    tenantPageHead(loaderData ?? null) ?? {
+      meta: [
+        { title: "Contact Revora — Build your customer growth system" },
+        {
+          name: "description",
+          content:
+            "Questions about Revora, want to see the platform in action, or ready to build a customer acquisition system? Email Revorabusiness0@gmail.com or call (919) 622-6620.",
+        },
+        { property: "og:title", content: "Contact Revora" },
+        {
+          property: "og:description",
+          content: "Get in touch with the Revora team about your customer acquisition system.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        ogUrl("/contact"),
+      ],
+      links: [canonicalLink("/contact")],
+    },
   component: ContactRoute,
 });
 

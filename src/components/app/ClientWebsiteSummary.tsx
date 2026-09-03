@@ -98,7 +98,11 @@ export function ClientWebsiteSummary({
         ))}
         {live && address ? (
           <Button asChild size="sm" variant="signal">
-            <a href={address.startsWith("/") ? address : `https://${address}`} target="_blank" rel="noopener">
+            <a
+              href={address.startsWith("/") ? address : `https://${address}`}
+              target="_blank"
+              rel="noopener"
+            >
               View live site <ExternalLink className="size-4" aria-hidden />
             </a>
           </Button>

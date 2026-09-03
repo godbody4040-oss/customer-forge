@@ -288,7 +288,8 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         metadata: { organization_id: orgId, source: data.source || "website" } as never,
       });
     };
-    if (data.quote) await recordMilestone("first_quote_request", Math.round((data.quote.min ?? 0) * 100));
+    if (data.quote)
+      await recordMilestone("first_quote_request", Math.round((data.quote.min ?? 0) * 100));
     if (data.booking) await recordMilestone("first_booking");
 
     // Everything below is a post-commit side effect (owner alert, follow-up
@@ -296,74 +297,73 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     // provider outage here must never delete it or fail the submission.
     let deliveryOk = true;
     try {
-    // Owner alert + customer follow-ups. Delivery happens here (server side) so
-    // "sent" always means a provider accepted the message.
-    const { data: profile } = await supabase
-      .from("business_profiles")
-      .select("email, owner_email, notification_email, notify_on_lead")
-      .eq("organization_id", orgId)
-      .maybeSingle();
-    const { alertRecipient } = await import("@/lib/notifications.functions");
-    const ownerEmail = profile?.email || profile?.owner_email || null;
-    const alertEmail = alertRecipient((profile ?? {}) as Record<string, never>);
+      // Owner alert + customer follow-ups. Delivery happens here (server side) so
+      // "sent" always means a provider accepted the message.
+      const { data: profile } = await supabase
+        .from("business_profiles")
+        .select("email, owner_email, notification_email, notify_on_lead")
+        .eq("organization_id", orgId)
+        .maybeSingle();
+      const { alertRecipient } = await import("@/lib/notifications.functions");
+      const ownerEmail = profile?.email || profile?.owner_email || null;
+      const alertEmail = alertRecipient((profile ?? {}) as Record<string, never>);
 
-    const { deliverRun, sendLeadAlert } = await import("@/lib/messaging.server");
+      const { deliverRun, sendLeadAlert } = await import("@/lib/messaging.server");
 
-    if (alertEmail) {
-      const alert = await sendLeadAlert(
-        alertEmail,
+      if (alertEmail) {
+        const alert = await sendLeadAlert(
+          alertEmail,
+          {
+            businessName: org.name,
+            kind: titles[data.kind]?.split(":")[0] ?? "New lead",
+            leadName: data.name,
+            leadEmail: data.email || undefined,
+            leadPhone: data.phone || undefined,
+            city: data.city || undefined,
+            service: data.serviceInterest || undefined,
+            estimate: data.quote
+              ? `$${data.quote.min}–$${data.quote.max}`
+              : data.estimatedValue
+                ? `$${data.estimatedValue}`
+                : undefined,
+            message: data.message || undefined,
+            when: data.booking ? new Date(data.booking.startsAt).toLocaleString() : undefined,
+          },
+          // One alert per lead, even if the submit is retried.
+          `lead-alert-${lead.id}`,
+        );
+        const { logAlertDelivery } = await import("@/lib/notifications.server");
+        await logAlertDelivery(null, {
+          organizationId: orgId,
+          leadId: lead.id,
+          recipient: alertEmail,
+          kind: data.kind,
+          result: alert,
+        });
+        if (!alert.ok) console.warn("lead alert not delivered", alert.reason);
+      }
+
+      const { enqueueAutomations } = await import("@/lib/automation-engine");
+      await enqueueAutomations(
+        supabase,
+        {
+          organizationId: orgId,
+          trigger: data.kind === "booking" ? "booking_created" : "lead_created",
+          businessName: org.name,
+          lead: {
+            id: lead.id,
+            name: data.name,
+            email: data.email || null,
+            phone: data.phone || null,
+            service_interest: data.serviceInterest || null,
+            estimated_value: data.estimatedValue,
+          },
+        },
         {
           businessName: org.name,
-          kind: titles[data.kind]?.split(":")[0] ?? "New lead",
-          leadName: data.name,
-          leadEmail: data.email || undefined,
-          leadPhone: data.phone || undefined,
-          city: data.city || undefined,
-          service: data.serviceInterest || undefined,
-          estimate: data.quote
-            ? `$${data.quote.min}–$${data.quote.max}`
-            : data.estimatedValue
-              ? `$${data.estimatedValue}`
-              : undefined,
-          message: data.message || undefined,
-          when: data.booking ? new Date(data.booking.startsAt).toLocaleString() : undefined,
+          deliver: (run) => deliverRun(run, { businessName: org.name, replyTo: ownerEmail }),
         },
-        // One alert per lead, even if the submit is retried.
-        `lead-alert-${lead.id}`,
       );
-      const { logAlertDelivery } = await import("@/lib/notifications.server");
-      await logAlertDelivery(null, {
-        organizationId: orgId,
-        leadId: lead.id,
-        recipient: alertEmail,
-        kind: data.kind,
-        result: alert,
-      });
-      if (!alert.ok) console.warn("lead alert not delivered", alert.reason);
-    }
-
-
-    const { enqueueAutomations } = await import("@/lib/automation-engine");
-    await enqueueAutomations(
-      supabase,
-      {
-        organizationId: orgId,
-        trigger: data.kind === "booking" ? "booking_created" : "lead_created",
-        businessName: org.name,
-        lead: {
-          id: lead.id,
-          name: data.name,
-          email: data.email || null,
-          phone: data.phone || null,
-          service_interest: data.serviceInterest || null,
-          estimated_value: data.estimatedValue,
-        },
-      },
-      {
-        businessName: org.name,
-        deliver: (run) => deliverRun(run, { businessName: org.name, replyTo: ownerEmail }),
-      },
-    );
     } catch (sideEffectError) {
       deliveryOk = false;
       console.error(
@@ -387,7 +387,6 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       duplicate: false,
     };
   });
-
 
 /** Fire-and-forget public analytics event (page views, CTA clicks). */
 export const trackPublicEvent = createServerFn({ method: "POST" })

@@ -143,7 +143,11 @@ export function LeadNotifications({
           disabled={!canManage || save.isPending}
           onClick={() => save.mutate()}
         >
-          {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
+          {save.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Mail className="size-4" />
+          )}
           Save inbox
         </Button>
         <Button
@@ -151,7 +155,11 @@ export function LeadNotifications({
           disabled={!canManage || test.isPending}
           onClick={() => test.mutate()}
         >
-          {test.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+          {test.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Send className="size-4" />
+          )}
           Send test alert
         </Button>
       </div>

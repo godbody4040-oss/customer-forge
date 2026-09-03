@@ -19,11 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useStepScroll } from "@/lib/use-step-scroll";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  analyzeSiteBrief,
-  runSiteGeneration,
-  saveSiteBrief,
-} from "@/lib/site-engine.functions";
+import { analyzeSiteBrief, runSiteGeneration, saveSiteBrief } from "@/lib/site-engine.functions";
 
 import {
   WEBSITE_GOALS,
@@ -202,7 +198,6 @@ function Onboarding() {
       const slugBase = existingOrg?.slug ?? safeSlug(draft.businessName);
       let slug = slugBase;
 
-
       const services = draft.services.filter((s) => s.name.trim());
       const testimonials = draft.testimonials.filter((t) => t.text.trim());
       const goals: GoalKey[] = draft.goals.length ? draft.goals : ["quote"];
@@ -264,7 +259,6 @@ function Onboarding() {
             "That business name is already in use on Revora. Try a slightly different name.",
           );
         org = inserted;
-
 
         const { error: membershipError } = await supabase
           .from("memberships")
@@ -420,7 +414,6 @@ function Onboarding() {
           description: "Open Build in the builder to start your website.",
         });
       navigate({ to: "/app/website", replace: true });
-
     } catch (err) {
       console.error("[onboarding] build failed", err);
       setError(supabaseErrorMessage(err));

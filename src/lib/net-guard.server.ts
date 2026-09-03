@@ -129,4 +129,3 @@ export async function guardedFetch(
   // which would let a public host bounce the probe to an internal address.
   return fetch(parsed.toString(), { ...init, redirect: "manual" });
 }
-

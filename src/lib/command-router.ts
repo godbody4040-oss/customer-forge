@@ -103,13 +103,22 @@ const RULES: Rule[] = [
   },
   {
     target: "domain",
-    patterns: [/\bdomain\b/i, /\bdns\b/i, /\bssl\b/i, /\bhttps\b/i, /\bnameserver/i, /\bconnect .*\.(com|net|co|org|site)\b/i],
+    patterns: [
+      /\bdomain\b/i,
+      /\bdns\b/i,
+      /\bssl\b/i,
+      /\bhttps\b/i,
+      /\bnameserver/i,
+      /\bconnect .*\.(com|net|co|org|site)\b/i,
+    ],
     action: "Set up your own domain with DNS and HTTPS checks",
     route: "/app/domain",
   },
   {
     target: "billing",
-    patterns: [/\b(billing|invoice|payment|card|subscription|charge|refund|price of revora|my plan)\b/i],
+    patterns: [
+      /\b(billing|invoice|payment|card|subscription|charge|refund|price of revora|my plan)\b/i,
+    ],
     action: "Open billing — setup fee, subscription and invoices",
     route: "/app/billing",
   },
@@ -121,7 +130,12 @@ const RULES: Rule[] = [
   },
   {
     target: "quotes",
-    patterns: [/\bquote (calculator|form|builder)\b/i, /\badd (a )?quote\b/i, /\bquotes?\b/i, /\bestimat/i],
+    patterns: [
+      /\bquote (calculator|form|builder)\b/i,
+      /\badd (a )?quote\b/i,
+      /\bquotes?\b/i,
+      /\bestimat/i,
+    ],
     action: "Set up the quote calculator visitors use",
     route: "/app/quotes",
   },
@@ -139,7 +153,11 @@ const RULES: Rule[] = [
   },
   {
     target: "analytics",
-    patterns: [/\b(analytics|traffic|visitors|conversion rate|report|stats)\b/i, /\bqr code/i, /\bcampaign/i],
+    patterns: [
+      /\b(analytics|traffic|visitors|conversion rate|report|stats)\b/i,
+      /\bqr code/i,
+      /\bcampaign/i,
+    ],
     action: "Open analytics, traffic and campaign tracking",
     route: "/app/analytics",
   },
@@ -158,7 +176,15 @@ const RULES: Rule[] = [
   },
   {
     target: "seo",
-    patterns: [/\bseo\b/i, /\bgoogle\b/i, /\brank(ing)?\b/i, /\bsearch results?\b/i, /\bkeyword/i, /\bsitemap\b/i, /\bschema\b/i],
+    patterns: [
+      /\bseo\b/i,
+      /\bgoogle\b/i,
+      /\brank(ing)?\b/i,
+      /\bsearch results?\b/i,
+      /\bkeyword/i,
+      /\bsitemap\b/i,
+      /\bschema\b/i,
+    ],
     action: "Improve how your site shows up in search",
     route: "/app/website",
     anchor: "website-assistant",

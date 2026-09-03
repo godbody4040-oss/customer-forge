@@ -33,7 +33,11 @@ export function useIntegrationFacts(organizationId: string | undefined) {
           )
           .eq("organization_id", orgId)
           .maybeSingle(),
-        supabase.from("automations").select("id").eq("organization_id", orgId).eq("is_active", true),
+        supabase
+          .from("automations")
+          .select("id")
+          .eq("organization_id", orgId)
+          .eq("is_active", true),
         supabase
           .from("automation_runs")
           .select("status, created_at")

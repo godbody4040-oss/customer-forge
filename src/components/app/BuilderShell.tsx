@@ -148,7 +148,6 @@ export function BuilderShell({
             <UndoRedo />
             {actions}
           </div>
-
         </div>
       </div>
 

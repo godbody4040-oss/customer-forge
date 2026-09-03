@@ -17,7 +17,6 @@ import { ActivityFeed } from "@/components/app/ActivityFeed";
 import { RevoraCommandBar } from "@/components/app/RevoraCommandBar";
 import { ClientWebsiteSummary } from "@/components/app/ClientWebsiteSummary";
 
-
 import { useProductionStatus } from "@/lib/production.hooks";
 
 import { Button } from "@/components/ui/button";
@@ -352,7 +351,6 @@ function Dashboard() {
       />
 
       <ProductionSummaryCard status={production} />
-
 
       <OnboardingJourney />
 

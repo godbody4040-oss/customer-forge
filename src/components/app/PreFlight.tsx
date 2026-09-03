@@ -214,9 +214,7 @@ export function ServiceStatusPanel({ states }: { states: ClaimState[] }) {
           >
             <div className="min-w-0">
               <p className="text-[13px] font-medium">{claim.promise}</p>
-              {detail ? (
-                <p className="mt-0.5 text-[12px] text-muted-foreground">{detail}</p>
-              ) : null}
+              {detail ? <p className="mt-0.5 text-[12px] text-muted-foreground">{detail}</p> : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {live ? (

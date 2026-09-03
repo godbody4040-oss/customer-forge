@@ -33,12 +33,7 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import {
-  GROWTH_SYSTEM_SCHEMA,
-  LOCAL_BUSINESS_SCHEMA,
-  canonicalLink,
-  ogUrl,
-} from "@/lib/seo";
+import { GROWTH_SYSTEM_SCHEMA, LOCAL_BUSINESS_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
 import { BusinessDetails } from "@/components/marketing/BusinessDetails";
 import { VisualComposition } from "@/components/site/VisualComposition";
 import { HOMEPAGE_COMPOSITION } from "@/lib/homepage-concept";
@@ -46,7 +41,6 @@ import { SiteAddressProvider } from "@/components/site/site-links";
 import { getHostSite } from "@/lib/host-site.functions";
 import { isPossibleTenantHost } from "@/lib/revora-address";
 import { PublicSiteView } from "@/routes/s.$slug";
-
 
 export const Route = createFileRoute("/")({
   /**
@@ -82,67 +76,69 @@ export const Route = createFileRoute("/")({
           ],
         }
       : loaderData
-      ? {
-          meta: [
-            { title: `${loaderData.site.org.name}`.slice(0, 60) },
-            {
-              name: "description",
-              content: (
-                loaderData.site.profile?.tagline ||
-                `${loaderData.site.org.name} — services, prices and online booking.`
-              ).slice(0, 158),
-            },
-            { property: "og:title", content: loaderData.site.org.name },
-            {
-              property: "og:description",
-              content: (
-                loaderData.site.profile?.tagline ||
-                `${loaderData.site.org.name} — services, prices and online booking.`
-              ).slice(0, 158),
-            },
-            { property: "og:type", content: "website" },
-            { property: "og:url", content: `https://${loaderData.host}/` },
-            { name: "twitter:card", content: "summary_large_image" },
-          ],
-          links: [{ rel: "canonical", href: `https://${loaderData.host}/` }],
-        }
-      : ({
-
-    meta: [
-      { title: "Revora — The AI Growth System That Books Local Jobs 24/7" },
-      {
-        name: "description",
-        content:
-          "Revora builds local businesses a complete AI growth system: website, instant quotes, booking, CRM, automated follow-up, reviews, local SEO and analytics — working while you sleep. 3 days free full access, $750 setup, first month free, then $100/month.",
-      },
-      { property: "og:title", content: "Revora — the AI growth system that books local jobs 24/7" },
-      {
-        property: "og:description",
-        content:
-          "Website, instant quotes, booking, CRM, follow-up, reviews, local SEO and analytics in one AI-run system. Built, launched and managed for you. Try it free for 3 days.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      ogUrl("/"),
-    ],
-    links: [canonicalLink("/")],
-    scripts: [
-      { type: "application/ld+json", children: JSON.stringify(LOCAL_BUSINESS_SCHEMA) },
-      { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: FAQ_ITEMS.map((item) => ({
-            "@type": "Question",
-            name: item.q,
-            acceptedAnswer: { "@type": "Answer", text: item.a },
-          })),
-        }),
-      },
-    ],
-  } as const),
+        ? {
+            meta: [
+              { title: `${loaderData.site.org.name}`.slice(0, 60) },
+              {
+                name: "description",
+                content: (
+                  loaderData.site.profile?.tagline ||
+                  `${loaderData.site.org.name} — services, prices and online booking.`
+                ).slice(0, 158),
+              },
+              { property: "og:title", content: loaderData.site.org.name },
+              {
+                property: "og:description",
+                content: (
+                  loaderData.site.profile?.tagline ||
+                  `${loaderData.site.org.name} — services, prices and online booking.`
+                ).slice(0, 158),
+              },
+              { property: "og:type", content: "website" },
+              { property: "og:url", content: `https://${loaderData.host}/` },
+              { name: "twitter:card", content: "summary_large_image" },
+            ],
+            links: [{ rel: "canonical", href: `https://${loaderData.host}/` }],
+          }
+        : ({
+            meta: [
+              { title: "Revora — The AI Growth System That Books Local Jobs 24/7" },
+              {
+                name: "description",
+                content:
+                  "Revora builds local businesses a complete AI growth system: website, instant quotes, booking, CRM, automated follow-up, reviews, local SEO and analytics — working while you sleep. 3 days free full access, $750 setup, first month free, then $100/month.",
+              },
+              {
+                property: "og:title",
+                content: "Revora — the AI growth system that books local jobs 24/7",
+              },
+              {
+                property: "og:description",
+                content:
+                  "Website, instant quotes, booking, CRM, follow-up, reviews, local SEO and analytics in one AI-run system. Built, launched and managed for you. Try it free for 3 days.",
+              },
+              { property: "og:type", content: "website" },
+              { name: "twitter:card", content: "summary_large_image" },
+              ogUrl("/"),
+            ],
+            links: [canonicalLink("/")],
+            scripts: [
+              { type: "application/ld+json", children: JSON.stringify(LOCAL_BUSINESS_SCHEMA) },
+              { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
+              {
+                type: "application/ld+json",
+                children: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "FAQPage",
+                  mainEntity: FAQ_ITEMS.map((item) => ({
+                    "@type": "Question",
+                    name: item.q,
+                    acceptedAnswer: { "@type": "Answer", text: item.a },
+                  })),
+                }),
+              },
+            ],
+          } as const),
   component: HomeRoute,
 });
 
@@ -169,7 +165,6 @@ function HomeRoute() {
     );
   return <Landing />;
 }
-
 
 const PROBLEMS = [
   {

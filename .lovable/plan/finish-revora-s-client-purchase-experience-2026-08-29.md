@@ -1,15 +1,18 @@
 # Finish Revora’s client purchase experience
 
 ## Goal
+
 Make the full sales and billing journey reliable so a client can understand the offer, create an account, pay securely, see accurate billing information, and manage the resulting subscription without broken actions or test/live data conflicts.
 
 ## What I found
+
 - The current “No such customer” error is caused by environment mixing: the published billing page uses the live payment connection while the stored customer shown in the screenshot belongs to sandbox. The portal function currently trusts the page environment instead of the subscription’s recorded environment.
 - Billing state is loaded without filtering or reconciling sandbox versus live records, so test subscription data can appear as if it were a live subscription.
 - The payment history does not show Stripe transaction identifiers, and some sales CTAs still use stale “Start free,” demo, quote, or book wording instead of the single paid Revora Growth System journey.
 - The core embedded checkout is already present and correctly presents the single offer: $1,500 setup plus the first $250 month today, then $250/month.
 
 ## Implementation
+
 1. **Repair customer and environment resolution**
    - Make billing and portal calls resolve the subscription for the active payment environment.
    - Validate the stored customer against that environment before opening the portal.
@@ -39,6 +42,7 @@ Make the full sales and billing journey reliable so a client can understand the 
    - Confirm build health and inspect live billing records without creating fake production charges.
 
 ## Technical details
+
 - Keep Stripe access server-side through the existing managed gateway and Embedded Checkout.
 - Use the subscription row’s `environment` as authoritative for portal access while the active build environment controls new checkout.
 - Scope subscription reads and duplicate guards by `organization_id`, provider, and environment.

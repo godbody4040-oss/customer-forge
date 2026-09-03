@@ -68,7 +68,9 @@ function PortalApp() {
       <nav className="border-b border-border bg-card/40">
         <div className="mx-auto flex w-full max-w-5xl gap-1 overflow-x-auto px-2 py-2">
           {NAV.map((item) => {
-            const active = item.exact ? path === "/my" || path === "/my/" : path.startsWith(item.to);
+            const active = item.exact
+              ? path === "/my" || path === "/my/"
+              : path.startsWith(item.to);
             return (
               <Link
                 key={item.to}

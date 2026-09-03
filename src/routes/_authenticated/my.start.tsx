@@ -83,7 +83,6 @@ function MyStart() {
         liveAt.label ? ` — ${liveAt.label}` : ""
       }. No domain purchase needed.`,
 
-
       done: live,
       to: "/app/launch",
       cta: "Publish",

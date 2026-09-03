@@ -218,8 +218,6 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
           },
         },
         payment_method_collection: "always" as const,
-        
-
       };
 
       // Live accounts run with full compliance handling, which rejects

@@ -87,7 +87,6 @@ export function LaunchChecks({
                 >
                   Take offline
                 </Button>
-
               ) : (
                 <Button variant="signal" onClick={onPublish} disabled={isPublishing || !passed}>
                   {isPublishing ? (

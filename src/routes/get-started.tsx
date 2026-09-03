@@ -540,14 +540,14 @@ function GetStarted() {
                       </Button>
                     </div>
                   </div>
-                 ) : alreadySubscribed ? (
+                ) : alreadySubscribed ? (
                   <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
                     <p className="text-[13px] font-medium">
                       Your workspace already has an active Revora subscription.
                     </p>
                     <p className="mt-1 text-[12px] text-muted-foreground">
-                      There's nothing else to pay here. Manage your plan, payment method or
-                      invoices from billing.
+                      There's nothing else to pay here. Manage your plan, payment method or invoices
+                      from billing.
                     </p>
                     <Button asChild variant="signal" size="lg" className="mt-3">
                       <Link to="/app/billing">Manage subscription</Link>

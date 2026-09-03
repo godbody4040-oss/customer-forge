@@ -19,8 +19,7 @@ async function flushAutomations(organizationId: string) {
     // Delivery retries on the next pass, so a dropped request (navigating away,
     // offline tab) is expected and must not surface as an application error.
     const transient =
-      error instanceof TypeError ||
-      (error instanceof DOMException && error.name === "AbortError");
+      error instanceof TypeError || (error instanceof DOMException && error.name === "AbortError");
     if (!transient) console.warn("automation delivery pass deferred", error);
     return null;
   }
@@ -192,8 +191,6 @@ export function useTeam(organizationId: string | undefined) {
   });
 }
 
-
-
 export function useQuoteRequests(organizationId: string | undefined) {
   return useQuery({
     queryKey: ["quote_requests", organizationId],
@@ -287,7 +284,8 @@ export function useUpdateAppointment(organizationId: string | undefined) {
       toast.success("Appointment updated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update that appointment.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't update that appointment.")),
   });
 }
 
@@ -842,7 +840,8 @@ export function useDeleteAutomation(organizationId: string | undefined) {
       toast.success("Automation removed.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't remove that automation.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't remove that automation.")),
   });
 }
 
@@ -1307,6 +1306,7 @@ export function useSetWebsiteReviewState(organizationId: string | undefined) {
       toast.success(message || "Website status updated.");
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't update the website status.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't update the website status.")),
   });
 }

@@ -192,7 +192,9 @@ function SharePage() {
                         href={asset.intentUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => trackConversion("cta_click", { metadata: { channel: asset.id } })}
+                        onClick={() =>
+                          trackConversion("cta_click", { metadata: { channel: asset.id } })
+                        }
                       >
                         Open <ExternalLink className="ml-2 size-4" aria-hidden="true" />
                       </a>

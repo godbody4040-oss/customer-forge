@@ -102,7 +102,8 @@ export function UpgradeStudio({
       void queryClient.invalidateQueries({ queryKey: ["score_facts", organizationId] });
       void queryClient.invalidateQueries({ queryKey: ["website_settings"] });
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't install those upgrades.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't install those upgrades.")),
   });
 
   return (

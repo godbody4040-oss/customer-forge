@@ -175,7 +175,6 @@ function SettingsPage() {
       </Panel>
 
       <LeadNotifications organizationId={orgId} canManage={canManage} />
-
     </div>
   );
 }

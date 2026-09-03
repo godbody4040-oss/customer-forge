@@ -136,8 +136,6 @@ export function DomainCenter({
     onError: (error: Error) => toast.error(friendlyError(error)),
   });
 
-
-
   const stepDone: Record<string, boolean> = {
     choose: !!connected,
     connect: !!connected,
@@ -172,7 +170,6 @@ export function DomainCenter({
               Use this to review and share your site before your domain is connected. Your own
               domain becomes the public address as soon as it is verified.
             </p>
-
           </div>
           <div className="rounded-md border border-border/60 p-3">
             <p className="text-[12px] font-medium">Your own domain (public website)</p>
@@ -204,7 +201,6 @@ export function DomainCenter({
           ))}
         </ol>
       </Panel>
-
 
       {/* Buy a domain at a registrar */}
       <Panel className="space-y-4 p-5">
@@ -267,10 +263,8 @@ export function DomainCenter({
         </Button>
       </Panel>
 
-
       {/* Connect a domain you own */}
       <Panel id="connect-own-domain" className="scroll-mt-24 space-y-4 p-5">
-
         <SectionHeading eyebrow="Connect a domain" title="Use a domain you already own" />
         <p className="text-[13px] text-muted-foreground">
           Save it here first. We keep checking your DNS in the background and only report it live

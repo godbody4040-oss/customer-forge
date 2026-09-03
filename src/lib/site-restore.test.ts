@@ -1,10 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { buildFullSnapshot, countSnapshot, planRestore, readFullSnapshot, snapshotsMatch } from "./site-restore";
+import {
+  buildFullSnapshot,
+  countSnapshot,
+  planRestore,
+  readFullSnapshot,
+  snapshotsMatch,
+} from "./site-restore";
 
 const pages = [{ id: "p1", slug: "home", title: "Home", kind: "home", sort_order: 0 }];
-const sections = [{ id: "s1", page_id: "p1", kind: "hero", variant: "bold", heading: "Hi", sort_order: 0 }];
+const sections = [
+  { id: "s1", page_id: "p1", kind: "hero", variant: "bold", heading: "Hi", sort_order: 0 },
+];
 const components = [
-  { id: "c1", section_id: "s1", kind: "button", label: "Call", link_url: "tel:+15550001111", sort_order: 0 },
+  {
+    id: "c1",
+    section_id: "s1",
+    kind: "button",
+    label: "Call",
+    link_url: "tel:+15550001111",
+    sort_order: 0,
+  },
 ];
 
 describe("site-restore", () => {
