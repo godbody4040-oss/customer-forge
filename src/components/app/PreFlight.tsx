@@ -54,12 +54,20 @@ export function PreFlightPanel({
   canPublish,
   isPublishing = false,
   onPublish,
+  onSelfHeal,
+  isHealing = false,
+  healSummary,
 }: {
   result: PreflightResult;
   isChecking?: boolean;
   canPublish: boolean;
   isPublishing?: boolean;
   onPublish?: () => void;
+  /** Runs Revora's safe repairs. Omitted when the viewer can't edit the site. */
+  onSelfHeal?: () => void;
+  isHealing?: boolean;
+  /** Real outcome of the last repair run, in plain language. */
+  healSummary?: string | null;
 }) {
   const fixable = autoFixable(result);
 
