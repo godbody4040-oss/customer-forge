@@ -13,8 +13,8 @@ import { withSecurityHeaders } from "@/lib/security-headers";
  */
 const securityHeadersMiddleware = createMiddleware().server(async ({ next, request }) => {
   const https = request
-    ? (request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "")) ===
-      "https"
+    ? (request.headers.get("x-forwarded-proto") ??
+        new URL(request.url).protocol.replace(":", "")) === "https"
     : true;
   const result = (await next()) as unknown;
   if (result instanceof Response) return withSecurityHeaders(result, { https }) as never;
@@ -26,8 +26,6 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
   }
   return result as never;
 });
-
-
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Lovable email/webhook routes authenticate themselves — pass them through untouched.
