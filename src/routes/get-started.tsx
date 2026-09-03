@@ -583,7 +583,7 @@ function GetStarted() {
                   </p>
                 ) : null}
 
-                {!payNow ? (
+                {!payNow && !alreadySubscribed ? (
                   <>
                     <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
                       <p className="text-[13px] font-semibold">
