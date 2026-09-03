@@ -52,13 +52,14 @@ describe("anonymous website settings exposure stays minimal", () => {
     for (const select of settingsSelects) expect(select).not.toContain(column);
   });
 
-
   it("restricts the anonymous grant to render columns only", () => {
     const sql = migrationSql();
     expect(sql).toContain("revoke all on public.website_settings from anon");
     expect(sql).toMatch(/grant select \(\s*\n?\s*id, organization_id, template/);
     for (const column of OPERATIONAL_COLUMNS) {
-      expect(sql).not.toMatch(new RegExp(`grant select \\([^)]*${column}[^)]*\\) on public.website_settings`));
+      expect(sql).not.toMatch(
+        new RegExp(`grant select \\([^)]*${column}[^)]*\\) on public.website_settings`),
+      );
     }
   });
 });
