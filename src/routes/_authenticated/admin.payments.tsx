@@ -53,7 +53,7 @@ function AdminPayments() {
   const queryClient = useQueryClient();
   const { data: events } = usePaymentEvents(openId);
 
-  const rows = payments ?? [];
+  const rows = useMemo(() => payments ?? [], [payments]);
   const stats = useMemo(() => {
     const completed = rows.filter((p) => p.status === "completed");
     const gross = completed.reduce((s, p) => s + Number(p.amount), 0);

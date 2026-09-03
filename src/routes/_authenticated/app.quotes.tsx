@@ -72,8 +72,8 @@ function QuotesPage() {
   const [addon, setAddon] = useState<AddonDraft | null>(null);
 
   const form = builder?.form ?? null;
-  const questions = builder?.questions ?? [];
-  const addons = builder?.addons ?? [];
+  const questions = useMemo(() => builder?.questions ?? [], [builder?.questions]);
+  const addons = useMemo(() => builder?.addons ?? [], [builder?.addons]);
 
   const sample = useMemo(() => {
     if (!form) return { min: 0, max: 0 };
