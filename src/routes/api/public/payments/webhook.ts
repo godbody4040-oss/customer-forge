@@ -451,7 +451,6 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           console.error("[payments:webhook] error", (error as Error).message);
           return new Response("Webhook error", { status: 400 });
         }
-
       },
     },
   },

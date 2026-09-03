@@ -9,7 +9,7 @@ describe("classifyClaimError", () => {
   it("treats a unique violation as a duplicate", () => {
     expect(classifyClaimError({ code: "23505", message: "duplicate key value" })).toBe("duplicate");
     expect(
-      classifyClaimError({ code: null, message: 'duplicate key value violates unique constraint' }),
+      classifyClaimError({ code: null, message: "duplicate key value violates unique constraint" }),
     ).toBe("duplicate");
   });
 
@@ -30,14 +30,16 @@ describe("organizationIdFromStripeObject", () => {
   it("reads the tenant from every supported metadata location", () => {
     expect(organizationIdFromStripeObject({ metadata: { organizationId: "a" } })).toBe("a");
     expect(
-      organizationIdFromStripeObject({ subscription_details: { metadata: { organizationId: "b" } } }),
+      organizationIdFromStripeObject({
+        subscription_details: { metadata: { organizationId: "b" } },
+      }),
     ).toBe("b");
     expect(
       organizationIdFromStripeObject({ lines: { data: [{ metadata: { organizationId: "c" } }] } }),
     ).toBe("c");
-    expect(organizationIdFromStripeObject({ customer: { metadata: { organizationId: "d" } } })).toBe(
-      "d",
-    );
+    expect(
+      organizationIdFromStripeObject({ customer: { metadata: { organizationId: "d" } } }),
+    ).toBe("d");
   });
 
   it("returns null when no tenant is present", () => {

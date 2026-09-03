@@ -177,7 +177,6 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         return { error: `${verified.reason} Checkout is paused until this is corrected.` };
       }
 
-
       const found = await stripe.customers.search({
         query: `metadata['organizationId']:'${data.organizationId}'`,
         limit: 1,
