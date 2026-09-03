@@ -35,6 +35,9 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
  * query parameter or header can turn this into an open redirect, and the
  * platform domain itself is never redirected, so no loop is possible.
  */
+/** Query marker proving a request already passed through the traffic redirect. */
+const TRAFFIC_REDIRECT_MARKER = "_rw";
+
 const trafficDomainRedirect = createMiddleware().server(async ({ next, request }) => {
   if (!request) return next();
   const url = new URL(request.url);
