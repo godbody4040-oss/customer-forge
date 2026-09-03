@@ -121,6 +121,7 @@ export const Route = createFileRoute("/")({
     ],
     links: [canonicalLink("/")],
     scripts: [
+      { type: "application/ld+json", children: JSON.stringify(LOCAL_BUSINESS_SCHEMA) },
       { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
       {
         type: "application/ld+json",
