@@ -246,7 +246,9 @@ export async function restoreBackup(
         .upsert(rows as never[], { onConflict: "id" });
       if (upsertError) throw new Error(`Restore failed on ${table}: ${upsertError.message}`);
     }
-    keptIds[table] = new Set(rows.map((row) => String(row["id"])));
+    keptIds[table] = new Set(
+      rows.map((row) => String((row as Record<string, unknown>)["id"])),
+    );
     tables[table] = rows.length;
   }
 
@@ -255,8 +257,8 @@ export async function restoreBackup(
     const { data: existing, error: readError } = await admin
       .from(table)
       .select("id")
-      .returns<{ id: string }[]>()
-      .eq("organization_id", organizationId);
+      .eq("organization_id", organizationId)
+      .returns<{ id: string }[]>();
     if (readError) throw new Error(`Restore cleanup failed on ${table}: ${readError.message}`);
     const stale = (existing ?? [])
       .map((row) => String(row.id))
