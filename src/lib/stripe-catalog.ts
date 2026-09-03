@@ -70,7 +70,6 @@ export type ProductShape =
   | null
   | undefined;
 
-
 export type CatalogVerification = { ok: true } | { ok: false; reason: string };
 
 const productIdOf = (price: PriceShape): string | null => {
