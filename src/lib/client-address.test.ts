@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   REVORA_ROOT,
   REVORA_SUBDOMAIN_HOSTING_ENABLED,
+  canonicalSiteUrl,
   customDomainIsLive,
   liveAddressUrl,
   primaryAddress,
