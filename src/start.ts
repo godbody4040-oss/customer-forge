@@ -27,6 +27,28 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
   return result as never;
 });
 
+/**
+ * `revoraweb.site` is a TRAFFIC-ONLY domain: it never serves the application
+ * and never serves a client website. Anything arriving on it (apex, www, or any
+ * subdomain) is permanently redirected to the platform domain, preserving the
+ * path so marketing links keep working. The target origin is hardcoded, so no
+ * query parameter or header can turn this into an open redirect, and the
+ * platform domain itself is never redirected, so no loop is possible.
+ */
+const trafficDomainRedirect = createMiddleware().server(async ({ next, request }) => {
+  if (!request) return next();
+  const url = new URL(request.url);
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
+  if (!isTrafficDomainHost(host)) return next();
+  return new Response(null, {
+    status: request.method === "GET" || request.method === "HEAD" ? 301 : 308,
+    headers: {
+      location: trafficRedirectUrl(url.pathname, url.search),
+      "cache-control": "public, max-age=3600",
+    },
+  }) as never;
+});
+
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Lovable email/webhook routes authenticate themselves — pass them through untouched.
   if (request && new URL(request.url).pathname.startsWith("/lovable/")) {
