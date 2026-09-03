@@ -128,10 +128,14 @@ export async function captureError(
   extra: Partial<CapturedError> = {},
 ) {
   try {
-    const described =
-      input && typeof input === "object" && "message" in (input as object)
-        ? (input as CapturedError)
-        : { message: describeError(input) };
+    // Error instances keep `message`/`stack` non-enumerable, so they must be
+    // read explicitly — spreading one silently loses the actual failure text.
+    const described: CapturedError =
+      input instanceof Error
+        ? { message: input.message || describeError(input), stack: input.stack ?? null }
+        : input && typeof input === "object" && "message" in (input as object)
+          ? { ...(input as CapturedError) }
+          : { message: describeError(input) };
     const event: CapturedError = { ...described, ...extra };
     const message = String(event.message ?? "Unknown error").slice(0, MAX_MESSAGE);
     const stack = event.stack ? String(event.stack).slice(0, MAX_STACK) : null;
