@@ -63,3 +63,17 @@ describe("website restore is written in one database transaction", () => {
     expect(source).toContain("snapshotsMatch(after");
   });
 });
+
+describe("repeated public submissions cannot duplicate or flood a workspace", () => {
+  const source = read("./public-site.functions.ts");
+
+  it("treats an immediate repeat submission as the request already saved", () => {
+    expect(source).toContain("saved.duplicate");
+    expect(source).toContain("duplicate: true");
+  });
+
+  it("tells a flooding submitter to wait instead of failing silently", () => {
+    expect(source).toContain("RATE_LIMITED");
+    expect(source).toContain("wait a few minutes");
+  });
+});
