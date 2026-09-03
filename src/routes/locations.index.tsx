@@ -71,7 +71,11 @@ function LocationsIndex() {
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
             Revora is run from {BUSINESS.region.name} and serves owners across the state — and
             anywhere in the {BUSINESS.areasServed[1]} or beyond. Pick your city to see how the
-            system captures the customers already searching for your service.
+            system captures the customers already searching for your service. Outside NC?{" "}
+            <Link to="/states" className="text-primary underline-offset-4 hover:underline">
+              See all 50 states
+            </Link>
+            .
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild variant="signal" size="lg">

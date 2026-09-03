@@ -8,6 +8,7 @@
  */
 import { publicClient, publicOrganization } from "@/lib/public-site.server";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
+import { US_STATES } from "@/lib/us-states";
 import { NC_LOCATIONS } from "@/lib/business-identity";
 import {
   REVORA_OWN_HOSTS,
@@ -178,6 +179,7 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
   if (!site) {
     const industryPaths = INDUSTRIES.map((i) => `/industries/${industrySlug(i.name)}`);
     const locationPaths = NC_LOCATIONS.map((l) => `/locations/${l.slug}`);
+    const statePaths = US_STATES.map((s) => `/states/${s.slug}`);
     return [
       "",
       "/pricing",
@@ -189,6 +191,8 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       ...industryPaths,
       "/locations",
       ...locationPaths,
+      "/states",
+      ...statePaths,
       "/crm-for-contractors",
       "/about",
       "/contact",
