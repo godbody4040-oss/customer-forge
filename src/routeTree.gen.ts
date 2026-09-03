@@ -38,6 +38,7 @@ import { Route as CompareIndexRouteImport } from './routes/compare.index'
 import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -231,6 +232,11 @@ const DemoDashboardRoute = DemoDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => DemoRoute,
+} as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
   id: '/',
@@ -530,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/states/$state': typeof StatesStateRoute
   '/compare/': typeof CompareIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/local/': typeof LocalIndexRoute
   '/locations/': typeof LocationsIndexRoute
@@ -604,6 +611,7 @@ export interface FileRoutesByTo {
   '/states/$state': typeof StatesStateRoute
   '/compare': typeof CompareIndexRoute
   '/demo': typeof DemoIndexRoute
+  '/guides': typeof GuidesIndexRoute
   '/industries': typeof IndustriesIndexRoute
   '/local': typeof LocalIndexRoute
   '/locations': typeof LocationsIndexRoute
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/states/$state': typeof StatesStateRoute
   '/compare/': typeof CompareIndexRoute
   '/demo/': typeof DemoIndexRoute
+  '/guides/': typeof GuidesIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/local/': typeof LocalIndexRoute
   '/locations/': typeof LocationsIndexRoute
@@ -766,6 +775,7 @@ export interface FileRouteTypes {
     | '/states/$state'
     | '/compare/'
     | '/demo/'
+    | '/guides/'
     | '/industries/'
     | '/local/'
     | '/locations/'
@@ -840,6 +850,7 @@ export interface FileRouteTypes {
     | '/states/$state'
     | '/compare'
     | '/demo'
+    | '/guides'
     | '/industries'
     | '/local'
     | '/locations'
@@ -920,6 +931,7 @@ export interface FileRouteTypes {
     | '/states/$state'
     | '/compare/'
     | '/demo/'
+    | '/guides/'
     | '/industries/'
     | '/local/'
     | '/locations/'
@@ -994,6 +1006,7 @@ export interface RootRouteChildren {
   SSlugRoute: typeof SSlugRouteWithChildren
   StatesStateRoute: typeof StatesStateRoute
   CompareIndexRoute: typeof CompareIndexRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
   LocalIndexRoute: typeof LocalIndexRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
@@ -1211,6 +1224,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/dashboard'
       preLoaderRoute: typeof DemoDashboardRouteImport
       parentRoute: typeof DemoRoute
+    }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/industries/': {
       id: '/industries/'
@@ -1740,6 +1760,7 @@ const rootRouteChildren: RootRouteChildren = {
   SSlugRoute: SSlugRouteWithChildren,
   StatesStateRoute: StatesStateRoute,
   CompareIndexRoute: CompareIndexRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
   LocalIndexRoute: LocalIndexRoute,
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
