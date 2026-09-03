@@ -74,6 +74,7 @@ import { Route as AuthenticatedMyIndexRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMyActivityRouteImport } from './routes/_authenticated/my.activity'
 import { Route as AuthenticatedMySiteRouteImport } from './routes/_authenticated/my.site'
 import { Route as AuthenticatedMyStartRouteImport } from './routes/_authenticated/my.start'
+import { Route as LocalIndustryStateRouteImport } from './routes/local.$industry.$state'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
 import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
@@ -420,6 +421,11 @@ const AuthenticatedMyStartRoute = AuthenticatedMyStartRouteImport.update({
   path: '/start',
   getParentRoute: () => AuthenticatedMyRoute,
 } as any)
+const LocalIndustryStateRoute = LocalIndustryStateRouteImport.update({
+  id: '/local/$industry/$state',
+  path: '/local/$industry/$state',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugPageRoute = SSlugPageRouteImport.update({
   id: '/$page',
   path: '/$page',
@@ -527,6 +533,7 @@ export interface FileRoutesByFullPath {
   '/my/activity': typeof AuthenticatedMyActivityRoute
   '/my/site': typeof AuthenticatedMySiteRoute
   '/my/start': typeof AuthenticatedMyStartRoute
+  '/local/$industry/$state': typeof LocalIndustryStateRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -596,6 +603,7 @@ export interface FileRoutesByTo {
   '/my/activity': typeof AuthenticatedMyActivityRoute
   '/my/site': typeof AuthenticatedMySiteRoute
   '/my/start': typeof AuthenticatedMyStartRoute
+  '/local/$industry/$state': typeof LocalIndustryStateRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -672,6 +680,7 @@ export interface FileRoutesById {
   '/_authenticated/my/activity': typeof AuthenticatedMyActivityRoute
   '/_authenticated/my/site': typeof AuthenticatedMySiteRoute
   '/_authenticated/my/start': typeof AuthenticatedMyStartRoute
+  '/local/$industry/$state': typeof LocalIndustryStateRoute
   '/s/$slug/$page': typeof SSlugPageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -748,6 +757,7 @@ export interface FileRouteTypes {
     | '/my/activity'
     | '/my/site'
     | '/my/start'
+    | '/local/$industry/$state'
     | '/s/$slug/$page'
     | '/admin/'
     | '/app/'
@@ -817,6 +827,7 @@ export interface FileRouteTypes {
     | '/my/activity'
     | '/my/site'
     | '/my/start'
+    | '/local/$industry/$state'
     | '/s/$slug/$page'
     | '/admin'
     | '/app'
@@ -892,6 +903,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my/activity'
     | '/_authenticated/my/site'
     | '/_authenticated/my/start'
+    | '/local/$industry/$state'
     | '/s/$slug/$page'
     | '/_authenticated/admin/'
     | '/_authenticated/app/'
@@ -934,6 +946,7 @@ export interface RootRouteChildren {
   StatesStateRoute: typeof StatesStateRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
+  LocalIndustryStateRoute: typeof LocalIndustryStateRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1399,6 +1412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyStartRouteImport
       parentRoute: typeof AuthenticatedMyRoute
     }
+    '/local/$industry/$state': {
+      id: '/local/$industry/$state'
+      path: '/local/$industry/$state'
+      fullPath: '/local/$industry/$state'
+      preLoaderRoute: typeof LocalIndustryStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug/$page': {
       id: '/s/$slug/$page'
       path: '/$page'
@@ -1640,6 +1660,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatesStateRoute: StatesStateRoute,
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
+  LocalIndustryStateRoute: LocalIndustryStateRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
