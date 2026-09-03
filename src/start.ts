@@ -2,7 +2,11 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
-import { isTrafficDomainHost, trafficRedirectUrl } from "@/lib/revora-address";
+import {
+  isTrafficDomainHost,
+  isTrafficRedirectHost,
+  trafficRedirectUrl,
+} from "@/lib/revora-address";
 import { withSecurityHeaders } from "@/lib/security-headers";
 
 /**
