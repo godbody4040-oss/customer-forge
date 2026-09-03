@@ -6,7 +6,6 @@ import {
   customDomainIsLive,
   liveAddressUrl,
   primaryAddress,
-  revoraHostIsLive,
 } from "@/lib/revora-address";
 
 describe("production client address model", () => {
@@ -14,9 +13,8 @@ describe("production client address model", () => {
     expect(REVORA_ROOT).toBe("revoragrowthsystems.com");
   });
 
-  it("deactivates Revora-branded client hosting", () => {
+  it("keeps Revora-branded client subdomain hosting permanently retired", () => {
     expect(REVORA_SUBDOMAIN_HOSTING_ENABLED).toBe(false);
-    expect(revoraHostIsLive({ subdomain: "acme", revora_host_ok: true })).toBe(false);
   });
 
   it("never treats an unverified client domain as live", () => {
@@ -29,20 +27,14 @@ describe("production client address model", () => {
   });
 
   it("makes the verified client domain the public address, never a Revora subdomain", () => {
-    const settings = {
-      custom_domain: "acme.com",
-      subdomain: "acme",
-      dns_ok: true,
-      ssl_ok: true,
-      revora_host_ok: true,
-    };
+    const settings = { custom_domain: "acme.com", dns_ok: true, ssl_ok: true };
     expect(primaryAddress(settings)).toBe("acme.com");
     expect(liveAddressUrl(settings, "acme").url).toBe("https://acme.com");
   });
 
   it("falls back to the platform preview path while a domain is unverified", () => {
     const address = liveAddressUrl(
-      { custom_domain: "acme.com", subdomain: "acme", dns_ok: false, ssl_ok: false },
+      { custom_domain: "acme.com", dns_ok: false, ssl_ok: false },
       "acme",
     );
     expect(address.kind).toBe("path");

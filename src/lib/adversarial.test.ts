@@ -8,9 +8,7 @@ import {
   isRevoraOwnHost,
   isPossibleTenantHost,
   normalizeHost,
-  normalizeSubdomain,
-  revoraSubdomainFromHost,
-  validateSubdomain,
+  isTrafficDomainHost,
   customDomainIsLive,
 } from "@/lib/revora-address";
 import { safeLinkUrl } from "@/lib/website-content";
@@ -75,31 +73,24 @@ describe("tenant hostnames cannot be spoofed", () => {
     }
   });
 
-  it("rejects reserved and malformed subdomains", () => {
-    for (const bad of ["www", "admin", "api", "a", "", "  ", "..", "!!"]) {
-      expect(validateSubdomain(bad).ok).toBe(false);
-    }
-    expect(validateSubdomain("elite-mobile-detailing").ok).toBe(true);
-  });
-
-  it("sanitizes hostile subdomain input into a safe label", () => {
-    for (const raw of ["has space", "under_score", "x".repeat(80), "-lead-", "a/../b"]) {
-      const check = validateSubdomain(raw);
-      if (check.ok) {
-        expect(check.value).toMatch(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/);
-        expect(check.value.length).toBeLessThanOrEqual(48);
-      }
+  it("never treats a revoraweb.site host as a possible client website", () => {
+    for (const host of [
+      "business.revoraweb.site",
+      "customer.revoraweb.site",
+      "a.b.revoraweb.site",
+      "revoraweb.site",
+      "www.revoraweb.site",
+      "BUSINESS.Revoraweb.Site:443",
+    ]) {
+      expect(isPossibleTenantHost(host)).toBe(false);
+      expect(isTrafficDomainHost(host)).toBe(true);
     }
   });
 
-  it("normalizes subdomain input without letting punctuation through", () => {
-    expect(normalizeSubdomain("Elite Mobile..Detailing!")).not.toMatch(/[^a-z0-9-]/);
-  });
-
-  it("only extracts a subdomain from a real Revora host", () => {
-    expect(revoraSubdomainFromHost("elite.revoraweb.site")).toBe("elite");
-    expect(revoraSubdomainFromHost("elite.revoraweb.site.evil.tld")).toBeNull();
-    expect(revoraSubdomainFromHost("revoraweb.site")).toBeNull();
+  it("does not treat a revoraweb.site lookalike as the traffic domain", () => {
+    for (const host of ["evilrevoraweb.site", "revoraweb.site.attacker.com"]) {
+      expect(isTrafficDomainHost(host)).toBe(false);
+    }
   });
 
   it("treats localhost and platform hosts as non-tenant hosts", () => {
