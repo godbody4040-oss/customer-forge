@@ -73,7 +73,7 @@ function AdminOutreach() {
     <div className="space-y-8">
       <SectionHeading
         title="Outreach console"
-        subtitle="Every free channel, with tracked links and honest rules. Paid ads, bulk SMS and broadcast placement are bought outside Revora — the assets are ready here."
+        description="Every free channel, with tracked links and honest rules. Paid ads, bulk SMS and broadcast placement are bought outside Revora — the assets are ready here."
       />
 
       <Panel>
@@ -125,7 +125,7 @@ function AdminOutreach() {
       <div>
         <SectionHeading
           title="Daily routine"
-          subtitle={`About ${routineMinutes()} minutes a day. This is the part that compounds — reach comes from repetition, not one blast.`}
+          description={`About ${routineMinutes()} minutes a day. This is the part that compounds — reach comes from repetition, not one blast.`}
         />
         <Panel className="mt-4">
           <ul className="space-y-3">
@@ -165,7 +165,7 @@ function AdminOutreach() {
       <div>
         <SectionHeading
           title="Free listings"
-          subtitle="Each one is free to submit and puts Revora in front of owners who are already searching."
+          description="Each one is free to submit and puts Revora in front of owners who are already searching."
         />
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {FREE_LISTINGS.map((listing) => {
@@ -199,7 +199,7 @@ function AdminOutreach() {
       <div>
         <SectionHeading
           title="Channel assets"
-          subtitle="Copy-ready messages with tracked links, including the 30-second radio/TV read."
+          description="Copy-ready messages with tracked links, including the 30-second radio/TV read."
         />
         <div className="mt-4 space-y-3">
           {assets.map((asset) => (

@@ -49,7 +49,7 @@ function SharePage() {
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
-    trackConversion("page_view", { page: "/share" });
+    trackConversion("page_view", { metadata: { page: "/share" } });
   }, []);
 
   const campaign = useMemo(() => (name.trim() ? `share-${name.trim()}` : "share"), [name]);
@@ -74,7 +74,7 @@ function SharePage() {
     if (typeof navigator !== "undefined" && "share" in navigator) {
       try {
         await navigator.share({ title: "Revora Growth Systems", url: mainLink });
-        trackConversion("share", { channel: "native" });
+        trackConversion("cta_click", { metadata: { channel: "native_share" } });
         return;
       } catch {
         /* user dismissed the sheet */
@@ -162,7 +162,7 @@ function SharePage() {
         <SectionHeading
           className="mt-12"
           title="Ready-to-send messages"
-          subtitle="Copy, paste, send. Each channel keeps its own honest rules."
+          description="Copy, paste, send. Each channel keeps its own honest rules."
         />
 
         <div className="mt-6 space-y-4">
@@ -192,7 +192,7 @@ function SharePage() {
                         href={asset.intentUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => trackConversion("share", { channel: asset.id })}
+                        onClick={() => trackConversion("cta_click", { metadata: { channel: asset.id } })}
                       >
                         Open <ExternalLink className="ml-2 size-4" aria-hidden="true" />
                       </a>
