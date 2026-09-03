@@ -196,6 +196,15 @@ describe("revoraweb.site is a traffic-only redirect domain", () => {
     }
   });
 
+  it("cannot ping-pong with a hosting-level primary-domain redirect", () => {
+    // The marker survives a bounce back to the traffic domain, and the app
+    // serves the page instead of redirecting again, so the platform stays
+    // reachable however the domains are configured.
+    const first = trafficRedirectUrl("/pricing", "?_rw=1");
+    expect(first).toBe("https://revoragrowthsystems.com/pricing?_rw=1");
+    expect(new URL(first).searchParams.has("_rw")).toBe(true);
+  });
+
   it("keeps Revora-branded client subdomain hosting switched off", async () => {
     const { REVORA_SUBDOMAIN_HOSTING_ENABLED, revoraHostIsLive } =
       await import("@/lib/revora-address");
