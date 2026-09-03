@@ -103,7 +103,12 @@ describe("subdomain tenant hosting is impossible", () => {
 
 describe("traffic domain is apex/www redirect only", () => {
   it("redirects only the apex and www forms", () => {
-    for (const host of ["revoraweb.site", "www.revoraweb.site", "REVORAWEB.site", "revoraweb.site."])
+    for (const host of [
+      "revoraweb.site",
+      "www.revoraweb.site",
+      "REVORAWEB.site",
+      "revoraweb.site.",
+    ])
       expect(isTrafficRedirectHost(host)).toBe(true);
   });
 
