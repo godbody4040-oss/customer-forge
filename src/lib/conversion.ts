@@ -1,4 +1,5 @@
 import { recordConversion, type ConversionEvent } from "@/lib/conversion.functions";
+import { ga4Event, ga4PageView } from "@/lib/ga4";
 
 const KEY = "revora.attribution.v1";
 

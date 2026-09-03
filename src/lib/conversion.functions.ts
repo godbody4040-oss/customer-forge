@@ -2,7 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const EVENTS = [
+  "page_view",
   "landing_view",
+  "portal_view",
   "assessment_submitted",
   "audit_requested",
   "cta_click",
