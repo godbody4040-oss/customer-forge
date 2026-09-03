@@ -88,6 +88,6 @@ describe("observability timeline", () => {
       ],
     });
     expect(events[0]?.level).toBe("problem");
-    expect(systemHealth(events).summary).toMatch/**/(/needs attention/i);
+    expect(systemHealth(events).summary).toMatch(/needs attention/i);
   });
 });
