@@ -160,6 +160,7 @@ const FOOTER_GROUPS = [
     links: [
       { to: "/demo", label: "Product tour" },
       { to: "/industries", label: "Solutions" },
+      { to: "/locations", label: "North Carolina" },
       { to: "/pricing", label: "Pricing" },
       { to: "/growth-assessment", label: "Free growth assessment" },
       { to: "/website-audit", label: "Free website audit" },
