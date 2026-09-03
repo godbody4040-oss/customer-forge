@@ -246,9 +246,7 @@ export async function restoreBackup(
         .upsert(rows as never[], { onConflict: "id" });
       if (upsertError) throw new Error(`Restore failed on ${table}: ${upsertError.message}`);
     }
-    keptIds[table] = new Set(
-      rows.map((row) => String((row as Record<string, unknown>)["id"])),
-    );
+    keptIds[table] = new Set(rows.map((row) => String((row as Record<string, unknown>)["id"])));
     tables[table] = rows.length;
   }
 
@@ -267,7 +265,6 @@ export async function restoreBackup(
     const { error: deleteError } = await admin.from(table).delete().in("id", stale);
     if (deleteError) throw new Error(`Restore cleanup failed on ${table}: ${deleteError.message}`);
   }
-
 
   await admin
     .from("data_backups")

@@ -41,12 +41,11 @@ export const reportClientError = createServerFn({ method: "POST" })
       message: String(input?.message ?? "").slice(0, 500),
       stack: String(input?.stack ?? "").slice(0, 4000) || undefined,
       route: String(input?.route ?? "").slice(0, 300) || undefined,
-      organizationId:
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          String(input?.organizationId ?? ""),
-        )
-          ? String(input?.organizationId)
-          : undefined,
+      organizationId: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        String(input?.organizationId ?? ""),
+      )
+        ? String(input?.organizationId)
+        : undefined,
     }),
   )
   .handler(async ({ data }) => {

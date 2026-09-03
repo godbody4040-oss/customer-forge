@@ -14,7 +14,12 @@ import {
 } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getBackupOverview, listBackups, restoreFromBackup, runBackup } from "@/lib/backup.functions";
+import {
+  getBackupOverview,
+  listBackups,
+  restoreFromBackup,
+  runBackup,
+} from "@/lib/backup.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/backups")({
   head: () => ({
@@ -36,7 +41,9 @@ const bytes = (value: number) =>
     : `${Math.max(1, Math.round(value / 1000))} KB`;
 
 const when = (value: string | null) =>
-  value ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  value
+    ? new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
+    : "—";
 
 function BackupHistory({ organizationId }: { organizationId: string }) {
   const queryClient = useQueryClient();
@@ -55,7 +62,9 @@ function BackupHistory({ organizationId }: { organizationId: string }) {
   const backupNow = useMutation({
     mutationFn: () => create({ data: { organizationId, label: "Manual backup" } }),
     onSuccess: (row) => {
-      setNotice(`Snapshot saved — ${row.rowCounts["total_rows"] ?? 0} rows, ${bytes(row.sizeBytes)}.`);
+      setNotice(
+        `Snapshot saved — ${row.rowCounts["total_rows"] ?? 0} rows, ${bytes(row.sizeBytes)}.`,
+      );
       queryClient.invalidateQueries({ queryKey: ["admin-backups", organizationId] });
       queryClient.invalidateQueries({ queryKey: ["admin-backup-overview"] });
     },
@@ -133,7 +142,9 @@ function BackupHistory({ organizationId }: { organizationId: string }) {
                   <Button
                     size="sm"
                     variant="destructive"
-                    disabled={runRestore.isPending || confirmText.trim().toUpperCase() !== "RESTORE"}
+                    disabled={
+                      runRestore.isPending || confirmText.trim().toUpperCase() !== "RESTORE"
+                    }
                     onClick={() => runRestore.mutate(row.id)}
                   >
                     {runRestore.isPending ? "Restoring…" : "Confirm"}

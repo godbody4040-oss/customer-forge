@@ -61,7 +61,6 @@ export function RouteError({ error, reset }: { error: Error; reset?: () => void 
       .catch(() => {});
   }, [error]);
 
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">

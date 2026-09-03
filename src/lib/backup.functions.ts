@@ -112,7 +112,11 @@ export const runBackup = createServerFn({ method: "POST" })
 export const restoreFromBackup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { backupId: string; confirm: string }) => {
-    if (String(input?.confirm ?? "").trim().toUpperCase() !== "RESTORE") {
+    if (
+      String(input?.confirm ?? "")
+        .trim()
+        .toUpperCase() !== "RESTORE"
+    ) {
       throw new Error("Type RESTORE to confirm.");
     }
     return { backupId: uuid(input?.backupId, "backup") };
@@ -125,11 +129,7 @@ export const restoreFromBackup = createServerFn({ method: "POST" })
       .eq("id", data.backupId)
       .maybeSingle();
     if (error || !backup) throw new Error("That backup no longer exists.");
-    await assertBackupAccess(
-      context.supabase,
-      context.userId,
-      backup.organization_id as string,
-    );
+    await assertBackupAccess(context.supabase, context.userId, backup.organization_id as string);
     const { restoreBackup } = await import("@/lib/backup.server");
     return restoreBackup(supabaseAdmin, data.backupId, { userId: context.userId });
   });

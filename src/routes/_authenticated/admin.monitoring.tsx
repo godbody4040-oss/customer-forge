@@ -91,9 +91,7 @@ function AdminMonitoring() {
                 <span className="text-muted-foreground">last {when(group.lastSeen)}</span>
               </div>
               <p className="mt-1 break-words">{group.message}</p>
-              {group.route ? (
-                <p className="text-muted-foreground">at {group.route}</p>
-              ) : null}
+              {group.route ? <p className="text-muted-foreground">at {group.route}</p> : null}
             </div>
           ))}
         </div>

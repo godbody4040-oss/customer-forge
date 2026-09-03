@@ -123,7 +123,10 @@ async function forwardToSentry(event: CapturedError, fingerprint: string): Promi
  * Records one error. Never throws: monitoring failing must not turn a handled
  * error into a second crash.
  */
-export async function captureError(input: CapturedError | unknown, extra: Partial<CapturedError> = {}) {
+export async function captureError(
+  input: CapturedError | unknown,
+  extra: Partial<CapturedError> = {},
+) {
   try {
     const described =
       input && typeof input === "object" && "message" in (input as object)
