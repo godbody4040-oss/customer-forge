@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 /**
  * Server-only fact gathering for the Revora orchestrator.
  *

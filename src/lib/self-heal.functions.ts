@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 /**
  * REVORA SELF-HEALING — transactional repair runner.
  *
