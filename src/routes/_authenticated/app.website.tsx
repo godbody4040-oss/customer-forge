@@ -408,6 +408,13 @@ function WebsitePage() {
       hint: "Check, preview, go live",
       node: (
         <div className="space-y-5">
+          <PreFlightPanel
+            result={preflightResult}
+            isChecking={preflightFacts.isLoading}
+            canPublish={manage && production?.unlocked !== false}
+            isPublishing={launchFlow.isLaunching}
+            onPublish={() => launchFlow.launch()}
+          />
           <ProductionReadinessPanel
             readiness={productionReadiness}
             status={production}
