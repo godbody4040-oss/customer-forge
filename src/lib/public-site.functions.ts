@@ -275,7 +275,11 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     if (data.quote) await recordMilestone("first_quote_request", Math.round((data.quote.min ?? 0) * 100));
     if (data.booking) await recordMilestone("first_booking");
 
-
+    // Everything below is a post-commit side effect (owner alert, follow-up
+    // automations). The customer's request is already durably saved, so a
+    // provider outage here must never delete it or fail the submission.
+    let deliveryOk = true;
+    try {
     // Owner alert + customer follow-ups. Delivery happens here (server side) so
     // "sent" always means a provider accepted the message.
     const { data: profile } = await supabase
