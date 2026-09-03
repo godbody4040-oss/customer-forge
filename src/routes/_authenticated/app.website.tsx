@@ -377,7 +377,6 @@ function WebsitePage() {
               publishState={settings?.publish_state ?? "draft"}
               lastPublishedAt={settings?.last_published_at ?? null}
               customDomain={settings?.custom_domain ?? null}
-              subdomain={settings?.subdomain ?? null}
               domainStatus={settings?.domain_status ?? null}
               pagesCount={(pages ?? []).length}
               visibleSections={visibleSections}
