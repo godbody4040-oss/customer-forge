@@ -54,8 +54,10 @@ import { Route as StatesIndexRouteImport } from './routes/states.index'
 import { Route as StatesStateRouteImport } from './routes/states.$state'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
+import { Route as AuthenticatedAdminBackupsRouteImport } from './routes/_authenticated/admin.backups'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authenticated/admin.domains'
+import { Route as AuthenticatedAdminMonitoringRouteImport } from './routes/_authenticated/admin.monitoring'
 import { Route as AuthenticatedAdminMonthlyRouteImport } from './routes/_authenticated/admin.monthly'
 import { Route as AuthenticatedAdminOutreachRouteImport } from './routes/_authenticated/admin.outreach'
 import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
@@ -85,6 +87,7 @@ import { Route as LocalIndustryIndexRouteImport } from './routes/local.$industry
 import { Route as LocalIndustryStateRouteImport } from './routes/local.$industry.$state'
 import { Route as SSlugPageRouteImport } from './routes/s.$slug.$page'
 import { Route as AuthenticatedAdminClientsOrgIdRouteImport } from './routes/_authenticated/admin.clients.$orgId'
+import { Route as ApiPublicJobsBackupRouteImport } from './routes/api/public/jobs/backup'
 import { Route as ApiPublicJobsLifecycleEmailRouteImport } from './routes/api/public/jobs/lifecycle-email'
 import { Route as ApiPublicJobsSiteEngineRouteImport } from './routes/api/public/jobs/site-engine'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -317,6 +320,12 @@ const AuthenticatedAdminAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminBackupsRoute =
+  AuthenticatedAdminBackupsRouteImport.update({
+    id: '/backups',
+    path: '/backups',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminClientsRoute =
   AuthenticatedAdminClientsRouteImport.update({
     id: '/clients',
@@ -327,6 +336,12 @@ const AuthenticatedAdminDomainsRoute =
   AuthenticatedAdminDomainsRouteImport.update({
     id: '/domains',
     path: '/domains',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminMonitoringRoute =
+  AuthenticatedAdminMonitoringRouteImport.update({
+    id: '/monitoring',
+    path: '/monitoring',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminMonthlyRoute =
@@ -485,6 +500,11 @@ const AuthenticatedAdminClientsOrgIdRoute =
     path: '/$orgId',
     getParentRoute: () => AuthenticatedAdminClientsRoute,
   } as any)
+const ApiPublicJobsBackupRoute = ApiPublicJobsBackupRouteImport.update({
+  id: '/api/public/jobs/backup',
+  path: '/api/public/jobs/backup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJobsLifecycleEmailRoute =
   ApiPublicJobsLifecycleEmailRouteImport.update({
     id: '/api/public/jobs/lifecycle-email',
@@ -563,8 +583,10 @@ export interface FileRoutesByFullPath {
   '/locations/': typeof LocationsIndexRoute
   '/states/': typeof StatesIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/backups': typeof AuthenticatedAdminBackupsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
   '/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -595,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/my/': typeof AuthenticatedMyIndexRoute
   '/local/$industry/': typeof LocalIndustryIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/backup': typeof ApiPublicJobsBackupRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -641,8 +664,10 @@ export interface FileRoutesByTo {
   '/locations': typeof LocationsIndexRoute
   '/states': typeof StatesIndexRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/backups': typeof AuthenticatedAdminBackupsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
   '/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -673,6 +698,7 @@ export interface FileRoutesByTo {
   '/my': typeof AuthenticatedMyIndexRoute
   '/local/$industry': typeof LocalIndustryIndexRoute
   '/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/backup': typeof ApiPublicJobsBackupRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -726,8 +752,10 @@ export interface FileRoutesById {
   '/locations/': typeof LocationsIndexRoute
   '/states/': typeof StatesIndexRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/backups': typeof AuthenticatedAdminBackupsRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
+  '/_authenticated/admin/monitoring': typeof AuthenticatedAdminMonitoringRoute
   '/_authenticated/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
   '/_authenticated/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
@@ -758,6 +786,7 @@ export interface FileRoutesById {
   '/_authenticated/my/': typeof AuthenticatedMyIndexRoute
   '/local/$industry/': typeof LocalIndustryIndexRoute
   '/_authenticated/admin/clients/$orgId': typeof AuthenticatedAdminClientsOrgIdRoute
+  '/api/public/jobs/backup': typeof ApiPublicJobsBackupRoute
   '/api/public/jobs/lifecycle-email': typeof ApiPublicJobsLifecycleEmailRoute
   '/api/public/jobs/site-engine': typeof ApiPublicJobsSiteEngineRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -811,8 +840,10 @@ export interface FileRouteTypes {
     | '/locations/'
     | '/states/'
     | '/admin/analytics'
+    | '/admin/backups'
     | '/admin/clients'
     | '/admin/domains'
+    | '/admin/monitoring'
     | '/admin/monthly'
     | '/admin/outreach'
     | '/admin/payments'
@@ -843,6 +874,7 @@ export interface FileRouteTypes {
     | '/my/'
     | '/local/$industry/'
     | '/admin/clients/$orgId'
+    | '/api/public/jobs/backup'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
     | '/api/public/payments/webhook'
@@ -889,8 +921,10 @@ export interface FileRouteTypes {
     | '/locations'
     | '/states'
     | '/admin/analytics'
+    | '/admin/backups'
     | '/admin/clients'
     | '/admin/domains'
+    | '/admin/monitoring'
     | '/admin/monthly'
     | '/admin/outreach'
     | '/admin/payments'
@@ -921,6 +955,7 @@ export interface FileRouteTypes {
     | '/my'
     | '/local/$industry'
     | '/admin/clients/$orgId'
+    | '/api/public/jobs/backup'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
     | '/api/public/payments/webhook'
@@ -973,8 +1008,10 @@ export interface FileRouteTypes {
     | '/locations/'
     | '/states/'
     | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/backups'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
+    | '/_authenticated/admin/monitoring'
     | '/_authenticated/admin/monthly'
     | '/_authenticated/admin/outreach'
     | '/_authenticated/admin/payments'
@@ -1005,6 +1042,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my/'
     | '/local/$industry/'
     | '/_authenticated/admin/clients/$orgId'
+    | '/api/public/jobs/backup'
     | '/api/public/jobs/lifecycle-email'
     | '/api/public/jobs/site-engine'
     | '/api/public/payments/webhook'
@@ -1051,6 +1089,7 @@ export interface RootRouteChildren {
   StatesIndexRoute: typeof StatesIndexRoute
   LocalIndustryStateRoute: typeof LocalIndustryStateRoute
   LocalIndustryIndexRoute: typeof LocalIndustryIndexRoute
+  ApiPublicJobsBackupRoute: typeof ApiPublicJobsBackupRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1376,6 +1415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/backups': {
+      id: '/_authenticated/admin/backups'
+      path: '/backups'
+      fullPath: '/admin/backups'
+      preLoaderRoute: typeof AuthenticatedAdminBackupsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/clients': {
       id: '/_authenticated/admin/clients'
       path: '/clients'
@@ -1388,6 +1434,13 @@ declare module '@tanstack/react-router' {
       path: '/domains'
       fullPath: '/admin/domains'
       preLoaderRoute: typeof AuthenticatedAdminDomainsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/monitoring': {
+      id: '/_authenticated/admin/monitoring'
+      path: '/monitoring'
+      fullPath: '/admin/monitoring'
+      preLoaderRoute: typeof AuthenticatedAdminMonitoringRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/monthly': {
@@ -1593,6 +1646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminClientsOrgIdRouteImport
       parentRoute: typeof AuthenticatedAdminClientsRoute
     }
+    '/api/public/jobs/backup': {
+      id: '/api/public/jobs/backup'
+      path: '/api/public/jobs/backup'
+      fullPath: '/api/public/jobs/backup'
+      preLoaderRoute: typeof ApiPublicJobsBackupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/lifecycle-email': {
       id: '/api/public/jobs/lifecycle-email'
       path: '/api/public/jobs/lifecycle-email'
@@ -1654,8 +1714,10 @@ const AuthenticatedAdminClientsRouteWithChildren =
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminBackupsRoute: typeof AuthenticatedAdminBackupsRoute
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminDomainsRoute: typeof AuthenticatedAdminDomainsRoute
+  AuthenticatedAdminMonitoringRoute: typeof AuthenticatedAdminMonitoringRoute
   AuthenticatedAdminMonthlyRoute: typeof AuthenticatedAdminMonthlyRoute
   AuthenticatedAdminOutreachRoute: typeof AuthenticatedAdminOutreachRoute
   AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
@@ -1666,8 +1728,10 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminBackupsRoute: AuthenticatedAdminBackupsRoute,
   AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminDomainsRoute: AuthenticatedAdminDomainsRoute,
+  AuthenticatedAdminMonitoringRoute: AuthenticatedAdminMonitoringRoute,
   AuthenticatedAdminMonthlyRoute: AuthenticatedAdminMonthlyRoute,
   AuthenticatedAdminOutreachRoute: AuthenticatedAdminOutreachRoute,
   AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
@@ -1829,6 +1893,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatesIndexRoute: StatesIndexRoute,
   LocalIndustryStateRoute: LocalIndustryStateRoute,
   LocalIndustryIndexRoute: LocalIndustryIndexRoute,
+  ApiPublicJobsBackupRoute: ApiPublicJobsBackupRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

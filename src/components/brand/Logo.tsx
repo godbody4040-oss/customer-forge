@@ -1,5 +1,10 @@
 import { cn } from "@/lib/utils";
-import revoraMark from "@/assets/revora-mark.png.asset.json";
+
+// Display-sized copy of the uploaded mark (158x144). The original upload is a
+// 1.2 MB 1312px PNG — shipping that for a 36px badge cost every page over a
+// megabyte of image bytes, which is the single biggest Core Web Vitals drag on
+// the marketing pages.
+const MARK_SRC = "/revora-mark-144.png";
 
 /** Revora gold "R" mark — favicon / app icon / dashboard safe. */
 export function LogoMark({ className }: { className?: string }) {
@@ -19,12 +24,15 @@ export function LogoMark({ className }: { className?: string }) {
         className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(70%_70%_at_25%_15%,color-mix(in_oklab,var(--color-gold)_28%,transparent),transparent_70%),radial-gradient(60%_60%_at_85%_85%,color-mix(in_oklab,var(--color-info)_22%,transparent),transparent_70%)]"
       />
       <img
-        src={revoraMark.url}
+        src={MARK_SRC}
         alt=""
         aria-hidden="true"
+        width={158}
+        height={144}
         className="relative size-full object-contain drop-shadow-[0_2px_6px_color-mix(in_oklab,var(--color-gold)_35%,transparent)]"
         loading="eager"
         decoding="async"
+        fetchPriority="high"
       />
       {/* glass sheen */}
       <span

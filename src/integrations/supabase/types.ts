@@ -701,6 +701,132 @@ export type Database = {
           },
         ]
       }
+      data_backups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          label: string | null
+          organization_id: string
+          restored_at: string | null
+          row_counts: Json
+          size_bytes: number
+          snapshot: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          organization_id: string
+          restored_at?: string | null
+          row_counts?: Json
+          size_bytes?: number
+          snapshot: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string | null
+          organization_id?: string
+          restored_at?: string | null
+          row_counts?: Json
+          size_bytes?: number
+          snapshot?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_backups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_backups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      error_events: {
+        Row: {
+          context: Json
+          created_at: string
+          duration_ms: number | null
+          environment: string
+          fingerprint: string
+          forwarded: boolean
+          id: string
+          level: string
+          message: string
+          organization_id: string | null
+          release: string | null
+          route: string | null
+          source: string
+          stack: string | null
+          status_code: number | null
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          duration_ms?: number | null
+          environment?: string
+          fingerprint: string
+          forwarded?: boolean
+          id?: string
+          level?: string
+          message: string
+          organization_id?: string | null
+          release?: string | null
+          route?: string | null
+          source?: string
+          stack?: string | null
+          status_code?: number | null
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          duration_ms?: number | null
+          environment?: string
+          fingerprint?: string
+          forwarded?: boolean
+          id?: string
+          level?: string
+          message?: string
+          organization_id?: string | null
+          release?: string | null
+          route?: string | null
+          source?: string
+          stack?: string | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "error_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generation_jobs: {
         Row: {
           attempts: number
