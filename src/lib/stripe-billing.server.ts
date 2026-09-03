@@ -5,18 +5,23 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 import type { StripeEnv } from "@/lib/stripe.server";
+import { MONTHLY_PRICE_LOOKUP_KEY, SETUP_PRICE_LOOKUP_KEY } from "@/lib/stripe-catalog";
 
 type Admin = SupabaseClient<Database>;
 type SubStatus = Database["public"]["Enums"]["subscription_status"];
 type Interval = Database["public"]["Enums"]["billing_interval"];
 
-/** The single Revora offer: $750 setup + $100/month. */
-export const GROWTH_PLAN_ID = "revora_growth_system";
-export const MONTHLY_PRICE_KEY = "revora_system_monthly";
-export const SETUP_PRICE_KEY = "revora_system_setup";
-export const SETUP_AMOUNT = 750;
-export const MONTHLY_AMOUNT = 100;
+/**
+ * The single Revora offer. Amounts are re-exported from `@/lib/offer` so there
+ * is exactly ONE place a price can ever be defined.
+ */
+export const GROWTH_PLAN_ID = GROWTH_SYSTEM.planId;
+export const MONTHLY_PRICE_KEY = MONTHLY_PRICE_LOOKUP_KEY;
+export const SETUP_PRICE_KEY = SETUP_PRICE_LOOKUP_KEY;
+export const SETUP_AMOUNT = GROWTH_SYSTEM.setupPrice;
+export const MONTHLY_AMOUNT = GROWTH_SYSTEM.monthlyPrice;
 
 /**
  * Maps a Stripe Price **lookup key** (not a Price ID) to the single plan.
