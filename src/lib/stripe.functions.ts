@@ -7,7 +7,7 @@ import {
   parseStripeEnvironment,
   parseWorkspaceId,
 } from "@/lib/stripe-input";
-import { DEFAULT_OFFER_RATES, GROWTH_SYSTEM, verifyGrowthPrices } from "@/lib/offer";
+import { DEFAULT_OFFER_RATES, GROWTH_SYSTEM } from "@/lib/offer";
 
 export type GrowthSystemIntake = {
   fullName: string;
@@ -68,8 +68,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<{ clientSecret: string } | { error: string }> => {
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
-    const { GROWTH_PLAN_ID, MONTHLY_PRICE_KEY, SETUP_PRICE_KEY } =
-      await import("@/lib/stripe-billing.server");
+    const { GROWTH_PLAN_ID } = await import("@/lib/stripe-billing.server");
 
     // RLS proves membership: a non-member cannot read this organization.
     const { data: org } = await context.supabase
@@ -142,22 +141,39 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
 
     try {
       const stripe = createStripeClient(data.environment);
-      const prices = await stripe.prices.list({
-        lookup_keys: [MONTHLY_PRICE_KEY, SETUP_PRICE_KEY],
-      });
-      const monthly = prices.data.find((p) => p.lookup_key === MONTHLY_PRICE_KEY);
-      const setup = prices.data.find((p) => p.lookup_key === SETUP_PRICE_KEY);
+      const { STRIPE_CATALOG, verifyGrowthCatalog } = await import("@/lib/stripe-catalog");
+      const catalog = STRIPE_CATALOG[data.environment];
+
+      // Bind the EXACT pinned Price IDs — lookup keys alone are transferable
+      // between products, so they are verified but never trusted on their own.
+      const [setup, monthly] = await Promise.all([
+        stripe.prices.retrieve(catalog.setup.stripePriceId).catch(() => null),
+        stripe.prices.retrieve(catalog.monthly.stripePriceId).catch(() => null),
+      ]);
       if (!monthly || !setup) {
         return { error: "Revora Growth System pricing is not set up in the payment provider yet." };
       }
+      const [setupProduct, monthlyProduct] = await Promise.all([
+        stripe.products.retrieve(catalog.setup.stripeProductId).catch(() => null),
+        stripe.products.retrieve(catalog.monthly.stripeProductId).catch(() => null),
+      ]);
+
       // ONE canonical source of truth: the immutable code-level offer. Neither
       // the browser nor a database row may influence what is charged.
       const rates = DEFAULT_OFFER_RATES;
 
-      // Never open a session against a price that disagrees with the published
-      // offer — a mis-set price would charge the customer the wrong amount.
-      const verified = verifyGrowthPrices(setup, monthly, rates);
+      // Never open a session against a product/price that disagrees with the
+      // published offer — a mis-set price would charge the wrong amount.
+      const verified = verifyGrowthCatalog({
+        environment: data.environment,
+        setupPrice: setup,
+        monthlyPrice: monthly,
+        setupProduct,
+        monthlyProduct,
+        rates,
+      });
       if (!verified.ok) {
+        console.error("[payments:checkout] catalog verification failed", verified.reason);
         return { error: `${verified.reason} Checkout is paused until this is corrected.` };
       }
 
@@ -194,8 +210,8 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         // One-time setup line is billed on the FIRST invoice only; the
         // recurring price stays $100/month.
         line_items: [
-          { price: monthly.id, quantity: 1 },
-          { price: setup.id, quantity: 1 },
+          { price: catalog.monthly.stripePriceId, quantity: 1 },
+          { price: catalog.setup.stripePriceId, quantity: 1 },
         ],
         mode: "subscription" as const,
         ui_mode: "embedded_page" as const,

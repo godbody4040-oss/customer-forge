@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { DEFAULT_OFFER_RATES } from "@/lib/offer";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
 // Raw Stripe event JSON; each case narrows the fields it needs.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleEvent(event: { type: string; data: { object: any } }, env: StripeEnv) {
   const { adminClient } = await import("@/lib/payments.server");
-  const { syncStripeSubscription, recordStripeTransaction, planFromPriceId, resolvePriceKey } =
-    await import("@/lib/stripe-billing.server");
+  const {
+    syncStripeSubscription,
+    recordStripeTransaction,
+    planFromPriceLookupKey,
+    resolvePriceLookupKey,
+    GROWTH_PLAN_ID,
+  } = await import("@/lib/stripe-billing.server");
   const admin = await adminClient();
   const object = event.data.object;
 
@@ -45,9 +51,9 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         ["active", "trialing"].includes(stripeStatus)
       ) {
         const priceKey = payload?.items?.data?.[0]?.price
-          ? resolvePriceKey(payload.items.data[0].price)
+          ? resolvePriceLookupKey(payload.items.data[0].price)
           : null;
-        const mapped = planFromPriceId(priceKey);
+        const mapped = planFromPriceLookupKey(priceKey);
         await lifecycle.handleSubscriptionActivated(admin, {
           organizationId,
           stripeSubscriptionId: String(object.id),
@@ -59,9 +65,9 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
 
       if (event.type === "customer.subscription.updated") {
         const newPriceKey = payload?.items?.data?.[0]?.price
-          ? resolvePriceKey(payload.items.data[0].price)
+          ? resolvePriceLookupKey(payload.items.data[0].price)
           : null;
-        const newPlan = planFromPriceId(newPriceKey)?.planId ?? null;
+        const newPlan = planFromPriceLookupKey(newPriceKey)?.planId ?? null;
         if (newPlan && previous?.plan_id && newPlan !== previous.plan_id) {
           await lifecycle.handlePlanChanged(admin, {
             organizationId,
@@ -104,8 +110,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         console.error("[payments:webhook] invoice without organization metadata", object?.id);
         break;
       }
-      const priceKey = line?.price ? resolvePriceKey(line.price) : null;
-      const mapped = planFromPriceId(priceKey);
+      const priceKey = line?.price ? resolvePriceLookupKey(line.price) : null;
+      const mapped = planFromPriceLookupKey(priceKey);
       const paid = event.type === "invoice.paid";
       await recordStripeTransaction(admin, {
         organizationId,
@@ -131,26 +137,76 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       if (md["kind"] === "growth_system" && md["organizationId"]) {
         if (object?.payment_status === "unpaid") break;
         const organizationId = md["organizationId"];
+
+        // Never trust metadata alone: re-read the session from Stripe and check
+        // the line items against the pinned catalog before granting anything.
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const { STRIPE_CATALOG } = await import("@/lib/stripe-catalog");
+        const catalog = STRIPE_CATALOG[env];
+        const stripe = createStripeClient(env);
+        const session = await stripe.checkout.sessions.retrieve(String(object?.id ?? ""), {
+          expand: ["line_items.data.price", "subscription", "customer"],
+        });
+        if (session.mode !== "subscription" || session.payment_status === "unpaid") {
+          console.error("[payments:webhook] growth session not payable", session.id);
+          break;
+        }
+        const lines = session.line_items?.data ?? [];
+        const priceIds = lines.map((l) => l.price?.id).filter(Boolean) as string[];
+        const expectedIds = [catalog.setup.stripePriceId, catalog.monthly.stripePriceId];
+        const unexpected = priceIds.filter((id) => !expectedIds.includes(id));
+        if (unexpected.length || !expectedIds.every((id) => priceIds.includes(id))) {
+          console.error("[payments:webhook] unexpected prices on growth session", session.id);
+          break;
+        }
+        const currency = String(session.currency ?? "usd").toLowerCase();
+        if (currency !== "usd") {
+          console.error("[payments:webhook] non-usd growth session", session.id, currency);
+          break;
+        }
+        const setupLine = lines.find((l) => l.price?.id === catalog.setup.stripePriceId);
+        const monthlyLine = lines.find((l) => l.price?.id === catalog.monthly.stripePriceId);
+        const setupCents = Math.round(DEFAULT_OFFER_RATES.setupPrice * 100);
+        const monthlyCents = Math.round(DEFAULT_OFFER_RATES.monthlyPrice * 100);
+        if (setupLine?.price?.unit_amount !== setupCents) {
+          console.error("[payments:webhook] setup amount mismatch", session.id);
+          break;
+        }
+        if (
+          monthlyLine?.price?.unit_amount !== monthlyCents ||
+          monthlyLine?.price?.recurring?.interval !== "month"
+        ) {
+          console.error("[payments:webhook] monthly price mismatch", session.id);
+          break;
+        }
+        const sessionOrgId =
+          (session.metadata?.["organizationId"] as string | undefined) ??
+          (typeof session.customer === "object" && session.customer
+            ? ((session.customer as { metadata?: Record<string, string> }).metadata?.[
+                "organizationId"
+              ] ?? null)
+            : null);
+        if (sessionOrgId !== organizationId) {
+          console.error("[payments:webhook] growth session org mismatch", session.id);
+          break;
+        }
         await admin
           .from("organizations")
           .update({
             setup_paid_at: new Date().toISOString(),
-            setup_checkout_session_id: String(object?.id ?? ""),
-            plan_id: md["planId"] ?? null,
+            setup_checkout_session_id: String(session.id),
+            plan_id: GROWTH_PLAN_ID,
           })
           .eq("id", organizationId);
         await recordStripeTransaction(admin, {
           organizationId,
-          stripeId: `setup:${String(object?.id ?? "")}`,
-          // Trust the amount Stripe actually charged, not request metadata.
-          amount:
-            typeof object?.amount_total === "number"
-              ? Number(object.amount_total) / 100
-              : Number(md["setupAmount"] ?? 0),
-          currency: String(object?.currency ?? "usd"),
+          stripeId: `setup:${String(session.id)}`,
+          // Independently verified above: the setup line's own amount.
+          amount: setupCents / 100,
+          currency,
           description: "Revora Growth System setup fee",
           status: "completed",
-          planId: md["planId"] ?? null,
+          planId: GROWTH_PLAN_ID,
           interval: "monthly",
           customerEmail: (object?.customer_details?.email as string | undefined) ?? null,
           environment: env,
@@ -260,7 +316,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
 /**
  * Event-level idempotency: Stripe delivers at least once, so a verified event
  * id is claimed in `payment_events` (unique per provider) before any side
- * effect runs. A duplicate delivery short-circuits with 200.
+ * effect runs. A duplicate delivery short-circuits with 200; a transient
+ * database failure is reported as retryable and never treated as a duplicate.
  */
 async function claimEvent(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -268,20 +325,77 @@ async function claimEvent(
   env: StripeEnv,
 ) {
   const { adminClient } = await import("@/lib/payments.server");
+  const { classifyClaimError, organizationIdFromStripeObject } =
+    await import("@/lib/webhook-claim");
   const admin = await adminClient();
   const eventId = String(event.id ?? "");
-  if (!eventId) return { claimed: true as const, admin, eventId };
+  const organizationId = organizationIdFromStripeObject(event.data?.object);
+  if (!eventId) return { outcome: "claimed" as const, admin, eventId, organizationId };
   const { error } = await admin.from("payment_events").insert({
     provider: "stripe",
     provider_event_id: eventId,
     event_type: event.type,
     resource_id: String(event.data?.object?.id ?? ""),
+    organization_id: organizationId,
     verification_status: "verified",
     processed: false,
     payload: { environment: env, type: event.type },
   });
-  if (error) return { claimed: false as const, admin, eventId };
-  return { claimed: true as const, admin, eventId };
+  if (error) {
+    const outcome = classifyClaimError(error);
+    if (outcome === "transient") {
+      console.error("[payments:webhook] claim failed (retryable)", error.message);
+    }
+    return { outcome, admin, eventId, organizationId };
+  }
+  return { outcome: "claimed" as const, admin, eventId, organizationId };
+}
+
+/**
+ * Links the processed event row to the payment record it produced, so an
+ * authenticated member can see their own payment history through RLS without
+ * any policy being weakened.
+ */
+async function associateEvent(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any,
+  eventId: string,
+  organizationId: string | null,
+  resourceId: string,
+) {
+  let paymentId: string | null = null;
+  if (organizationId && resourceId) {
+    for (const stripeId of [resourceId, `setup:${resourceId}`]) {
+      const { data } = await admin
+        .from("payments")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .contains("metadata", { stripe_id: stripeId })
+        .maybeSingle();
+      if (data?.id) {
+        paymentId = data.id as string;
+        break;
+      }
+    }
+    if (!paymentId) {
+      const { data } = await admin
+        .from("payments")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .contains("metadata", { stripe_session_id: resourceId })
+        .maybeSingle();
+      paymentId = (data?.id as string | undefined) ?? null;
+    }
+  }
+  await admin
+    .from("payment_events")
+    .update({
+      processed: true,
+      ...(organizationId ? { organization_id: organizationId } : {}),
+      ...(paymentId ? { payment_id: paymentId } : {}),
+    })
+    .eq("provider", "stripe")
+    .eq("provider_event_id", eventId);
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
@@ -290,8 +404,9 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
       POST: async ({ request }) => {
         const rawEnv = new URL(request.url).searchParams.get("env");
         if (rawEnv !== "sandbox" && rawEnv !== "live") {
+          // A misconfigured endpoint must fail loudly — never a fake success.
           console.error("[payments:webhook] invalid env", rawEnv);
-          return Response.json({ received: true, ignored: "invalid env" });
+          return new Response("Invalid or missing env query parameter", { status: 400 });
         }
         try {
           const event = (await verifyWebhook(request, rawEnv)) as {
@@ -301,7 +416,10 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
             data: { object: any };
           };
           const claim = await claimEvent(event, rawEnv);
-          if (!claim.claimed) return Response.json({ received: true, duplicate: true });
+          if (claim.outcome === "duplicate")
+            return Response.json({ received: true, duplicate: true });
+          if (claim.outcome === "transient")
+            return new Response("Temporarily unable to record webhook", { status: 503 });
           try {
             await handleEvent(event, rawEnv);
           } catch (failure) {
@@ -320,11 +438,12 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
             return new Response("Webhook processing failed", { status: 500 });
           }
           if (claim.eventId) {
-            await claim.admin
-              .from("payment_events")
-              .update({ processed: true })
-              .eq("provider", "stripe")
-              .eq("provider_event_id", claim.eventId);
+            await associateEvent(
+              claim.admin,
+              claim.eventId,
+              claim.organizationId,
+              String(event.data?.object?.id ?? ""),
+            );
           }
           return Response.json({ received: true });
         } catch (error) {
