@@ -215,3 +215,14 @@ export function xmlSitemap(urls: { loc: string; lastmod: string | null }[]) {
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
 }
+
+/**
+ * Canonical origin for Revora's own marketing site. Preview and *.lovable.app
+ * hosts must still advertise the primary domain in robots.txt / sitemap.xml so
+ * crawlers never index or follow a throwaway build host.
+ */
+export function platformOrigin(host: string | null, protocol = "https") {
+  const bare = (host ?? "").split(":")[0].toLowerCase();
+  if (/^(localhost|127\.0\.0\.1)$/.test(bare)) return `${protocol}://${host}`;
+  return "https://revoragrowthsystems.com";
+}
