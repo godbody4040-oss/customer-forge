@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { DEFAULT_OFFER_RATES } from "@/lib/offer";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
 // Raw Stripe event JSON; each case narrows the fields it needs.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleEvent(event: { type: string; data: { object: any } }, env: StripeEnv) {
   const { adminClient } = await import("@/lib/payments.server");
-  const { syncStripeSubscription, recordStripeTransaction, planFromPriceId, resolvePriceKey } =
-    await import("@/lib/stripe-billing.server");
+  const {
+    syncStripeSubscription,
+    recordStripeTransaction,
+    planFromPriceLookupKey,
+    resolvePriceLookupKey,
+    GROWTH_PLAN_ID,
+  } = await import("@/lib/stripe-billing.server");
   const admin = await adminClient();
   const object = event.data.object;
 
@@ -45,9 +51,9 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         ["active", "trialing"].includes(stripeStatus)
       ) {
         const priceKey = payload?.items?.data?.[0]?.price
-          ? resolvePriceKey(payload.items.data[0].price)
+          ? resolvePriceLookupKey(payload.items.data[0].price)
           : null;
-        const mapped = planFromPriceId(priceKey);
+        const mapped = planFromPriceLookupKey(priceKey);
         await lifecycle.handleSubscriptionActivated(admin, {
           organizationId,
           stripeSubscriptionId: String(object.id),
@@ -59,9 +65,9 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
 
       if (event.type === "customer.subscription.updated") {
         const newPriceKey = payload?.items?.data?.[0]?.price
-          ? resolvePriceKey(payload.items.data[0].price)
+          ? resolvePriceLookupKey(payload.items.data[0].price)
           : null;
-        const newPlan = planFromPriceId(newPriceKey)?.planId ?? null;
+        const newPlan = planFromPriceLookupKey(newPriceKey)?.planId ?? null;
         if (newPlan && previous?.plan_id && newPlan !== previous.plan_id) {
           await lifecycle.handlePlanChanged(admin, {
             organizationId,
@@ -104,8 +110,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         console.error("[payments:webhook] invoice without organization metadata", object?.id);
         break;
       }
-      const priceKey = line?.price ? resolvePriceKey(line.price) : null;
-      const mapped = planFromPriceId(priceKey);
+      const priceKey = line?.price ? resolvePriceLookupKey(line.price) : null;
+      const mapped = planFromPriceLookupKey(priceKey);
       const paid = event.type === "invoice.paid";
       await recordStripeTransaction(admin, {
         organizationId,
@@ -131,26 +137,76 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       if (md["kind"] === "growth_system" && md["organizationId"]) {
         if (object?.payment_status === "unpaid") break;
         const organizationId = md["organizationId"];
+
+        // Never trust metadata alone: re-read the session from Stripe and check
+        // the line items against the pinned catalog before granting anything.
+        const { createStripeClient } = await import("@/lib/stripe.server");
+        const { STRIPE_CATALOG } = await import("@/lib/stripe-catalog");
+        const catalog = STRIPE_CATALOG[env];
+        const stripe = createStripeClient(env);
+        const session = await stripe.checkout.sessions.retrieve(String(object?.id ?? ""), {
+          expand: ["line_items.data.price", "subscription", "customer"],
+        });
+        if (session.mode !== "subscription" || session.payment_status === "unpaid") {
+          console.error("[payments:webhook] growth session not payable", session.id);
+          break;
+        }
+        const lines = session.line_items?.data ?? [];
+        const priceIds = lines.map((l) => l.price?.id).filter(Boolean) as string[];
+        const expectedIds = [catalog.setup.stripePriceId, catalog.monthly.stripePriceId];
+        const unexpected = priceIds.filter((id) => !expectedIds.includes(id));
+        if (unexpected.length || !expectedIds.every((id) => priceIds.includes(id))) {
+          console.error("[payments:webhook] unexpected prices on growth session", session.id);
+          break;
+        }
+        const currency = String(session.currency ?? "usd").toLowerCase();
+        if (currency !== "usd") {
+          console.error("[payments:webhook] non-usd growth session", session.id, currency);
+          break;
+        }
+        const setupLine = lines.find((l) => l.price?.id === catalog.setup.stripePriceId);
+        const monthlyLine = lines.find((l) => l.price?.id === catalog.monthly.stripePriceId);
+        const setupCents = Math.round(DEFAULT_OFFER_RATES.setupPrice * 100);
+        const monthlyCents = Math.round(DEFAULT_OFFER_RATES.monthlyPrice * 100);
+        if (setupLine?.price?.unit_amount !== setupCents) {
+          console.error("[payments:webhook] setup amount mismatch", session.id);
+          break;
+        }
+        if (
+          monthlyLine?.price?.unit_amount !== monthlyCents ||
+          monthlyLine?.price?.recurring?.interval !== "month"
+        ) {
+          console.error("[payments:webhook] monthly price mismatch", session.id);
+          break;
+        }
+        const sessionOrgId =
+          (session.metadata?.["organizationId"] as string | undefined) ??
+          (typeof session.customer === "object" && session.customer
+            ? ((session.customer as { metadata?: Record<string, string> }).metadata?.[
+                "organizationId"
+              ] ?? null)
+            : null);
+        if (sessionOrgId !== organizationId) {
+          console.error("[payments:webhook] growth session org mismatch", session.id);
+          break;
+        }
         await admin
           .from("organizations")
           .update({
             setup_paid_at: new Date().toISOString(),
-            setup_checkout_session_id: String(object?.id ?? ""),
-            plan_id: md["planId"] ?? null,
+            setup_checkout_session_id: String(session.id),
+            plan_id: GROWTH_PLAN_ID,
           })
           .eq("id", organizationId);
         await recordStripeTransaction(admin, {
           organizationId,
-          stripeId: `setup:${String(object?.id ?? "")}`,
-          // Trust the amount Stripe actually charged, not request metadata.
-          amount:
-            typeof object?.amount_total === "number"
-              ? Number(object.amount_total) / 100
-              : Number(md["setupAmount"] ?? 0),
-          currency: String(object?.currency ?? "usd"),
+          stripeId: `setup:${String(session.id)}`,
+          // Independently verified above: the setup line's own amount.
+          amount: setupCents / 100,
+          currency,
           description: "Revora Growth System setup fee",
           status: "completed",
-          planId: md["planId"] ?? null,
+          planId: GROWTH_PLAN_ID,
           interval: "monthly",
           customerEmail: (object?.customer_details?.email as string | undefined) ?? null,
           environment: env,

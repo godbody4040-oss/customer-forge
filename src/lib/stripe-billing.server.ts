@@ -18,22 +18,30 @@ export const SETUP_PRICE_KEY = "revora_system_setup";
 export const SETUP_AMOUNT = 750;
 export const MONTHLY_AMOUNT = 100;
 
-/** Price lookup key -> plan mapping. Only one plan exists. */
-export function planFromPriceId(priceId: string | null | undefined) {
-  if (!priceId) return null;
-  if (priceId === MONTHLY_PRICE_KEY)
+/**
+ * Maps a Stripe Price **lookup key** (not a Price ID) to the single plan.
+ * Anything unrecognised returns null so unknown prices can never be
+ * silently treated as the Revora Growth System.
+ */
+export function planFromPriceLookupKey(lookupKey: string | null | undefined) {
+  if (!lookupKey) return null;
+  if (lookupKey === MONTHLY_PRICE_KEY)
     return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
-  if (priceId === SETUP_PRICE_KEY)
+  if (lookupKey === SETUP_PRICE_KEY)
     return { planId: GROWTH_PLAN_ID, interval: "monthly" as Interval };
   return null;
 }
 
-/** The recurring price key for the single plan. */
-export function priceIdFor(planId: string): string | null {
+/** The recurring Stripe Price *lookup key* for the single plan. */
+export function monthlyPriceLookupKeyFor(planId: string): string | null {
   return planId === GROWTH_PLAN_ID ? MONTHLY_PRICE_KEY : null;
 }
 
-export function resolvePriceKey(price: {
+/**
+ * Best-effort human-readable identifier for a Stripe Price: the lookup key
+ * when present, else the legacy metadata id, else the raw Stripe Price ID.
+ */
+export function resolvePriceLookupKey(price: {
   lookup_key?: string | null;
   metadata?: Record<string, string> | null;
   id?: string;
@@ -74,8 +82,8 @@ export async function syncStripeSubscription(
   if (!organizationId) return { ok: false, reason: "missing_organization_metadata" };
 
   const item = subscription?.items?.data?.[0];
-  const priceKey = item?.price ? resolvePriceKey(item.price) : null;
-  const mapped = planFromPriceId(priceKey);
+  const priceKey = item?.price ? resolvePriceLookupKey(item.price) : null;
+  const mapped = planFromPriceLookupKey(priceKey);
   const status = mapSubscriptionStatus(String(subscription?.status ?? ""));
   const periodStart = iso(item?.current_period_start ?? subscription?.current_period_start);
   const periodEnd = iso(item?.current_period_end ?? subscription?.current_period_end);
