@@ -3327,6 +3327,69 @@ export type Database = {
           },
         ]
       }
+      public_website_settings: {
+        Row: {
+          created_at: string | null
+          custom_domain: string | null
+          generation: Json | null
+          id: string | null
+          last_published_at: string | null
+          organization_id: string | null
+          pages: Json | null
+          publish_state: Database["public"]["Enums"]["publish_state"] | null
+          published: boolean | null
+          seo: Json | null
+          subdomain: string | null
+          template: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_domain?: string | null
+          generation?: Json | null
+          id?: string | null
+          last_published_at?: string | null
+          organization_id?: string | null
+          pages?: Json | null
+          publish_state?: Database["public"]["Enums"]["publish_state"] | null
+          published?: boolean | null
+          seo?: Json | null
+          subdomain?: string | null
+          template?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_domain?: string | null
+          generation?: Json | null
+          id?: string | null
+          last_published_at?: string | null
+          organization_id?: string | null
+          pages?: Json | null
+          publish_state?: Database["public"]["Enums"]["publish_state"] | null
+          published?: boolean | null
+          seo?: Json | null
+          subdomain?: string | null
+          template?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       is_safe_link_url: { Args: { value: string }; Returns: boolean }
