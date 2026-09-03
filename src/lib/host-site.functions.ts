@@ -43,19 +43,17 @@ export const getHostSite = createServerFn({ method: "GET" })
     } catch {
       host = null;
     }
-    // The client-hosting domain only ever serves client websites. The bare
-    // root belongs to no client, and neither does an unclaimed label on it
-    // (including when it arrives through the Cloudflare proxy) — both show the
-    // neutral holding page, never Revora's marketing site.
+    // `revoraweb.site` is a traffic domain: no client website ever lives on it,
+    // at the root or on any label. Requests there are redirected to the
+    // platform domain before reaching a page; if one is ever rendered anyway
+    // (for example after loop protection stops a second redirect), it shows the
+    // platform's own page rather than an empty holding page.
     const bare = normalizeHost(host);
-    if (bare === SITE_ROOT || bare === `www.${SITE_ROOT}`) {
-      return { tenant: true, result: null };
-    }
-    const tenant = await resolveTenantHost(host);
-    if (!tenant) {
-      if (bare.endsWith(`.${SITE_ROOT}`)) return { tenant: true, result: null };
+    if (bare === SITE_ROOT || bare.endsWith(`.${SITE_ROOT}`)) {
       return { tenant: false, result: null };
     }
+    const tenant = await resolveTenantHost(host);
+    if (!tenant) return { tenant: false, result: null };
 
     // Published-only: `loadSite` refuses drafts unless an authorised preview
     // token is presented, which never happens on a public host.
