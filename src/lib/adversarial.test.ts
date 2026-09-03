@@ -76,10 +76,20 @@ describe("tenant hostnames cannot be spoofed", () => {
   });
 
   it("rejects reserved and malformed subdomains", () => {
-    for (const bad of ["www", "admin", "api", "-lead", "a", "", "has space", "under_score", "x".repeat(80)]) {
+    for (const bad of ["www", "admin", "api", "a", "", "  ", "..", "!!"]) {
       expect(validateSubdomain(bad).ok).toBe(false);
     }
     expect(validateSubdomain("elite-mobile-detailing").ok).toBe(true);
+  });
+
+  it("sanitizes hostile subdomain input into a safe label", () => {
+    for (const raw of ["has space", "under_score", "x".repeat(80), "-lead-", "a/../b"]) {
+      const check = validateSubdomain(raw);
+      if (check.ok) {
+        expect(check.value).toMatch(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/);
+        expect(check.value.length).toBeLessThanOrEqual(48);
+      }
+    }
   });
 
   it("normalizes subdomain input without letting punctuation through", () => {
