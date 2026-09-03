@@ -39,6 +39,7 @@ import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -236,6 +237,11 @@ const DemoDashboardRoute = DemoDashboardRouteImport.update({
 const GuidesIndexRoute = GuidesIndexRouteImport.update({
   id: '/guides/',
   path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndustriesIndexRoute = IndustriesIndexRouteImport.update({
@@ -528,6 +534,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/locations/$city': typeof LocationsCityRoute
@@ -603,6 +610,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/locations/$city': typeof LocationsCityRoute
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
   '/demo/dashboard': typeof DemoDashboardRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
   '/locations/$city': typeof LocationsCityRoute
@@ -767,6 +776,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/compare/$slug'
     | '/demo/dashboard'
+    | '/guides/$slug'
     | '/industries/$slug'
     | '/invite/$token'
     | '/locations/$city'
@@ -842,6 +852,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/compare/$slug'
     | '/demo/dashboard'
+    | '/guides/$slug'
     | '/industries/$slug'
     | '/invite/$token'
     | '/locations/$city'
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/compare/$slug'
     | '/demo/dashboard'
+    | '/guides/$slug'
     | '/industries/$slug'
     | '/invite/$token'
     | '/locations/$city'
@@ -1000,6 +1012,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
   CompareSlugRoute: typeof CompareSlugRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   LocationsCityRoute: typeof LocationsCityRoute
   PTokenRoute: typeof PTokenRoute
@@ -1230,6 +1243,13 @@ declare module '@tanstack/react-router' {
       path: '/guides'
       fullPath: '/guides/'
       preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/industries/': {
@@ -1754,6 +1774,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
   CompareSlugRoute: CompareSlugRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   LocationsCityRoute: LocationsCityRoute,
   PTokenRoute: PTokenRoute,
