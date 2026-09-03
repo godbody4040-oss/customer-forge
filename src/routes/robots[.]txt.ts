@@ -15,7 +15,21 @@ export const Route = createFileRoute("/robots.txt")({
           console.error("robots host resolution failed", error);
         }
         const origin = site ? site.origin : platformOrigin(host ?? url.host, protocol);
-        const disallowed = ["/app", "/admin", "/p/", "/api/"];
+        // Private application surfaces must never be indexed: the workspace, the
+        // platform admin, the client portal, auth screens, invitations and
+        // shareable preview links.
+        const disallowed = [
+          "/app",
+          "/admin",
+          "/my",
+          "/onboarding",
+          "/auth",
+          "/reset-password",
+          "/invite/",
+          "/p/",
+          "/api/",
+          "/_serverFn/",
+        ];
         const lines = [
           ...["Googlebot", "Bingbot", "Twitterbot", "facebookexternalhit"].flatMap((agent) => [
             `User-agent: ${agent}`,

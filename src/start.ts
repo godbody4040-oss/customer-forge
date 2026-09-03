@@ -3,6 +3,31 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 import { SITE_ROOT } from "@/lib/revora-address";
+import { withSecurityHeaders } from "@/lib/security-headers";
+
+/**
+ * Production security headers on every response — platform pages, client
+ * websites, API routes and error pages alike. It runs outermost so even a
+ * crash-rendered error page is protected, and it never overwrites a header a
+ * handler set on purpose.
+ */
+const securityHeadersMiddleware = createMiddleware().server(async ({ next, request }) => {
+  const https = request
+    ? (request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "")) ===
+      "https"
+    : true;
+  const result = (await next()) as unknown;
+  if (result instanceof Response) return withSecurityHeaders(result, { https }) as never;
+  if (result && typeof result === "object" && "response" in result) {
+    const holder = result as { response: unknown };
+    if (holder.response instanceof Response) {
+      holder.response = withSecurityHeaders(holder.response, { https });
+    }
+  }
+  return result as never;
+});
+
+
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Lovable email/webhook routes authenticate themselves — pass them through untouched.
@@ -107,5 +132,10 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware, customDomainRedirect],
+  requestMiddleware: [
+    securityHeadersMiddleware,
+    errorMiddleware,
+    csrfMiddleware,
+    customDomainRedirect,
+  ],
 }));
