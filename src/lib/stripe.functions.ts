@@ -7,7 +7,7 @@ import {
   parseStripeEnvironment,
   parseWorkspaceId,
 } from "@/lib/stripe-input";
-import { DEFAULT_OFFER_RATES, GROWTH_SYSTEM, verifyGrowthPrices } from "@/lib/offer";
+import { DEFAULT_OFFER_RATES, GROWTH_SYSTEM } from "@/lib/offer";
 
 export type GrowthSystemIntake = {
   fullName: string;
@@ -68,8 +68,7 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<{ clientSecret: string } | { error: string }> => {
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
-    const { GROWTH_PLAN_ID, MONTHLY_PRICE_KEY, SETUP_PRICE_KEY } =
-      await import("@/lib/stripe-billing.server");
+    const { GROWTH_PLAN_ID } = await import("@/lib/stripe-billing.server");
 
     // RLS proves membership: a non-member cannot read this organization.
     const { data: org } = await context.supabase
@@ -212,8 +211,8 @@ export const createGrowthSystemCheckout = createServerFn({ method: "POST" })
         // One-time setup line is billed on the FIRST invoice only; the
         // recurring price stays $100/month.
         line_items: [
-          { price: monthly.id, quantity: 1 },
-          { price: setup.id, quantity: 1 },
+          { price: catalog.monthly.stripePriceId, quantity: 1 },
+          { price: catalog.setup.stripePriceId, quantity: 1 },
         ],
         mode: "subscription" as const,
         ui_mode: "embedded_page" as const,
