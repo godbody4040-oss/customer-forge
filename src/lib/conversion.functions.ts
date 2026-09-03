@@ -223,3 +223,129 @@ export const getConversionReport = createServerFn({ method: "GET" })
 
     return { days: data.days, total: rows?.length ?? 0, report, variantReport };
   });
+
+export interface TrafficPage {
+  path: string;
+  views: number;
+  visitors: number;
+}
+
+export interface TrafficSource {
+  source: string;
+  visitors: number;
+  signups: number;
+  paid: number;
+}
+
+/**
+ * Platform traffic report: real page views, unique sessions, portal reach and
+ * how many of those sessions turned into signups and paid clients.
+ *
+ * Every number comes from `marketing_conversions` rows actually recorded by
+ * visitors — nothing is estimated or extrapolated.
+ */
+export const getTrafficReport = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input?: { days?: number }) => ({
+    days: Math.min(365, Math.max(1, Math.round(Number(input?.days ?? 30)))),
+  }))
+  .handler(async ({ context, data }) => {
+    const { assertSuperAdmin } = await import("@/lib/admin.server");
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("marketing_conversions")
+      .select("event_name, landing_path, session_id, referrer, utm_source, created_at")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(20000);
+    if (error) throw new Error(error.message);
+
+    const pages = new Map<string, { views: number; sessions: Set<string> }>();
+    const sources = new Map<string, { visitors: Set<string>; signups: number; paid: number }>();
+    const allSessions = new Set<string>();
+    const portalSessions = new Set<string>();
+    const byDay = new Map<string, Set<string>>();
+    let views = 0;
+    let signups = 0;
+    let paid = 0;
+
+    for (const row of rows ?? []) {
+      const session = row.session_id ?? "";
+      if (session) allSessions.add(session);
+
+      if (row.event_name === "page_view") {
+        views += 1;
+        const path = (row.landing_path ?? "/").slice(0, 120);
+        const page = pages.get(path) ?? { views: 0, sessions: new Set<string>() };
+        page.views += 1;
+        if (session) page.sessions.add(session);
+        pages.set(path, page);
+
+        const day = row.created_at.slice(0, 10);
+        const dayset = byDay.get(day) ?? new Set<string>();
+        if (session) dayset.add(session);
+        byDay.set(day, dayset);
+      }
+
+      if (row.event_name === "portal_view" && session) portalSessions.add(session);
+      if (row.event_name === "signup_completed") signups += 1;
+      if (row.event_name === "checkout_completed") paid += 1;
+
+      // Attribute by utm_source, else referring host, else direct.
+      let source = row.utm_source?.trim().toLowerCase() ?? "";
+      if (!source && row.referrer) {
+        try {
+          source = new URL(row.referrer).hostname.replace(/^www\./, "");
+        } catch {
+          source = "";
+        }
+      }
+      source = source || "direct";
+      const bucket = sources.get(source) ?? {
+        visitors: new Set<string>(),
+        signups: 0,
+        paid: 0,
+      };
+      if (session) bucket.visitors.add(session);
+      if (row.event_name === "signup_completed") bucket.signups += 1;
+      if (row.event_name === "checkout_completed") bucket.paid += 1;
+      sources.set(source, bucket);
+    }
+
+    const topPages: TrafficPage[] = [...pages.entries()]
+      .map(([path, value]) => ({ path, views: value.views, visitors: value.sessions.size }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 15);
+
+    const topSources: TrafficSource[] = [...sources.entries()]
+      .map(([source, value]) => ({
+        source,
+        visitors: value.visitors.size,
+        signups: value.signups,
+        paid: value.paid,
+      }))
+      .sort((a, b) => b.visitors - a.visitors)
+      .slice(0, 12);
+
+    const daily = [...byDay.entries()]
+      .map(([day, set]) => ({ day, visitors: set.size }))
+      .sort((a, b) => a.day.localeCompare(b.day));
+
+    const visitors = allSessions.size;
+    return {
+      days: data.days,
+      views,
+      visitors,
+      portalVisitors: portalSessions.size,
+      signups,
+      paid,
+      portalRate: visitors > 0 ? Math.round((portalSessions.size / visitors) * 1000) / 10 : 0,
+      leadRate: visitors > 0 ? Math.round((signups / visitors) * 1000) / 10 : 0,
+      topPages,
+      topSources,
+      daily,
+    };
+  });
