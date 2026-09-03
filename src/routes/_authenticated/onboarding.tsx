@@ -196,20 +196,12 @@ function Onboarding() {
       const existingOrg = ws?.workspace?.organization ?? null;
       const existingId = existingOrg && !existingOrg.onboarding_completed ? existingOrg.id : null;
 
-      let slug = existingOrg?.slug ?? safeSlug(draft.businessName);
-      if (!existingId) {
-        const base = safeSlug(draft.businessName);
-        slug = base;
-        for (let attempt = 0; attempt < 5; attempt++) {
-          const { data: existing } = await supabase
-            .from("organizations")
-            .select("id")
-            .eq("slug", slug)
-            .maybeSingle();
-          if (!existing) break;
-          slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
-        }
-      }
+      // Web addresses have to be unique across every workspace, and a client
+      // can't see other people's workspaces — so we can't check first. We ask
+      // for the name we want and take the next free variation if it's taken.
+      const slugBase = existingOrg?.slug ?? safeSlug(draft.businessName);
+      let slug = slugBase;
+
 
       const services = draft.services.filter((s) => s.name.trim());
       const testimonials = draft.testimonials.filter((t) => t.text.trim());
@@ -245,19 +237,34 @@ function Onboarding() {
         if (updateError) throw updateError;
         org = updated;
       } else {
-        const { data: inserted, error: orgError } = await supabase
-          .from("organizations")
-          .insert({
-            ...orgFields,
-            slug,
-            created_by: user.id,
-            subscription_status: "trialing" as never,
-            trial_ends_at: newTrialEndsAt(),
-          })
-          .select("id, slug")
-          .single();
-        if (orgError) throw orgError;
+        let inserted: { id: string; slug: string } | null = null;
+        for (let attempt = 0; attempt < 6 && !inserted; attempt++) {
+          if (attempt > 0) slug = `${slugBase}-${Math.floor(Math.random() * 9000 + 1000)}`;
+          const { data, error: orgError } = await supabase
+            .from("organizations")
+            .insert({
+              ...orgFields,
+              slug,
+              created_by: user.id,
+              subscription_status: "trialing" as never,
+              trial_ends_at: newTrialEndsAt(),
+            })
+            .select("id, slug")
+            .single();
+          if (!orgError) {
+            inserted = data;
+            break;
+          }
+          const taken =
+            orgError.code === "23505" || /duplicate key|organizations_slug/i.test(orgError.message);
+          if (!taken) throw orgError;
+        }
+        if (!inserted)
+          throw new Error(
+            "That business name is already in use on Revora. Try a slightly different name.",
+          );
         org = inserted;
+
 
         const { error: membershipError } = await supabase
           .from("memberships")
