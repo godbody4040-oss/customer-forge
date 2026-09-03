@@ -134,12 +134,15 @@ const PROFILES: Record<string, Omit<LocalIndustry, "slug" | "name">> = {
 };
 
 /** Industries that get a programmatic local page, joined to the profile copy. */
-export const LOCAL_INDUSTRIES: readonly LocalIndustry[] = INDUSTRIES.map((industry) => {
-  const slug = industrySlug(industry.name);
-  const profile = PROFILES[slug];
-  if (!profile) return null;
-  return { slug, name: industry.name, ...profile };
-}).filter((entry): entry is LocalIndustry => entry !== null);
+export const LOCAL_INDUSTRIES: readonly LocalIndustry[] = INDUSTRIES.flatMap<LocalIndustry>(
+  (industry) => {
+    const slug = industrySlug(industry.name);
+    const profile = PROFILES[slug];
+    if (!profile) return [];
+    return [{ slug, name: industry.name as string, ...profile }];
+  },
+);
+
 
 export function findLocalIndustry(slug: string): LocalIndustry | null {
   return LOCAL_INDUSTRIES.find((i) => i.slug === slug) ?? null;
