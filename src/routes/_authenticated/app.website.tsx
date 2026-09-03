@@ -448,6 +448,9 @@ function WebsitePage() {
             canPublish={manage && production?.unlocked !== false}
             isPublishing={launchFlow.isLaunching}
             onPublish={() => launchFlow.launch()}
+            {...(manage ? { onSelfHeal: () => selfHeal.mutate() } : {})}
+            isHealing={selfHeal.isPending}
+            healSummary={selfHeal.data?.summary ?? null}
           />
           <ProductionReadinessPanel
             readiness={productionReadiness}
