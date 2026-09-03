@@ -302,7 +302,26 @@ async function runJob(
     secondaryCtaLabel: copy.secondaryCta || qaFacts.qaInput.secondaryCtaLabel,
   });
 
+  // Materialize the plan into real pages/sections/components so the owner has
+  // something to edit and publish. Skipped when the workspace already has pages.
+  const { materializeSiteContent } = await import("@/lib/site-materialize.server");
+  const built = await materializeSiteContent(db, orgId, {
+    businessName: org.data.name ?? "",
+    copy,
+    services: serviceRows,
+    city: (p["city"] as string) ?? null,
+    state: (p["state"] as string) ?? null,
+    serviceArea: (p["service_area"] as string) ?? null,
+    phone: (p["phone"] as string) ?? null,
+    email: (p["email"] as string) ?? null,
+    yearsInBusiness: (p["years_in_business"] as number) ?? null,
+    photoCount: (media.data ?? []).length,
+    hasQuoteForm: (forms.data ?? []).length > 0,
+    hasBooking: (bookable.data ?? []).length > 0,
+  });
+
   const report = {
+
     builtAt: new Date().toISOString(),
     pages: plan.pages.length,
     sections: plan.sections.length,
