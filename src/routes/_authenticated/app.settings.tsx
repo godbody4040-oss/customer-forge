@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { LoadingRows, Panel, Pill, SectionHeading } from "@/components/app/Bits";
+import { IntegrationCenter } from "@/components/app/IntegrationCenter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,8 @@ function SettingsPage() {
         <p className="eyebrow">Account</p>
         <h1 className="mt-1 font-display text-[24px] font-semibold">Settings</h1>
       </div>
+
+      <IntegrationCenter organizationId={orgId} />
 
       <Panel className="p-5">
         <SectionHeading eyebrow="You" title="Your account" />

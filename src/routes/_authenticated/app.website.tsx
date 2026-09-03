@@ -50,6 +50,7 @@ import { LaunchChecks } from "@/components/app/LaunchChecks";
 import { PortalAccess } from "@/components/app/PortalAccess";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
+import { RestorePointPanel } from "@/components/app/RestorePointPanel";
 import { PlatformEngine } from "@/components/app/PlatformEngine";
 import { DesignIdentity } from "@/components/app/DesignIdentity";
 import { recordHealth, snapshotFromPreflight } from "@/lib/site-health";
@@ -654,6 +655,7 @@ function WebsitePage() {
           description="Every change Revora and your team made — restore any earlier version."
           onClose={() => setHistoryOpen(false)}
         >
+          <RestorePointPanel organizationId={orgId} canManage={manage} />
           <VersionHistory organizationId={orgId} canManage={manage} />
           <VersionDiff organizationId={orgId} />
         </OverlayPanel>
