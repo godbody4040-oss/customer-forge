@@ -1,5 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireOrgRole, type MinRole } from "@/lib/org-authz.server";
+
+/**
+ * Every domain operation below changes where a business's website and email
+ * live, so authentication is not enough: the caller must actually hold a
+ * managing role in the workspace whose id they sent. Read-only reports need
+ * only staff access.
+ */
+async function authorize(
+  context: { supabase: Parameters<typeof requireOrgRole>[0]; userId: string },
+  organizationId: string,
+  min: MinRole = "manager",
+) {
+  return requireOrgRole(context.supabase, organizationId, context.userId, min);
+}
 
 /** Saves which address is canonical and whether HTTPS is forced. */
 export const saveDomainRouting = createServerFn({ method: "POST" })
@@ -12,6 +27,7 @@ export const saveDomainRouting = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { error } = await context.supabase
       .from("website_settings")
       .update({ domain_primary_host: data.primaryHost, domain_force_https: data.forceHttps })
@@ -31,6 +47,7 @@ export const monitorCertificate = createServerFn({ method: "POST" })
     organizationId: String(input?.organizationId ?? ""),
   }))
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { checkDomain } = await import("@/lib/admin.server");
     const { data: settings, error } = await context.supabase
       .from("website_settings")
@@ -85,6 +102,7 @@ export const startDomainTransfer = createServerFn({ method: "POST" })
     toDomain: String(input?.toDomain ?? ""),
   }))
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { normalizeDomain, isValidDomain } = await import("@/lib/admin.server");
     const toDomain = normalizeDomain(data.toDomain);
     if (!isValidDomain(toDomain)) throw new Error("That doesn't look like a valid domain name.");
@@ -122,6 +140,7 @@ export const completeDomainTransfer = createServerFn({ method: "POST" })
     organizationId: String(input?.organizationId ?? ""),
   }))
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { checkDomain, DOMAIN_TARGET } = await import("@/lib/admin.server");
     const { data: settings, error } = await context.supabase
       .from("website_settings")
@@ -187,6 +206,7 @@ export const rollbackDomainTransfer = createServerFn({ method: "POST" })
     organizationId: String(input?.organizationId ?? ""),
   }))
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { checkDomain } = await import("@/lib/admin.server");
     const { data: settings, error } = await context.supabase
       .from("website_settings")
@@ -245,6 +265,7 @@ export const saveEmailForwarding = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { isEmail } = await import("@/lib/domain-ops");
     if (!data.alias) throw new Error("Choose the name that goes before the @ sign.");
     if (!isEmail(data.forwardTo)) throw new Error("Enter the inbox that should receive the mail.");
@@ -283,6 +304,7 @@ export const verifyEmailForwarding = createServerFn({ method: "POST" })
     organizationId: String(input?.organizationId ?? ""),
   }))
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { checkEmailForwardingDns } = await import("@/lib/domain-ops.server");
     const { data: settings, error } = await context.supabase
       .from("website_settings")
@@ -325,6 +347,7 @@ export const runDomainSeoReport = createServerFn({ method: "POST" })
     organizationId: String(input?.organizationId ?? ""),
   }))
   .handler(async ({ data, context }) => {
+    await authorize(context, data.organizationId);
     const { domainSeoReport } = await import("@/lib/domain-ops.server");
     const { data: settings, error } = await context.supabase
       .from("website_settings")
