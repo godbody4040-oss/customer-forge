@@ -1,9 +1,9 @@
 /**
  * Catch-all route.
  *
- * On a client host (`clientname.revoraweb.site` or a verified custom
- * domain) this serves the client's own inner pages — `/services`, `/pricing`,
- * `/book` — straight from the builder, on their own address. On Revora's own
+ * On a customer's own verified custom domain this serves that client's inner
+ * pages — `/services`, `/pricing`, `/book` — straight from the builder, on their
+ * own address. Revora-owned subdomains are never client hosts. On Revora's own
  * marketing site the same path is simply a page that doesn't exist.
  */
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";

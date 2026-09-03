@@ -1,11 +1,11 @@
 /**
  * Public website links.
  *
- * A client website is reachable two ways: on the client's own address
- * (`name.revoraweb.site` or their domain), where pages live at `/about`,
- * and inside the builder preview at `/s/<slug>/about`. Visitors must never see
- * builder-shaped URLs on their own address, so every in-site link goes through
- * this component and picks the right shape for the address being served.
+ * A client website is reachable two ways: on the customer's own verified domain,
+ * where pages live at `/about`, and on the platform share path at
+ * `/s/<slug>/about`. Visitors must never see builder-shaped URLs on the
+ * customer's own domain, so every in-site link goes through this component and
+ * picks the right shape for the address being served.
  */
 import { Link } from "@tanstack/react-router";
 import { createContext, useContext, type ReactNode } from "react";

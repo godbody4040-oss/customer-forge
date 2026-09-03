@@ -3,9 +3,9 @@
  * client websites (for example `/contact`, `/pricing`, `/about`).
  *
  * On `revoragrowthsystems.com` these paths are Revora's marketing pages. On a
- * client's free Revora address or verified custom domain, the same path must be
- * the client's own page — a visitor on `joesplumbing.revoraweb.site`
- * should never see Revora's pricing page.
+ * customer's verified custom domain the same path must be that client's own
+ * page — a visitor on `joesplumbing.com` should never see Revora's pricing
+ * page.
  */
 import type { ReactNode } from "react";
 import { notFound } from "@tanstack/react-router";
