@@ -620,7 +620,7 @@ function GetStarted() {
                 ) : null}
               </div>
 
-              {payNow && signedIn && cardsReady && organizationId ? (
+              {payNow && signedIn && cardsReady && !alreadySubscribed && organizationId ? (
                 <GrowthSystemCheckout
                   organizationId={organizationId}
                   intake={intake}
