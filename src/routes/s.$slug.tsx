@@ -99,8 +99,9 @@ function PublicSiteRoute() {
   // `/s/:slug/:page` nests under this route, so inner pages must render instead
   // of the home page — otherwise every deep link would show the home layout.
   const children = useChildMatches();
+  const site = Route.useLoaderData();
   if (children.length > 0) return <Outlet />;
-  return <PublicSiteView site={Route.useLoaderData()} />;
+  return <PublicSiteView site={site} />;
 }
 
 /**
