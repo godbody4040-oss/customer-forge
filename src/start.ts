@@ -31,36 +31,30 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
  * `revoraweb.site` is a TRAFFIC-ONLY domain: it never serves the application
  * and never serves a client website. Anything arriving on it (apex, www, or any
  * subdomain) is permanently redirected to the platform domain, preserving the
- * path so marketing links keep working. The target origin is hardcoded, so no
- * query parameter or header can turn this into an open redirect, and the
- * platform domain itself is never redirected, so no loop is possible.
+ * path and query so marketing links keep working. The target origin is
+ * hardcoded, so no query parameter or header can turn this into an open
+ * redirect, and the platform domain itself is never redirected, so no loop is
+ * possible.
+ *
+ * There is deliberately NO bypass parameter: any request whose host is the
+ * traffic domain is redirected, unconditionally. (A previous `_rw` marker was
+ * removed because it let a visitor-supplied query string reach the application
+ * on the traffic domain.)
  */
-/** Query marker proving a request already passed through the traffic redirect. */
-const TRAFFIC_REDIRECT_MARKER = "_rw";
-
 const trafficDomainRedirect = createMiddleware().server(async ({ next, request }) => {
   if (!request) return next();
   const url = new URL(request.url);
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
   if (!isTrafficDomainHost(host)) return next();
-  // Loop protection. If the hosting layer is ever configured with the traffic
-  // domain as the primary domain, it bounces the platform domain back here and
-  // this redirect would ping-pong forever. The marker below survives that
-  // bounce, so a request that has already been redirected once is served
-  // instead of redirected again — the platform stays reachable no matter how
-  // the domains are configured. Normal traffic-domain visits never carry it.
-  if (url.searchParams.has(TRAFFIC_REDIRECT_MARKER)) return next();
-  const search = url.search
-    ? `${url.search}&${TRAFFIC_REDIRECT_MARKER}=1`
-    : `?${TRAFFIC_REDIRECT_MARKER}=1`;
   return new Response(null, {
     status: request.method === "GET" || request.method === "HEAD" ? 301 : 308,
     headers: {
-      location: trafficRedirectUrl(url.pathname, search),
+      location: trafficRedirectUrl(url.pathname, url.search),
       "cache-control": "public, max-age=3600",
     },
   }) as never;
 });
+
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Lovable email/webhook routes authenticate themselves — pass them through untouched.
