@@ -54,6 +54,17 @@ export function isTrafficDomainHost(rawHost: string | null | undefined) {
   return host === SITE_ROOT || host.endsWith(`.${SITE_ROOT}`);
 }
 
+/**
+ * Only the apex and `www` form of the traffic domain are served at all, and
+ * only as a redirect. Every other label under it (including nested ones such as
+ * `a.b.revoraweb.site`) is refused with a 404 so no host under the traffic
+ * domain can ever look like a hosted website.
+ */
+export function isTrafficRedirectHost(rawHost: string | null | undefined) {
+  const host = normalizeHost(rawHost);
+  return host === SITE_ROOT || host === `www.${SITE_ROOT}`;
+}
+
 /** The single safe redirect target for traffic-domain requests. */
 export function trafficRedirectUrl(pathname: string, search = "") {
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;

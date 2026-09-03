@@ -5,9 +5,11 @@ import {
   isPossibleTenantHost,
   isRevoraOwnHost,
   isTrafficDomainHost,
+  isTrafficRedirectHost,
   REVORA_SUBDOMAIN_HOSTING_ENABLED,
   trafficRedirectUrl,
 } from "@/lib/revora-address";
+import { parseReturnUrl } from "@/lib/stripe-input";
 
 /**
  * The final domain architecture: the platform domain is platform-only, the
@@ -96,5 +98,54 @@ describe("subdomain tenant hosting is impossible", () => {
     ]) {
       expect(projection).not.toContain(column);
     }
+  });
+});
+
+describe("traffic domain is apex/www redirect only", () => {
+  it("redirects only the apex and www forms", () => {
+    for (const host of [
+      "revoraweb.site",
+      "www.revoraweb.site",
+      "REVORAWEB.site",
+      "revoraweb.site.",
+    ])
+      expect(isTrafficRedirectHost(host)).toBe(true);
+  });
+
+  it("refuses every other label under the traffic domain", () => {
+    for (const host of [
+      "business.revoraweb.site",
+      "client.revoraweb.site",
+      "a.b.revoraweb.site",
+      "www.www.revoraweb.site",
+    ]) {
+      expect(isTrafficDomainHost(host)).toBe(true);
+      expect(isTrafficRedirectHost(host)).toBe(false);
+      expect(isPossibleTenantHost(host)).toBe(false);
+    }
+  });
+});
+
+describe("stripe return urls are limited to approved origins", () => {
+  it("accepts production and project development origins", () => {
+    for (const url of [
+      "https://revoragrowthsystems.com/app/billing",
+      "https://www.revoragrowthsystems.com/app/billing",
+      "https://customer-forge.lovable.app/app/billing",
+      "http://localhost:8080/app/billing",
+    ])
+      expect(parseReturnUrl(url)).toBe(url);
+  });
+
+  it("rejects other hosts, other lovable projects and non-http schemes", () => {
+    for (const url of [
+      "https://evil.tld/app/billing",
+      "https://someone-else.lovable.app/app/billing",
+      "https://revoraweb.site/app/billing",
+      "https://revoragrowthsystems.com.evil.tld/",
+      "javascript:alert(1)",
+      "not a url",
+    ])
+      expect(() => parseReturnUrl(url)).toThrow();
   });
 });
