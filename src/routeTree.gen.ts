@@ -29,6 +29,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as WebsiteAuditRouteImport } from './routes/website-audit'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -187,6 +188,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WebsiteAuditRoute = WebsiteAuditRouteImport.update({
@@ -527,6 +533,7 @@ export interface FileRoutesByFullPath {
   '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/tools': typeof ToolsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRouteWithChildren
@@ -606,6 +613,7 @@ export interface FileRoutesByTo {
   '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/tools': typeof ToolsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
@@ -686,6 +694,7 @@ export interface FileRoutesById {
   '/share': typeof ShareRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/tools': typeof ToolsRoute
   '/website-audit': typeof WebsiteAuditRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/share'
     | '/sitemap.xml'
     | '/terms'
+    | '/tools'
     | '/website-audit'
     | '/admin'
     | '/app'
@@ -848,6 +858,7 @@ export interface FileRouteTypes {
     | '/share'
     | '/sitemap.xml'
     | '/terms'
+    | '/tools'
     | '/website-audit'
     | '/onboarding'
     | '/compare/$slug'
@@ -927,6 +938,7 @@ export interface FileRouteTypes {
     | '/share'
     | '/sitemap.xml'
     | '/terms'
+    | '/tools'
     | '/website-audit'
     | '/_authenticated/admin'
     | '/_authenticated/app'
@@ -1010,6 +1022,7 @@ export interface RootRouteChildren {
   ShareRoute: typeof ShareRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  ToolsRoute: typeof ToolsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
   CompareSlugRoute: typeof CompareSlugRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
@@ -1173,6 +1186,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/website-audit': {
@@ -1772,6 +1792,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShareRoute: ShareRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  ToolsRoute: ToolsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
   CompareSlugRoute: CompareSlugRoute,
   GuidesSlugRoute: GuidesSlugRoute,
