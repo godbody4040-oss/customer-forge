@@ -49,7 +49,7 @@ export function Logo({
       <LogoMark />
       {wordmark ? (
         <span className="flex flex-col leading-none">
-          <span className="font-display text-[16px] font-bold tracking-[0.16em] text-foreground">
+          <span className="font-display bg-[linear-gradient(100deg,var(--color-gold-deep),var(--color-gold)_40%,var(--color-gold-soft)_60%,var(--color-gold))] bg-clip-text text-[16px] font-bold tracking-[0.16em] text-transparent">
             REVORA
           </span>
           {tagline ? (
