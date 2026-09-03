@@ -55,7 +55,6 @@ const trafficDomainRedirect = createMiddleware().server(async ({ next, request }
   }) as never;
 });
 
-
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Lovable email/webhook routes authenticate themselves — pass them through untouched.
   if (request && new URL(request.url).pathname.startsWith("/lovable/")) {

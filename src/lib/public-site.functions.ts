@@ -484,4 +484,3 @@ export const trackPublicEvent = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
-

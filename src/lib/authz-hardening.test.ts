@@ -7,7 +7,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { requireOrgRole, roleAtLeast, orgRole } from "@/lib/org-authz.server";
-import { isTrafficDomainHost, isPossibleTenantHost, trafficRedirectUrl } from "@/lib/revora-address";
+import {
+  isTrafficDomainHost,
+  isPossibleTenantHost,
+  trafficRedirectUrl,
+} from "@/lib/revora-address";
 
 type Row = { organization_id: string; user_id: string; role: string };
 
@@ -60,9 +64,7 @@ describe("workspace authorization", () => {
   it("refuses staff and viewers for managing actions", async () => {
     for (const role of ["staff", "viewer"]) {
       const client = clientWith([{ organization_id: ORG_A, user_id: USER_A, role }]);
-      await expect(requireOrgRole(client, ORG_A, USER_A, "manager")).rejects.toThrow(
-        /permission/i,
-      );
+      await expect(requireOrgRole(client, ORG_A, USER_A, "manager")).rejects.toThrow(/permission/i);
     }
   });
 
