@@ -379,7 +379,13 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       });
     }
 
-    return { ok: true, leadId: lead.id, business: org.name, notified: deliveryOk };
+    return {
+      ok: true,
+      leadId: lead.id,
+      business: org.name,
+      notified: deliveryOk,
+      duplicate: false,
+    };
   });
 
 
