@@ -99,9 +99,11 @@ export function revoraUrl(subdomain: string | null | undefined) {
 
 export function normalizeHost(host: string | null | undefined) {
   return String(host ?? "")
+    .trim()
     .toLowerCase()
+    .replace(/\.+$/, "")
     .split(":")[0]!
-    .replace(/\.$/, "");
+    .replace(/\.+$/, "");
 }
 
 /** Revora's marketing site, previews and local development are never tenants. */
