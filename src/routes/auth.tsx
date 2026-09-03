@@ -179,7 +179,7 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
+  async function handleGoogle(intent: "continue" | "switch" = "continue") {
     setError(null);
     setBusy("google");
     try {
@@ -187,6 +187,11 @@ function AuthPage() {
       sessionStorage.setItem("lle:redirect", redirect ?? "/app");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
+        extraParams: {
+          // Always let the client pick which Google account to use, and force
+          // the full consent screen when they explicitly want a different one.
+          prompt: intent === "switch" ? "select_account consent" : "select_account",
+        },
       });
 
       if (result.error) {
@@ -202,6 +207,7 @@ function AuthPage() {
       setBusy(null);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
