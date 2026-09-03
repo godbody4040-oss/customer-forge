@@ -13,6 +13,7 @@ import {
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
 import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
 import { StatusCenter } from "@/components/app/StatusCenter";
+import { RevoraCommandBar } from "@/components/app/RevoraCommandBar";
 import { ClientWebsiteSummary } from "@/components/app/ClientWebsiteSummary";
 
 
@@ -295,6 +296,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
+      <RevoraCommandBar />
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
