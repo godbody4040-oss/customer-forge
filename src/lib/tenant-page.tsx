@@ -8,10 +8,9 @@
  * should never see Revora's pricing page.
  */
 import type { ReactNode } from "react";
-import { canonicalSiteUrl } from "@/lib/revora-address";
 import { notFound } from "@tanstack/react-router";
 import { getHostSite, type HostSiteResult } from "@/lib/host-site.functions";
-import { isPossibleTenantHost } from "@/lib/revora-address";
+import { canonicalSiteUrl, isPossibleTenantHost } from "@/lib/revora-address";
 import { PublicSiteView } from "@/routes/s.$slug";
 
 /**
