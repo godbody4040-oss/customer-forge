@@ -129,11 +129,27 @@ export function PreFlightPanel({
         </details>
       ) : null}
 
-      {fixable.length > 0 ? (
-        <p className="mt-3 text-[12px] text-muted-foreground">
-          {fixable.length} of these are things Revora can correct for you — open the item and choose
-          the suggested fix. Nothing is published while items are outstanding.
-        </p>
+      {fixable.length > 0 || onSelfHeal ? (
+        <div className="mt-3 rounded-md border border-border/60 bg-card/40 p-3">
+          <p className="text-[12px] text-muted-foreground">
+            {fixable.length > 0
+              ? `${fixable.length} of these are things Revora can correct for you from details you already gave. Your previous version is saved first, and if any part of the repair fails nothing is changed.`
+              : "Revora can run its safe repairs any time — it saves a restore point first and changes nothing it can't verify."}
+          </p>
+          {onSelfHeal ? (
+            <Button
+              className="mt-2"
+              size="sm"
+              variant="outline"
+              disabled={isHealing || isChecking}
+              onClick={onSelfHeal}
+            >
+              {isHealing ? <Loader2 className="mr-2 size-4 animate-spin" aria-hidden /> : null}
+              Fix what Revora safely can
+            </Button>
+          ) : null}
+          {healSummary ? <p className="mt-2 text-[12px]">{healSummary}</p> : null}
+        </div>
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
