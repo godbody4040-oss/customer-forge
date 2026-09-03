@@ -189,7 +189,7 @@ function WebsitePage() {
   });
 
   // REVORA PRE-FLIGHT™ — real pre-publish verification over the live workspace.
-  const domainVerified = (settings?.domain_status ?? "") === "verified";
+  const domainVerified = ["connected", "ssl_active"].includes(settings?.domain_status ?? "");
   const preflightResult = preflight({
     pages: pages ?? [],
     businessName: org?.name ?? null,
