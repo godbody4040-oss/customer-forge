@@ -43,6 +43,7 @@ import { Route as LocationsCityRouteImport } from './routes/locations.$city'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as StatesIndexRouteImport } from './routes/states.index'
+import { Route as StatesStateRouteImport } from './routes/states.$state'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
@@ -247,6 +248,11 @@ const SSlugRoute = SSlugRouteImport.update({
 const StatesIndexRoute = StatesIndexRouteImport.update({
   id: '/states/',
   path: '/states/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatesStateRoute = StatesStateRouteImport.update({
+  id: '/states/$state',
+  path: '/states/$state',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -476,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/states/$state': typeof StatesStateRoute
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/locations/': typeof LocationsIndexRoute
@@ -542,6 +549,7 @@ export interface FileRoutesByTo {
   '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/states/$state': typeof StatesStateRoute
   '/demo': typeof DemoIndexRoute
   '/industries': typeof IndustriesIndexRoute
   '/locations': typeof LocationsIndexRoute
@@ -615,6 +623,7 @@ export interface FileRoutesById {
   '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
+  '/states/$state': typeof StatesStateRoute
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
   '/locations/': typeof LocationsIndexRoute
@@ -688,6 +697,7 @@ export interface FileRouteTypes {
     | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
+    | '/states/$state'
     | '/demo/'
     | '/industries/'
     | '/locations/'
@@ -754,6 +764,7 @@ export interface FileRouteTypes {
     | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
+    | '/states/$state'
     | '/demo'
     | '/industries'
     | '/locations'
@@ -826,6 +837,7 @@ export interface FileRouteTypes {
     | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
+    | '/states/$state'
     | '/demo/'
     | '/industries/'
     | '/locations/'
@@ -893,6 +905,7 @@ export interface RootRouteChildren {
   LocationsCityRoute: typeof LocationsCityRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
+  StatesStateRoute: typeof StatesStateRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
   StatesIndexRoute: typeof StatesIndexRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
@@ -1141,6 +1154,13 @@ declare module '@tanstack/react-router' {
       path: '/states'
       fullPath: '/states/'
       preLoaderRoute: typeof StatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/states/$state': {
+      id: '/states/$state'
+      path: '/states/$state'
+      fullPath: '/states/$state'
+      preLoaderRoute: typeof StatesStateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -1574,6 +1594,7 @@ const rootRouteChildren: RootRouteChildren = {
   LocationsCityRoute: LocationsCityRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
+  StatesStateRoute: StatesStateRoute,
   LocationsIndexRoute: LocationsIndexRoute,
   StatesIndexRoute: StatesIndexRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
