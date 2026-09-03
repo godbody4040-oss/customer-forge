@@ -38,9 +38,12 @@ import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as LocationsIndexRouteImport } from './routes/locations.index'
+import { Route as LocationsCityRouteImport } from './routes/locations.$city'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAdminClientsRouteImport } from './routes/_authenticated/admin.clients'
 import { Route as AuthenticatedAdminDomainsRouteImport } from './routes/_authenticated/admin.domains'
 import { Route as AuthenticatedAdminMonthlyRouteImport } from './routes/_authenticated/admin.monthly'
@@ -220,6 +223,16 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocationsIndexRoute = LocationsIndexRouteImport.update({
+  id: '/locations/',
+  path: '/locations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsCityRoute = LocationsCityRouteImport.update({
+  id: '/locations/$city',
+  path: '/locations/$city',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PTokenRoute = PTokenRouteImport.update({
   id: '/p/$token',
   path: '/p/$token',
@@ -235,6 +248,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminClientsRoute =
   AuthenticatedAdminClientsRouteImport.update({
     id: '/clients',
@@ -448,10 +467,13 @@ export interface FileRoutesByFullPath {
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/locations/': typeof LocationsIndexRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
@@ -510,10 +532,13 @@ export interface FileRoutesByTo {
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo': typeof DemoIndexRoute
   '/industries': typeof IndustriesIndexRoute
+  '/locations': typeof LocationsIndexRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
@@ -579,10 +604,13 @@ export interface FileRoutesById {
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo/': typeof DemoIndexRoute
   '/industries/': typeof IndustriesIndexRoute
+  '/locations/': typeof LocationsIndexRoute
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/clients': typeof AuthenticatedAdminClientsRouteWithChildren
   '/_authenticated/admin/domains': typeof AuthenticatedAdminDomainsRoute
   '/_authenticated/admin/monthly': typeof AuthenticatedAdminMonthlyRoute
@@ -648,10 +676,13 @@ export interface FileRouteTypes {
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
+    | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/demo/'
     | '/industries/'
+    | '/locations/'
+    | '/admin/analytics'
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/monthly'
@@ -710,10 +741,13 @@ export interface FileRouteTypes {
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
+    | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/demo'
     | '/industries'
+    | '/locations'
+    | '/admin/analytics'
     | '/admin/clients'
     | '/admin/domains'
     | '/admin/monthly'
@@ -778,10 +812,13 @@ export interface FileRouteTypes {
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
+    | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/demo/'
     | '/industries/'
+    | '/locations/'
+    | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/clients'
     | '/_authenticated/admin/domains'
     | '/_authenticated/admin/monthly'
@@ -841,8 +878,10 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  LocationsCityRoute: typeof LocationsCityRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
+  LocationsIndexRoute: typeof LocationsIndexRoute
   ApiPublicJobsLifecycleEmailRoute: typeof ApiPublicJobsLifecycleEmailRoute
   ApiPublicJobsSiteEngineRoute: typeof ApiPublicJobsSiteEngineRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1056,6 +1095,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/locations/': {
+      id: '/locations/'
+      path: '/locations'
+      fullPath: '/locations/'
+      preLoaderRoute: typeof LocationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/$city': {
+      id: '/locations/$city'
+      path: '/locations/$city'
+      fullPath: '/locations/$city'
+      preLoaderRoute: typeof LocationsCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$token': {
       id: '/p/$token'
       path: '/p/$token'
@@ -1075,6 +1128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/clients': {
@@ -1333,6 +1393,7 @@ const AuthenticatedAdminClientsRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminClientsRoute: typeof AuthenticatedAdminClientsRouteWithChildren
   AuthenticatedAdminDomainsRoute: typeof AuthenticatedAdminDomainsRoute
   AuthenticatedAdminMonthlyRoute: typeof AuthenticatedAdminMonthlyRoute
@@ -1343,6 +1404,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminClientsRoute: AuthenticatedAdminClientsRouteWithChildren,
   AuthenticatedAdminDomainsRoute: AuthenticatedAdminDomainsRoute,
   AuthenticatedAdminMonthlyRoute: AuthenticatedAdminMonthlyRoute,
@@ -1489,8 +1551,10 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
   InviteTokenRoute: InviteTokenRoute,
+  LocationsCityRoute: LocationsCityRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
+  LocationsIndexRoute: LocationsIndexRoute,
   ApiPublicJobsLifecycleEmailRoute: ApiPublicJobsLifecycleEmailRoute,
   ApiPublicJobsSiteEngineRoute: ApiPublicJobsSiteEngineRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

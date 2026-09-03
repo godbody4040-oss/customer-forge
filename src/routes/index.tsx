@@ -33,7 +33,13 @@ import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
 import { GROWTH_SYSTEM, usd } from "@/lib/offer";
-import { GROWTH_SYSTEM_SCHEMA, canonicalLink, ogUrl } from "@/lib/seo";
+import {
+  GROWTH_SYSTEM_SCHEMA,
+  LOCAL_BUSINESS_SCHEMA,
+  canonicalLink,
+  ogUrl,
+} from "@/lib/seo";
+import { BusinessDetails } from "@/components/marketing/BusinessDetails";
 import { VisualComposition } from "@/components/site/VisualComposition";
 import { HOMEPAGE_COMPOSITION } from "@/lib/homepage-concept";
 import { SiteAddressProvider } from "@/components/site/site-links";
@@ -121,6 +127,7 @@ export const Route = createFileRoute("/")({
     ],
     links: [canonicalLink("/")],
     scripts: [
+      { type: "application/ld+json", children: JSON.stringify(LOCAL_BUSINESS_SCHEMA) },
       { type: "application/ld+json", children: JSON.stringify(GROWTH_SYSTEM_SCHEMA) },
       {
         type: "application/ld+json",
@@ -663,6 +670,8 @@ function Landing() {
             </div>
           </div>
         </section>
+
+        <BusinessDetails />
       </main>
 
       <SiteFooter />
