@@ -125,6 +125,8 @@ export async function guardedFetch(
     const addresses = await resolve(parsed.hostname).catch(() => [] as string[]);
     if (!areAddressesPublic(addresses)) throw new Error("Not a public address");
   }
-  return fetch(parsed.toString(), { redirect: "manual", ...init });
+  // redirect stays last: a caller can never opt back into automatic following,
+  // which would let a public host bounce the probe to an internal address.
+  return fetch(parsed.toString(), { ...init, redirect: "manual" });
 }
 
