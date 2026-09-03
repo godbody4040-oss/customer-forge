@@ -18,10 +18,12 @@ import {
 } from "./billing-lifecycle";
 
 export interface TemplateEntry {
+  // Templates have differing prop shapes; the registry is intentionally generic.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   component: ComponentType<any>;
-  subject: string | ((data: Record<string, any>) => string);
+  subject: string | ((data: Record<string, unknown>) => string);
   displayName?: string;
-  previewData?: Record<string, any>;
+  previewData?: Record<string, unknown>;
   /** Fixed recipient — overrides caller-provided recipientEmail when set. */
   to?: string;
 }
@@ -48,7 +50,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   "lifecycle-winback": lifecycleWinbackTemplate,
   "team-invite": {
     component: InviteEmail,
-    subject: (data: Record<string, any>) =>
+    subject: (data: Record<string, unknown>) =>
       `You've been invited to ${(data?.["siteName"] as string) || "Revora"}`,
     displayName: "Team invite",
     previewData: {

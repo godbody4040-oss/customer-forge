@@ -166,6 +166,7 @@ export function useRequestReview(organizationId: string | undefined) {
       toast.success("Review request queued.");
       void queryClient.invalidateQueries({ queryKey: ["automation_runs", organizationId] });
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't queue that review request.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't queue that review request.")),
   });
 }

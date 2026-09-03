@@ -40,7 +40,10 @@ describe("regression detection", () => {
   });
 
   it("catches emptied sections and lost forms", () => {
-    const found = detectRegressions(base, after({ sections: { ...base.sections, home: 0 }, forms: 0 }));
+    const found = detectRegressions(
+      base,
+      after({ sections: { ...base.sections, home: 0 }, forms: 0 }),
+    );
     const kinds = found.map((f) => f.kind);
     expect(kinds).toContain("sections_removed");
     expect(kinds).toContain("forms_removed");

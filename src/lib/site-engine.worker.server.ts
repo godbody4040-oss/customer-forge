@@ -19,7 +19,7 @@ const LEASE_SECONDS = 180;
 const MAX_ATTEMPTS = 3;
 const RATE_LIMIT_TRIP = 3;
 
-type Db = SupabaseClient<any, any, any>;
+type Db = SupabaseClient;
 
 export type QueueState = {
   paused: boolean;

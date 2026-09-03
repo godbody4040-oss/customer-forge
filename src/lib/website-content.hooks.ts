@@ -854,7 +854,8 @@ export function useDuplicateComponent(organizationId: string | undefined) {
       toast.success("Element duplicated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't duplicate that element.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't duplicate that element.")),
   });
 }
 
@@ -945,7 +946,8 @@ export function useDuplicateSection(organizationId: string | undefined) {
       toast.success("Section duplicated.");
       void invalidate();
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't duplicate that section.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't duplicate that section.")),
   });
 }
 

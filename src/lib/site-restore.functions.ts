@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -43,7 +44,9 @@ async function readState(
       .eq("organization_id", organizationId),
     supabase
       .from("website_sections")
-      .select("id, page_id, kind, variant, heading, subheading, body, settings, sort_order, is_visible")
+      .select(
+        "id, page_id, kind, variant, heading, subheading, body, settings, sort_order, is_visible",
+      )
       .eq("organization_id", organizationId),
     supabase
       .from("website_components")
@@ -83,7 +86,7 @@ export const restoreSiteState = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const supabase = context.supabase as never as {
-      from: (table: string) => any;
+      from: SupabaseClient["from"];
       rpc: (
         name: string,
         args: Record<string, unknown>,
@@ -135,4 +138,3 @@ export const restoreSiteState = createServerFn({ method: "POST" })
       counts: countSnapshot(after),
     };
   });
-

@@ -110,29 +110,29 @@ function PortalHome() {
         <Panel>
           <SectionHeading eyebrow="Leads" title="Latest leads" />
           <div className="mt-3">
-          {(leads ?? []).length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">
-              No leads yet. Every form on your live site lands here — and emails you instantly.
-            </p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {(leads ?? []).slice(0, 5).map((lead) => (
-                <li key={lead.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-medium">{lead.name}</p>
-                    <p className="truncate text-[12px] text-muted-foreground">
-                      {[lead.service_interest, lead.city, lead.email, lead.phone]
-                        .filter(Boolean)
-                        .join(" · ") || "New enquiry"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-[11px] text-muted-foreground">
-                    {relative(new Date(lead.created_at))}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+            {(leads ?? []).length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">
+                No leads yet. Every form on your live site lands here — and emails you instantly.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {(leads ?? []).slice(0, 5).map((lead) => (
+                  <li key={lead.id} className="flex items-center justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium">{lead.name}</p>
+                      <p className="truncate text-[12px] text-muted-foreground">
+                        {[lead.service_interest, lead.city, lead.email, lead.phone]
+                          .filter(Boolean)
+                          .join(" · ") || "New enquiry"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">
+                      {relative(new Date(lead.created_at))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="mt-3">
             <Button asChild variant="ghost" size="sm">
@@ -147,33 +147,31 @@ function PortalHome() {
         <Panel>
           <SectionHeading eyebrow="Calendar" title="Next bookings" />
           <div className="mt-3">
-          {upcoming.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">
-              Nothing booked yet. Bookings from your site's Book section appear here with date,
-              time and contact details.
-            </p>
-          ) : (
-            <ul className="divide-y divide-border">
-              {upcoming.slice(0, 5).map((appointment) => (
-                <li key={appointment.id} className="py-2.5">
-                  <p className="text-[13px] font-medium">{appointment.name}</p>
-                  <p className="text-[12px] text-muted-foreground">
-                    {dateLong(appointment.starts_at)}
-                    {appointment.phone ? ` · ${appointment.phone}` : ""}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
+            {upcoming.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">
+                Nothing booked yet. Bookings from your site's Book section appear here with date,
+                time and contact details.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {upcoming.slice(0, 5).map((appointment) => (
+                  <li key={appointment.id} className="py-2.5">
+                    <p className="text-[13px] font-medium">{appointment.name}</p>
+                    <p className="text-[12px] text-muted-foreground">
+                      {dateLong(appointment.starts_at)}
+                      {appointment.phone ? ` · ${appointment.phone}` : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </Panel>
       </div>
 
       <Panel>
         <SectionHeading eyebrow="Billing" title="Your plan and payments" />
-        <p className="text-[13px] text-muted-foreground">
-          {billingLine}
-        </p>
+        <p className="text-[13px] text-muted-foreground">{billingLine}</p>
         {lastPayment ? (
           <p className="mt-2 text-[12px] text-muted-foreground">
             Last payment: {currency(Number(lastPayment.amount))} ·{" "}

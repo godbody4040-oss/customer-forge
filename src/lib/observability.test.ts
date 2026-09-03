@@ -66,7 +66,12 @@ describe("observability timeline", () => {
       jobs: [job({ id: "old", completed_at: "2026-01-01T00:00:00.000Z" })],
       runs: [],
       audits: [
-        { id: "a1", action: "website.published", entity: null, created_at: "2026-02-01T00:00:00.000Z" },
+        {
+          id: "a1",
+          action: "website.published",
+          entity: null,
+          created_at: "2026-02-01T00:00:00.000Z",
+        },
       ],
       limit: 1,
     });

@@ -120,7 +120,6 @@ export async function loadSite(
     if (!gate || gate.publish_state !== "published") return null;
   }
 
-
   const [profile, services, settings, social, reviews, galleryRows, quoteForm] = await Promise.all([
     supabase
       .from("public_business_profiles")
@@ -270,7 +269,6 @@ export async function loadSite(
     ? sectionCountQuery
     : sectionCountQuery.eq("is_visible", true));
   const populatedPages = new Set((navSectionRows ?? []).map((row) => row.page_id as string));
-
 
   let sections: SiteSection[] = [];
   if (currentPage?.id) {

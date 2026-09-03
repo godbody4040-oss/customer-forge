@@ -51,15 +51,7 @@ export const ORGANIZATION_SCHEMA = {
       areaServed: ["US", "Worldwide"],
       hoursAvailable: {
         "@type": "OpeningHoursSpecification",
-        dayOfWeek: [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ],
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
         opens: "00:00",
         closes: "23:59",
       },
@@ -167,7 +159,6 @@ export const WEBSITE_SCHEMA = {
   inLanguage: "en",
   publisher: { "@id": `${SITE_URL}/#organization` },
 };
-
 
 /** The single canonical offer, expressed for search engines. */
 export const GROWTH_SYSTEM_SCHEMA = {

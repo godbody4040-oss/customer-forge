@@ -58,7 +58,8 @@ export function useLaunchFlow(organizationId: string | undefined) {
       void queryClient.invalidateQueries({ queryKey: ["production-readiness"] });
       void queryClient.invalidateQueries({ queryKey: ["website_versions"] });
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "We couldn't take the website live.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "We couldn't take the website live.")),
   });
 
   const launch = useCallback(() => {

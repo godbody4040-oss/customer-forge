@@ -46,7 +46,15 @@ describe("self-heal planner", () => {
 
   it("adds a headline only when a visible page has none", () => {
     const sections = [
-      { id: "s1", page_id: "p1", kind: "hero", heading: null, body: null, is_visible: true, sort_order: 0 },
+      {
+        id: "s1",
+        page_id: "p1",
+        kind: "hero",
+        heading: null,
+        body: null,
+        is_visible: true,
+        sort_order: 0,
+      },
     ];
     const repairs = planRepairs([page()], sections, [], facts);
     const heading = repairs.find((r) => r.kind === "section_heading");
@@ -58,7 +66,15 @@ describe("self-heal planner", () => {
 
   it("repoints unsafe and broken button links to a real destination", () => {
     const sections = [
-      { id: "s1", page_id: "p1", kind: "hero", heading: "Hi", body: null, is_visible: true, sort_order: 0 },
+      {
+        id: "s1",
+        page_id: "p1",
+        kind: "hero",
+        heading: "Hi",
+        body: null,
+        is_visible: true,
+        sort_order: 0,
+      },
     ];
     const components = [
       {
@@ -82,7 +98,10 @@ describe("self-heal planner", () => {
         media_url: null,
       },
     ];
-    const pages = [page(), { ...page({ id: "p2", slug: "services", title: "Services", kind: "page" }) }];
+    const pages = [
+      page(),
+      { ...page({ id: "p2", slug: "services", title: "Services", kind: "page" }) },
+    ];
     const repairs = planRepairs(pages, sections, components, facts);
     const links = repairs.filter((r) => r.kind === "component_link");
     expect(links).toHaveLength(2);
@@ -92,7 +111,15 @@ describe("self-heal planner", () => {
 
   it("describes an image from its own section, never from invention", () => {
     const sections = [
-      { id: "s1", page_id: "p1", kind: "gallery", heading: "Recent work", body: null, is_visible: true, sort_order: 0 },
+      {
+        id: "s1",
+        page_id: "p1",
+        kind: "gallery",
+        heading: "Recent work",
+        body: null,
+        is_visible: true,
+        sort_order: 0,
+      },
     ];
     const repairs = planRepairs(
       [page({ seo_title: "t", seo_description: "d" })],

@@ -43,7 +43,7 @@ export const getHostSite = createServerFn({ method: "GET" })
     } catch {
       host = null;
     }
-// The client-hosting domain only ever serves client websites. The bare
+    // The client-hosting domain only ever serves client websites. The bare
     // root belongs to no client, and neither does an unclaimed label on it
     // (including when it arrives through the Cloudflare proxy) — both show the
     // neutral holding page, never Revora's marketing site.
@@ -69,4 +69,3 @@ export const getHostSite = createServerFn({ method: "GET" })
       result: { slug: tenant.slug, host: tenant.host, via: tenant.via, site },
     };
   });
-

@@ -192,7 +192,7 @@ export function buildChannelAssets(input: {
       why: "Business email is legal to cold-send in the US with a real opt-out.",
       message: emailBody,
       intentUrl: `mailto:?subject=${encodeURIComponent("A customer system for your business")}&body=${encodeURIComponent(emailBody)}`,
-      note: "CAN-SPAM requires a truthful subject, a real identity and a working opt-out. Keep the reply-\"no\" line in.",
+      note: 'CAN-SPAM requires a truthful subject, a real identity and a working opt-out. Keep the reply-"no" line in.',
     },
     {
       id: "youtube",
@@ -312,12 +312,32 @@ export const FREE_LISTINGS: ListingTarget[] = [
 
 /** A repeatable daily routine — the part that actually compounds into reach. */
 export const DAILY_ROUTINE: { task: string; minutes: number; channel: string }[] = [
-  { task: "Post one build walkthrough (Reels + TikTok + Shorts, same clip)", minutes: 20, channel: "social" },
-  { task: "Answer 3 website/lead questions in trade groups or subreddits", minutes: 15, channel: "community" },
-  { task: "Send 10 personal messages to owners you actually know or met", minutes: 15, channel: "message" },
-  { task: "Email 15 businesses whose site has no booking or quote form", minutes: 20, channel: "email" },
+  {
+    task: "Post one build walkthrough (Reels + TikTok + Shorts, same clip)",
+    minutes: 20,
+    channel: "social",
+  },
+  {
+    task: "Answer 3 website/lead questions in trade groups or subreddits",
+    minutes: 15,
+    channel: "community",
+  },
+  {
+    task: "Send 10 personal messages to owners you actually know or met",
+    minutes: 15,
+    channel: "message",
+  },
+  {
+    task: "Email 15 businesses whose site has no booking or quote form",
+    minutes: 20,
+    channel: "email",
+  },
   { task: "Publish or refresh one trade + city page", minutes: 15, channel: "seo" },
-  { task: "Leave the QR card at one supply house, counter or trade desk", minutes: 10, channel: "print" },
+  {
+    task: "Leave the QR card at one supply house, counter or trade desk",
+    minutes: 10,
+    channel: "print",
+  },
 ];
 
 /** Honest daily reach ceiling, so nobody expects millions overnight. */

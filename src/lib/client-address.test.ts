@@ -23,7 +23,9 @@ describe("production client address model", () => {
     expect(customDomainIsLive({ custom_domain: "acme.com", dns_ok: true, ssl_ok: false })).toBe(
       false,
     );
-    expect(customDomainIsLive({ custom_domain: "acme.com", dns_ok: true, ssl_ok: true })).toBe(true);
+    expect(customDomainIsLive({ custom_domain: "acme.com", dns_ok: true, ssl_ok: true })).toBe(
+      true,
+    );
   });
 
   it("makes the verified client domain the public address, never a Revora subdomain", () => {
@@ -61,20 +63,28 @@ describe("canonical address for a published page", () => {
 
   it("treats the home page as the bare address", () => {
     expect(
-      canonicalSiteUrl({ custom_domain: "elitedetail.com", dns_ok: true, ssl_ok: true }, "elite", "home"),
+      canonicalSiteUrl(
+        { custom_domain: "elitedetail.com", dns_ok: true, ssl_ok: true },
+        "elite",
+        "home",
+      ),
     ).toBe("https://elitedetail.com");
   });
 
   it("falls back to the always-working platform path until a domain is verified", () => {
-    expect(canonicalSiteUrl({ custom_domain: "elitedetail.com", dns_ok: false, ssl_ok: false }, "elite", "book")).toBe(
-      "https://revoragrowthsystems.com/s/elite/book",
-    );
+    expect(
+      canonicalSiteUrl(
+        { custom_domain: "elitedetail.com", dns_ok: false, ssl_ok: false },
+        "elite",
+        "book",
+      ),
+    ).toBe("https://revoragrowthsystems.com/s/elite/book");
   });
 
   it("honours a canonical the client set themselves", () => {
-    expect(
-      canonicalSiteUrl(null, "elite", "book", "https://elitedetail.com/booking"),
-    ).toBe("https://elitedetail.com/booking");
+    expect(canonicalSiteUrl(null, "elite", "book", "https://elitedetail.com/booking")).toBe(
+      "https://elitedetail.com/booking",
+    );
   });
 
   it("returns nothing when there is no address at all", () => {

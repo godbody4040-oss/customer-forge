@@ -33,7 +33,6 @@ export async function loadTenantPage(pageSlug: string): Promise<HostSiteResult> 
   return response.result;
 }
 
-
 /** Metadata for a client page, so shares and search results show the business. */
 export function tenantPageHead(result: HostSiteResult) {
   if (!result?.site?.content) return null;

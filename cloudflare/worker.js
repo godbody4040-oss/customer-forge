@@ -54,9 +54,7 @@ export default {
     // Only the hosting domain and its one-level subdomains belong to this
     // Worker. Anything else is not a Revora client address.
     const bare = host === SITE_ROOT || host === `www.${SITE_ROOT}`;
-    const label = host.endsWith(`.${SITE_ROOT}`)
-      ? host.slice(0, -(SITE_ROOT.length + 1))
-      : null;
+    const label = host.endsWith(`.${SITE_ROOT}`) ? host.slice(0, -(SITE_ROOT.length + 1)) : null;
     if (!bare && (!label || label.includes("."))) {
       return new Response("Not found", { status: 404 });
     }

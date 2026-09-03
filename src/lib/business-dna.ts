@@ -112,11 +112,17 @@ export const PROHIBITED_CLAIMS = [
 /** Claim-shaped language that must never be generated from thin air. */
 const CLAIM_PATTERNS: { pattern: RegExp; reason: string }[] = [
   { pattern: /\b\d{1,3}(\.\d)?\s*(star|stars|\/\s*5)\b/i, reason: "star rating" },
-  { pattern: /\b(award[- ]?winning|award winner|voted best|#\s?1\b|number one)\b/i, reason: "award" },
+  {
+    pattern: /\b(award[- ]?winning|award winner|voted best|#\s?1\b|number one)\b/i,
+    reason: "award",
+  },
   { pattern: /\b(licen[cs]ed|certified|accredited|insured and bonded)\b/i, reason: "credential" },
   { pattern: /\b\d{1,3}\s?%/, reason: "statistic" },
   { pattern: /\b(guarantee[d]?|warrant(y|ied)|money[- ]back)\b/i, reason: "guarantee" },
-  { pattern: /\b\d{2,3}\+?\s*(five[- ]star|happy customers|clients served|reviews)\b/i, reason: "customer count" },
+  {
+    pattern: /\b\d{2,3}\+?\s*(five[- ]star|happy customers|clients served|reviews)\b/i,
+    reason: "customer count",
+  },
   { pattern: /\b(cheapest|lowest price|best in|leading|award)\b/i, reason: "superlative claim" },
 ];
 
@@ -145,9 +151,12 @@ export function screenClaims(text: string, facts: DnaFacts): ClaimIssue[] {
 const clean = (value: unknown): string | null =>
   typeof value === "string" && value.trim() ? value.trim().slice(0, 200) : null;
 
-const EMERGENCY_TRADES = /(plumb|electric|hvac|heating|roof|locksmith|water damage|restoration|towing|glass|garage door|pest)/i;
-const APPOINTMENT_TRADES = /(salon|barber|spa|nail|lash|clean|detail|dog|groom|massage|dental|tattoo|photograph|fitness|tutor|therap)/i;
-const PROJECT_TRADES = /(landscap|remodel|renovat|build|construct|paint|fenc|concrete|kitchen|bath|solar|floor|window|deck|pav)/i;
+const EMERGENCY_TRADES =
+  /(plumb|electric|hvac|heating|roof|locksmith|water damage|restoration|towing|glass|garage door|pest)/i;
+const APPOINTMENT_TRADES =
+  /(salon|barber|spa|nail|lash|clean|detail|dog|groom|massage|dental|tattoo|photograph|fitness|tutor|therap)/i;
+const PROJECT_TRADES =
+  /(landscap|remodel|renovat|build|construct|paint|fenc|concrete|kitchen|bath|solar|floor|window|deck|pav)/i;
 
 function urgencyOf(industry: string | null): UrgencyLevel {
   if (!industry) return "researching";
@@ -194,7 +203,11 @@ export function businessDna(facts: DnaFacts): BusinessDna {
   mark("email", Boolean(clean(facts.email)), "Add the email that should receive enquiries.");
   mark("opening hours", facts.hasHours === true, "Set your opening hours.");
   mark("photos of real work", (facts.photoCount ?? 0) > 0, "Upload a few photos of your own work.");
-  mark("customer reviews", (facts.testimonialCount ?? 0) > 0 || Boolean(clean(facts.reviewLink)), "Add real reviews, or a link to where customers leave them.");
+  mark(
+    "customer reviews",
+    (facts.testimonialCount ?? 0) > 0 || Boolean(clean(facts.reviewLink)),
+    "Add real reviews, or a link to where customers leave them.",
+  );
   mark("pricing", hasPrices, "Add starting prices, or leave pricing to quotes.");
 
   const problems = services.length
@@ -225,16 +238,14 @@ export function businessDna(facts: DnaFacts): BusinessDna {
   ];
 
   const primaryCta =
-    urgency === "emergency"
-      ? "Call now"
-      : bookable > 0
-        ? "Book a time"
-        : "Get a quote";
+    urgency === "emergency" ? "Call now" : bookable > 0 ? "Book a time" : "Get a quote";
   const secondaryCta = bookable > 0 ? "Get a quote" : "See services";
   const needsBooking = bookable > 0 || urgency === "soon";
   const needsQuote = urgency !== "soon" || !bookable;
 
-  const goals = (facts.goals ?? []).map((goal) => clean(goal)).filter((g): g is string => Boolean(g));
+  const goals = (facts.goals ?? [])
+    .map((goal) => clean(goal))
+    .filter((g): g is string => Boolean(g));
   const desiredAction =
     clean(facts.conversionGoal) === "calls"
       ? "Get the phone ringing"
@@ -242,7 +253,10 @@ export function businessDna(facts: DnaFacts): BusinessDna {
         ? "Fill the calendar with booked jobs"
         : clean(facts.conversionGoal) === "quotes"
           ? "Collect qualified quote requests"
-          : goals[0] ?? (urgency === "emergency" ? "Get the phone ringing" : "Collect qualified quote requests");
+          : (goals[0] ??
+            (urgency === "emergency"
+              ? "Get the phone ringing"
+              : "Collect qualified quote requests"));
 
   const geoStrategy: BusinessDna["geoStrategy"] = serviceArea
     ? serviceArea.includes(",") || /\band\b|&/.test(serviceArea)

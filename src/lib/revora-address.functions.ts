@@ -92,14 +92,14 @@ export const checkRevoraAddressLive = createServerFn({ method: "POST" })
     const host = revoraHost(settings.subdomain);
     if (!host) throw new Error("This workspace doesn't have a free Revora address yet.");
 
-const { checkDomain, DOMAIN_A_RECORD } = await import("@/lib/admin.server");
+    const { checkDomain, DOMAIN_A_RECORD } = await import("@/lib/admin.server");
     const { SITE_ROOT } = await import("@/lib/revora-address");
     // The free address is served either directly (wildcard A → platform) or
     // through the Cloudflare proxy (wildcard A → Cloudflare edge), so DNS is
     // judged by "public answers + HTTPS works" rather than one fixed record.
     const check = await checkDomain(host, { proxied: true });
 
-const detail =
+    const detail =
       check.dnsOk && check.sslOk && check.records.servesThisSite
         ? `${host} is live and secured with HTTPS.`
         : !check.dnsOk
@@ -126,10 +126,9 @@ const detail =
       live,
       status: check.status,
       detail,
-expected: check.records.a.includes(DOMAIN_A_RECORD)
+      expected: check.records.a.includes(DOMAIN_A_RECORD)
         ? DOMAIN_A_RECORD
         : `Cloudflare edge (proxied ${SITE_ROOT})`,
       checkedAt,
     };
   });
-

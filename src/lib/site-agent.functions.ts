@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 /**
  * Authenticated Site Agent endpoints.
  *
@@ -96,7 +97,7 @@ async function loadSite(supabase: SupabaseLike, orgId: string): Promise<LoadedSi
 
 /** Minimal shape we use from the request-scoped Supabase client. */
 type SupabaseLike = {
-  from: (table: string) => any;
+  from: SupabaseClient["from"];
 };
 
 function indexOf(site: LoadedSite): { index: SiteIndex; currentText: Map<string, string> } {

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { type StripeEnv, verifyWebhook } from "@/lib/stripe.server";
 
+// Raw Stripe event JSON; each case narrows the fields it needs.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleEvent(event: { type: string; data: { object: any } }, env: StripeEnv) {
   const { adminClient } = await import("@/lib/payments.server");
   const { syncStripeSubscription, recordStripeTransaction, planFromPriceId, resolvePriceKey } =
@@ -261,6 +263,7 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
  * effect runs. A duplicate delivery short-circuits with 200.
  */
 async function claimEvent(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   event: { id?: string; type: string; data: { object: any } },
   env: StripeEnv,
 ) {
@@ -294,6 +297,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           const event = (await verifyWebhook(request, rawEnv)) as {
             id?: string;
             type: string;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data: { object: any };
           };
           const claim = await claimEvent(event, rawEnv);

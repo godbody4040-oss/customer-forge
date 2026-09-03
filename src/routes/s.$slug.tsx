@@ -99,10 +99,10 @@ function PublicSiteRoute() {
   // `/s/:slug/:page` nests under this route, so inner pages must render instead
   // of the home page — otherwise every deep link would show the home layout.
   const children = useChildMatches();
+  const site = Route.useLoaderData();
   if (children.length > 0) return <Outlet />;
-  return <PublicSiteView site={Route.useLoaderData()} />;
+  return <PublicSiteView site={site} />;
 }
-
 
 /**
  * The home address serves whatever the owner actually built. When the builder
@@ -123,7 +123,6 @@ export function PublicSiteView({
   }
   return <TemplateSiteView site={site} preview={preview} />;
 }
-
 
 /**
  * The rendered business website. Shared by the live site and by time-limited
@@ -230,7 +229,6 @@ function TemplateSiteView({
               .replace(/&/g, "\\u0026"),
           }}
         />
-
 
         <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5">
@@ -544,7 +542,10 @@ function TemplateSiteView({
             </p>
             <div className="flex gap-4">
               {social?.google_business ? (
-                <a href={safeLinkUrl(social.google_business) ?? "#"} className="hover:text-foreground">
+                <a
+                  href={safeLinkUrl(social.google_business) ?? "#"}
+                  className="hover:text-foreground"
+                >
                   Google
                 </a>
               ) : null}

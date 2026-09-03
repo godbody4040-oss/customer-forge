@@ -169,7 +169,7 @@ export const lifecycleWelcomeTemplate = {
 
 export const lifecycleSetupReminderTemplate = {
   component: SetupReminderEmail,
-  subject: (d: Record<string, any>) =>
+  subject: (d: Record<string, unknown>) =>
     `Next step: ${(d?.["nextAction"] as string) || "finish your Revora setup"}`,
   displayName: "Lifecycle: setup reminder",
   previewData: preview,
@@ -177,7 +177,7 @@ export const lifecycleSetupReminderTemplate = {
 
 export const lifecycleBookingFollowUpTemplate = {
   component: BookingFollowUpEmail,
-  subject: (d: Record<string, any>) =>
+  subject: (d: Record<string, unknown>) =>
     `New booking: ${(d?.["bookingName"] as string) || "a customer"} — confirm and quote`,
   displayName: "Lifecycle: booking follow-up",
   previewData: preview,

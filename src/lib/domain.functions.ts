@@ -162,7 +162,6 @@ export const checkDomainAvailability = createServerFn({ method: "POST" })
     };
   });
 
-
 /**
  * Re-run the live DNS + HTTPS verification for the domain already saved on this
  * workspace, and report which individual records resolve. Status is only ever

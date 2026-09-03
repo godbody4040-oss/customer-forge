@@ -92,9 +92,16 @@ export const Route = createFileRoute("/locations/$city")({
             name: `Revora Growth System for ${location.city}, NC businesses`,
             provider: { "@id": "https://revoragrowthsystems.com/#business" },
             serviceType: "Website design, lead generation and customer acquisition systems",
-            audience: { "@type": "BusinessAudience", name: `${location.city} local business owners` },
+            audience: {
+              "@type": "BusinessAudience",
+              name: `${location.city} local business owners`,
+            },
             areaServed: [
-              { "@type": "City", name: location.city, containedInPlace: { "@type": "State", name: "North Carolina" } },
+              {
+                "@type": "City",
+                name: location.city,
+                containedInPlace: { "@type": "State", name: "North Carolina" },
+              },
               ...location.nearby.map((name) => ({ "@type": "City", name })),
             ],
             offers: {
@@ -148,8 +155,7 @@ function LocationPage() {
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
             People in {location.city} are searching for your service right now. Revora builds the
             website, captures the enquiry, quotes it, books it and follows up — so the job goes to
-            you instead of the next name on the list. Also covering{" "}
-            {location.nearby.join(", ")}.
+            you instead of the next name on the list. Also covering {location.nearby.join(", ")}.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button
@@ -181,10 +187,7 @@ function LocationPage() {
           />
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {PILLARS.map((pillar) => (
-              <div
-                key={pillar.title}
-                className="rounded-xl border border-border/60 bg-card/40 p-5"
-              >
+              <div key={pillar.title} className="rounded-xl border border-border/60 bg-card/40 p-5">
                 <pillar.icon className="size-5 text-primary" aria-hidden="true" />
                 <h3 className="mt-3 font-display text-[15px] font-semibold">{pillar.title}</h3>
                 <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">

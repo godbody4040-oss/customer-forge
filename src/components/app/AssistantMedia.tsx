@@ -75,7 +75,8 @@ export function AssistantMedia({
       if (result.text) onTranscript(result.text);
       else toast.error(result.message || "I couldn't hear anything in that recording.");
     },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't transcribe that recording.")),
+    onError: (error: Error) =>
+      toast.error(friendlyError(error, "Couldn't transcribe that recording.")),
   });
 
   useEffect(() => {

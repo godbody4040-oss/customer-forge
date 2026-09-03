@@ -38,7 +38,10 @@ describe("qrImageUrl", () => {
 });
 
 describe("buildChannelAssets", () => {
-  const assets = buildChannelAssets({ campaign: "launch", audience: "HVAC companies in Charlotte" });
+  const assets = buildChannelAssets({
+    campaign: "launch",
+    audience: "HVAC companies in Charlotte",
+  });
 
   it("returns a message and a consent note for every channel", () => {
     expect(assets.length).toBeGreaterThan(10);

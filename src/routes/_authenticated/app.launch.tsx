@@ -102,8 +102,6 @@ function Launch() {
       ? `https://${settings.custom_domain}`
       : (revoraUrl(settings?.subdomain) ?? `/s/${org?.slug ?? ""}`);
 
-
-
   const reviewState = (settings?.review_state as string | undefined) ?? "onboarding";
   const reviewMeta = reviewStateMeta(reviewState);
   const approved = ["approved", "domain_setup", "publishing", "live"].includes(reviewState);

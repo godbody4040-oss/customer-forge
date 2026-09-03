@@ -104,9 +104,9 @@ export function RevoraAddressCard({
         }
       />
       <p className="text-[13px] text-muted-foreground">
-        While you build, Revora gives you a preview address so you can review and share your
-        website before your own domain is connected. Your own domain is always your permanent
-        public website address.
+        While you build, Revora gives you a preview address so you can review and share your website
+        before your own domain is connected. Your own domain is always your permanent public website
+        address.
       </p>
 
       <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/5 p-3">
@@ -188,8 +188,6 @@ export function RevoraAddressCard({
         </div>
       ) : null}
 
-
-
       <div className="grid gap-2 text-[12px] text-muted-foreground sm:grid-cols-3">
         <p className="rounded-md border border-border/60 p-2.5">
           <ShieldCheck className="mb-1 size-3.5 text-primary" aria-hidden="true" />
@@ -244,9 +242,7 @@ export function RevoraAddressCard({
               </Button>
             </div>
             <p className="text-[11.5px] text-muted-foreground">
-              {check.ok
-                ? `Your site will be at ${check.value}.${SITE_ROOT}`
-                : check.error}
+              {check.ok ? `Your site will be at ${check.value}.${SITE_ROOT}` : check.error}
             </p>
           </div>
         ) : (

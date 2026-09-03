@@ -96,13 +96,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 function normalizeReport(value: unknown): SeoReport | null {
   if (!isRecord(value)) return null;
-  const raw = value as Record<string, any>;
+  const raw = value as Record<string, unknown>;
   if (typeof raw["canonicalOrigin"] !== "string") return null;
-  const redirects = isRecord(raw["redirects"]) ? (raw["redirects"] as Record<string, any>) : {};
-  const crawl = isRecord(raw["crawl"]) ? (raw["crawl"] as Record<string, any>) : {};
-  const robots = isRecord(crawl["robots"]) ? (crawl["robots"] as Record<string, any>) : {};
-  const sitemap = isRecord(crawl["sitemap"]) ? (crawl["sitemap"] as Record<string, any>) : {};
-  const home = isRecord(crawl["home"]) ? (crawl["home"] as Record<string, any>) : {};
+  const redirects = isRecord(raw["redirects"]) ? (raw["redirects"] as Record<string, unknown>) : {};
+  const crawl = isRecord(raw["crawl"]) ? (raw["crawl"] as Record<string, unknown>) : {};
+  const robots = isRecord(crawl["robots"]) ? (crawl["robots"] as Record<string, unknown>) : {};
+  const sitemap = isRecord(crawl["sitemap"]) ? (crawl["sitemap"] as Record<string, unknown>) : {};
+  const home = isRecord(crawl["home"]) ? (crawl["home"] as Record<string, unknown>) : {};
   return {
     canonicalOrigin: raw["canonicalOrigin"] as string,
     canonicalMatches: !!raw["canonicalMatches"],
@@ -112,7 +112,7 @@ function normalizeReport(value: unknown): SeoReport | null {
       detail: typeof redirects["detail"] === "string" ? redirects["detail"] : "",
       results: (Array.isArray(redirects["results"]) ? redirects["results"] : [])
         .filter((row: unknown) => isRecord(row) && typeof row["url"] === "string")
-        .map((row: Record<string, any>) => ({
+        .map((row: Record<string, unknown>) => ({
           url: row["url"] as string,
           canonical: !!row["canonical"],
           status: typeof row["status"] === "number" ? row["status"] : null,
@@ -128,7 +128,7 @@ function normalizeReport(value: unknown): SeoReport | null {
     },
     issues: (Array.isArray(raw["issues"]) ? raw["issues"] : [])
       .filter((row: unknown) => isRecord(row) && typeof row["label"] === "string")
-      .map((row: Record<string, any>) => ({
+      .map((row: Record<string, unknown>) => ({
         label: row["label"] as string,
         fix: typeof row["fix"] === "string" ? row["fix"] : "",
       })),

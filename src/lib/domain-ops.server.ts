@@ -52,7 +52,6 @@ async function guardedFetch(url: string): Promise<Response> {
   });
 }
 
-
 async function probe(url: string): Promise<HopResult> {
   try {
     const res = await guardedFetch(url);

@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { cleanText, parseReturnUrl, parseWorkspaceId } from "@/lib/stripe-input";
@@ -33,7 +34,7 @@ async function hashToken(token: string): Promise<string> {
 }
 
 async function assertCanManage(
-  supabase: { from: (t: string) => any },
+  supabase: Pick<SupabaseClient, "from">,
   organizationId: string,
   userId: string,
 ) {
@@ -280,7 +281,19 @@ export const listTeamMembers = createServerFn({ method: "POST" })
         .eq("organization_id", data.organizationId)
         .order("created_at");
 
-      return (rows ?? []).map((row: any) => ({
+      type MemberRow = {
+        id: string;
+        role: string;
+        created_at: string;
+        user_id: string;
+        profiles?: {
+          full_name?: string | null;
+          email?: string | null;
+          avatar_url?: string | null;
+        } | null;
+      };
+
+      return ((rows ?? []) as unknown as MemberRow[]).map((row) => ({
         id: row.id as string,
         role: String(row.role),
         created_at: row.created_at as string,

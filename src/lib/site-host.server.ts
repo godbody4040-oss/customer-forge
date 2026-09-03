@@ -39,7 +39,6 @@ export type TenantHost = {
   redirectHost?: string | null;
 };
 
-
 /**
  * Resolves which organization owns an incoming host.
  *
@@ -100,7 +99,6 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
       return true;
     });
 
-
   for (const row of ordered) {
     if (!row.organization_id) continue;
     const viaRevora = !!subdomain && row.subdomain === subdomain;
@@ -122,11 +120,9 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
           ? normalizeHost(row.custom_domain)
           : null,
     };
-
   }
   return null;
 }
-
 
 /**
  * Returns the published tenant that owns this host, or null when the host is
@@ -170,9 +166,7 @@ export async function resolveHostSite(
       .filter((p) => !p.noindex && populated.has(p.id as string))
       .map((p) => ({ slug: p.slug, updatedAt: p.updated_at ?? null })),
   };
-
 }
-
 
 /** Absolute URLs for a tenant site, or for Revora's own marketing pages. */
 export function sitemapUrls(site: HostSite | null, origin: string) {

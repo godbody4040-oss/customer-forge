@@ -12,7 +12,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { safeLinkUrl } from "@/lib/website-content";
 
-type Db = SupabaseClient<any, any, any>;
+type Db = SupabaseClient;
 
 type ServiceRow = {
   name: string;

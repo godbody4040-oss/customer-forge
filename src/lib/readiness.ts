@@ -192,7 +192,6 @@ export const DOMAIN_STATES: Record<
   },
 };
 
-
 export const PUBLISH_STATES: Record<
   string,
   { label: string; tone: "signal" | "attention" | "info" | "neutral" | "danger"; help: string }

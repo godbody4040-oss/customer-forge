@@ -65,6 +65,8 @@ const iso = (seconds: unknown) =>
  */
 export async function syncStripeSubscription(
   admin: Admin,
+  // Raw Stripe subscription payload (webhook JSON); fields are read defensively.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscription: any,
   env: StripeEnv,
 ): Promise<{ ok: boolean; organizationId?: string; reason?: string }> {

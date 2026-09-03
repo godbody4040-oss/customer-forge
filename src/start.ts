@@ -45,7 +45,7 @@ const customDomainRedirect = createMiddleware().server(async ({ next, request })
   try {
     const { resolveTenantHost } = await import("./lib/site-host.server");
     const { isRevoraOwnHost, normalizeHost } = await import("./lib/revora-address");
-// Requests served through the Cloudflare client-hosting proxy carry the
+    // Requests served through the Cloudflare client-hosting proxy carry the
     // real client hostname in X-Forwarded-Host; direct requests use Host.
     const rawHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
     const tenant = await resolveTenantHost(rawHost);
@@ -96,4 +96,3 @@ export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [errorMiddleware, csrfMiddleware, customDomainRedirect],
 }));
-
