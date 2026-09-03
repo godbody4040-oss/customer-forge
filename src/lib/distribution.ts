@@ -96,7 +96,7 @@ export function buildChannelAssets(input: {
   const audience = (input.audience || "local service business owners").trim();
   const path = input.path ?? "/";
   const link = (source: string, medium: string, content?: string) =>
-    trackedLink(path, { source, medium, campaign, content });
+    trackedLink(path, { source, medium, campaign, ...(content ? { content } : {}) });
 
   const pitch = `A complete customer acquisition system for ${audience}: a website that ranks, instant quotes, online booking, CRM and automatic follow-up. ${SETUP} setup, first month free, then ${MONTHLY}/month.`;
 
