@@ -7,15 +7,13 @@ import {
 } from "@/lib/security-headers";
 import {
   REVORA_ROOT,
-  RESERVED_SUBDOMAINS,
   SITE_ROOT,
   isTrafficDomainHost,
   trafficRedirectUrl,
   canonicalSiteUrl,
   isRevoraOwnHost,
+  isPossibleTenantHost,
   normalizeHost,
-  revoraSubdomainFromHost,
-  validateSubdomain,
 } from "@/lib/revora-address";
 import worker from "../../cloudflare/worker.js";
 
@@ -80,27 +78,27 @@ describe("hostname resolution edge cases", () => {
     expect(isRevoraOwnHost(`business.${SITE_ROOT}`)).toBe(false);
   });
 
-  it("rejects nested and look-alike client hosts", () => {
-    expect(revoraSubdomainFromHost(`business.${SITE_ROOT}`)).toBe("business");
-    expect(revoraSubdomainFromHost(`BUSINESS.${SITE_ROOT}.`)).toBe("business");
-    expect(revoraSubdomainFromHost(`a.b.${SITE_ROOT}`)).toBeNull();
-    expect(revoraSubdomainFromHost(`evil${SITE_ROOT}`)).toBeNull();
-    expect(revoraSubdomainFromHost("business.attacker.com")).toBeNull();
+  it("never resolves a traffic-domain host to a client website", () => {
+    for (const host of [
+      `business.${SITE_ROOT}`,
+      `BUSINESS.${SITE_ROOT}.`,
+      `a.b.${SITE_ROOT}`,
+      SITE_ROOT,
+      `www.${SITE_ROOT}`,
+    ]) {
+      expect(isPossibleTenantHost(host), host).toBe(false);
+    }
   });
 
-  it("refuses reserved addresses", () => {
-    for (const name of ["www", "admin", "api", "app", "billing"]) {
-      expect(RESERVED_SUBDOMAINS).toContain(name);
-      expect(validateSubdomain(name).ok, name).toBe(false);
-    }
-    expect(validateSubdomain("Miller Roofing")).toEqual({ ok: true, value: "miller-roofing" });
+  it("still resolves a real customer-owned domain as a candidate tenant host", () => {
+    expect(isPossibleTenantHost("millerroofing.com")).toBe(true);
+    expect(isPossibleTenantHost(`evil${SITE_ROOT}`)).toBe(true);
   });
 });
 
 describe("client website canonical urls", () => {
   const verifiedDomain = {
     custom_domain: "millerroofing.com",
-    subdomain: "miller",
     dns_ok: true,
     ssl_ok: true,
   };
@@ -206,10 +204,8 @@ describe("revoraweb.site is a traffic-only redirect domain", () => {
   });
 
   it("keeps Revora-branded client subdomain hosting switched off", async () => {
-    const { REVORA_SUBDOMAIN_HOSTING_ENABLED, revoraHostIsLive } =
-      await import("@/lib/revora-address");
+    const { REVORA_SUBDOMAIN_HOSTING_ENABLED } = await import("@/lib/revora-address");
     expect(REVORA_SUBDOMAIN_HOSTING_ENABLED).toBe(false);
-    expect(revoraHostIsLive({ subdomain: "business", revora_host_ok: true })).toBe(false);
   });
 
   it("worker redirects the traffic domain and refuses everything else", async () => {
