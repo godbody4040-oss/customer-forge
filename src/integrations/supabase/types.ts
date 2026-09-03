@@ -3160,7 +3160,22 @@ export type Database = {
           user_id: string
         }[]
       }
+      restore_website_state: {
+        Args: { _organization_id: string; _snapshot: Json }
+        Returns: Json
+      }
       revora_reserved_subdomains: { Args: never; Returns: string[] }
+      submit_public_conversion: {
+        Args: {
+          _activity?: Json
+          _booking?: Json
+          _lead: Json
+          _notification?: Json
+          _organization_id: string
+          _quote?: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"
