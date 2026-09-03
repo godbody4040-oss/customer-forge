@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { resolveHostSite, sitemapUrls, xmlSitemap } from "@/lib/site-host.server";
+import { platformOrigin, resolveHostSite, sitemapUrls, xmlSitemap } from "@/lib/site-host.server";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         } catch (error) {
           console.error("sitemap host resolution failed", error);
         }
-        const origin = host ? `${protocol}://${host.split(":")[0]}` : url.origin;
+        const origin = site ? site.origin : platformOrigin(host ?? url.host, protocol);
         return new Response(xmlSitemap(sitemapUrls(site, origin)), {
           headers: {
             "content-type": "application/xml; charset=utf-8",

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { resolveHostSite } from "@/lib/site-host.server";
+import { platformOrigin, resolveHostSite } from "@/lib/site-host.server";
 
 export const Route = createFileRoute("/robots.txt")({
   server: {
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/robots.txt")({
         } catch (error) {
           console.error("robots host resolution failed", error);
         }
-        const origin = host ? `${protocol}://${host.split(":")[0]}` : url.origin;
+        const origin = site ? site.origin : platformOrigin(host ?? url.host, protocol);
         const disallowed = ["/app", "/admin", "/p/", "/api/"];
         const lines = [
           ...["Googlebot", "Bingbot", "Twitterbot", "facebookexternalhit"].flatMap((agent) => [
