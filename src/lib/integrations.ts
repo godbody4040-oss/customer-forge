@@ -126,7 +126,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
       name: "Your domain",
       status: "unknown",
       detail: "Your website record couldn't be read, so domain status isn't confirmed.",
-      action: { label: "Open domains", to: "/app/domains" },
+      action: { label: "Open domains", to: "/app/domain" },
     });
   } else if (!facts.customDomain) {
     cards.push({
@@ -134,7 +134,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
       name: "Your domain",
       status: "not_connected",
       detail: "No domain is connected yet. Buy one from any registrar, then connect it here.",
-      action: { label: "Connect a domain", to: "/app/domains" },
+      action: { label: "Connect a domain", to: "/app/domain" },
     });
   } else {
     const live = facts.domainVerified && facts.dnsOk && facts.sslOk;
@@ -146,7 +146,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
         ? "DNS points to Revora and HTTPS is active, so your domain serves your website."
         : facts.domainError ||
           `Still finishing: DNS ${facts.dnsOk ? "verified" : "not verified"}, HTTPS ${facts.sslOk ? "active" : "not active"}.`,
-      action: live ? undefined : { label: "Finish setup", to: "/app/domains" },
+      action: live ? undefined : { label: "Finish setup", to: "/app/domain" },
     });
   }
 
@@ -174,7 +174,7 @@ export function buildIntegrationCards(facts: IntegrationFacts): IntegrationCard[
       detail: facts.seoIndexable
         ? "Published with a sitemap and robots.txt search engines can read."
         : "Published, but pages are set to stay out of search results.",
-      action: facts.seoIndexable ? undefined : { label: "Review SEO", to: "/app/seo" },
+      action: facts.seoIndexable ? undefined : { label: "Review SEO", to: "/app/website" },
     });
   }
 
