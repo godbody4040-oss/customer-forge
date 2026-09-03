@@ -10,7 +10,6 @@ type Props = {
   publishState?: string | null;
   lastPublishedAt?: string | null;
   customDomain?: string | null;
-  subdomain?: string | null;
   domainStatus?: string | null;
   pagesCount: number;
   visibleSections: number;
