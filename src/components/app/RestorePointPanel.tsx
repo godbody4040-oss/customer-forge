@@ -23,7 +23,7 @@ export function RestorePointPanel({
   return (
     <Panel className="p-5">
       <SectionHeading
-        icon={History}
+        eyebrow="Revora"
         title="Restore point"
         description="Save an exact copy before a big change, then put everything back in one click."
       />

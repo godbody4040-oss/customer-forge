@@ -36,7 +36,7 @@ export function IntegrationCenter({ organizationId }: { organizationId: string |
   return (
     <Panel className="p-5">
       <SectionHeading
-        icon={Plug}
+        eyebrow="Revora"
         title="Integration Center"
         description="Payments, alerts, domain, search, automations and AI — with their real status."
       />

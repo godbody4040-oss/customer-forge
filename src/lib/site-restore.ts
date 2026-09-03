@@ -12,6 +12,8 @@
  * `site-restore.functions.ts`.
  */
 
+export type JsonLike = string | number | boolean | null | JsonLike[] | { [key: string]: JsonLike };
+
 export type FullComponent = {
   id: string;
   section_id: string;
@@ -21,7 +23,7 @@ export type FullComponent = {
   link_label: string | null;
   link_url: string | null;
   media_url: string | null;
-  settings: Record<string, unknown>;
+  settings: JsonLike;
   sort_order: number;
   is_visible: boolean;
 };
@@ -34,7 +36,7 @@ export type FullSection = {
   heading: string | null;
   subheading: string | null;
   body: string | null;
-  settings: Record<string, unknown>;
+  settings: JsonLike;
   sort_order: number;
   is_visible: boolean;
   components: FullComponent[];
@@ -75,8 +77,8 @@ export type RestorePlan = {
   summary: string;
 };
 
-const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+const asRecord = (value: unknown): JsonLike =>
+  value && typeof value === "object" && !Array.isArray(value) ? (value as JsonLike) : {};
 
 /** Builds a snapshot from flat table rows. */
 export function buildFullSnapshot(
