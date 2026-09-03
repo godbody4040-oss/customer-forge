@@ -43,12 +43,18 @@ export function normalizeDomain(value: string) {
 
 export function isValidDomain(value: string) {
   // Also rejects IP literals and internal/reserved names (see net-guard.server).
+  // Revora's own hosts can never be claimed as a client website address: the
+  // platform domain (and every label under it) is platform-only, and
+  // revoraweb.site is redirect-only.
   return (
     isFetchableHostname(value) &&
     /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(value) &&
-    value.length <= 253
+    value.length <= 253 &&
+    !isRevoraOwnHost(value) &&
+    !isTrafficDomainHost(value)
   );
 }
+
 
 type DnsAnswer = { name: string; type: number; data: string };
 
