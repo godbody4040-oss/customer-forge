@@ -37,9 +37,9 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
  * possible.
  *
  * There is deliberately NO bypass parameter: any request whose host is the
- * traffic domain is redirected, unconditionally. (A previous `_rw` marker was
- * removed because it let a visitor-supplied query string reach the application
- * on the traffic domain.)
+ * traffic domain is redirected, unconditionally. An earlier "already
+ * redirected" query marker was removed because a visitor could supply it and
+ * reach the application on the traffic domain.
  */
 const trafficDomainRedirect = createMiddleware().server(async ({ next, request }) => {
   if (!request) return next();
