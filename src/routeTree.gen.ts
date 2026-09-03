@@ -39,6 +39,7 @@ import { Route as IndustriesIndexRouteImport } from './routes/industries.index'
 import { Route as IndustriesSlugRouteImport } from './routes/industries.$slug'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as LocationsIndexRouteImport } from './routes/locations.index'
+import { Route as LocationsCityRouteImport } from './routes/locations.$city'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -225,6 +226,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
 const LocationsIndexRoute = LocationsIndexRouteImport.update({
   id: '/locations/',
   path: '/locations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsCityRoute = LocationsCityRouteImport.update({
+  id: '/locations/$city',
+  path: '/locations/$city',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PTokenRoute = PTokenRouteImport.update({
@@ -461,6 +467,7 @@ export interface FileRoutesByFullPath {
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo/': typeof DemoIndexRoute
@@ -525,6 +532,7 @@ export interface FileRoutesByTo {
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo': typeof DemoIndexRoute
@@ -596,6 +604,7 @@ export interface FileRoutesById {
   '/demo/dashboard': typeof DemoDashboardRoute
   '/industries/$slug': typeof IndustriesSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/locations/$city': typeof LocationsCityRoute
   '/p/$token': typeof PTokenRoute
   '/s/$slug': typeof SSlugRouteWithChildren
   '/demo/': typeof DemoIndexRoute
@@ -667,6 +676,7 @@ export interface FileRouteTypes {
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
+    | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/demo/'
@@ -731,6 +741,7 @@ export interface FileRouteTypes {
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
+    | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/demo'
@@ -801,6 +812,7 @@ export interface FileRouteTypes {
     | '/demo/dashboard'
     | '/industries/$slug'
     | '/invite/$token'
+    | '/locations/$city'
     | '/p/$token'
     | '/s/$slug'
     | '/demo/'
@@ -866,6 +878,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  LocationsCityRoute: typeof LocationsCityRoute
   PTokenRoute: typeof PTokenRoute
   SSlugRoute: typeof SSlugRouteWithChildren
   LocationsIndexRoute: typeof LocationsIndexRoute
@@ -1087,6 +1100,13 @@ declare module '@tanstack/react-router' {
       path: '/locations'
       fullPath: '/locations/'
       preLoaderRoute: typeof LocationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/$city': {
+      id: '/locations/$city'
+      path: '/locations/$city'
+      fullPath: '/locations/$city'
+      preLoaderRoute: typeof LocationsCityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$token': {
@@ -1531,6 +1551,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
   InviteTokenRoute: InviteTokenRoute,
+  LocationsCityRoute: LocationsCityRoute,
   PTokenRoute: PTokenRoute,
   SSlugRoute: SSlugRouteWithChildren,
   LocationsIndexRoute: LocationsIndexRoute,
