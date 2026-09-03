@@ -28,7 +28,11 @@ const MAX_MESSAGE = 500;
 const MAX_STACK = 8000;
 
 /** Stable grouping key: same failure in the same place = same fingerprint. */
-export function fingerprintOf(input: { message: string; route?: string | null; stack?: string | null }) {
+export function fingerprintOf(input: {
+  message: string;
+  route?: string | null | undefined;
+  stack?: string | null | undefined;
+}) {
   const frame =
     (input.stack ?? "")
       .split("\n")

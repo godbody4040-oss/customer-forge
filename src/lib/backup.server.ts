@@ -127,7 +127,11 @@ export type BackupSummary = {
 export async function createBackup(
   admin: Admin,
   organizationId: string,
-  options: { kind?: "scheduled" | "manual" | "pre_restore"; label?: string; userId?: string } = {},
+  options: {
+    kind?: "scheduled" | "manual" | "pre_restore";
+    label?: string | undefined;
+    userId?: string | undefined;
+  } = {},
 ): Promise<BackupSummary> {
   const snapshot = await buildSnapshot(admin, organizationId);
   const rowCounts: Record<string, number> = {};
@@ -195,7 +199,7 @@ export type RestoreResult = {
 export async function restoreBackup(
   admin: Admin,
   backupId: string,
-  options: { userId?: string } = {},
+  options: { userId?: string | undefined } = {},
 ): Promise<RestoreResult> {
   const { data: backup, error } = await admin
     .from("data_backups")
@@ -251,10 +255,11 @@ export async function restoreBackup(
     const { data: existing, error: readError } = await admin
       .from(table)
       .select("id")
+      .returns<{ id: string }[]>()
       .eq("organization_id", organizationId);
     if (readError) throw new Error(`Restore cleanup failed on ${table}: ${readError.message}`);
     const stale = (existing ?? [])
-      .map((row) => String((row as { id: unknown }).id))
+      .map((row) => String(row.id))
       .filter((id) => !keptIds[table]?.has(id));
     if (!stale.length) continue;
     const { error: deleteError } = await admin.from(table).delete().in("id", stale);

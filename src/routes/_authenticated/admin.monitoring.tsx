@@ -46,7 +46,6 @@ function AdminMonitoring() {
   return (
     <div className="space-y-4">
       <SectionHeading
-        icon={<Activity className="size-4" />}
         title="Monitoring & alerts"
         description="Every server crash, failed API call, webhook error and background job failure recorded in the last 7 days."
       />
@@ -67,7 +66,6 @@ function AdminMonitoring() {
 
       <Panel>
         <SectionHeading
-          icon={<BellRing className="size-4" />}
           title="Grouped issues"
           description="Ranked by how often the same failure happened."
         />
@@ -103,7 +101,6 @@ function AdminMonitoring() {
 
       <Panel>
         <SectionHeading
-          icon={<AlertTriangle className="size-4" />}
           title="Most recent"
           description="Newest events first, exactly as recorded."
         />

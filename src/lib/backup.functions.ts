@@ -93,7 +93,7 @@ export const runBackup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { organizationId: string; label?: string }) => ({
     organizationId: uuid(input?.organizationId),
-    label: String(input?.label ?? "").slice(0, 120) || undefined,
+    label: (String(input?.label ?? "").slice(0, 120) || undefined) as string | undefined,
   }))
   .handler(async ({ data, context }) => {
     await assertBackupAccess(context.supabase, context.userId, data.organizationId);

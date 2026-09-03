@@ -53,8 +53,8 @@ export function RouteError({ error, reset }: { error: Error; reset?: () => void 
         reportClientError({
           data: {
             message: error?.message ?? "Unknown client error",
-            stack: error?.stack ?? undefined,
-            route: typeof window === "undefined" ? undefined : window.location.pathname,
+            stack: error?.stack ?? "",
+            route: typeof window === "undefined" ? "" : window.location.pathname,
           },
         }),
       )

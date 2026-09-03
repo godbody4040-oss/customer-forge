@@ -78,7 +78,6 @@ function BackupHistory({ organizationId }: { organizationId: string }) {
   return (
     <Panel>
       <SectionHeading
-        icon={<History className="size-4" />}
         title="Restore points"
         description="Every snapshot holds this workspace's profile, services, website, CRM and history."
         action={
@@ -186,7 +185,6 @@ function AdminBackups() {
   return (
     <div className="space-y-4">
       <SectionHeading
-        icon={<ShieldCheck className="size-4" />}
         title="Backups & restore"
         description="Daily automated snapshots per client, with a confirmed point-in-time restore that always saves the current state first."
       />
