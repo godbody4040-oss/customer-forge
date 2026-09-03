@@ -86,7 +86,6 @@ export function isRevoraOwnHost(rawHost: string | null | undefined) {
   return REVORA_OWN_HOSTS.includes(host);
 }
 
-
 /**
  * True only when a host could be a customer-owned domain. Revora's own hosts and
  * every `revoraweb.site` host are excluded, so no lookup is ever attempted for
