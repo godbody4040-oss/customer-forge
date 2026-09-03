@@ -13,6 +13,7 @@ import {
 import { OnboardingJourney } from "@/components/app/OnboardingJourney";
 import { ProductionSummaryCard } from "@/components/app/ProductionLaunch";
 import { StatusCenter } from "@/components/app/StatusCenter";
+import { ActivityFeed } from "@/components/app/ActivityFeed";
 import { RevoraCommandBar } from "@/components/app/RevoraCommandBar";
 import { ClientWebsiteSummary } from "@/components/app/ClientWebsiteSummary";
 
@@ -340,6 +341,7 @@ function Dashboard() {
       </div>
 
       <StatusCenter organizationId={orgId} />
+      <ActivityFeed organizationId={orgId} />
 
       <ClientWebsiteSummary
         organizationId={orgId}
