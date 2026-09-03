@@ -16,6 +16,19 @@ const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
       throw error;
     }
     console.error(error);
+    // Record real production crashes so they are actionable instead of lost in
+    // a log. Never let tracking failure mask the original error.
+    try {
+      const { captureError } = await import("./lib/monitoring.server");
+      await captureError(error, {
+        source: "server",
+        level: "fatal",
+        statusCode: 500,
+        route: request ? new URL(request.url).pathname : null,
+      });
+    } catch {
+      /* monitoring is best-effort */
+    }
     return new Response(renderErrorPage(), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },

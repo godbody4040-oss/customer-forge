@@ -1,6 +1,8 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import {
+  Activity,
   BarChart3,
+  DatabaseBackup,
   Building2,
   ClipboardList,
   CreditCard,
@@ -41,6 +43,8 @@ const NAV = [
   { to: "/admin/domains", label: "Domains", icon: Globe2, exact: false },
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
   { to: "/admin/payments", label: "Payments", icon: CreditCard, exact: false },
+  { to: "/admin/backups", label: "Backups", icon: DatabaseBackup, exact: false },
+  { to: "/admin/monitoring", label: "Monitoring", icon: Activity, exact: false },
 ] as const;
 
 function AdminShell() {
