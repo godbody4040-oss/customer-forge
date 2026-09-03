@@ -321,11 +321,11 @@ async function runJob(
   });
 
   const report = {
-
     builtAt: new Date().toISOString(),
-    pages: plan.pages.length,
-    sections: plan.sections.length,
+    pages: built.skipped ? plan.pages.length : built.pages,
+    sections: built.skipped ? plan.sections.length : built.sections,
     services: serviceRows.length,
+
     faqs: copy.faqs.length,
     photos: (media.data ?? []).length + ((p["hero_image_url"] as string) ? 1 : 0),
     leadForms: (forms.data ?? []).length,
