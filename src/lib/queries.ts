@@ -761,7 +761,7 @@ export function useAutomations(organizationId: string | undefined) {
       const { data, error } = await supabase
         .from("automations")
         .select(
-          "id, name, trigger_event, is_active, created_at, automation_steps(id, sort_order, delay_minutes, action_type, channel, subject, body)",
+          "id, name, trigger_event, is_active, created_at, automation_steps!automation_steps_automation_id_fkey(id, sort_order, delay_minutes, action_type, channel, subject, body)",
         )
         .eq("organization_id", organizationId!)
         .order("created_at");
