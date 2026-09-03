@@ -9,7 +9,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: "Do I need an existing website?",
-    a: "No. Revora can build and host a conversion-focused business site for you, on a Revora address or your own domain.",
+    a: "No. Revora builds and hosts a conversion-focused business site for you: start with your Revora platform preview, then connect your own domain.",
   },
   {
     q: "Can I connect my existing website?",

@@ -194,13 +194,18 @@ describe("revoraweb.site is a traffic-only redirect domain", () => {
     }
   });
 
-  it("cannot ping-pong with a hosting-level primary-domain redirect", () => {
-    // The marker survives a bounce back to the traffic domain, and the app
-    // serves the page instead of redirecting again, so the platform stays
-    // reachable however the domains are configured.
-    const first = trafficRedirectUrl("/pricing", "?_rw=1");
-    expect(first).toBe("https://revoragrowthsystems.com/pricing?_rw=1");
-    expect(new URL(first).searchParams.has("_rw")).toBe(true);
+  it("has no query parameter that can bypass the traffic redirect", async () => {
+    const { isTrafficDomainHost } = await import("@/lib/revora-address");
+    // The old `_rw` marker is gone: the decision to redirect depends on the host
+    // alone, so no visitor-supplied query string can reach the application on
+    // the traffic domain.
+    expect(isTrafficDomainHost(`${SITE_ROOT}`)).toBe(true);
+    expect(trafficRedirectUrl("/pricing", "?_rw=1")).toBe(
+      "https://revoragrowthsystems.com/pricing?_rw=1",
+    );
+    const source = await import("node:fs").then((fs) => fs.readFileSync("src/start.ts", "utf8"));
+    expect(source).not.toContain("_rw");
+    expect(source).not.toContain("TRAFFIC_REDIRECT_MARKER");
   });
 
   it("keeps Revora-branded client subdomain hosting switched off", async () => {

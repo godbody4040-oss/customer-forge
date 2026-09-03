@@ -80,7 +80,7 @@ const FAQ = [
   },
   {
     q: "Can I use my own domain?",
-    a: "Yes. Domain connection and setup is included — start on your Revora address and point your own domain at it whenever you're ready.",
+    a: "Yes. Domain connection and setup is included — start with your Revora platform preview, then connect your own domain whenever you're ready.",
   },
   {
     q: "Can I cancel?",

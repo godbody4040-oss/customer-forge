@@ -194,7 +194,7 @@ export function ClientOnboardingFlow({
                       <p className="text-[12px] leading-relaxed text-muted-foreground">
                         {published
                           ? "Your site is live. Publish again any time you make changes."
-                          : "Run the launch checks, then publish. Your site goes live on your Revora address, and on your own domain once it's connected."}
+                          : "Run the launch checks, then publish. Your site goes live on your Revora platform preview link, and on your own domain once it's connected."}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button
