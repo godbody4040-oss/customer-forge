@@ -8,6 +8,7 @@
 
 import { GROWTH_SYSTEM } from "@/lib/offer";
 import { REVORA } from "@/lib/brand";
+import { BUSINESS } from "@/lib/business-identity";
 
 export const SITE_URL = "https://revoragrowthsystems.com";
 
