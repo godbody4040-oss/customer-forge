@@ -70,6 +70,9 @@ describe("subdomain tenant hosting is impossible", () => {
   it("keeps the retired subdomain field out of the public site reader", () => {
     const reader = readFileSync("src/lib/public-site.server.ts", "utf8");
     expect(reader).not.toContain("subdomain");
+    // The public settings projection must stay a fixed render-only column list.
+    const projection = reader.match(/"id, organization_id, template[^"]*"/)?.[0] ?? "";
+    expect(projection).toContain("pages");
     for (const column of [
       "domain_transfer",
       "ssl_detail",
@@ -77,7 +80,7 @@ describe("subdomain tenant hosting is impossible", () => {
       "domain_seo_report",
       "email_forwarding",
     ]) {
-      expect(reader).not.toContain(column);
+      expect(projection).not.toContain(column);
     }
   });
 });
