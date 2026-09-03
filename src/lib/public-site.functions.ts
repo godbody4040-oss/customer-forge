@@ -348,9 +348,24 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         deliver: (run) => deliverRun(run, { businessName: org.name, replyTo: ownerEmail }),
       },
     );
+    } catch (sideEffectError) {
+      deliveryOk = false;
+      console.error(
+        "post-submission delivery failed",
+        sideEffectError instanceof Error ? sideEffectError.message : sideEffectError,
+      );
+      await supabase.from("lead_activities").insert({
+        organization_id: orgId,
+        lead_id: lead.id,
+        kind: "note",
+        body: "Owner alert or follow-up automation couldn't be delivered for this request.",
+        metadata: { delivery: "failed" } as never,
+      });
+    }
 
-    return { ok: true, leadId: lead.id, business: org.name };
+    return { ok: true, leadId: lead.id, business: org.name, notified: deliveryOk };
   });
+
 
 /** Fire-and-forget public analytics event (page views, CTA clicks). */
 export const trackPublicEvent = createServerFn({ method: "POST" })
