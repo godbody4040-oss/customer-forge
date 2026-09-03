@@ -246,13 +246,35 @@ export const submitPublicLead = createServerFn({ method: "POST" })
       if (message.includes("INVALID_SERVICE") || message.includes("INVALID_QUOTE_FORM")) {
         throw new Error("That service is no longer available. Please refresh and try again.");
       }
+      if (message.includes("RATE_LIMITED")) {
+        throw new Error(
+          "We've already received your details. Please wait a few minutes before sending again.",
+        );
+      }
       throw new Error("We couldn't save your request. Please try again.");
     }
 
-    const saved = (result ?? {}) as { lead_id?: string; appointment_id?: string | null };
+    const saved = (result ?? {}) as {
+      lead_id?: string;
+      appointment_id?: string | null;
+      duplicate?: boolean;
+    };
     const leadId = String(saved.lead_id ?? "");
     if (!leadId) throw new Error("We couldn't save your request. Please try again.");
     const lead = { id: leadId };
+
+    // A double-submitted form (double-clicked button, retried request) resolves
+    // to the request that was already saved. The visitor still sees a normal
+    // confirmation, and the owner is not alerted or followed up with twice.
+    if (saved.duplicate) {
+      return {
+        ok: true as const,
+        leadId,
+        appointmentId: saved.appointment_id ?? null,
+        duplicate: true,
+        notified: true,
+      };
+    }
 
     // Funnel milestones: recorded only the first time a workspace reaches them,
     // so attribution shows sign-up -> first quote -> first booking per client.
