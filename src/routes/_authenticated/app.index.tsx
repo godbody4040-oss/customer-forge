@@ -341,6 +341,7 @@ function Dashboard() {
       </div>
 
       <StatusCenter organizationId={orgId} />
+      <ActivityFeed organizationId={orgId} />
 
       <ClientWebsiteSummary
         organizationId={orgId}
