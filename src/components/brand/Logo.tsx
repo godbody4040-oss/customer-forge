@@ -23,7 +23,6 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-
 export function Logo({
   className,
   wordmark = true,
