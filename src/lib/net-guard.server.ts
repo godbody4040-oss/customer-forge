@@ -116,6 +116,10 @@ export async function guardedFetch(
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
     throw new Error("Only web addresses starting with http or https can be checked.");
   if (parsed.username || parsed.password) throw new Error("That address can't be checked.");
+  // Only the standard web ports: an arbitrary port would let a public hostname
+  // be pointed at an internal service (e.g. :6379, :8080) on the same address.
+  if (parsed.port && parsed.port !== "80" && parsed.port !== "443")
+    throw new Error("That address can't be checked.");
   assertFetchableHostname(parsed.hostname);
   if (resolve) {
     const addresses = await resolve(parsed.hostname).catch(() => [] as string[]);
