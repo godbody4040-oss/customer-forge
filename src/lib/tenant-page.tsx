@@ -10,7 +10,7 @@
 import type { ReactNode } from "react";
 import { notFound } from "@tanstack/react-router";
 import { getHostSite, type HostSiteResult } from "@/lib/host-site.functions";
-import { isPossibleTenantHost } from "@/lib/revora-address";
+import { canonicalSiteUrl, isPossibleTenantHost } from "@/lib/revora-address";
 import { PublicSiteView } from "@/routes/s.$slug";
 
 /**
@@ -45,7 +45,9 @@ export function tenantPageHead(result: HostSiteResult) {
     result.site.profile?.tagline ||
     `${page.title} from ${name}.`
   ).slice(0, 158);
-  const url = page.seo_canonical || `https://${result.host}/${page.slug}`;
+  const url =
+    canonicalSiteUrl(result.site.settings, result.slug, page.slug, page.seo_canonical) ??
+    `https://${result.host}/${page.slug}`;
   return {
     meta: [
       { title },

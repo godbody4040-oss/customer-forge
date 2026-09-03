@@ -10,6 +10,7 @@ import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-s
 import { currency, dateShort } from "@/lib/format";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
+import { canonicalSiteUrl } from "@/lib/revora-address";
 import { SiteNav, SitePageView } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
 import { telHref } from "@/components/site/ContactDetails";
@@ -51,7 +52,9 @@ export const Route = createFileRoute("/s/$slug")({
     ).slice(0, 158);
     // Canonical and og:url point at this page itself unless the client set
     // their own canonical address (e.g. after moving to a custom domain).
-    const url = page?.seo_canonical || `https://revoragrowthsystems.com/s/${params.slug}`;
+    const url =
+      canonicalSiteUrl(loaderData.settings, params.slug, page?.slug, page?.seo_canonical) ??
+      `https://revoragrowthsystems.com/s/${params.slug}`;
     const shareImage = page?.og_image_url || loaderData.profile?.hero_image_url || null;
     return {
       meta: [

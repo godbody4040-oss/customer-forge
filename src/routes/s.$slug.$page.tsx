@@ -20,6 +20,7 @@ import { getPublicSite, trackPublicEvent, type PublicSite } from "@/lib/public-s
 import { styleSheet } from "@/lib/site-style";
 import { readSeo } from "@/lib/site-seo";
 import { readCopy } from "@/lib/site-engine";
+import { canonicalSiteUrl } from "@/lib/revora-address";
 
 export const Route = createFileRoute("/s/$slug/$page")({
   loader: async ({ params }) => {
@@ -43,7 +44,8 @@ export const Route = createFileRoute("/s/$slug/$page")({
       `${page.title} from ${name}. See what's included and get a price.`
     ).slice(0, 158);
     const url =
-      page.seo_canonical || `https://revoragrowthsystems.com/s/${params.slug}/${params.page}`;
+      canonicalSiteUrl(loaderData.settings, params.slug, params.page, page.seo_canonical) ??
+      `https://revoragrowthsystems.com/s/${params.slug}/${params.page}`;
     const shareImage = page.og_image_url || loaderData.profile?.hero_image_url || null;
     return {
       meta: [

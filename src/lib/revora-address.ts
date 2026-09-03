@@ -235,3 +235,37 @@ export function liveAddressUrl(
     ? { url, label: url.replace(/^https:\/\//, ""), kind: "path" as const }
     : { url: null, label: null, kind: "none" as const };
 }
+
+/**
+ * The one address search engines should index for a client page.
+ *
+ * A published site can be reached from several places at once (the client's own
+ * domain, a Revora address, and the always-working platform path). Search
+ * engines must be told which one is the real home, or the same page competes
+ * with itself. Order of truth: an explicit canonical the client set, then their
+ * verified live hostname, then the platform path.
+ */
+export function canonicalSiteUrl(
+  settings: {
+    custom_domain?: string | null;
+    subdomain?: string | null;
+    dns_ok?: boolean | null;
+    ssl_ok?: boolean | null;
+    revora_host_ok?: boolean | null;
+  } | null,
+  orgSlug: string | null | undefined,
+  pageSlug?: string | null,
+  explicitCanonical?: string | null,
+) {
+  const explicit = String(explicitCanonical ?? "").trim();
+  if (explicit.startsWith("https://")) return explicit;
+
+  const page = String(pageSlug ?? "").trim();
+  const isHome = !page || page === "home" || page === "index";
+  const host = settings ? primaryAddress(settings) : null;
+  if (host) return isHome ? `https://${host}` : `https://${host}/${page}`;
+
+  const base = clientSiteUrl(orgSlug);
+  if (!base) return null;
+  return isHome ? base : `${base}/${page}`;
+}

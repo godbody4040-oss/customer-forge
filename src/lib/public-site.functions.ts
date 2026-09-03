@@ -155,10 +155,34 @@ export const submitPublicLead = createServerFn({ method: "POST" })
     if (!org?.id) throw new Error("We couldn't find that business.");
     const orgId: string = org.id;
 
-    const { data: lead, error } = await supabase
-      .from("leads")
-      .insert({
-        organization_id: orgId,
+    // Origin event for the CRM timeline: every public submission is visible as
+    // the first activity on the lead, with the channel it came from.
+    const originBody =
+      data.kind === "booking"
+        ? `Booking requested from the public website${data.serviceInterest ? ` — ${data.serviceInterest}` : ""}.`
+        : data.kind === "quote"
+          ? `Quote submitted from the public website — estimate $${data.quote?.min ?? 0}–$${data.quote?.max ?? 0}.`
+          : data.kind === "contact"
+            ? "Contact form submitted from the public website."
+            : "Lead captured from the public website.";
+
+    const titles: Record<string, string> = {
+      inquiry: `New lead: ${data.name}`,
+      contact: `New message: ${data.name}`,
+      quote: `Quote request: ${data.name}`,
+      booking: `New booking request: ${data.name}`,
+      consultation: `Consultation request: ${data.name}`,
+    };
+
+    // A single database transaction writes the lead, quote answers, appointment,
+    // timeline entry and owner notification together. Any failure rolls the whole
+    // thing back, so the visitor never sees a false "sent" and the workspace never
+    // ends up with an orphaned half-record. The function also re-checks that any
+    // service or quote form id really belongs to this business and refuses a time
+    // that clashes with an existing appointment.
+    const { data: result, error } = await supabase.rpc("submit_public_conversion", {
+      _organization_id: orgId,
+      _lead: {
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
@@ -167,19 +191,73 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         message: data.message || null,
         city: data.city || null,
         source: data.source || "website",
-        campaign: data.campaign || null,
+        campaign: data.campaign ?? null,
         status: data.kind === "booking" ? "booked" : data.kind === "quote" ? "quoted" : "new",
         estimated_value: data.estimatedValue,
-      })
-      .select("id")
-      .single();
+      } as never,
+      _quote: data.quote
+        ? ({
+            form_id: data.quote.formId,
+            answers: data.quote.answers,
+            estimate_min: data.quote.min,
+            estimate_max: data.quote.max,
+          } as never)
+        : null,
+      _booking: data.booking
+        ? ({
+            starts_at: data.booking.startsAt,
+            duration_minutes: data.booking.durationMinutes,
+          } as never)
+        : null,
+      _activity: {
+        kind:
+          data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "form_submission",
+        body: [originBody, data.message ? `"${data.message}"` : null].filter(Boolean).join(" "),
+        metadata: {
+          source: data.source || "website",
+          campaign: data.campaign ?? null,
+          city: data.city || null,
+          service_interest: data.serviceInterest || null,
+          estimated_value: data.estimatedValue,
+        },
+      } as never,
+      _notification: {
+        title: titles[data.kind] ?? `New lead: ${data.name}`,
+        body: [
+          data.serviceInterest,
+          data.city,
+          data.estimatedValue ? `$${data.estimatedValue} estimated` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        kind: data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "lead",
+        link: data.kind === "booking" ? "/app/calendar" : "/app/leads",
+      } as never,
+    });
+
     if (error) {
-      console.error("public lead insert failed", error);
+      const message = error.message ?? "";
+      console.error("public submission failed", message);
+      if (message.includes("BOOKING_CONFLICT") || message.includes("appointments_no_overlap")) {
+        throw new Error("That time was just taken. Please pick another time.");
+      }
+      if (message.includes("TIME_IN_PAST")) throw new Error("Please pick a time in the future.");
+      if (message.includes("INVALID_TIME")) throw new Error("Pick a valid appointment time.");
+      if (message.includes("INVALID_SERVICE") || message.includes("INVALID_QUOTE_FORM")) {
+        throw new Error("That service is no longer available. Please refresh and try again.");
+      }
       throw new Error("We couldn't save your request. Please try again.");
     }
 
+    const saved = (result ?? {}) as { lead_id?: string; appointment_id?: string | null };
+    const leadId = String(saved.lead_id ?? "");
+    if (!leadId) throw new Error("We couldn't save your request. Please try again.");
+    const lead = { id: leadId };
+
     // Funnel milestones: recorded only the first time a workspace reaches them,
     // so attribution shows sign-up -> first quote -> first booking per client.
+    // These run after the transaction commits: a reporting write must never be
+    // able to lose a customer's request.
     const recordMilestone = async (event: string, amountCents?: number | null) => {
       const { data: seen } = await supabase
         .from("marketing_conversions")
@@ -194,92 +272,14 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         metadata: { organization_id: orgId, source: data.source || "website" } as never,
       });
     };
+    if (data.quote) await recordMilestone("first_quote_request", Math.round((data.quote.min ?? 0) * 100));
+    if (data.booking) await recordMilestone("first_booking");
 
-    if (data.quote) {
-      await supabase.from("quote_requests").insert({
-        organization_id: orgId,
-        form_id: data.quote.formId,
-        lead_id: lead.id,
-        answers: data.quote.answers,
-        estimate_min: data.quote.min,
-        estimate_max: data.quote.max,
-      });
-      await recordMilestone("first_quote_request", Math.round((data.quote.min ?? 0) * 100));
-    }
-
-    let appointmentId: string | null = null;
-    if (data.booking) {
-      const starts = new Date(data.booking.startsAt);
-      if (Number.isNaN(starts.getTime())) throw new Error("Pick a valid appointment time.");
-      const ends = new Date(starts.getTime() + data.booking.durationMinutes * 60_000);
-      const { data: appointment } = await supabase
-        .from("appointments")
-        .insert({
-          organization_id: orgId,
-          lead_id: lead.id,
-          service_id: data.serviceId || null,
-          name: data.name,
-          email: data.email || null,
-          phone: data.phone || null,
-          starts_at: starts.toISOString(),
-          ends_at: ends.toISOString(),
-          status: "pending",
-          notes: data.message || null,
-        })
-        .select("id")
-        .single();
-      appointmentId = appointment?.id ?? null;
-      await recordMilestone("first_booking");
-    }
-
-    // Origin event for the CRM timeline: every public submission is visible as
-    // the first activity on the lead, with the channel it came from.
-    const originBody =
-      data.kind === "booking"
-        ? `Booking requested from the public website${data.serviceInterest ? ` — ${data.serviceInterest}` : ""}.`
-        : data.kind === "quote"
-          ? `Quote submitted from the public website — estimate $${data.quote?.min ?? 0}–$${data.quote?.max ?? 0}.`
-          : data.kind === "contact"
-            ? "Contact form submitted from the public website."
-            : "Lead captured from the public website.";
-    const { error: activityError } = await supabase.from("lead_activities").insert({
-      organization_id: orgId,
-      lead_id: lead.id,
-      appointment_id: appointmentId,
-      kind:
-        data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "form_submission",
-      body: [originBody, data.message ? `"${data.message}"` : null].filter(Boolean).join(" "),
-      metadata: {
-        source: data.source || "website",
-        campaign: data.campaign ?? null,
-        city: data.city || null,
-        service_interest: data.serviceInterest || null,
-        estimated_value: data.estimatedValue,
-      } as never,
-    });
-    if (activityError) console.error("public lead activity insert failed", activityError);
-
-    const titles: Record<string, string> = {
-      inquiry: `New lead: ${data.name}`,
-      contact: `New message: ${data.name}`,
-      quote: `Quote request: ${data.name}`,
-      booking: `New booking request: ${data.name}`,
-      consultation: `Consultation request: ${data.name}`,
-    };
-    await supabase.from("notifications").insert({
-      organization_id: orgId,
-      title: titles[data.kind] ?? `New lead: ${data.name}`,
-      body: [
-        data.serviceInterest,
-        data.city,
-        data.estimatedValue ? `$${data.estimatedValue} estimated` : null,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      kind: data.kind === "booking" ? "booking" : data.kind === "quote" ? "quote" : "lead",
-      link: data.kind === "booking" ? "/app/calendar" : "/app/leads",
-    });
-
+    // Everything below is a post-commit side effect (owner alert, follow-up
+    // automations). The customer's request is already durably saved, so a
+    // provider outage here must never delete it or fail the submission.
+    let deliveryOk = true;
+    try {
     // Owner alert + customer follow-ups. Delivery happens here (server side) so
     // "sent" always means a provider accepted the message.
     const { data: profile } = await supabase
@@ -348,9 +348,24 @@ export const submitPublicLead = createServerFn({ method: "POST" })
         deliver: (run) => deliverRun(run, { businessName: org.name, replyTo: ownerEmail }),
       },
     );
+    } catch (sideEffectError) {
+      deliveryOk = false;
+      console.error(
+        "post-submission delivery failed",
+        sideEffectError instanceof Error ? sideEffectError.message : sideEffectError,
+      );
+      await supabase.from("lead_activities").insert({
+        organization_id: orgId,
+        lead_id: lead.id,
+        kind: "note",
+        body: "Owner alert or follow-up automation couldn't be delivered for this request.",
+        metadata: { delivery: "failed" } as never,
+      });
+    }
 
-    return { ok: true, leadId: lead.id, business: org.name };
+    return { ok: true, leadId: lead.id, business: org.name, notified: deliveryOk };
   });
+
 
 /** Fire-and-forget public analytics event (page views, CTA clicks). */
 export const trackPublicEvent = createServerFn({ method: "POST" })
