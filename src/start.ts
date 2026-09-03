@@ -40,10 +40,20 @@ const trafficDomainRedirect = createMiddleware().server(async ({ next, request }
   const url = new URL(request.url);
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
   if (!isTrafficDomainHost(host)) return next();
+  // Loop protection. If the hosting layer is ever configured with the traffic
+  // domain as the primary domain, it bounces the platform domain back here and
+  // this redirect would ping-pong forever. The marker below survives that
+  // bounce, so a request that has already been redirected once is served
+  // instead of redirected again — the platform stays reachable no matter how
+  // the domains are configured. Normal traffic-domain visits never carry it.
+  if (url.searchParams.has(TRAFFIC_REDIRECT_MARKER)) return next();
+  const search = url.search
+    ? `${url.search}&${TRAFFIC_REDIRECT_MARKER}=1`
+    : `?${TRAFFIC_REDIRECT_MARKER}=1`;
   return new Response(null, {
     status: request.method === "GET" || request.method === "HEAD" ? 301 : 308,
     headers: {
-      location: trafficRedirectUrl(url.pathname, url.search),
+      location: trafficRedirectUrl(url.pathname, search),
       "cache-control": "public, max-age=3600",
     },
   }) as never;
