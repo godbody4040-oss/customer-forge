@@ -2,7 +2,7 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
-import { SITE_ROOT } from "@/lib/revora-address";
+import { isTrafficDomainHost, trafficRedirectUrl } from "@/lib/revora-address";
 import { withSecurityHeaders } from "@/lib/security-headers";
 
 /**
@@ -134,26 +134,16 @@ const customDomainRedirect = createMiddleware().server(async ({ next, request })
 // from cross-site requests.
 const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
-  // Client websites are served on *.revoraweb.site through the Cloudflare
-  // proxy, so a visitor's browser legitimately POSTs server-function calls
-  // with an Origin of their own client subdomain. That entire domain is
-  // Revora's hosting domain — every origin on it is a site this app serves —
-  // so it is trusted. Everything else must still match the request's origin.
-  origin: (origin, ctx) => {
-    if (origin === new URL(ctx.request.url).origin) return true;
-    try {
-      const hostname = new URL(origin).hostname.toLowerCase();
-      return hostname === SITE_ROOT || hostname.endsWith(`.${SITE_ROOT}`);
-    } catch {
-      return false;
-    }
-  },
+  // The platform domain is the only application origin. `revoraweb.site` is a
+  // traffic/redirect domain and is never trusted as a server-function origin.
+  origin: (origin, ctx) => origin === new URL(ctx.request.url).origin,
 });
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [
     securityHeadersMiddleware,
+    trafficDomainRedirect,
     errorMiddleware,
     csrfMiddleware,
     customDomainRedirect,

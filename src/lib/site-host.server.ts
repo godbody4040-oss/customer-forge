@@ -17,6 +17,7 @@ import { guidePaths } from "@/lib/guides";
 import {
   REVORA_OWN_HOSTS,
   isRevoraOwnHost,
+  isTrafficDomainHost,
   normalizeHost,
   revoraSubdomainFromHost,
 } from "@/lib/revora-address";
@@ -58,6 +59,10 @@ export async function resolveTenantHost(rawHost: string | null): Promise<TenantH
   if (!rawHost) return null;
   const host = normalizeHost(rawHost);
   if (!host || isRevoraOwnHost(host)) return null;
+  // `revoraweb.site` is traffic-only: no hostname on it may ever resolve to a
+  // client website (the redirect middleware sends those visitors to the
+  // platform domain before this is reached).
+  if (isTrafficDomainHost(host)) return null;
 
   // Address settings are private, so the lookup runs with server credentials on
   // the server only. It returns nothing but the owning workspace, and callers
