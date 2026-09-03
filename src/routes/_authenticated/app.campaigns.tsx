@@ -1,4 +1,3 @@
-import { revoraUrl } from "@/lib/revora-address";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
@@ -117,8 +116,6 @@ function CampaignsPage() {
   const siteOrigin = useMemo(() => {
     const custom = settings.data?.custom_domain;
     if (custom && settings.data?.domain_verified) return `https://${custom}`;
-    const free = revoraUrl(settings.data?.subdomain);
-    if (free && settings.data?.revora_host_ok) return free;
     if (typeof window !== "undefined" && org?.slug)
       return `${window.location.origin}/s/${org.slug}`;
     return org?.slug ? `/s/${org.slug}` : "";
