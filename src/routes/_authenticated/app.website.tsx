@@ -43,6 +43,7 @@ import { PreFlightPanel, ServiceStatusPanel } from "@/components/app/PreFlight";
 import { claimStates } from "@/lib/claim-registry";
 import { preflight } from "@/lib/preflight";
 import { usePreflightFacts } from "@/lib/preflight.hooks";
+import { useSelfHeal } from "@/lib/self-heal.hooks";
 import { ClientOnboardingFlow } from "@/components/app/ClientOnboardingFlow";
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
@@ -110,6 +111,7 @@ function WebsitePage() {
   const { data: readiness } = useBuildReadiness(orgId);
   const facts = useScoreFacts(orgId);
   const preflightFacts = usePreflightFacts(orgId);
+  const selfHeal = useSelfHeal(orgId);
   const generation = (settings?.generation ?? null) as Record<string, unknown> | null;
   const copy = readCopy(generation?.["copy"]);
   const brief = readBrief(generation?.["brief"]);
@@ -448,6 +450,9 @@ function WebsitePage() {
             canPublish={manage && production?.unlocked !== false}
             isPublishing={launchFlow.isLaunching}
             onPublish={() => launchFlow.launch()}
+            {...(manage ? { onSelfHeal: () => selfHeal.mutate() } : {})}
+            isHealing={selfHeal.isPending}
+            healSummary={selfHeal.data?.summary ?? null}
           />
           <ProductionReadinessPanel
             readiness={productionReadiness}
