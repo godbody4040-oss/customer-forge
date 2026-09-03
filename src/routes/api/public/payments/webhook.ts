@@ -316,7 +316,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
 /**
  * Event-level idempotency: Stripe delivers at least once, so a verified event
  * id is claimed in `payment_events` (unique per provider) before any side
- * effect runs. A duplicate delivery short-circuits with 200.
+ * effect runs. A duplicate delivery short-circuits with 200; a transient
+ * database failure is reported as retryable and never treated as a duplicate.
  */
 async function claimEvent(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -324,20 +325,77 @@ async function claimEvent(
   env: StripeEnv,
 ) {
   const { adminClient } = await import("@/lib/payments.server");
+  const { classifyClaimError, organizationIdFromStripeObject } =
+    await import("@/lib/webhook-claim");
   const admin = await adminClient();
   const eventId = String(event.id ?? "");
-  if (!eventId) return { claimed: true as const, admin, eventId };
+  const organizationId = organizationIdFromStripeObject(event.data?.object);
+  if (!eventId) return { outcome: "claimed" as const, admin, eventId, organizationId };
   const { error } = await admin.from("payment_events").insert({
     provider: "stripe",
     provider_event_id: eventId,
     event_type: event.type,
     resource_id: String(event.data?.object?.id ?? ""),
+    organization_id: organizationId,
     verification_status: "verified",
     processed: false,
     payload: { environment: env, type: event.type },
   });
-  if (error) return { claimed: false as const, admin, eventId };
-  return { claimed: true as const, admin, eventId };
+  if (error) {
+    const outcome = classifyClaimError(error);
+    if (outcome === "transient") {
+      console.error("[payments:webhook] claim failed (retryable)", error.message);
+    }
+    return { outcome, admin, eventId, organizationId };
+  }
+  return { outcome: "claimed" as const, admin, eventId, organizationId };
+}
+
+/**
+ * Links the processed event row to the payment record it produced, so an
+ * authenticated member can see their own payment history through RLS without
+ * any policy being weakened.
+ */
+async function associateEvent(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any,
+  eventId: string,
+  organizationId: string | null,
+  resourceId: string,
+) {
+  let paymentId: string | null = null;
+  if (organizationId && resourceId) {
+    for (const stripeId of [resourceId, `setup:${resourceId}`]) {
+      const { data } = await admin
+        .from("payments")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .contains("metadata", { stripe_id: stripeId })
+        .maybeSingle();
+      if (data?.id) {
+        paymentId = data.id as string;
+        break;
+      }
+    }
+    if (!paymentId) {
+      const { data } = await admin
+        .from("payments")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .contains("metadata", { stripe_session_id: resourceId })
+        .maybeSingle();
+      paymentId = (data?.id as string | undefined) ?? null;
+    }
+  }
+  await admin
+    .from("payment_events")
+    .update({
+      processed: true,
+      ...(organizationId ? { organization_id: organizationId } : {}),
+      ...(paymentId ? { payment_id: paymentId } : {}),
+    })
+    .eq("provider", "stripe")
+    .eq("provider_event_id", eventId);
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
@@ -346,8 +404,9 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
       POST: async ({ request }) => {
         const rawEnv = new URL(request.url).searchParams.get("env");
         if (rawEnv !== "sandbox" && rawEnv !== "live") {
+          // A misconfigured endpoint must fail loudly — never a fake success.
           console.error("[payments:webhook] invalid env", rawEnv);
-          return Response.json({ received: true, ignored: "invalid env" });
+          return new Response("Invalid or missing env query parameter", { status: 400 });
         }
         try {
           const event = (await verifyWebhook(request, rawEnv)) as {
@@ -357,7 +416,10 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
             data: { object: any };
           };
           const claim = await claimEvent(event, rawEnv);
-          if (!claim.claimed) return Response.json({ received: true, duplicate: true });
+          if (claim.outcome === "duplicate")
+            return Response.json({ received: true, duplicate: true });
+          if (claim.outcome === "transient")
+            return new Response("Temporarily unable to record webhook", { status: 503 });
           try {
             await handleEvent(event, rawEnv);
           } catch (failure) {
@@ -376,11 +438,12 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
             return new Response("Webhook processing failed", { status: 500 });
           }
           if (claim.eventId) {
-            await claim.admin
-              .from("payment_events")
-              .update({ processed: true })
-              .eq("provider", "stripe")
-              .eq("provider_event_id", claim.eventId);
+            await associateEvent(
+              claim.admin,
+              claim.eventId,
+              claim.organizationId,
+              String(event.data?.object?.id ?? ""),
+            );
           }
           return Response.json({ received: true });
         } catch (error) {
@@ -388,6 +451,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           console.error("[payments:webhook] error", (error as Error).message);
           return new Response("Webhook error", { status: 400 });
         }
+
       },
     },
   },
