@@ -11,6 +11,7 @@ import { AlertTriangle, Check, Loader2, MinusCircle, ShieldCheck, X } from "luci
 import { Button } from "@/components/ui/button";
 import type { PreflightCheck, PreflightGroup, PreflightResult } from "@/lib/preflight";
 import { autoFixable } from "@/lib/preflight";
+import type { ClaimState } from "@/lib/claim-registry";
 
 const groupIcon = (group: PreflightGroup) => {
   if (group.status === "fail") return <X className="size-3.5 text-destructive" aria-hidden />;
@@ -142,6 +143,49 @@ export function PreFlightPanel({
           </span>
         ) : null}
       </div>
+    </section>
+  );
+}
+
+/**
+ * Every capability Revora advertises, with its real state for this workspace.
+ * A promise with no implementation can't appear here — the claim registry test
+ * fails the build first.
+ */
+export function ServiceStatusPanel({ states }: { states: ClaimState[] }) {
+  return (
+    <section className="panel p-4" aria-labelledby="claims-title">
+      <h2 id="claims-title" className="text-[14px] font-semibold">
+        Your Revora services
+      </h2>
+      <p className="mt-1 text-[12px] text-muted-foreground">
+        What you were promised, and whether it is switched on for your business right now.
+      </p>
+      <ul className="mt-3 space-y-2">
+        {states.map(({ claim, live, detail }) => (
+          <li
+            key={claim.key}
+            className="flex items-start justify-between gap-3 rounded-md border border-border/60 bg-card/40 p-3"
+          >
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium">{claim.promise}</p>
+              {detail ? (
+                <p className="mt-0.5 text-[12px] text-muted-foreground">{detail}</p>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {live ? (
+                <Check className="size-3.5 text-primary" aria-label="Live" />
+              ) : (
+                <MinusCircle className="size-3.5 text-muted-foreground" aria-label="Not on yet" />
+              )}
+              <Button asChild size="sm" variant="outline">
+                <Link to={claim.to}>Open</Link>
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
