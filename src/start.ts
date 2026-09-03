@@ -2,7 +2,7 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
-import { SITE_ROOT } from "@/lib/revora-address";
+import { isTrafficDomainHost, trafficRedirectUrl } from "@/lib/revora-address";
 import { withSecurityHeaders } from "@/lib/security-headers";
 
 /**
@@ -25,6 +25,28 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next, reque
     }
   }
   return result as never;
+});
+
+/**
+ * `revoraweb.site` is a TRAFFIC-ONLY domain: it never serves the application
+ * and never serves a client website. Anything arriving on it (apex, www, or any
+ * subdomain) is permanently redirected to the platform domain, preserving the
+ * path so marketing links keep working. The target origin is hardcoded, so no
+ * query parameter or header can turn this into an open redirect, and the
+ * platform domain itself is never redirected, so no loop is possible.
+ */
+const trafficDomainRedirect = createMiddleware().server(async ({ next, request }) => {
+  if (!request) return next();
+  const url = new URL(request.url);
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
+  if (!isTrafficDomainHost(host)) return next();
+  return new Response(null, {
+    status: request.method === "GET" || request.method === "HEAD" ? 301 : 308,
+    headers: {
+      location: trafficRedirectUrl(url.pathname, url.search),
+      "cache-control": "public, max-age=3600",
+    },
+  }) as never;
 });
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
@@ -112,26 +134,16 @@ const customDomainRedirect = createMiddleware().server(async ({ next, request })
 // from cross-site requests.
 const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
-  // Client websites are served on *.revoraweb.site through the Cloudflare
-  // proxy, so a visitor's browser legitimately POSTs server-function calls
-  // with an Origin of their own client subdomain. That entire domain is
-  // Revora's hosting domain — every origin on it is a site this app serves —
-  // so it is trusted. Everything else must still match the request's origin.
-  origin: (origin, ctx) => {
-    if (origin === new URL(ctx.request.url).origin) return true;
-    try {
-      const hostname = new URL(origin).hostname.toLowerCase();
-      return hostname === SITE_ROOT || hostname.endsWith(`.${SITE_ROOT}`);
-    } catch {
-      return false;
-    }
-  },
+  // The platform domain is the only application origin. `revoraweb.site` is a
+  // traffic/redirect domain and is never trusted as a server-function origin.
+  origin: (origin, ctx) => origin === new URL(ctx.request.url).origin,
 });
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [
     securityHeadersMiddleware,
+    trafficDomainRedirect,
     errorMiddleware,
     csrfMiddleware,
     customDomainRedirect,

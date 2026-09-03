@@ -121,6 +121,31 @@ export const RESERVED_SUBDOMAINS = [
   "invite",
 ];
 
+/**
+ * TRAFFIC-ONLY DOMAIN.
+ *
+ * `revoraweb.site` (apex, `www`, and any subdomain) exists solely to send
+ * visitors to the platform domain. It is never an application origin and never
+ * hosts a client website; every request on it is permanently redirected.
+ */
+export function isTrafficDomainHost(rawHost: string | null | undefined) {
+  const host = String(rawHost ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\.+$/, "")
+    .split(":")[0]!
+    .replace(/\.+$/, "");
+  return host === SITE_ROOT || host.endsWith(`.${SITE_ROOT}`);
+}
+
+/** The single safe redirect target for traffic-domain requests. */
+export function trafficRedirectUrl(pathname: string, search = "") {
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  // The origin is fixed, so no visitor-supplied value can ever redirect off
+  // the platform. Path/query are carried through unchanged and inert.
+  return `https://${REVORA_ROOT}${path}${search}`;
+}
+
 export function normalizeSubdomain(value: string | null | undefined) {
   return String(value ?? "")
     .trim()

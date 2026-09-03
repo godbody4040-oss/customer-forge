@@ -9,6 +9,8 @@ import {
   REVORA_ROOT,
   RESERVED_SUBDOMAINS,
   SITE_ROOT,
+  isTrafficDomainHost,
+  trafficRedirectUrl,
   canonicalSiteUrl,
   isRevoraOwnHost,
   normalizeHost,
@@ -130,11 +132,12 @@ describe("client website canonical urls", () => {
   });
 });
 
-describe("cloudflare hosting worker", () => {
+describe("cloudflare traffic-domain worker", () => {
   const call = (url: string, init?: RequestInit) => worker.fetch(new Request(url, init));
 
-  it("refuses hosts that are not one-level client addresses", async () => {
+  it("refuses every host except the traffic domain and its www form", async () => {
     for (const url of [
+      `https://business.${SITE_ROOT}/`,
       `https://a.b.${SITE_ROOT}/`,
       `https://evil${SITE_ROOT}/`,
       `https://-bad.${SITE_ROOT}/`,
@@ -145,14 +148,74 @@ describe("cloudflare hosting worker", () => {
     }
   });
 
-  it("refuses unsupported methods", async () => {
-    // `Request` itself forbids TRACE, so the edge case is exercised with the
-    // same shape the Worker runtime hands the handler.
+  it("redirects non-idempotent methods without losing the target", async () => {
+    // Worker-shaped request: the runtime passes methods `Request` may reject.
     const res = await worker.fetch({
-      method: "TRACE",
-      url: `https://business.${SITE_ROOT}/`,
+      method: "POST",
+      url: `https://${SITE_ROOT}/pricing`,
       headers: new Headers(),
     } as unknown as Request);
-    expect(res.status).toBe(405);
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe("https://revoragrowthsystems.com/pricing");
+  });
+});
+
+describe("revoraweb.site is a traffic-only redirect domain", () => {
+  it("recognises every form of the traffic domain", () => {
+    for (const host of [
+      SITE_ROOT,
+      `www.${SITE_ROOT}`,
+      `business.${SITE_ROOT}`,
+      `BUSINESS.${SITE_ROOT}.`,
+      `business.${SITE_ROOT}:443`,
+    ]) {
+      expect(isTrafficDomainHost(host)).toBe(true);
+    }
+    // The platform domain and look-alikes are never the traffic domain, so the
+    // redirect can never loop or capture unrelated hosts.
+    for (const host of ["revoragrowthsystems.com", `evil${SITE_ROOT}`, "example.com", ""]) {
+      expect(isTrafficDomainHost(host)).toBe(false);
+    }
+  });
+
+  it("redirects apex, www and marketing paths to the platform domain", () => {
+    expect(trafficRedirectUrl("/")).toBe("https://revoragrowthsystems.com/");
+    expect(trafficRedirectUrl("/pricing")).toBe("https://revoragrowthsystems.com/pricing");
+    expect(trafficRedirectUrl("/contact")).toBe("https://revoragrowthsystems.com/contact");
+    expect(trafficRedirectUrl("/about")).toBe("https://revoragrowthsystems.com/about");
+  });
+
+  it("cannot be turned into an open redirect", () => {
+    for (const attempt of [
+      ["/", "?redirect=https://example.com"],
+      ["/", "?next=//evil.tld"],
+      ["//evil.tld/path", ""],
+    ] as const) {
+      const url = trafficRedirectUrl(attempt[0], attempt[1]);
+      expect(new URL(url).origin).toBe("https://revoragrowthsystems.com");
+    }
+  });
+
+  it("keeps Revora-branded client subdomain hosting switched off", async () => {
+    const { REVORA_SUBDOMAIN_HOSTING_ENABLED, revoraHostIsLive } =
+      await import("@/lib/revora-address");
+    expect(REVORA_SUBDOMAIN_HOSTING_ENABLED).toBe(false);
+    expect(revoraHostIsLive({ subdomain: "business", revora_host_ok: true })).toBe(false);
+  });
+
+  it("worker redirects the traffic domain and refuses everything else", async () => {
+    const worker = (await import("../../cloudflare/worker.js")).default;
+    for (const url of [
+      `https://${SITE_ROOT}/pricing?redirect=https://example.com`,
+      `https://www.${SITE_ROOT}/about`,
+    ]) {
+      const res = await worker.fetch(new Request(url));
+      expect(res.status).toBe(301);
+      expect(new URL(res.headers.get("location")!).origin).toBe("https://revoragrowthsystems.com");
+    }
+    // A client subdomain must never be served as a website by the edge.
+    for (const url of [`https://business.${SITE_ROOT}/`, `https://evil${SITE_ROOT}/`]) {
+      expect((await worker.fetch(new Request(url))).status).toBe(404);
+    }
   });
 });
