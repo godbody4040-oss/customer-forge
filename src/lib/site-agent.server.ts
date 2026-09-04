@@ -12,6 +12,7 @@
  */
 
 import { AiGatewayError } from "@/lib/site-engine.server";
+import { translateIntent } from "@/lib/intent-translator";
 import {
   MAX_ACTIONS,
   readChapters,
@@ -139,7 +140,16 @@ RESPONSE FORMAT — a single JSON object, no markdown:
   "questions": ["only genuine blockers — facts you need from the owner"],
   "notes": ["anything you deliberately did not do"]
 }
-When the request is a question rather than a change, answer it in "reply" and return an empty "actions" array.`;
+When the request is a question rather than a change, answer it in "reply" and return an empty "actions" array.
+
+PLAIN LANGUAGE, NO REVORA TERMS
+- The owner does not know Revora's vocabulary and must never be asked to learn it.
+  Never reply that a request is unclear, unsupported or "not in Revora's terms",
+  and never ask them to reword it. Read the intent and act on it.
+- Work out for yourself which pages, sections, copy, design, search text, photos,
+  buttons and functionality the request implies, even when none of them are named.
+- Ask at most ONE question, only when a fact you cannot know is the only thing
+  blocking the work. Otherwise proceed and record assumptions in "notes".`)
 
 function siteMap(context: AgentContext) {
   return JSON.stringify(
