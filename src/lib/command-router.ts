@@ -8,10 +8,12 @@
  * billing, leads, quotes, booking, automations, analytics or media.
  *
  * It never claims to have done the work. It returns where the work happens and,
- * for assistant work, the instruction to hand over. Anything it can't place with
- * confidence goes to the assistant with `confident: false`, so the UI can say so
- * honestly instead of guessing.
+ * for assistant work, the instruction to hand over. Nothing is ever rejected for
+ * not matching a known command: anything a rule doesn't claim is translated into
+ * builder work by the intent translator and handed to the assistant.
  */
+
+import { translateIntent } from "@/lib/intent-translator";
 
 export type CommandTarget =
   | "assistant"
@@ -227,7 +229,7 @@ export function routeCommand(input: string): RoutedCommand {
   if (!text) {
     return {
       target: "assistant",
-      action: "Tell Revora what you'd like changed",
+      action: "Tell Revora what you want in your own words — it'll handle the rest",
       route: null,
       anchor: "website-assistant",
       instruction: null,
@@ -247,16 +249,16 @@ export function routeCommand(input: string): RoutedCommand {
     };
   }
 
-  const looksLikeSiteEdit = ASSISTANT_HINTS.some((pattern) => pattern.test(text));
+  // No rule matched, and that is not a rejection: the intent translator turns
+  // any wording into builder work, so this always goes to the assistant.
+  const intent = translateIntent(text);
   return {
     target: "assistant",
-    action: looksLikeSiteEdit
-      ? "Hand this to the website assistant"
-      : "Revora isn't certain where this belongs — the assistant will read it",
+    action: intent.restated,
     route: null,
     anchor: "website-assistant",
     instruction: text,
-    confident: looksLikeSiteEdit,
+    confident: true,
   };
 }
 
