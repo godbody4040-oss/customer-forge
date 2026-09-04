@@ -243,7 +243,17 @@ export async function planChanges(
   history: AgentTurn[],
   attachments: AgentAttachment[] = [],
 ): Promise<Record<string, unknown>> {
-  const parts: ContentPart[] = [{ type: "text", text: `REQUEST FROM THE OWNER:\n${instruction}` }];
+  const intent = translateIntent(instruction);
+  const parts: ContentPart[] = [
+    {
+      type: "text",
+      text: `REQUEST FROM THE OWNER:\n${instruction}\n\nTRANSLATED BRIEF (worked out from their words — the owner does not know Revora's terms):\n${intent.brief}${
+        intent.question
+          ? `\n\nIf and only if this is genuinely blocking, ask exactly this one question and nothing else: ${intent.question}`
+          : ""
+      }`,
+    },
+  ];
   if (attachments.length) {
     parts.push({
       type: "text",
