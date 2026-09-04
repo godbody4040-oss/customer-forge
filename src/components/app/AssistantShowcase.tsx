@@ -45,9 +45,10 @@ export function AssistantShowcase() {
           Your whole build team, in one box
         </h2>
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
-          Type what you want in normal words and the assistant does the work — new pages and
-          sections, sharper selling copy, quote and booking forms, search settings, colours and
-          fonts, photos and video, plus premium visuals like{" "}
+          Tell Revora what you want in your own words — it'll handle the rest. There is nothing to
+          learn: describe the outcome and the assistant does the work — new pages and sections,
+          sharper selling copy, quote and booking forms, search settings, colours and fonts, photos
+          and video, plus premium visuals like{" "}
           <span className="text-gold">animated star backgrounds</span>,{" "}
           <span className="text-gold">3D floating sections</span>, frosted glass and gold glow. It
           always shows you the plan first, you approve it, and every change is saved as a version
@@ -68,8 +69,8 @@ export function AssistantShowcase() {
           ))}
         </div>
         <p className="mt-3 text-[11.5px] text-muted-foreground">
-          Tap an example to load it into the assistant, or write your own — nothing is applied until
-          you approve it.
+          Tap an example or write your own words — any wording works, and nothing is applied until
+          you approve it. Every change is previewed first and can be rolled back.
         </p>
       </div>
     </section>

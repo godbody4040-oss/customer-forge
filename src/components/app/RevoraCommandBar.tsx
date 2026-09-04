@@ -53,8 +53,8 @@ export function RevoraCommandBar({ className }: { className?: string }) {
         Tell Revora what you want
       </div>
       <p className="mt-1 text-[12px] text-muted-foreground">
-        Tell Revora what you want in your own words — it'll handle the rest. No special wording,
-        no menus to learn.
+        Tell Revora what you want in your own words — it'll handle the rest. No special wording, no
+        menus to learn.
       </p>
       <form
         className="mt-3 flex flex-col gap-2 sm:flex-row"

@@ -19,14 +19,7 @@
 
 /** The parts of the site a request touches, in the owner's language. */
 export type IntentArea =
-  | "pages"
-  | "sections"
-  | "copy"
-  | "design"
-  | "seo"
-  | "images"
-  | "cta"
-  | "functionality";
+  "pages" | "sections" | "copy" | "design" | "seo" | "images" | "cta" | "functionality";
 
 export type TranslatedIntent = {
   /** The owner's words, cleaned up but never rewritten. */
@@ -105,9 +98,7 @@ const SIGNALS: Signal[] = [
   },
   {
     area: "seo",
-    patterns: [
-      /\b(seo|google|search|rank|keyword|found|find me|traffic|sitemap|schema|meta)\b/i,
-    ],
+    patterns: [/\b(seo|google|search|rank|keyword|found|find me|traffic|sitemap|schema|meta)\b/i],
     brief:
       "Write a unique search title and description for every page involved, keep pages indexable, and use the words real customers search for.",
   },
@@ -193,9 +184,9 @@ export function translateIntent(input: string): TranslatedIntent {
   const areas = matched.map((signal) => signal.area);
   // Nothing recognised is still a real request: treat it as page work on copy
   // and conversion, which is what almost every plain-language ask comes down to.
-  const guidance = (matched.length ? matched : SIGNALS.filter((s) => s.area === "copy" || s.area === "cta")).map(
-    (signal) => signal.brief,
-  );
+  const guidance = (
+    matched.length ? matched : SIGNALS.filter((s) => s.area === "copy" || s.area === "cta")
+  ).map((signal) => signal.brief);
 
   const blocker = BLOCKERS.find((entry) => entry.patterns.some((p) => p.test(original)))?.question;
 
