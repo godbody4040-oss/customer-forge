@@ -253,14 +253,21 @@ export function SiteChatbot({
         }
       />
       <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 p-3.5">
-        <p className="text-[12.5px] font-medium text-primary">How to use this to win more work</p>
+        <p className="text-[12.5px] font-medium text-primary">
+          Tell Revora what you want in your own words — it'll handle the rest
+        </p>
         <ol className="mt-1.5 grid gap-1 text-[12px] text-muted-foreground">
           <li>
-            1. Say what you want in plain words — “make the home page sell emergency callouts”.
+            1. Describe the change however you'd say it out loud — no Revora wording to learn.
           </li>
           <li>2. Revora shows a plan of the exact changes before anything is written.</li>
           <li>3. Approve it and your pages, buttons, forms and search text update together.</li>
         </ol>
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          Revora works out the pages, sections, copy, design, search text, photos, buttons and
+          functionality your request needs, and only asks a question when a fact is genuinely
+          missing.
+        </p>
         <p className="mt-2 text-[12px] text-muted-foreground">
           Ask for lead-generator work, not decoration: clear call, text, book and quote buttons on
           every page, prices, proof, answers to the questions that stop people buying, and a
@@ -330,7 +337,7 @@ export function SiteChatbot({
           value={instruction}
           onChange={(event) => setInstruction(event.target.value.slice(0, PLAN_INSTRUCTION_LIMIT))}
           placeholder={
-            "e.g. Rewrite the home page for emergency callouts, add an FAQ about pricing, move reviews above services, and write meta descriptions for every page."
+            "e.g. I want more emergency callouts — make the home page about that and make it easy to phone me."
           }
           disabled={!canManage || !hasSections}
           aria-label="Tell Revora what to change"

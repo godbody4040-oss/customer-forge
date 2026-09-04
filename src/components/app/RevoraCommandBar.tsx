@@ -53,7 +53,8 @@ export function RevoraCommandBar({ className }: { className?: string }) {
         Tell Revora what you want
       </div>
       <p className="mt-1 text-[12px] text-muted-foreground">
-        Plain words are fine. Revora works out which part of your system handles it.
+        Tell Revora what you want in your own words — it'll handle the rest. No special wording, no
+        menus to learn.
       </p>
       <form
         className="mt-3 flex flex-col gap-2 sm:flex-row"
@@ -69,7 +70,7 @@ export function RevoraCommandBar({ className }: { className?: string }) {
           id="revora-command-input"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="e.g. Make my homepage convert better"
+          placeholder="e.g. I want more emergency callouts from my home page"
           autoComplete="off"
         />
         <Button type="submit" disabled={!value.trim()}>
@@ -93,9 +94,7 @@ export function RevoraCommandBar({ className }: { className?: string }) {
       </div>
       {last ? (
         <p className="mt-3 text-[12px]" role="status">
-          {last.confident
-            ? `Revora is taking you to: ${last.action}.`
-            : `${last.action}. If that's not right, say it a different way.`}
+          {`${last.action}${last.action.endsWith(".") ? "" : "."}`}
         </p>
       ) : null}
     </section>

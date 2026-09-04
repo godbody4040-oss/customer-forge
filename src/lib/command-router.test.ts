@@ -37,11 +37,12 @@ describe("command router", () => {
     expect(routed.instruction).toBe("Add a page for gutter cleaning");
   });
 
-  it("admits when it is not sure instead of guessing", () => {
-    const routed = routeCommand("asdkjhaskdjh");
+  it("never rejects wording it has no rule for", () => {
+    const routed = routeCommand("i want people to stop leaving my page");
     expect(routed.target).toBe("assistant");
-    expect(routed.confident).toBe(false);
-    expect(routed.action).toMatch(/isn't certain/);
+    expect(routed.confident).toBe(true);
+    expect(routed.instruction).toBe("i want people to stop leaving my page");
+    expect(routed.action).toMatch(/Revora will handle/);
   });
 
   it("handles an empty command without throwing", () => {
