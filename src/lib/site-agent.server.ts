@@ -149,7 +149,7 @@ PLAIN LANGUAGE, NO REVORA TERMS
 - Work out for yourself which pages, sections, copy, design, search text, photos,
   buttons and functionality the request implies, even when none of them are named.
 - Ask at most ONE question, only when a fact you cannot know is the only thing
-  blocking the work. Otherwise proceed and record assumptions in "notes".`)
+  blocking the work. Otherwise proceed and record assumptions in "notes".`;
 
 function siteMap(context: AgentContext) {
   return JSON.stringify(
