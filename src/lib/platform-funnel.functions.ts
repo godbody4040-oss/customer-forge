@@ -197,29 +197,24 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
       const seenVisitors = new Set<string>();
       let sessionsWithoutVisitor = new Set<string>();
       let count = 0;
-      let page = 0;
-      let failed = false;
-      for (;;) {
-        const { data: rows, error } = await supabaseAdmin
-          .from("marketing_conversions")
-          .select("session_id, visitor_id")
-          .eq("event_name", "page_view")
-          .gte("created_at", since)
-          .order("created_at", { ascending: false })
-          .range(page * 1000, page * 1000 + 999);
-        if (error) {
-          errors.push("sessions");
-          failed = true;
-          break;
-        }
-        for (const row of rows ?? []) {
-          count += 1;
-          if (row.session_id) seenSessions.add(row.session_id);
-          if (row.visitor_id) seenVisitors.add(row.visitor_id);
-          else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
-        }
-        if ((rows?.length ?? 0) < 1000 || page >= 50) break;
-        page += 1;
+      // Every page view in the window is counted — no page ceiling.
+      const paged = await fetchAllRows<{ session_id: string | null; visitor_id: string | null }>(
+        (from, to) =>
+          supabaseAdmin
+            .from("marketing_conversions")
+            .select("session_id, visitor_id")
+            .eq("event_name", "page_view")
+            .gte("created_at", since)
+            .order("created_at", { ascending: false })
+            .range(from, to),
+      );
+      const failed = Boolean(paged.error);
+      if (failed) errors.push("sessions");
+      for (const row of paged.rows) {
+        count += 1;
+        if (row.session_id) seenSessions.add(row.session_id);
+        if (row.visitor_id) seenVisitors.add(row.visitor_id);
+        else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
       }
       if (!failed) {
         sessions = seenSessions.size;
