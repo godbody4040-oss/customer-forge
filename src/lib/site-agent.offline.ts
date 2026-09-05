@@ -192,16 +192,38 @@ export function planWithoutAi(
     }
   }
 
+  // 5. Nothing matched by name — that is NEVER a dead end. Revora reads the
+  // site's real gaps and proposes the highest-value sections it can add itself,
+  // so a request in the owner's own words still returns real, reviewable work.
+  if (!actions.length && home && !removing) {
+    const PRIORITY = ["hero", "services", "reviews", "faq", "cta", "contact"];
+    const present = new Set(home.sections.map((section) => section.kind));
+    for (const kind of PRIORITY) {
+      if (present.has(kind) || !SECTION_LIBRARY.some((s) => s.kind === kind)) continue;
+      actions.push({ type: "add_section", pageId: home.id, kind });
+      done.push(
+        `added a ${SECTION_LIBRARY.find((s) => s.kind === kind)?.label ?? kind} section to ${home.title}`,
+      );
+      if (actions.length >= 3) break;
+    }
+    for (const section of home.sections) {
+      if (section.is_visible || !PRIORITY.includes(section.kind)) continue;
+      actions.push({ type: "set_section_visibility", sectionId: section.id, visible: true });
+      done.push(`turned your ${section.kind.replace(/_/g, " ")} section back on`);
+      break;
+    }
+  }
+
   const built = done.length > 0;
   return {
     reply: built
       ? `Done — I ${done.join(", ")}. Review the steps below and apply them.`
-      : "I can build this straight away, but I need it in Revora's own terms: name a section (reviews, pricing, FAQ, gallery, booking), a background (starfield, aurora, nebula, tech grid, spotlight, gradient mesh) or a motion effect (3D float, 3D tilt, frosted glass, gold glow, rise, parallax, shine). Effect Studio and Upgrade Studio below do the same job with buttons.",
+      : "Your pages already contain every section Revora's built-in builder can place on its own, and its AI writer — which handles wording, design judgement and search text — is paused for a moment. Nothing else in Revora is limited: try this request again shortly and it will be handled in full.",
     summary: built
       ? `${done.length} change${done.length === 1 ? "" : "s"} planned by Revora's built-in builder.`
       : "",
     actions,
-    questions: built ? [] : ["Which section, background or effect do you want changed?"],
+    questions: [],
     notes: [
       `Built by Revora's own engine, included in your subscription (${reason}).`,
       "It arranges what Revora already knows how to build and never invents reviews, awards or prices.",
