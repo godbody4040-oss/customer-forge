@@ -227,7 +227,11 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
       }
     }
 
-    // 2. Accounts created (one row per Supabase Auth user).
+    // 2. Accounts created (one row per Supabase Auth user). Auth is the source
+    //    of truth, so reconcile first: every real sign-up gets exactly one row,
+    //    and nothing is ever invented.
+    const reconcile = await supabaseAdmin.rpc("sync_platform_accounts");
+    if (reconcile.error) errors.push("accounts");
     const accountsQuery = await supabaseAdmin
       .from("platform_accounts")
       .select("user_id", { count: "exact", head: true })
