@@ -300,7 +300,7 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       const organizationId = (object?.metadata?.organizationId as string | undefined) ?? null;
       const succeeded = event.type === "payment_intent.succeeded";
       if (organizationId) {
-        await admin.from("audit_logs").insert({
+        const { error: auditError } = await admin.from("audit_logs").insert({
           organization_id: organizationId,
           action: `payment_intent.${succeeded ? "succeeded" : "failed"}`,
           entity: "payment_intent",
