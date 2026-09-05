@@ -168,8 +168,9 @@ function GetStarted() {
 
   /**
    * A brand-new account has no workspace yet (that normally happens during
-   * onboarding), which used to block checkout entirely. Create a minimal
-   * workspace from the intake so payment can always proceed.
+   * onboarding), which used to block checkout entirely. Provisioning runs in a
+   * single server-side transaction and is idempotent: refreshes, retries and
+   * double clicks always return the SAME workspace instead of creating another.
    */
   async function ensureWorkspace(): Promise<string> {
     if (organizationId) return organizationId;
@@ -178,55 +179,32 @@ function GetStarted() {
       setOrganizationId(existing);
       return existing;
     }
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth.user;
-    if (!user) throw new Error("Your session expired. Please sign in again.");
+    const attribution = getAttribution();
+    // Authoritative account record (one row per auth user, database-enforced).
+    await recordAccountCreated({
+      data: {
+        landingPath: attribution?.landingPath ?? null,
+        referrer: attribution?.referrer ?? null,
+        utmSource: attribution?.utmSource ?? null,
+        utmCampaign: attribution?.utmCampaign ?? null,
+      },
+    }).catch(() => undefined);
 
-    const base = safeSlug(intake.businessName);
-    let slug = base;
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const { data: taken } = await supabase
-        .from("organizations")
-        .select("id")
-        .eq("slug", slug)
-        .maybeSingle();
-      if (!taken) break;
-      slug = `${base}-${Math.floor(Math.random() * 900 + 100)}`;
-    }
-
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .insert({
+    const { organizationId: provisioned } = await provisionWorkspace({
+      data: {
         name: intake.businessName.trim() || "My business",
-        slug,
         industry: intake.businessType.trim() || null,
-        created_by: user.id,
-        subscription_status: "trialing",
-        trial_ends_at: new Date(
-          Date.now() + GROWTH_SYSTEM.fullAccessTrialDays * 24 * 60 * 60 * 1000,
-        ).toISOString(),
-      })
-      .select("id")
-      .single();
-    if (orgError) throw orgError;
+        email: intake.email.trim() || null,
+        phone: intake.phone.trim() || null,
+        city: intake.city.trim() || null,
+        state: intake.state.trim() || null,
+        website: intake.website?.trim() || null,
+        description: intake.services.trim() || null,
+      },
+    });
 
-    const { error: memberError } = await supabase
-      .from("memberships")
-      .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
-    if (memberError) throw memberError;
-
-    await supabase.from("business_profiles").insert({
-      organization_id: org.id,
-      email: intake.email.trim() || null,
-      phone: intake.phone.trim() || null,
-      city: intake.city.trim() || null,
-      state: intake.state.trim() || null,
-      website: intake.website?.trim() || null,
-      description: intake.services.trim() || null,
-    } as never);
-
-    setOrganizationId(org.id);
-    return org.id;
+    setOrganizationId(provisioned);
+    return provisioned;
   }
 
   /** Start the free full-access trial: provision the workspace, then open the app. */
@@ -238,12 +216,8 @@ function GetStarted() {
     }
     setStartingTrial(true);
     try {
-      const provisionedId = await ensureWorkspace();
-      trackConversion("signup_completed", { email: intake.email.trim() });
-      trackConversion("workspace_provisioned", {
-        email: intake.email.trim(),
-        metadata: { organization_id: provisionedId },
-      });
+      await ensureWorkspace();
+
 
       navigate({ to: "/app" });
     } catch (cause) {
