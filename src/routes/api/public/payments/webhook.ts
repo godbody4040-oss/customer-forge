@@ -190,14 +190,20 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
           console.error("[payments:webhook] growth session org mismatch", session.id);
           break;
         }
-        await admin
-          .from("organizations")
-          .update({
-            setup_paid_at: new Date().toISOString(),
-            setup_checkout_session_id: String(session.id),
-            plan_id: GROWTH_PLAN_ID,
-          })
-          .eq("id", organizationId);
+        // Only verified LIVE money unlocks production access. A sandbox setup
+        // session is bookkept as a sandbox payment row and nothing more.
+        if (env === "live") {
+          const { error: orgError } = await admin
+            .from("organizations")
+            .update({
+              setup_paid_at: new Date().toISOString(),
+              setup_checkout_session_id: String(session.id),
+              plan_id: GROWTH_PLAN_ID,
+            })
+            .eq("id", organizationId);
+          if (orgError)
+            throw new Error(`setup_activation_failed:${orgError.code ?? orgError.message}`);
+        }
         await recordStripeTransaction(admin, {
           organizationId,
           stripeId: `setup:${String(session.id)}`,
