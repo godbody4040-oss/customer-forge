@@ -299,9 +299,13 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       notes: [reason],
       requirements: [] as { label: string; covered: boolean }[],
       trace: [reason],
-      index,
-      unavailable: { reason, retryable, instruction },
+      unavailable: { reason, retryable, instruction } as {
+        reason: string;
+        retryable: boolean;
+        instruction: string;
+      } | null,
     });
+
 
     let attempt = 0;
     for (;;) {
