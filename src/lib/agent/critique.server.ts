@@ -124,9 +124,10 @@ export async function critiquePlan(options: {
     };
   } catch {
     return {
-      scores: Object.fromEntries(
-        CRITIQUE_DIMENSIONS.map((dimension) => [dimension, 0]),
-      ) as Record<CritiqueDimension, number>,
+      scores: Object.fromEntries(CRITIQUE_DIMENSIONS.map((dimension) => [dimension, 0])) as Record<
+        CritiqueDimension,
+        number
+      >,
       overall: 0,
       fixes: [],
       verdict: "",

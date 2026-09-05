@@ -122,7 +122,6 @@ export async function loadSite(
         .eq("organization_id", orgId)
         .maybeSingle());
 
-
   // A client site is served on its public address only once it is published.
   // Unpublished work stays private: the owner previews it inside the builder,
   // or shares a signed preview link (/p/<token>).
@@ -144,7 +143,7 @@ export async function loadSite(
       .eq("organization_id", orgId)
       .eq("is_active", true)
       .order("sort_order"),
-    (allowUnpublished
+    allowUnpublished
       ? supabase
           .from("website_settings")
           // Draft preview only, behind an authorised token. Public rendering
@@ -162,7 +161,7 @@ export async function loadSite(
           .from("public_website_settings")
           .select("*")
           .eq("organization_id", orgId)
-          .maybeSingle()),
+          .maybeSingle(),
 
     supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
     supabase

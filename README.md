@@ -6,13 +6,13 @@ built and improved through a natural-language AI builder.
 
 ## Stack
 
-| Layer     | Technology                                                     |
-| --------- | -------------------------------------------------------------- |
+| Layer     | Technology                                                      |
+| --------- | --------------------------------------------------------------- |
 | Framework | TanStack Start v1 (React 19, Vite 7, SSR on Cloudflare Workers) |
 | Styling   | Tailwind CSS v4 (`src/styles.css`, CSS-first config)            |
-| Backend   | Supabase (Postgres, Auth, Storage, RLS)                        |
+| Backend   | Supabase (Postgres, Auth, Storage, RLS)                         |
 | Payments  | Stripe (setup fee + monthly subscription, live/sandbox split)   |
-| AI        | Lovable AI Gateway                                             |
+| AI        | Lovable AI Gateway                                              |
 
 ## Getting started
 
@@ -21,27 +21,27 @@ npm install
 npm run dev        # http://localhost:8080
 ```
 
-| Script              | Purpose                        |
-| ------------------- | ------------------------------ |
-| `npm run dev`       | Local dev server               |
-| `npm run typecheck` | TypeScript, no emit            |
-| `npm run lint`      | ESLint                         |
-| `npx vitest run`    | Test suite                     |
-| `npm run build`     | Production build               |
+| Script              | Purpose             |
+| ------------------- | ------------------- |
+| `npm run dev`       | Local dev server    |
+| `npm run typecheck` | TypeScript, no emit |
+| `npm run lint`      | ESLint              |
+| `npx vitest run`    | Test suite          |
+| `npm run build`     | Production build    |
 
 ## Environment
 
 Client variables are `VITE_`-prefixed and public. Everything else is server-only and read
 inside a server function or route handler, never at module scope.
 
-| Variable                        | Scope  | Purpose                          |
-| ------------------------------- | ------ | -------------------------------- |
-| `VITE_SUPABASE_URL`             | client | Supabase project URL             |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Publishable (anon) key           |
-| `SUPABASE_SERVICE_ROLE_KEY`     | server | Privileged server-only access    |
-| `STRIPE_SECRET_KEY`             | server | Live Stripe API access           |
-| `STRIPE_WEBHOOK_SECRET`         | server | Webhook signature verification   |
-| `LOVABLE_API_KEY`               | server | AI Gateway access                |
+| Variable                        | Scope  | Purpose                        |
+| ------------------------------- | ------ | ------------------------------ |
+| `VITE_SUPABASE_URL`             | client | Supabase project URL           |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Publishable (anon) key         |
+| `SUPABASE_SERVICE_ROLE_KEY`     | server | Privileged server-only access  |
+| `STRIPE_SECRET_KEY`             | server | Live Stripe API access         |
+| `STRIPE_WEBHOOK_SECRET`         | server | Webhook signature verification |
+| `LOVABLE_API_KEY`               | server | AI Gateway access              |
 
 ## Architecture
 

@@ -57,7 +57,6 @@ export type PlanFn = (
   attachments: AgentAttachment[],
 ) => Promise<Record<string, unknown>>;
 
-
 const str = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
 
@@ -285,7 +284,9 @@ export async function orchestrate(options: {
     });
     if (graded.source === "model") {
       critique = graded;
-      trace.push(`Graded its own work ${graded.overall}/10${graded.verdict ? ` — ${graded.verdict}` : ""}`);
+      trace.push(
+        `Graded its own work ${graded.overall}/10${graded.verdict ? ` — ${graded.verdict}` : ""}`,
+      );
       if (graded.overall < QUALITY_THRESHOLD && graded.fixes.length) {
         try {
           const improved = await plan(
@@ -340,5 +341,4 @@ export async function orchestrate(options: {
     requirements,
     trace,
   };
-
 }
