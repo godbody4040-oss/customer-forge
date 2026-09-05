@@ -47,10 +47,16 @@ const ORG = "11111111-1111-1111-1111-111111111111";
 describe("site agent atomic journal", () => {
   it("maps each action to the row it touches", () => {
     expect(
-      targetOf({ type: "set_section_text", sectionId: "s1", field: "heading", value: "x" } as never),
+      targetOf({
+        type: "set_section_text",
+        sectionId: "s1",
+        field: "heading",
+        value: "x",
+      } as never),
     ).toEqual({ kind: "update", table: "website_sections", id: "s1" });
-    expect(targetOf({ type: "add_page", kind: "about", title: "About", slug: "about" } as never))
-      .toEqual({ kind: "insert", table: "website_pages" });
+    expect(
+      targetOf({ type: "add_page", kind: "about", title: "About", slug: "about" } as never),
+    ).toEqual({ kind: "insert", table: "website_pages" });
     expect(targetOf({ type: "delete_component", componentId: "c1" } as never)).toEqual({
       kind: "delete",
       table: "website_components",
@@ -93,7 +99,10 @@ describe("site agent atomic journal", () => {
     const row = { id: "c1", organization_id: ORG, kind: "button", label: "Call now" };
     const { client, calls } = fakeClient({ website_components: [row] });
     await rollback(
-      await captureUndo(client, ORG, { type: "delete_component", componentId: "c1" } as AgentAction),
+      await captureUndo(client, ORG, {
+        type: "delete_component",
+        componentId: "c1",
+      } as AgentAction),
     );
     const insert = calls.find((call) => call.op === "insert");
     expect(insert?.table).toBe("website_components");
