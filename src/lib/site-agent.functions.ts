@@ -19,9 +19,13 @@ import {
   readActions,
   readAttachments,
   type AgentAction,
+  type AgentAttachment,
+  type AgentStep,
   type AgentTurn,
   type SiteIndex,
 } from "@/lib/site-agent";
+import type { VerificationReport } from "@/lib/agent/verify";
+
 import { safeLinkUrl } from "@/lib/website-content";
 import { captureUndo, rollback, type JournalClient, type UndoStep } from "@/lib/site-agent.atomic";
 
