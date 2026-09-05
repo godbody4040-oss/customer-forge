@@ -154,7 +154,11 @@ function ContractorCrmPage() {
             ))}
           </ul>
           <p className="mt-6 text-[13px] text-muted-foreground">
-            Working in a related trade? Browse the{" "}
+            Working in a related trade? Read how this works for{" "}
+            <Link to="/crm" className="text-primary underline-offset-4 hover:underline">
+              your specific trade
+            </Link>
+            , browse the{" "}
             <Link to="/industries" className="text-primary underline-offset-4 hover:underline">
               full list of trades we build for
             </Link>{" "}
@@ -164,6 +168,26 @@ function ContractorCrmPage() {
             </Link>
             .
           </p>
+        </section>
+
+        <section className="mt-16">
+          <h2 className="font-display text-[19px] font-semibold">Built around your trade</h2>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            Same system, written for how each trade actually works — including where a different tool
+            would serve you better.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2.5 text-[13px]">
+            {CRM_SOLUTIONS.map((solution) => (
+              <Link
+                key={solution.slug}
+                to="/crm/$trade"
+                params={{ trade: solution.slug }}
+                className="rounded-full border border-border px-3 py-1.5 text-muted-foreground hover:border-primary/50 hover:text-primary"
+              >
+                {solution.heading}
+              </Link>
+            ))}
+          </div>
         </section>
 
         <section className="panel mt-16 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
