@@ -10,16 +10,20 @@ import type { SiteCopy } from "@/lib/site-engine";
 import type { SiteBrief } from "@/lib/site-brief";
 import { INTENT_META, readBrief } from "@/lib/site-brief";
 import { businessDna, dnaBrief, screenClaims, type DnaFacts } from "@/lib/business-dna";
+import { RevoraAiError } from "@/lib/ai/errors";
+import { generateStructuredOutput } from "@/lib/ai/router.server";
+import type { ModelRole } from "@/lib/ai/config";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-export const COPY_MODEL = "google/gemini-3-flash-preview";
+export { RevoraAiError };
+
+/** Writing runs on the fast model class; Revora AI resolves the actual model. */
+export const COPY_ROLE: ModelRole = "fast";
 /**
- * Analysis is a reasoning job, not a writing job, so it runs on a stronger
- * model. If that model isn't available to the workspace the call falls back to
- * the copy model, and if the whole pass fails the build still completes using
- * the deterministic brief in `fallbackBrief`.
+ * Analysis is a reasoning job, not a writing job, so it asks for the reasoning
+ * model class. If Revora AI can't serve it the build still completes using the
+ * deterministic brief in `fallbackBrief`.
  */
-export const ANALYSIS_MODEL = "google/gemini-3.1-pro-preview";
+export const ANALYSIS_ROLE: ModelRole = "coding";
 
 const SAFETY = `You write marketing copy for local business websites.
 ABSOLUTE RULES:
@@ -54,18 +58,6 @@ export type CopyFacts = {
   }[];
 };
 
-/** Carries the gateway HTTP status so the worker can pause or retry correctly. */
-export class AiGatewayError extends Error {
-  status: number;
-  retryAfterSeconds: number | null;
-  constructor(status: number, message: string, retryAfterSeconds: number | null = null) {
-    super(message);
-    this.name = "AiGatewayError";
-    this.status = status;
-    this.retryAfterSeconds = retryAfterSeconds;
-  }
-}
-
 /**
  * Included-builder mode. Every generation stage has a deterministic Revora
  * fallback, so once the AI provider denies a request we stop calling it for a
@@ -86,71 +78,43 @@ export function isAiAvailable() {
 async function chatJson(
   system: string,
   prompt: string,
-  model: string = COPY_MODEL,
+  role: ModelRole = COPY_ROLE,
+  caller?: { organizationId?: string | null; userId?: string | null; task?: string },
 ): Promise<Record<string, unknown>> {
   if (!isAiAvailable())
-    throw new AiGatewayError(402, "Revora is writing this build from your own business details.");
+    throw new RevoraAiError(402, "Revora is writing this build from your own business details.", {
+      category: "quota",
+    });
 
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key)
-    throw new AiGatewayError(402, "Revora is writing this build from your own business details.");
-
-  const response = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: `${SAFETY}\n\n${system}` },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    if (response.status === 429) {
-      const retryAfter = Number(response.headers.get("retry-after")) || null;
-      throw new AiGatewayError(
-        429,
-        "AI is busy right now. The build will retry automatically.",
-        retryAfter,
-      );
-    }
-    if (response.status === 402) {
-      markAiUnavailable();
-      throw new AiGatewayError(402, "Revora is writing this build from your own business details.");
-    }
-    if (response.status === 403) {
-      markAiUnavailable();
-      throw new AiGatewayError(
-        403,
-        "AI is blocked for this workspace, so Revora built the site from your details.",
-      );
-    }
-
-    console.error("[site-engine] gateway error", response.status, body);
-    throw new AiGatewayError(response.status, "The copy engine couldn't be reached. Try again.");
-  }
-
-  const payload = (await response.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  const raw = payload.choices?.[0]?.message?.content ?? "";
-  const cleaned = raw
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/, "")
-    .trim();
   try {
-    const parsed = JSON.parse(cleaned) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
-      throw new Error("bad shape");
-    return parsed as Record<string, unknown>;
-  } catch {
-    throw new Error("The copy engine returned an unexpected response. Try again.");
+    const result = await generateStructuredOutput(
+      {
+        task: caller?.task ?? "copy.write",
+        organizationId: caller?.organizationId ?? null,
+        userId: caller?.userId ?? null,
+      },
+      {
+        role,
+        messages: [
+          { role: "system", content: `${SAFETY}\n\n${system}` },
+          { role: "user", content: prompt },
+        ],
+      },
+    );
+    return result.data;
+  } catch (error) {
+    // A missing provider, a rejected key or a provider refusal will keep being
+    // refused, so stop asking for a cooldown window and let the deterministic
+    // Revora builder finish the site from the owner's own details.
+    if (
+      error instanceof RevoraAiError &&
+      ["not_configured", "unauthorized", "quota", "policy"].includes(error.category)
+    )
+      markAiUnavailable();
+    throw error;
   }
 }
+
 
 const factSheet = (facts: CopyFacts) =>
   JSON.stringify(
