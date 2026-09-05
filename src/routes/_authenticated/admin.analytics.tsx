@@ -29,6 +29,15 @@ export const Route = createFileRoute("/_authenticated/admin/analytics")({
   component: AdminAnalytics,
 });
 
+const STAGE_TITLES: Record<string, string> = {
+  visitors: "Unique visitors",
+  sessions: "Unique sessions",
+  accounts: "Accounts created",
+  trials: "Trials started",
+  active_trials: "Active trials right now",
+  paid: "Paid customers",
+};
+
 function AdminAnalytics() {
   const qc = useQueryClient();
   const trafficFn = useServerFn(getTrafficReport);
@@ -38,7 +47,7 @@ function AdminAnalytics() {
   const saveFn = useServerFn(setGaMeasurementId);
 
   const [days, setDays] = useState(30);
-  const [showDetails, setShowDetails] = useState(false);
+  const [openStage, setOpenStage] = useState<string | null>(null);
   const [gaId, setGaId] = useState("");
 
   const traffic = useQuery({
@@ -52,7 +61,7 @@ function AdminAnalytics() {
   const details = useQuery({
     queryKey: ["admin", "funnel-details", days],
     queryFn: () => detailsFn({ data: { days } }),
-    enabled: showDetails,
+    enabled: openStage !== null,
   });
   const settings = useQuery({
     queryKey: ["admin", "platform-settings"],
@@ -242,7 +251,7 @@ function AdminAnalytics() {
       <SectionHeading
         eyebrow="Marketing traffic"
         title="Who reaches revoragrowthsystems.com"
-        description="Browser-recorded page views and sessions. Sessions are distinct browsers, not verified unique people, and these events never decide who counts as a customer."
+        description="Browser-recorded page views. A unique session is one browsing visit; a unique visitor is one browser counted once however often it returns. Neither ever decides who counts as a customer."
       />
 
       {traffic.isLoading ? (
