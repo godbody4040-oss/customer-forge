@@ -370,7 +370,11 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     });
 
     return plan;
-  });
+  }
+}
+
+export type WebsitePlan = Awaited<ReturnType<typeof planImpl>>;
+
 
 /* --------------------------------- applying -------------------------------- */
 
