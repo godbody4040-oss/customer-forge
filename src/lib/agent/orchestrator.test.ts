@@ -7,6 +7,9 @@ import {
 } from "@/lib/agent/workspace-context.server";
 import { orchestrate, planningBrief } from "@/lib/agent/orchestrator.server";
 import { understandWithoutModel } from "@/lib/agent/understanding.server";
+import { designWithoutModel } from "@/lib/agent/design-brief.server";
+import { CRITIQUE_DIMENSIONS } from "@/lib/agent/critique.server";
+
 import type { AgentContext } from "@/lib/site-agent.server";
 import type { Understanding } from "@/lib/agent/understanding.server";
 
