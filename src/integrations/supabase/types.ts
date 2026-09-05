@@ -3620,6 +3620,7 @@ export type Database = {
         }
         Returns: Json
       }
+      sync_platform_accounts: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "owner" | "admin" | "manager" | "staff" | "viewer"
