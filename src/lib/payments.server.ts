@@ -64,7 +64,9 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
         .maybeSingle()
     : { data: null, error: null };
   if (productError)
-    throw new Error(`entitlement_product_lookup_failed:${productError.code ?? productError.message}`);
+    throw new Error(
+      `entitlement_product_lookup_failed:${productError.code ?? productError.message}`,
+    );
 
   if (product?.kind === "subscription" && product.plan_id) {
     const interval = product.billing_interval ?? "monthly";
@@ -120,7 +122,9 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
       })
       .eq("id", payment.id);
     if (periodError)
-      throw new Error(`entitlement_period_update_failed:${periodError.code ?? periodError.message}`);
+      throw new Error(
+        `entitlement_period_update_failed:${periodError.code ?? periodError.message}`,
+      );
   }
 
   // Paid website builds unblock the build queue for that business — real money only.

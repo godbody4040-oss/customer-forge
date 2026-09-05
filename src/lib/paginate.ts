@@ -29,10 +29,12 @@ export async function fetchAllRows<T>(
   page: (
     from: number,
     to: number,
-  ) => PromiseLike<{ data: T[] | null; error: PageError | null }> | {
-    data: T[] | null;
-    error: PageError | null;
-  },
+  ) =>
+    | PromiseLike<{ data: T[] | null; error: PageError | null }>
+    | {
+        data: T[] | null;
+        error: PageError | null;
+      },
   pageSize: number = PAGE_SIZE,
 ): Promise<PagedResult<T>> {
   const size = Math.max(1, Math.floor(pageSize));

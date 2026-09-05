@@ -22,6 +22,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { GROWTH_SYSTEM } from "@/lib/offer";
+import { fetchAllRows } from "@/lib/paginate";
 
 const clean = (value: unknown, max: number) => {
   const text = typeof value === "string" ? value.trim() : "";
@@ -426,34 +427,48 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
 
+    // Every drill-down list is read to exhaustion: a fixed ceiling would quietly
+    // hide real accounts, trials or traffic from the report.
     const [trafficRes, accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
-      supabaseAdmin
-        .from("marketing_conversions")
-        .select("created_at, session_id, visitor_id")
-        .eq("event_name", "page_view")
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(20000),
-      supabaseAdmin
-        .from("platform_accounts")
-        .select("user_id, created_at")
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(200),
-      supabaseAdmin
-        .from("platform_trials")
-        .select("organization_id, started_at, trial_ends_at")
-        .gte("started_at", since)
-        .order("started_at", { ascending: false })
-        .limit(200),
+      fetchAllRows<{ created_at: string; session_id: string | null; visitor_id: string | null }>(
+        (from, to) =>
+          supabaseAdmin
+            .from("marketing_conversions")
+            .select("created_at, session_id, visitor_id")
+            .eq("event_name", "page_view")
+            .gte("created_at", since)
+            .order("created_at", { ascending: false })
+            .range(from, to),
+      ),
+      fetchAllRows<{ user_id: string; created_at: string }>((from, to) =>
+        supabaseAdmin
+          .from("platform_accounts")
+          .select("user_id, created_at")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      ),
+      fetchAllRows<{ organization_id: string; started_at: string; trial_ends_at: string }>(
+        (from, to) =>
+          supabaseAdmin
+            .from("platform_trials")
+            .select("organization_id, started_at, trial_ends_at")
+            .gte("started_at", since)
+            .order("started_at", { ascending: false })
+            .range(from, to),
+      ),
       supabaseAdmin
         .from("organizations")
         .select("id, name, is_demo, is_suspended, subscription_status, trial_ends_at"),
+      // Paid drill-down is verified LIVE Stripe state only — sandbox rows are
+      // bookkeeping, never customers.
       supabaseAdmin
         .from("subscriptions")
         .select(
           "organization_id, status, provider_subscription_id, provider_customer_id, current_period_start, created_at",
-        ),
+        )
+        .eq("payment_provider", "stripe")
+        .eq("environment", "live"),
     ]);
 
     const firstError =
@@ -471,7 +486,7 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
       string,
       { views: number; sessions: Set<string>; visitors: Set<string> }
     >();
-    for (const row of trafficRes.data ?? []) {
+    for (const row of trafficRes.rows) {
       const day = row.created_at.slice(0, 10);
       const bucket = byDay.get(day) ?? {
         views: 0,
@@ -494,8 +509,8 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
           sessions: bucket.sessions.size,
           visitors: bucket.visitors.size,
         })),
-      accounts: (accountsRes.data ?? []).map((a) => ({ id: a.user_id, createdAt: a.created_at })),
-      trials: (trialsRes.data ?? [])
+      accounts: accountsRes.rows.map((a) => ({ id: a.user_id, createdAt: a.created_at })),
+      trials: trialsRes.rows
         .filter((t) => orgs.get(t.organization_id) && !orgs.get(t.organization_id)!.is_demo)
         .map((t) => {
           const org = orgs.get(t.organization_id)!;

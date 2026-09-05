@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/paginate";
 import {
   aiEditSiteCopy,
   pumpSiteEngineQueue,
@@ -241,12 +242,14 @@ export function useScoreFacts(organizationId: string | undefined) {
           .select("id", { count: "exact", head: true })
           .eq("organization_id", orgId)
           .eq("is_active", true),
-        supabase
-          .from("analytics_events")
-          .select("event_type")
-          .eq("organization_id", orgId)
-          .gte("created_at", since)
-          .limit(20000),
+        fetchAllRows<{ event_type: string }>((from, to) =>
+          supabase
+            .from("analytics_events")
+            .select("event_type")
+            .eq("organization_id", orgId)
+            .gte("created_at", since)
+            .range(from, to),
+        ),
         supabase
           .from("leads")
           .select("id", { count: "exact", head: true })
@@ -269,7 +272,7 @@ export function useScoreFacts(organizationId: string | undefined) {
         "google_business",
         "linkedin",
       ].filter((k) => typeof s[k] === "string" && String(s[k]).trim()).length;
-      const eventRows = events.data ?? [];
+      const eventRows = events.rows;
       const countOf = (type: string) => eventRows.filter((e) => e.event_type === type).length;
 
       return {

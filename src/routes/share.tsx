@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Copy, ExternalLink, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,10 +47,6 @@ function SharePage() {
   const [audience, setAudience] = useState("local service business owners");
   const [name, setName] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
-
-  useEffect(() => {
-    trackConversion("page_view", { metadata: { page: "/share" } });
-  }, []);
 
   const campaign = useMemo(() => (name.trim() ? `share-${name.trim()}` : "share"), [name]);
   const assets = useMemo(() => buildChannelAssets({ campaign, audience }), [campaign, audience]);

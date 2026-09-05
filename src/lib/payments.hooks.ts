@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { fetchAllRows } from "@/lib/paginate";
 
 export type PaymentProduct = {
   id: string;
@@ -55,15 +56,18 @@ export function useAllPayments(enabled: boolean) {
     queryKey: ["payments", "all"],
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select(
-          "id, organization_id, product_id, plan_id, description, amount, currency, status, environment, customer_email, refund_status, refunded_amount, created_at, completed_at, organizations(name, slug)",
-        )
-        .order("created_at", { ascending: false })
-        .limit(200);
+      // Every payment is listed — no arbitrary ceiling hiding real money.
+      const { rows, error } = await fetchAllRows((from, to) =>
+        supabase
+          .from("payments")
+          .select(
+            "id, organization_id, product_id, plan_id, description, amount, currency, status, environment, customer_email, refund_status, refunded_amount, created_at, completed_at, organizations(name, slug)",
+          )
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      );
       if (error) throw error;
-      return data ?? [];
+      return rows;
     },
   });
 }

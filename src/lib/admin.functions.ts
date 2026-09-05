@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { NewClientInput } from "@/lib/admin-types";
+import { fetchAllRows } from "@/lib/paginate";
 
 type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
 type PublishState = Database["public"]["Enums"]["publish_state"];
@@ -85,11 +86,14 @@ export const listClients = createServerFn({ method: "GET" })
           .in("organization_id", ids),
         supabaseAdmin.from("leads").select("organization_id").in("organization_id", ids),
         supabaseAdmin.from("appointments").select("organization_id").in("organization_id", ids),
-        supabaseAdmin
-          .from("analytics_events")
-          .select("organization_id")
-          .in("organization_id", ids)
-          .limit(20000),
+        // Read every event: a fixed ceiling silently understates readiness.
+        fetchAllRows<{ organization_id: string }>((from, to) =>
+          supabaseAdmin
+            .from("analytics_events")
+            .select("organization_id")
+            .in("organization_id", ids)
+            .range(from, to),
+        ),
         // Financial truth is LIVE Stripe only.
         supabaseAdmin
           .from("subscriptions")
@@ -122,7 +126,7 @@ export const listClients = createServerFn({ method: "GET" })
         quoteFormCount: (forms.data ?? []).filter(
           (f) => f.organization_id === org.id && f.is_active,
         ).length,
-        analyticsCount: countBy(events.data, org.id),
+        analyticsCount: countBy(events.rows, org.id),
       }).score;
 
       const sub = (subs.data ?? []).find((s) => s.organization_id === org.id) ?? null;
@@ -228,15 +232,25 @@ export const getClientDetail = createServerFn({ method: "GET" })
       supabaseAdmin.from("quote_forms").select("id, is_active").eq("organization_id", id),
       supabaseAdmin.from("leads").select("id, status, created_at").eq("organization_id", id),
       supabaseAdmin.from("appointments").select("id, status, starts_at").eq("organization_id", id),
-      supabaseAdmin
-        .from("analytics_events")
-        .select("id, event_type, created_at")
-        .eq("organization_id", id)
-        .gte("created_at", since)
-        .limit(20000),
+      fetchAllRows<{ id: string; event_type: string; created_at: string }>((from, to) =>
+        supabaseAdmin
+          .from("analytics_events")
+          .select("id, event_type, created_at")
+          .eq("organization_id", id)
+          .gte("created_at", since)
+          .range(from, to),
+      ),
       supabaseAdmin.from("memberships").select("id, role, user_id").eq("organization_id", id),
 
-      supabaseAdmin.from("subscriptions").select("*").eq("organization_id", id).maybeSingle(),
+      // A workspace can legitimately have both a live and a sandbox row.
+      supabaseAdmin
+        .from("subscriptions")
+        .select("*")
+        .eq("organization_id", id)
+        .eq("payment_provider", "stripe")
+        .eq("environment", "live")
+        .order("created_at", { ascending: false })
+        .limit(1),
       supabaseAdmin
         .from("support_sessions")
         .select("*")
@@ -257,9 +271,9 @@ export const getClientDetail = createServerFn({ method: "GET" })
       quoteFormCount: (forms.data ?? []).filter((f) => f.is_active).length,
       leads: leads.data ?? [],
       appointments: appts.data ?? [],
-      analyticsCount: (events.data ?? []).length,
+      analyticsCount: events.rows.length,
       usage: (() => {
-        const eventRows = events.data ?? [];
+        const eventRows = events.rows;
         const leadRows = leads.data ?? [];
         const apptRows = appts.data ?? [];
         const days = Array.from({ length: 30 }, (_, i) =>
@@ -298,9 +312,9 @@ export const getClientDetail = createServerFn({ method: "GET" })
           leadSeries: days.map((day) => leadsByDay.get(day) ?? 0),
         };
       })(),
-      views30d: (events.data ?? []).filter((e) => e.event_type === "page_view").length,
+      views30d: events.rows.filter((e) => e.event_type === "page_view").length,
       team: team.data ?? [],
-      subscription: sub.data,
+      subscription: sub.data?.[0] ?? null,
       supportSessions: support.data ?? [],
       domainTarget: DOMAIN_TARGET,
     };
@@ -378,10 +392,14 @@ export const updateClientOrg = createServerFn({ method: "POST" })
       if (data.subscription_status !== undefined) {
         subPatch.status = data.subscription_status as SubscriptionStatus;
       }
-      await supabaseAdmin
+      // Admin edits only ever touch the canonical LIVE billing row.
+      const { error: subError } = await supabaseAdmin
         .from("subscriptions")
         .update(subPatch)
-        .eq("organization_id", data.organizationId);
+        .eq("organization_id", data.organizationId)
+        .eq("payment_provider", "stripe")
+        .eq("environment", "live");
+      if (subError) throw new Error(subError.message);
     }
 
     await supabaseAdmin.from("audit_logs").insert({
