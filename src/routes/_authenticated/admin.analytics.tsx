@@ -267,7 +267,6 @@ function AdminAnalytics() {
         </>
       )}
 
-
       <Panel className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-display text-[15px] font-semibold">Google Analytics 4</p>

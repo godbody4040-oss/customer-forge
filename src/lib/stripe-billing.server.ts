@@ -130,7 +130,8 @@ export async function syncStripeSubscription(
       ...(periodEnd ? { trial_ends_at: null } : {}),
     })
     .eq("id", organizationId);
-  if (orgError) throw new Error(`organization_billing_update_failed:${orgError.code ?? orgError.message}`);
+  if (orgError)
+    throw new Error(`organization_billing_update_failed:${orgError.code ?? orgError.message}`);
 
   return { ok: true, organizationId };
 }
@@ -159,7 +160,8 @@ export async function recordStripeTransaction(
     .eq("organization_id", input.organizationId)
     .contains("metadata", { stripe_id: input.stripeId })
     .maybeSingle();
-  if (lookupError) throw new Error(`payment_lookup_failed:${lookupError.code ?? lookupError.message}`);
+  if (lookupError)
+    throw new Error(`payment_lookup_failed:${lookupError.code ?? lookupError.message}`);
 
   if (existing) {
     if (existing.status === input.status) return { inserted: false as const };
@@ -188,7 +190,8 @@ export async function recordStripeTransaction(
     entitlement_applied: input.status === "completed",
     metadata: { stripe_id: input.stripeId },
   });
-  if (insertError) throw new Error(`payment_insert_failed:${insertError.code ?? insertError.message}`);
+  if (insertError)
+    throw new Error(`payment_insert_failed:${insertError.code ?? insertError.message}`);
 
   await admin.from("notifications").insert({
     organization_id: input.organizationId,

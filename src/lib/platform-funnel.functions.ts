@@ -108,7 +108,10 @@ export const provisionWorkspace = createServerFn({ method: "POST" })
       _trial_days: GROWTH_SYSTEM.fullAccessTrialDays,
     });
     if (error || !organizationId) {
-      console.error("[funnel] provision_workspace failed", error?.code ?? error?.message ?? "empty");
+      console.error(
+        "[funnel] provision_workspace failed",
+        error?.code ?? error?.message ?? "empty",
+      );
       throw new Error("We could not prepare your workspace. Please try again.");
     }
     return { organizationId: organizationId as string };
