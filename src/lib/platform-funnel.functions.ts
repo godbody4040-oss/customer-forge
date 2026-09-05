@@ -509,8 +509,8 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
           sessions: bucket.sessions.size,
           visitors: bucket.visitors.size,
         })),
-      accounts: (accountsRes.rows).map((a) => ({ id: a.user_id, createdAt: a.created_at })),
-      trials: (trialsRes.rows)
+      accounts: accountsRes.rows.map((a) => ({ id: a.user_id, createdAt: a.created_at })),
+      trials: trialsRes.rows
         .filter((t) => orgs.get(t.organization_id) && !orgs.get(t.organization_id)!.is_demo)
         .map((t) => {
           const org = orgs.get(t.organization_id)!;

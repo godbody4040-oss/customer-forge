@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/user-error";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllRows } from "@/lib/paginate";
 import {
   aiEditSiteCopy,
   pumpSiteEngineQueue,
@@ -271,7 +272,7 @@ export function useScoreFacts(organizationId: string | undefined) {
         "google_business",
         "linkedin",
       ].filter((k) => typeof s[k] === "string" && String(s[k]).trim()).length;
-      const eventRows = events.data ?? [];
+      const eventRows = events.rows;
       const countOf = (type: string) => eventRows.filter((e) => e.event_type === type).length;
 
       return {
