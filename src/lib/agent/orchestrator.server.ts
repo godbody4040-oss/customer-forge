@@ -87,8 +87,15 @@ function mergeActions(first: object[], second: object[]) {
   return out;
 }
 
-/** The brief the planner receives: the owner's words plus the agent's reading. */
-export function planningBrief(instruction: string, understanding: Understanding) {
+/**
+ * The brief the planner receives: the owner's words, the agent's reading of
+ * them, and the design direction it committed to.
+ */
+export function planningBrief(
+  instruction: string,
+  understanding: Understanding,
+  design?: DesignDirection,
+) {
   const { guidance, handoffs } = capabilityBrief(understanding.capabilities);
   const lines = [
     `THE OWNER ASKED, IN THEIR OWN WORDS:\n${instruction}`,
@@ -97,10 +104,14 @@ export function planningBrief(instruction: string, understanding: Understanding)
     "",
     "REQUIREMENTS THIS PLAN WILL BE CHECKED AGAINST:",
     ...understanding.requirements.map((requirement, index) => `${index + 1}. ${requirement}`),
+  ];
+  if (design) lines.push("", designBrief(design));
+  lines.push(
     "",
     "AREAS THIS TOUCHES, AND WHAT YOU MAY DO IN EACH:",
     ...guidance.map((line) => `- ${line}`),
-  ];
+  );
+
   if (understanding.tasks.length > 1) {
     lines.push(
       "",
