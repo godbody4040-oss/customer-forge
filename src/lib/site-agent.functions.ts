@@ -731,7 +731,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
         kind: "agent_apply_rolled_back",
         model: "applied",
         instruction: snapshotLabel,
-        result: { applied, failed, reversal } as unknown as never,
+        result: { operationId, applied, failed, reversal, mutations: undoSteps.length } as unknown as never,
         created_by: userId,
       });
       invalidateWorkspaceContext(orgId);
@@ -747,7 +747,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
       kind: "agent_apply",
       model: "applied",
       instruction: snapshotLabel,
-      result: { applied, failed } as unknown as never,
+      result: { operationId, applied, failed, mutations: undoSteps.length } as unknown as never,
       created_by: userId,
     });
 
@@ -772,7 +772,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           kind: "agent_apply_failed_verification",
           model: "applied",
           instruction: snapshotLabel,
-          result: { applied, verification, reversal } as unknown as never,
+          result: { operationId, applied, verification, reversal, mutations: undoSteps.length } as unknown as never,
           created_by: userId,
         });
         invalidateWorkspaceContext(orgId);
@@ -794,6 +794,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
       failed: failed.length,
       snapshotLabel,
       snapshotVersion,
+      operationId,
       verification,
     };
   }
