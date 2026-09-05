@@ -295,6 +295,16 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
               .map((s) => s.organization_id as string),
           ).size;
 
+    // Trials in this window the payment webhook has confirmed converted.
+    const convertedTrials =
+      trialRows.error || orgRows.error
+        ? null
+        : new Set(
+            (trialRows.data ?? [])
+              .filter((t) => t.converted_at !== null && realOrgs.has(t.organization_id))
+              .map((t) => t.organization_id),
+          ).size;
+
     const stages: FunnelStage[] = [
       {
         key: "visitors",
@@ -302,6 +312,8 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         count: visitors,
         rate: null,
         rateLabel: views === null ? undefined : `${views} page views in total`,
+        source: "measured",
+        note: "Distinct browsers that opened a public page. Measured in the browser, so blocked scripts and private windows are not counted — read it as a minimum.",
       },
       {
         key: "sessions",
@@ -309,6 +321,8 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         count: sessions,
         rate: null,
         rateLabel: "browsing visits — one visitor can have several",
+        source: "measured",
+        note: "Separate browsing visits. One visitor coming back three times is three sessions.",
       },
       {
         key: "accounts",
@@ -316,6 +330,8 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         count: accounts,
         rate: pct(accounts, visitors),
         rateLabel: "of unique visitors",
+        source: "database",
+        note: "One row per real sign-up, written by the server. Exact.",
       },
       {
         key: "trials",
@@ -323,12 +339,16 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         count: trialsStarted,
         rate: pct(trialsStarted, accounts),
         rateLabel: "of accounts",
+        source: "database",
+        note: "One per workspace created, demo workspaces excluded. Exact.",
       },
       {
         key: "active_trials",
         label: "Active trials right now",
         count: activeTrials,
         rate: null,
+        source: "database",
+        note: "Trials that have not expired and are not suspended.",
       },
       {
         key: "paid",
@@ -336,11 +356,27 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         count: paid,
         rate: pct(paid, trialsStarted),
         rateLabel: "of trials",
+        source: "database",
+        note: "Confirmed paid subscriptions written only by the verified payment webhook — never checkout starts.",
       },
     ];
 
-    return { days: data.days, from: since, to: to.toISOString(), stages, errors };
+    return {
+      days: data.days,
+      from: since,
+      to: to.toISOString(),
+      stages,
+      rates: {
+        visitorsToAccounts: pct(accounts, visitors),
+        accountsToTrials: pct(trialsStarted, accounts),
+        trialsToPaid: pct(convertedTrials ?? paid, trialsStarted),
+        visitorsToPaid: pct(paid, visitors),
+      },
+      convertedTrials,
+      errors,
+    };
   });
+
 
 export interface FunnelDetails {
   /** Per-day traffic, so the visitor and session stages can be opened up too. */
