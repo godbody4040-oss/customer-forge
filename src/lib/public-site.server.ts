@@ -134,16 +134,26 @@ export async function loadSite(
       .eq("organization_id", orgId)
       .eq("is_active", true)
       .order("sort_order"),
-    supabase
-      .from("website_settings")
-      // Public rendering columns only. Operational/domain columns
-      // (domain_transfer, email_forwarding, ssl_detail, domain_records,
-      // domain_seo_report, ...) are never exposed to anonymous visitors.
-      .select(
-        "id, organization_id, template, pages, seo, custom_domain, published, publish_state, last_published_at, generation, created_at, updated_at",
-      )
-      .eq("organization_id", orgId)
-      .maybeSingle(),
+    (allowUnpublished
+      ? supabase
+          .from("website_settings")
+          // Draft preview only, behind an authorised token. Public rendering
+          // columns only — operational/domain columns (domain_transfer,
+          // email_forwarding, ssl_detail, domain_records, domain_seo_report,
+          // ...) are never read for rendering.
+          .select(
+            "id, organization_id, template, pages, seo, custom_domain, published, publish_state, last_published_at, generation, created_at, updated_at",
+          )
+          .eq("organization_id", orgId)
+          .maybeSingle()
+      : // Anonymous visitors read the safe published-only projection, which
+        // exposes exactly these rendering columns and nothing else.
+        supabase
+          .from("public_website_settings")
+          .select("*")
+          .eq("organization_id", orgId)
+          .maybeSingle()),
+
     supabase.from("social_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
     supabase
       .from("public_reviews")
