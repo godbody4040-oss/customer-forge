@@ -316,14 +316,21 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
                 "Card payment failed"),
           },
         });
-        if (!succeeded) {
-          await admin.from("notifications").insert({
+        if (auditError)
+          throw new Error(`payment_intent_audit_failed:${auditError.code ?? auditError.message}`);
+        // Only real (live) card failures warn a real customer.
+        if (!succeeded && env === "live") {
+          const { error: notifyError } = await admin.from("notifications").insert({
             organization_id: organizationId,
             title: "Card payment failed",
             body: `${(object?.last_payment_error?.message as string | undefined) ?? "The card payment did not go through."} Update your payment method to activate or keep your Revora system.`,
             kind: "warning",
             link: "/app/billing",
           });
+          if (notifyError)
+            throw new Error(
+              `payment_intent_notification_failed:${notifyError.code ?? notifyError.message}`,
+            );
         }
       }
       break;
