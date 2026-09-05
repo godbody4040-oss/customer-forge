@@ -58,6 +58,8 @@ type Plan = {
   requirements: { label: string; covered: boolean }[];
   /** What Revora actually did to reach this plan, stage by stage. */
   trace: string[];
+  /** Set when the AI writer could not be reached; the request is kept for retry. */
+  unavailable?: { reason: string; retryable: boolean; instruction: string } | null;
 };
 
 /**
@@ -154,10 +156,17 @@ export function SiteChatbot({
         notes: result.notes,
         requirements: result.requirements ?? [],
         trace: result.trace ?? [],
+        unavailable: result.unavailable ?? null,
       };
       setMessages((prior) => [...prior, { role: "assistant", content: result.reply, plan: next }]);
       setPlan(next);
       setSkipped(new Set());
+      // The writer was unreachable: keep the owner's words so one tap resends them.
+      if (result.unavailable) {
+        setQueued(result.unavailable.instruction);
+        return;
+      }
+      setQueued(null);
       // Auto-apply: safe plans (nothing removed, nothing missing) go straight onto the site.
       const safe =
         steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
