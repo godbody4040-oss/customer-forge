@@ -132,9 +132,21 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
     },
   )
 
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+  .handler(async ({ data, context }) =>
+    planImpl(context.supabase as unknown as SupabaseLike, String(context.userId), data),
+  );
+
+type PlanInput = {
+  organizationId: string;
+  instruction: string;
+  history: AgentTurn[];
+  attachments: AgentAttachment[];
+};
+
+async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput) {
+  {
     const orgId = data.organizationId;
+
     const { planChanges, AGENT_MODEL } = await import("@/lib/site-agent.server");
     const { orchestrate } = await import("@/lib/agent/orchestrator.server");
     const { getWorkspaceContext, workspaceSummary } =
