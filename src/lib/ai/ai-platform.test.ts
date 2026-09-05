@@ -28,10 +28,12 @@ function walk(dir: string, files: string[] = []) {
 }
 
 const SOURCE_FILES = walk("src");
+/** Every source file except this test, which necessarily names what it forbids. */
+const APP_FILES = SOURCE_FILES.filter((file) => !file.endsWith("ai-platform.test.ts"));
 
 describe("no third-party AI gateway remains", () => {
   it("never references an AI gateway host anywhere in the app", () => {
-    const offenders = SOURCE_FILES.filter((file) =>
+    const offenders = APP_FILES.filter((file) =>
       readFileSync(file, "utf8").includes("ai.gateway.lovable.dev"),
     );
     expect(offenders).toEqual([]);
@@ -40,8 +42,8 @@ describe("no third-party AI gateway remains", () => {
   it("reads LOVABLE_API_KEY only for email and the Stripe connector, never for AI", () => {
     // Email delivery and the Stripe connector gateway are separate Lovable
     // integrations that have nothing to do with running a model.
-    const allowed = ["email", "stripe.server.ts", "ai-platform.test.ts"];
-    const offenders = SOURCE_FILES.filter((file) => {
+    const allowed = ["email", "stripe.server.ts"];
+    const offenders = APP_FILES.filter((file) => {
       if (!readFileSync(file, "utf8").includes("LOVABLE_API_KEY")) return false;
       return !allowed.some((fragment) => file.includes(fragment));
     });
@@ -50,7 +52,7 @@ describe("no third-party AI gateway remains", () => {
 
   it("keeps provider keys out of anything the browser can load", () => {
     const secretNames = ["GOOGLE_AI_API_KEY", "OPENAI_API_KEY"];
-    const offenders = SOURCE_FILES.filter((file) => {
+    const offenders = APP_FILES.filter((file) => {
       // Server-only modules and the AI layer itself are allowed to read keys.
       if (file.includes(".server.") || file.startsWith("src/lib/ai/")) return false;
       const body = readFileSync(file, "utf8");
@@ -60,7 +62,7 @@ describe("no third-party AI gateway remains", () => {
   });
 
   it("never exposes an AI provider key through a client-visible VITE_ variable", () => {
-    const offenders = SOURCE_FILES.filter((file) =>
+    const offenders = APP_FILES.filter((file) =>
       /VITE_[A-Z_]*(OPENAI|GOOGLE_AI|AI_API)[A-Z_]*/.test(readFileSync(file, "utf8")),
     );
     expect(offenders).toEqual([]);
