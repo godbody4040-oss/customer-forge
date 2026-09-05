@@ -174,14 +174,20 @@ export async function recordStripeTransaction(
     periodEnd?: string | null;
   },
 ) {
-  const { data: existing, error: lookupError } = await admin
+  // Identity is always organization + provider + environment + Stripe id, so a
+  // sandbox charge can never be mistaken for (or overwrite) a live one.
+  const { data: existingRows, error: lookupError } = await admin
     .from("payments")
     .select("id, status")
     .eq("organization_id", input.organizationId)
+    .eq("payment_provider", "stripe")
+    .eq("environment", input.environment)
     .contains("metadata", { stripe_id: input.stripeId })
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
   if (lookupError)
     throw new Error(`payment_lookup_failed:${lookupError.code ?? lookupError.message}`);
+  const existing = existingRows?.[0] ?? null;
 
   if (existing) {
     if (existing.status === input.status) return { inserted: false as const };
