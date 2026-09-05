@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { NewClientInput } from "@/lib/admin-types";
+import { fetchAllRows } from "@/lib/paginate";
 
 type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"];
 type PublishState = Database["public"]["Enums"]["publish_state"];
@@ -270,9 +271,9 @@ export const getClientDetail = createServerFn({ method: "GET" })
       quoteFormCount: (forms.data ?? []).filter((f) => f.is_active).length,
       leads: leads.data ?? [],
       appointments: appts.data ?? [],
-      analyticsCount: (events.data ?? []).length,
+      analyticsCount: events.rows.length,
       usage: (() => {
-        const eventRows = events.data ?? [];
+        const eventRows = events.rows;
         const leadRows = leads.data ?? [];
         const apptRows = appts.data ?? [];
         const days = Array.from({ length: 30 }, (_, i) =>
@@ -311,9 +312,9 @@ export const getClientDetail = createServerFn({ method: "GET" })
           leadSeries: days.map((day) => leadsByDay.get(day) ?? 0),
         };
       })(),
-      views30d: (events.data ?? []).filter((e) => e.event_type === "page_view").length,
+      views30d: events.rows.filter((e) => e.event_type === "page_view").length,
       team: team.data ?? [],
-      subscription: sub.data,
+      subscription: sub.data?.[0] ?? null,
       supportSessions: support.data ?? [],
       domainTarget: DOMAIN_TARGET,
     };
