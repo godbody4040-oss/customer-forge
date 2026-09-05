@@ -306,7 +306,6 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       } | null,
     });
 
-
     let attempt = 0;
     for (;;) {
       attempt += 1;
@@ -329,7 +328,6 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
         throw error;
       }
     }
-
 
     const allSections = agentContext.pages.flatMap((page) =>
       page.sections.map((section) => ({ ...section, pageId: page.id })),
@@ -382,7 +380,6 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       unavailable: null as { reason: string; retryable: boolean; instruction: string } | null,
     };
 
-
     await supabase.from("ai_generations").insert({
       organization_id: orgId,
       kind: "agent_plan",
@@ -433,7 +430,6 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
     // a change is always traceable as a single operation rather than a scatter
     // of unrelated edits.
     const operationId = crypto.randomUUID();
-
 
     // Writing invalidates the agent's cached picture of this workspace, so the
     // next plan is made against the site as it now really is.
@@ -731,7 +727,13 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
         kind: "agent_apply_rolled_back",
         model: "applied",
         instruction: snapshotLabel,
-        result: { operationId, applied, failed, reversal, mutations: undoSteps.length } as unknown as never,
+        result: {
+          operationId,
+          applied,
+          failed,
+          reversal,
+          mutations: undoSteps.length,
+        } as unknown as never,
         created_by: userId,
       });
       invalidateWorkspaceContext(orgId);
@@ -772,7 +774,13 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           kind: "agent_apply_failed_verification",
           model: "applied",
           instruction: snapshotLabel,
-          result: { operationId, applied, verification, reversal, mutations: undoSteps.length } as unknown as never,
+          result: {
+            operationId,
+            applied,
+            verification,
+            reversal,
+            mutations: undoSteps.length,
+          } as unknown as never,
           created_by: userId,
         });
         invalidateWorkspaceContext(orgId);

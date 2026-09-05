@@ -162,11 +162,7 @@ export function SiteChatbot({
       setPlan(next);
       setSkipped(new Set());
       // The writer was unreachable: keep the owner's words so one tap resends them.
-      if (result.unavailable) {
-        setQueued(result.unavailable.instruction);
-        return;
-      }
-      setQueued(null);
+      if (result.unavailable) return;
       // Auto-apply: safe plans (nothing removed, nothing missing) go straight onto the site.
       const safe =
         steps.length > 0 && !steps.some((step) => step.destructive) && !result.questions.length;
@@ -400,7 +396,7 @@ export function SiteChatbot({
             )}
             {messages.length ? "Send" : "Ask Revora"}
           </Button>
-          {propose.isError && lastRequest ? (
+          {(propose.isError || plan?.unavailable) && lastRequest ? (
             <Button
               type="button"
               variant="outline"
