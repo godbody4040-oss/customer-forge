@@ -245,8 +245,9 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
     // 3/4. Trials — authoritative rows joined to non-demo workspaces.
     const trialRows = await supabaseAdmin
       .from("platform_trials")
-      .select("organization_id, started_at, trial_ends_at")
+      .select("organization_id, started_at, trial_ends_at, converted_at")
       .gte("started_at", since);
+
     const orgRows = await supabaseAdmin
       .from("organizations")
       .select("id, is_demo, is_suspended, subscription_status, trial_ends_at");
