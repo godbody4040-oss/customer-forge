@@ -9,13 +9,7 @@
  * resolved from the incoming Host header.
  */
 import { publicClient, publicOrganization } from "@/lib/public-site.server";
-import { INDUSTRIES, industrySlug } from "@/lib/domain";
-import { US_STATES } from "@/lib/us-states";
-import { NC_LOCATIONS } from "@/lib/business-identity";
-import { localPaths } from "@/lib/local-pages";
-import { comparePaths } from "@/lib/compare";
-import { crmSolutionPaths } from "@/lib/crm-solutions";
-import { guidePaths } from "@/lib/guides";
+import { indexablePlatformPaths } from "@/lib/seo-intent";
 
 import {
   REVORA_OWN_HOSTS,
@@ -152,49 +146,20 @@ export async function resolveHostSite(
 }
 
 /** Absolute URLs for a tenant site, or for Revora's own marketing pages. */
+/**
+ * Absolute URLs for a tenant site, or for Revora's own marketing pages.
+ *
+ * Revora's own list comes from the SEO inventory, so only canonical, indexable
+ * pages with real unique value are advertised: private surfaces, demos, share
+ * helpers and thin pages are excluded automatically rather than by hand.
+ */
 export function sitemapUrls(site: HostSite | null, origin: string) {
   if (!site) {
-    const industryPaths = INDUSTRIES.map((i) => `/industries/${industrySlug(i.name)}`);
-    const locationPaths = NC_LOCATIONS.map((l) => `/locations/${l.slug}`);
-    const statePaths = US_STATES.map((s) => `/states/${s.slug}`);
-    return (
-      [
-        "",
-        "/pricing",
-        "/get-started",
-        "/portal",
-        "/share",
-        "/growth-assessment",
-        "/website-audit",
-        "/tools",
-        "/industries",
-        ...industryPaths,
-        "/locations",
-        ...locationPaths,
-        "/states",
-        ...statePaths,
-        ...localPaths(),
-        "/compare",
-        ...comparePaths(),
-        "/guides",
-        ...guidePaths(),
-        "/crm-for-contractors",
-        ...crmSolutionPaths(),
-        "/about",
-        "/contact",
-        "/demo",
-        "/demo/dashboard",
-        "/privacy",
-        "/terms",
-      ]
-        // comparePaths()/guidePaths() already include their index page, so the
-        // hub entries above can repeat; a sitemap must never list a URL twice.
-        .filter((path, i, all) => all.indexOf(path) === i)
-        .map((path) => ({
-          loc: `${origin}${path}`,
-          lastmod: null as string | null,
-        }))
-    );
+    return indexablePlatformPaths().map((path) => ({
+      loc: `${origin}${path}`,
+      // No fabricated lastmod: a build-time date on a static page is noise.
+      lastmod: null as string | null,
+    }));
   }
   const paths = [{ slug: "home", updatedAt: null as string | null }, ...site.pages].filter(
     (p, i, all) => all.findIndex((x) => x.slug === p.slug) === i,
