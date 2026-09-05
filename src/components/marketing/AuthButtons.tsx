@@ -88,8 +88,10 @@ export function AuthActions({
 
 /** One line of reassurance under the hero pair. Never shown to a signed-in visitor. */
 export function AuthHint({ className = "" }: { className?: string }) {
-  const { loading, user } = useSession();
-  if (loading || user) return null;
+  // Shown until we know there is a session — a visitor should never wait on a
+  // session check to be told where to sign in.
+  const { user } = useSession();
+  if (user) return null;
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
       No card needed to start. Already have a Revora account?{" "}
