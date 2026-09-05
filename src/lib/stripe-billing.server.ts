@@ -82,7 +82,7 @@ export async function syncStripeSubscription(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscription: any,
   env: StripeEnv,
-): Promise<{ ok: boolean; organizationId?: string; reason?: string }> {
+): Promise<{ ok: boolean; organizationId?: string; reason?: string; canonical?: boolean }> {
   const organizationId = subscription?.metadata?.organizationId as string | undefined;
   if (!organizationId) return { ok: false, reason: "missing_organization_metadata" };
 
