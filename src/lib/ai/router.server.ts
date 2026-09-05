@@ -140,7 +140,8 @@ function guardRequest(messages: AiMessage[]) {
       category: "too_large",
     });
   for (const part of attachmentParts(messages)) {
-    if (base64ByteLength(part.dataUrl) > limits.maxAttachmentBytes)
+    const dataUrl = "dataUrl" in part ? part.dataUrl : "";
+    if (base64ByteLength(dataUrl) > limits.maxAttachmentBytes)
       throw new RevoraAiError(413, "That attachment is too large for Revora AI.", {
         category: "too_large",
       });
@@ -281,7 +282,7 @@ export async function generateText(
       messages: request.messages,
       json: request.json === true,
       maxOutputTokens: Math.min(request.maxOutputTokens ?? limits.maxOutputTokens, limits.maxOutputTokens),
-      temperature: request.temperature,
+      ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
       signal,
     });
     return {

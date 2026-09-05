@@ -104,11 +104,30 @@ register<{ organizationId: string }>({
   mutates: false,
   parse: (raw) => ({ organizationId: uuid(record(raw)["organizationId"], "organizationId") }),
   run: async (input, context) => {
-    const { getWorkspaceContext } = await import("@/lib/agent/workspace-context.server");
-    return getWorkspaceContext(
-      context.supabase as unknown as Parameters<typeof getWorkspaceContext>[0],
-      input.organizationId,
-    );
+    // Read through the caller's own client, so row level security decides what
+    // is visible exactly as it would for the person in the browser.
+    const client = context.supabase as unknown as {
+      from: (table: string) => {
+        select: (columns: string) => {
+          eq: (
+            column: string,
+            value: unknown,
+          ) => Promise<{ data: unknown[] | null; error: unknown }>;
+        };
+      };
+    };
+    const [pages, sections] = await Promise.all([
+      client
+        .from("website_pages")
+        .select("id, slug, title, kind, is_visible, noindex, seo_title, seo_description")
+        .eq("organization_id", input.organizationId),
+      client
+        .from("website_sections")
+        .select("id, page_id, kind, heading, subheading, is_visible")
+        .eq("organization_id", input.organizationId),
+    ]);
+    if (pages.error) throw new Error("You don't have access to that workspace.");
+    return { pages: pages.data ?? [], sections: sections.data ?? [] };
   },
 });
 
@@ -124,7 +143,7 @@ register<{ organizationId: string }>({
     return verifyWorkspaceSite(
       context.supabase as unknown as Parameters<typeof verifyWorkspaceSite>[0],
       input.organizationId,
-    );
+    ) as unknown;
   },
 });
 
@@ -184,6 +203,8 @@ async function audit(
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("ai_tool_audit").insert({
+      // Audit rows are written with the trusted server client on purpose: a
+      // refused call must still be recorded even when the caller had no access.
       request_id: entry.requestId,
       tool: entry.tool.slice(0, 60),
       organization_id: context.organizationId,

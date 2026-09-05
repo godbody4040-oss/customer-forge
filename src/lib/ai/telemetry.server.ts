@@ -39,7 +39,7 @@ export async function recordAiEvent(event: AiEvent) {
   try {
     const client = await admin();
     await client.from("ai_usage_events").insert({
-      request_id: event.requestId,
+      request_id: event.requestId ?? crypto.randomUUID(),
       provider: event.provider,
       model: event.model,
       task: event.task.slice(0, 60),
