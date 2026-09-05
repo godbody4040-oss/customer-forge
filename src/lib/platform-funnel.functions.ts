@@ -103,7 +103,7 @@ export const provisionWorkspace = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: organizationId, error } = await context.supabase.rpc("provision_workspace", {
       _name: data.name,
-      _industry: data.industry ?? undefined,
+      ...(data.industry ? { _industry: data.industry } : {}),
       _profile: data.profile as never,
       _trial_days: GROWTH_SYSTEM.fullAccessTrialDays,
     });
