@@ -83,6 +83,8 @@ const L = {
   },
 } satisfies Record<string, SeoLink>;
 
+const FALLBACK: SeoLink[] = [L.pricing, L.crm];
+
 const CLUSTERS: Record<string, SeoLink[]> = {
   brand: [L.crm, L.local, L.pricing, L.audit],
   commercial: [L.industries, L.local, L.guides, L.pricing],
@@ -92,7 +94,6 @@ const CLUSTERS: Record<string, SeoLink[]> = {
   informational: [L.crm, L.contractorCrm, L.tools, L.pricing],
   comparison: [L.pricing, L.crm, L.guides, L.getStarted],
   navigational: [L.pricing, L.crm, L.guides],
-  brandFallback: [L.pricing, L.crm],
 };
 
 /**
@@ -101,6 +102,6 @@ const CLUSTERS: Record<string, SeoLink[]> = {
  */
 export function internalLinksFor(path: string, limit = 4): SeoLink[] {
   const intent = classifyIntent(path);
-  const cluster = CLUSTERS[intent] ?? CLUSTERS.brandFallback ?? [];
+  const cluster = CLUSTERS[intent] ?? FALLBACK;
   return cluster.filter((link) => link.path !== path).slice(0, limit);
 }
