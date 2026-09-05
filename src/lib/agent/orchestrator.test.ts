@@ -132,13 +132,7 @@ describe("orchestrator pipeline", () => {
     },
   };
 
-  const run = (plan: ReturnType<typeof vi.fn>, over: Partial<typeof understanding.complex> = {}) => {
-    vi.doMock("@/lib/agent/understanding.server", () => ({
-      understandRequest: async () => ({ ...understanding.complex, ...over }),
-      understandWithoutModel,
-    }));
-    return plan;
-  };
+  const understand = async () => understanding.complex;
 
   it("merges the review pass, never repeating an identical action", async () => {
     const first = {
@@ -161,7 +155,6 @@ describe("orchestrator pipeline", () => {
       .fn()
       .mockResolvedValueOnce(first as Record<string, unknown>)
       .mockResolvedValueOnce(second as Record<string, unknown>);
-    run(plan);
 
     const result = await orchestrate({
       context,
@@ -170,6 +163,7 @@ describe("orchestrator pipeline", () => {
       history: [],
       attachments: [],
       plan,
+      understand,
     });
 
     expect(plan).toHaveBeenCalledTimes(2);
@@ -193,7 +187,6 @@ describe("orchestrator pipeline", () => {
         missing: ["Clear single call to action"],
         notes: [],
       } as Record<string, unknown>);
-    run(plan);
 
     const result = await orchestrate({
       context,
@@ -202,6 +195,7 @@ describe("orchestrator pipeline", () => {
       history: [],
       attachments: [],
       plan,
+      understand,
     });
 
     const open = result.requirements.find((r) => r.label === "Clear single call to action");
@@ -219,7 +213,6 @@ describe("orchestrator pipeline", () => {
         notes: [],
       } as Record<string, unknown>)
       .mockRejectedValueOnce(new Error("gateway down"));
-    run(plan);
 
     const result = await orchestrate({
       context,
@@ -228,6 +221,7 @@ describe("orchestrator pipeline", () => {
       history: [],
       attachments: [],
       plan,
+      understand,
     });
     expect((result.raw["actions"] as unknown[]).length).toBe(1);
     expect(result.trace.join(" ")).toMatch(/first drafted/);

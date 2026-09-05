@@ -136,11 +136,21 @@ export async function orchestrate(options: {
   history: AgentTurn[];
   attachments: AgentAttachment[];
   plan: PlanFn;
+  /** Injectable understanding stage, so the pipeline stays testable. */
+  understand?: (
+    instruction: string,
+    workspaceSummary: string,
+    history: AgentTurn[],
+  ) => Promise<Understanding>;
 }): Promise<OrchestratedPlan> {
   const { context, instruction, history, attachments, plan } = options;
   const trace: string[] = [];
 
-  const understanding = await understandRequest(instruction, options.workspaceSummary, history);
+  const understanding = await (options.understand ?? understandRequest)(
+    instruction,
+    options.workspaceSummary,
+    history,
+  );
   trace.push(
     understanding.source === "model"
       ? `Read the request as: ${understanding.goal}`
