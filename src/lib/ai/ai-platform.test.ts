@@ -12,7 +12,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-import { AI_NOT_CONFIGURED_MESSAGE, RevoraAiError } from "@/lib/ai/errors";
+import { AI_NOT_CONFIGURED_MESSAGE } from "@/lib/ai/errors";
 import { isAiConfigured, providerChain, providerConfig, aiLimits } from "@/lib/ai/config";
 import { createRunBudget, findTool, listTools, runTool } from "@/lib/ai/tools.server";
 
@@ -37,10 +37,13 @@ describe("no third-party AI gateway remains", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("reads LOVABLE_API_KEY only in email delivery, never for AI", () => {
+  it("reads LOVABLE_API_KEY only for email and the Stripe connector, never for AI", () => {
+    // Email delivery and the Stripe connector gateway are separate Lovable
+    // integrations that have nothing to do with running a model.
+    const allowed = ["email", "stripe.server.ts", "ai-platform.test.ts"];
     const offenders = SOURCE_FILES.filter((file) => {
       if (!readFileSync(file, "utf8").includes("LOVABLE_API_KEY")) return false;
-      return !file.includes("email");
+      return !allowed.some((fragment) => file.includes(fragment));
     });
     expect(offenders).toEqual([]);
   });
@@ -185,7 +188,7 @@ describe("provider fallback", () => {
       generateText({ task: "test.auth", organizationId: null, userId: null }, {
         messages: [{ role: "user", content: "hello" }],
       }),
-    ).rejects.toBeInstanceOf(RevoraAiError);
+    ).rejects.toMatchObject({ name: "RevoraAiError", category: "unauthorized" });
   });
 
   it("refuses an oversized request before paying a provider to refuse it", async () => {
