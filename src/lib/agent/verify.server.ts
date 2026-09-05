@@ -17,9 +17,15 @@ import { inspectHtml, summarise, type Check, type VerificationReport } from "@/l
 type Client = {
   from: (table: string) => {
     select: (columns: string) => {
-      eq: (column: string, value: string) => {
+      eq: (
+        column: string,
+        value: string,
+      ) => {
         maybeSingle: () => PromiseLike<{ data: Record<string, unknown> | null }>;
-        eq: (column: string, value: unknown) => {
+        eq: (
+          column: string,
+          value: unknown,
+        ) => {
           order: (column: string) => PromiseLike<{ data: Record<string, unknown>[] | null }>;
         };
       };

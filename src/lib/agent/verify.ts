@@ -76,7 +76,11 @@ export function inspectHtml(html: string, where: string): PageInspection {
     .filter((tag) => /name\s*=\s*["']description["']/i.test(tag))
     .map((tag) => attr(tag, "content"))
     .find(Boolean);
-  add("Google has a description to show", Boolean(description && description.length > 20), "warning");
+  add(
+    "Google has a description to show",
+    Boolean(description && description.length > 20),
+    "warning",
+  );
 
   const viewport = metas.some((tag) => /name\s*=\s*["']viewport["']/i.test(tag));
   add("The page is readable on a phone", viewport, "critical");
@@ -91,7 +95,12 @@ export function inspectHtml(html: string, where: string): PageInspection {
   );
 
   const body = stripped(html);
-  add("The page has real content on it", body.length > 200, "critical", `${body.length} characters`);
+  add(
+    "The page has real content on it",
+    body.length > 200,
+    "critical",
+    `${body.length} characters`,
+  );
   const placeholder = PLACEHOLDER.exec(body);
   add(
     "No draft or placeholder text is showing",

@@ -379,7 +379,6 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
 
 export type WebsitePlan = Awaited<ReturnType<typeof planImpl>>;
 
-
 /* --------------------------------- applying -------------------------------- */
 
 export const applyWebsiteChanges = createServerFn({ method: "POST" })
@@ -406,7 +405,6 @@ type ApplyInput = {
 async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInput) {
   {
     const orgId = data.organizationId;
-
 
     // Writing invalidates the agent's cached picture of this workspace, so the
     // next plan is made against the site as it now really is.
@@ -772,7 +770,6 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
   }
 }
 
-
 /* ------------------------------ voice commands ----------------------------- */
 
 /**
@@ -855,4 +852,142 @@ export const summarizeClipChapters = createServerFn({ method: "POST" })
     }
 
     return result;
+  });
+
+/* ------------------------------- autonomous run ---------------------------- */
+
+/**
+ * THE AUTONOMOUS RUN.
+ *
+ * One request in plain words, and Revora goes all the way:
+ * UNDERSTAND → INSPECT → PLAN → EXECUTE → TEST → INSPECT → VERIFY → REPAIR →
+ * RETEST → REPORT.
+ *
+ * Two rules keep this safe rather than reckless:
+ * - Anything that removes something (a page, a section, a button) is never done
+ *   on its own. Those steps come back for the owner to approve.
+ * - Everything else is applied inside the existing all-or-nothing apply, with a
+ *   verified restore point first and a real check of the live pages after. If the
+ *   pages fail that check, the change is reversed and Revora tries once more
+ *   with the failure in front of it. It never reports success it did not verify.
+ */
+export const runWebsiteTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      organizationId: string;
+      instruction: string;
+      history?: { role: string; content: string }[];
+      attachments?: unknown;
+    }) => {
+      const organizationId = orgIdOf(input);
+      const instruction = str(input?.instruction, PLAN_INSTRUCTION_LIMIT);
+      const attachments = readAttachments(input?.attachments);
+      if (instruction.length < 3 && !attachments.length)
+        throw new Error("Tell Revora what you'd like done — in your own words.");
+      const history: AgentTurn[] = Array.isArray(input?.history)
+        ? input.history
+            .slice(-8)
+            .map((turn) => ({
+              role: turn?.role === "assistant" ? ("assistant" as const) : ("user" as const),
+              content: str(turn?.content, 4000),
+            }))
+            .filter((turn) => turn.content.length > 0)
+        : [];
+      return { organizationId, instruction, history, attachments };
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase as unknown as SupabaseLike;
+    const userId = String(context.userId);
+    const trail: string[] = [];
+
+    const attempt = async (instruction: string, label: string) => {
+      const plan = await planImpl(supabase, userId, {
+        organizationId: data.organizationId,
+        instruction,
+        history: data.history,
+        attachments: data.attachments,
+      });
+      const safe = plan.steps.filter((step: AgentStep) => !step.destructive);
+      const needsApproval = plan.steps.filter((step: AgentStep) => step.destructive);
+      if (!safe.length)
+        return {
+          plan,
+          needsApproval,
+          applied: null as null | Awaited<ReturnType<typeof applyImpl>>,
+        };
+      const applied = await applyImpl(supabase, userId, {
+        organizationId: data.organizationId,
+        actions: safe.map((step: AgentStep) => step.action),
+        label,
+        verify: true,
+      });
+      return { plan, needsApproval, applied };
+    };
+
+    let outcome: Awaited<ReturnType<typeof attempt>>;
+    try {
+      outcome = await attempt(data.instruction, "Before Revora's autonomous run");
+      trail.push(
+        outcome.applied
+          ? `Applied ${outcome.applied.applied} change${outcome.applied.applied === 1 ? "" : "s"} and checked your live pages`
+          : "Planned the work — nothing could be done without your approval",
+      );
+    } catch (first) {
+      const reason = first instanceof Error ? first.message : "the change did not hold";
+      trail.push("First attempt was reversed automatically, so your site was never left broken");
+      // REPAIR, then RETEST. The second attempt is told exactly what went wrong.
+      try {
+        outcome = await attempt(
+          `${data.instruction}\n\nYour previous attempt was rolled back because the live pages failed this check: ${reason} Fix that cause in this attempt.`,
+          "Before Revora's repaired run",
+        );
+        trail.push("Repaired it and the live pages passed on the second attempt");
+      } catch (second) {
+        const detail = second instanceof Error ? second.message : reason;
+        await supabase.from("ai_generations").insert({
+          organization_id: data.organizationId,
+          kind: "agent_autorun_failed",
+          model: "autorun",
+          instruction: data.instruction.slice(0, 4000),
+          result: { reason, detail } as unknown as never,
+          created_by: userId,
+        });
+        throw new Error(
+          `Revora tried this twice and reversed both attempts, so your website is exactly as it was. ${detail}`,
+        );
+      }
+    }
+
+    if (outcome.needsApproval.length)
+      trail.push(
+        `Held back ${outcome.needsApproval.length} step${outcome.needsApproval.length === 1 ? "" : "s"} that would remove something — those need your approval`,
+      );
+
+    await supabase.from("ai_generations").insert({
+      organization_id: data.organizationId,
+      kind: "agent_autorun",
+      model: "autorun",
+      instruction: data.instruction.slice(0, 4000),
+      result: {
+        applied: outcome.applied?.applied ?? 0,
+        verification: outcome.applied?.verification ?? null,
+        heldBack: outcome.needsApproval.length,
+      } as unknown as never,
+      created_by: userId,
+    });
+
+    return {
+      reply: outcome.plan.reply,
+      summary: outcome.plan.summary,
+      notes: outcome.plan.notes,
+      requirements: outcome.plan.requirements,
+      trace: [...outcome.plan.trace, ...trail].slice(0, 14),
+      applied: outcome.applied?.applied ?? 0,
+      snapshotLabel: outcome.applied?.snapshotLabel ?? null,
+      snapshotVersion: outcome.applied?.snapshotVersion ?? null,
+      verification: outcome.applied?.verification ?? null,
+      approvalSteps: outcome.needsApproval,
+    };
   });
