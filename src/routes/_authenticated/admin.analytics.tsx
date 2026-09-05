@@ -82,8 +82,8 @@ function AdminAnalytics() {
     <div className="space-y-5">
       <SectionHeading
         eyebrow="Funnel"
-        title="Visitors → accounts → trials → paid customers"
-        description="Every funnel number is read from the database: accounts from real sign-ups, trials from provisioned workspaces, paid customers from verified Stripe billing. Nothing is estimated."
+        title="Unique visitors → unique sessions → accounts → trials → paid customers"
+        description="Accounts come from real sign-ups, trials from provisioned workspaces, paid customers from verified Stripe billing. Nothing is estimated. Select a stage to see the records behind the number."
       />
 
       <div className="flex flex-wrap gap-2">
@@ -109,97 +109,135 @@ function AdminAnalytics() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {(funnel.data?.stages ?? []).map((stage) => (
-            <MetricCard
+            <button
               key={stage.key}
-              label={stage.label}
-              value={stage.count === null ? "Analytics unavailable" : number(stage.count)}
-              hint={
-                stage.count === null
-                  ? "Query failed — this is not zero"
-                  : stage.rate !== null
-                    ? `${stage.rate}% ${stage.rateLabel ?? ""}`.trim()
-                    : (stage.rateLabel ?? `Last ${funnel.data?.days} days`)
-              }
-              {...(stage.key === "paid" ? { tone: "signal" as const } : {})}
-            />
+              type="button"
+              onClick={() => setOpenStage(openStage === stage.key ? null : stage.key)}
+              aria-pressed={openStage === stage.key}
+              className={`rounded-xl text-left transition ${
+                openStage === stage.key ? "ring-2 ring-ring" : "hover:opacity-90"
+              }`}
+            >
+              <MetricCard
+                label={stage.label}
+                value={stage.count === null ? "Analytics unavailable" : number(stage.count)}
+                hint={
+                  stage.count === null
+                    ? "Query failed — this is not zero"
+                    : stage.rate !== null
+                      ? `${stage.rate}% ${stage.rateLabel ?? ""}`.trim()
+                      : (stage.rateLabel ?? `Last ${funnel.data?.days} days`)
+                }
+                {...(stage.key === "paid" ? { tone: "signal" as const } : {})}
+              />
+            </button>
           ))}
         </div>
       )}
 
       <Panel className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-display text-[15px] font-semibold">Where each number comes from</p>
-          <Button size="sm" variant="outline" onClick={() => setShowDetails((v) => !v)}>
-            {showDetails ? "Hide records" : "Show records"}
-          </Button>
-        </div>
-        {showDetails ? (
-          details.isError ? (
-            <p className="text-[12px] text-muted-foreground">
-              Analytics unavailable — the underlying records could not be read.
-            </p>
-          ) : details.isLoading ? (
-            <LoadingRows rows={3} />
-          ) : (
-            <div className="space-y-4 text-[12px]">
-              <div>
-                <p className="eyebrow">Accounts created</p>
-                <ul className="divide-y divide-border">
-                  {(details.data?.accounts ?? []).slice(0, 25).map((row) => (
-                    <li key={row.id} className="flex justify-between gap-3 py-1.5">
-                      <span className="truncate font-mono text-[11px]">{row.id}</span>
-                      <span className="shrink-0 text-muted-foreground">
-                        {new Date(row.createdAt).toISOString().slice(0, 16).replace("T", " ")} UTC
-                      </span>
-                    </li>
-                  ))}
-                  {(details.data?.accounts ?? []).length === 0 ? (
-                    <li className="py-1.5 text-muted-foreground">No accounts in this range.</li>
-                  ) : null}
-                </ul>
-              </div>
-              <div>
-                <p className="eyebrow">Trials</p>
-                <ul className="divide-y divide-border">
-                  {(details.data?.trials ?? []).slice(0, 25).map((row) => (
-                    <li key={row.organizationId} className="flex justify-between gap-3 py-1.5">
-                      <span className="truncate">{row.name ?? row.organizationId}</span>
-                      <span className="shrink-0 text-muted-foreground">
-                        ends {new Date(row.trialEndsAt).toISOString().slice(0, 10)} ·{" "}
-                        {row.active ? "active" : row.status}
-                      </span>
-                    </li>
-                  ))}
-                  {(details.data?.trials ?? []).length === 0 ? (
-                    <li className="py-1.5 text-muted-foreground">No trials in this range.</li>
-                  ) : null}
-                </ul>
-              </div>
-              <div>
-                <p className="eyebrow">Paid customers (verified Stripe)</p>
-                <ul className="divide-y divide-border">
-                  {(details.data?.paid ?? []).slice(0, 25).map((row) => (
-                    <li key={row.organizationId} className="flex justify-between gap-3 py-1.5">
-                      <span className="truncate">{row.name ?? row.organizationId}</span>
-                      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
-                        {row.subscriptionId ?? "—"}
-                      </span>
-                    </li>
-                  ))}
-                  {(details.data?.paid ?? []).length === 0 ? (
-                    <li className="py-1.5 text-muted-foreground">No paid customers yet.</li>
-                  ) : null}
-                </ul>
-              </div>
-            </div>
-          )
-        ) : (
-          <p className="text-[12px] text-muted-foreground">
-            Accounts are one record per sign-in identity, trials one record per workspace, paid
-            customers one record per active Stripe subscription — so nobody can be counted twice.
+          <p className="font-display text-[15px] font-semibold">
+            {openStage ? `${STAGE_TITLES[openStage] ?? "Stage"} — the records behind it` : "Where each number comes from"}
           </p>
+          {openStage ? (
+            <Button size="sm" variant="outline" onClick={() => setOpenStage(null)}>
+              Close
+            </Button>
+          ) : null}
+        </div>
+
+        <p className="text-[12px] text-muted-foreground">
+          <strong className="font-semibold text-foreground">Unique visitors</strong> counts browsers,
+          each one once however often it returns, using a random ID stored in that browser — no
+          names, emails, IP addresses or device fingerprints.{" "}
+          <strong className="font-semibold text-foreground">Unique sessions</strong> counts separate
+          browsing visits, so one visitor coming back three times is 1 visitor and 3 sessions.
+          Accounts are one record per sign-in identity, trials one per workspace, paid customers one
+          per active Stripe subscription — so nobody can be counted twice.
+        </p>
+
+        {!openStage ? (
+          <p className="text-[12px] text-muted-foreground">
+            Select any stage above to open its records.
+          </p>
+        ) : details.isError ? (
+          <p className="text-[12px] text-muted-foreground">
+            Analytics unavailable — the underlying records could not be read.
+          </p>
+        ) : details.isLoading ? (
+          <LoadingRows rows={3} />
+        ) : openStage === "visitors" || openStage === "sessions" ? (
+          <ul className="divide-y divide-border text-[12px]">
+            {(details.data?.traffic ?? []).slice(0, 60).map((row) => (
+              <li key={row.day} className="flex items-center justify-between gap-3 py-1.5">
+                <span className="font-mono text-[11px]">{row.day}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {number(row.visitors)} visitors · {number(row.sessions)} sessions ·{" "}
+                  {number(row.views)} views
+                </span>
+              </li>
+            ))}
+            {(details.data?.traffic ?? []).length === 0 ? (
+              <li className="py-1.5 text-muted-foreground">No traffic recorded in this range.</li>
+            ) : null}
+          </ul>
+        ) : openStage === "accounts" ? (
+          <ul className="divide-y divide-border text-[12px]">
+            {(details.data?.accounts ?? []).slice(0, 100).map((row) => (
+              <li key={row.id} className="flex justify-between gap-3 py-1.5">
+                <span className="truncate font-mono text-[11px]">{row.id}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  {new Date(row.createdAt).toISOString().slice(0, 16).replace("T", " ")} UTC
+                </span>
+              </li>
+            ))}
+            {(details.data?.accounts ?? []).length === 0 ? (
+              <li className="py-1.5 text-muted-foreground">No accounts in this range.</li>
+            ) : null}
+          </ul>
+        ) : openStage === "trials" || openStage === "active_trials" ? (
+          <ul className="divide-y divide-border text-[12px]">
+            {(details.data?.trials ?? [])
+              .filter((row) => (openStage === "active_trials" ? row.active : true))
+              .slice(0, 100)
+              .map((row) => (
+                <li key={row.organizationId} className="flex justify-between gap-3 py-1.5">
+                  <span className="truncate">{row.name ?? row.organizationId}</span>
+                  <span className="shrink-0 text-muted-foreground">
+                    started {new Date(row.startedAt).toISOString().slice(0, 10)} · ends{" "}
+                    {new Date(row.trialEndsAt).toISOString().slice(0, 10)} ·{" "}
+                    {row.active ? "active" : row.status}
+                  </span>
+                </li>
+              ))}
+            {(details.data?.trials ?? []).filter((row) =>
+              openStage === "active_trials" ? row.active : true,
+            ).length === 0 ? (
+              <li className="py-1.5 text-muted-foreground">
+                {openStage === "active_trials"
+                  ? "No trials are running right now."
+                  : "No trials in this range."}
+              </li>
+            ) : null}
+          </ul>
+        ) : (
+          <ul className="divide-y divide-border text-[12px]">
+            {(details.data?.paid ?? []).slice(0, 100).map((row) => (
+              <li key={row.organizationId} className="flex justify-between gap-3 py-1.5">
+                <span className="truncate">{row.name ?? row.organizationId}</span>
+                <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+                  {row.subscriptionId ?? "—"}
+                </span>
+              </li>
+            ))}
+            {(details.data?.paid ?? []).length === 0 ? (
+              <li className="py-1.5 text-muted-foreground">No paid customers yet.</li>
+            ) : null}
+          </ul>
         )}
       </Panel>
+
 
       <SectionHeading
         eyebrow="Marketing traffic"
