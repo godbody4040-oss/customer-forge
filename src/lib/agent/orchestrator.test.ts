@@ -186,6 +186,8 @@ describe("orchestrator pipeline", () => {
       attachments: [],
       plan,
       understand,
+      design,
+      critique,
     });
 
     expect(plan).toHaveBeenCalledTimes(2);
@@ -218,6 +220,8 @@ describe("orchestrator pipeline", () => {
       attachments: [],
       plan,
       understand,
+      design,
+      critique,
     });
 
     const open = result.requirements.find((r) => r.label === "Clear single call to action");
@@ -244,6 +248,8 @@ describe("orchestrator pipeline", () => {
       attachments: [],
       plan,
       understand,
+      design,
+      critique,
     });
     expect((result.raw["actions"] as unknown[]).length).toBe(1);
     expect(result.trace.join(" ")).toMatch(/first drafted/);
