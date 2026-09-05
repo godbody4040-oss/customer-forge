@@ -100,27 +100,6 @@ type SupabaseLike = {
   from: SupabaseClient["from"];
 };
 
-function indexOf(site: LoadedSite): { index: SiteIndex; currentText: Map<string, string> } {
-  const index: SiteIndex = { pages: new Map(), sections: new Map(), components: new Map() };
-  const currentText = new Map<string, string>();
-  for (const page of site.pages) index.pages.set(page.id, { title: page.title, slug: page.slug });
-  for (const section of site.sections) {
-    index.sections.set(section.id, {
-      pageId: section.page_id,
-      label: section.heading?.slice(0, 40) || section.kind.replace(/_/g, " "),
-    });
-    currentText.set(`${section.id}:heading`, section.heading ?? "");
-    currentText.set(`${section.id}:subheading`, section.subheading ?? "");
-    currentText.set(`${section.id}:body`, section.body ?? "");
-  }
-  for (const component of site.components)
-    index.components.set(component.id, {
-      sectionId: component.section_id,
-      label: component.label?.slice(0, 40) || component.kind.replace(/_/g, " "),
-    });
-  return { index, currentText };
-}
-
 /* --------------------------------- planning -------------------------------- */
 
 export const planWebsiteChanges = createServerFn({ method: "POST" })
@@ -394,6 +373,11 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const orgId = data.organizationId;
+
+    // Writing invalidates the agent's cached picture of this workspace, so the
+    // next plan is made against the site as it now really is.
+    const { invalidateWorkspaceContext } = await import("@/lib/agent/workspace-context.server");
+    invalidateWorkspaceContext(orgId);
 
     const site = await loadSite(supabase as unknown as SupabaseLike, orgId);
     const actions = readActions(data.actions, {
