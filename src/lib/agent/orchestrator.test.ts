@@ -8,6 +8,7 @@ import {
 import { orchestrate, planningBrief } from "@/lib/agent/orchestrator.server";
 import { understandWithoutModel } from "@/lib/agent/understanding.server";
 import type { AgentContext } from "@/lib/site-agent.server";
+import type { Understanding } from "@/lib/agent/understanding.server";
 
 const context: AgentContext = {
   business: {
@@ -121,18 +122,18 @@ describe("planning brief", () => {
 });
 
 describe("orchestrator pipeline", () => {
-  const understanding = {
+  const understanding: { complex: Understanding } = {
     complex: {
       goal: "A more premium homepage",
       requirements: ["Stronger hero hierarchy", "Clear single call to action"],
-      capabilities: ["design"] as const,
+      capabilities: ["design"],
       tasks: [
-        { title: "a", brief: "b", capabilities: ["design"] as const },
-        { title: "c", brief: "d", capabilities: ["cta"] as const },
+        { title: "a", brief: "b", capabilities: ["design"] },
+        { title: "c", brief: "d", capabilities: ["cta"] },
       ],
-      complexity: "complex" as const,
+      complexity: "complex",
       question: null,
-      source: "model" as const,
+      source: "model",
     },
   };
 
