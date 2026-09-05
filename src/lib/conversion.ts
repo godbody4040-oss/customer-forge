@@ -100,6 +100,7 @@ export function trackConversion(
       utmMedium: attribution?.utmMedium ?? null,
       utmCampaign: attribution?.utmCampaign ?? null,
       sessionId: attribution?.sessionId ?? null,
+      visitorId: getVisitorId(),
       email: extra?.email ?? null,
       amountCents: extra?.amountCents ?? null,
       metadata,
