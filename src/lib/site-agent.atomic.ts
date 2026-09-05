@@ -16,13 +16,25 @@ import type { AgentAction } from "@/lib/site-agent";
 
 type Row = Record<string, unknown>;
 
+/**
+ * The chainable query surface this journal uses. Typed structurally rather than
+ * against the generated Supabase types so the journal stays table-agnostic.
+ */
+type Chain = PromiseLike<{ data: unknown; error: unknown }> & {
+  eq: (column: string, value: unknown) => Chain;
+  in: (column: string, values: unknown[]) => Chain;
+  gte: (column: string, value: unknown) => Chain;
+  select: (columns?: string) => Chain;
+  maybeSingle: () => PromiseLike<{ data: unknown; error: unknown }>;
+};
+
 /** The minimum surface of the Supabase client this journal needs. */
 export type JournalClient = {
   from: (table: string) => {
-    select: (columns: string) => any;
-    insert: (values: Row) => any;
-    update: (values: Row) => any;
-    delete: () => any;
+    select: (columns: string) => Chain;
+    insert: (values: Row) => Chain;
+    update: (values: Row) => Chain;
+    delete: () => Chain;
   };
 };
 
