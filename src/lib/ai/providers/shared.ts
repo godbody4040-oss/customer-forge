@@ -36,7 +36,12 @@ export async function providerHttpError(
 ): Promise<RevoraAiError> {
   const detail = await response.text().catch(() => "");
   const retryAfter = Number(response.headers.get("retry-after")) || null;
-  const category = categoryForStatus(response.status);
+  // Google answers a rejected key with 400, not 401. Treat a credential
+  // rejection as unauthorized so the request moves on to the next provider
+  // instead of being reported as a malformed request.
+  const keyRejected = /API_KEY_INVALID|API key not valid|invalid[_ ]api[_ ]key/i.test(detail);
+  const category = keyRejected ? "unauthorized" : categoryForStatus(response.status);
+
   const message =
     category === "rate_limited"
       ? "Revora AI is busy right now. Try again in a moment."
