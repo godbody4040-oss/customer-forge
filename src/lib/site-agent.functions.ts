@@ -364,14 +364,29 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
 
 export const applyWebsiteChanges = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { organizationId: string; actions: unknown; label?: string }) => ({
-    organizationId: orgIdOf(input),
-    actions: input?.actions,
-    label: str(input?.label, 120),
-  }))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+  .inputValidator(
+    (input: { organizationId: string; actions: unknown; label?: string; verify?: boolean }) => ({
+      organizationId: orgIdOf(input),
+      actions: input?.actions,
+      label: str(input?.label, 120),
+      verify: input?.verify !== false,
+    }),
+  )
+  .handler(async ({ data, context }) =>
+    applyImpl(context.supabase as unknown as SupabaseLike, String(context.userId), data),
+  );
+
+type ApplyInput = {
+  organizationId: string;
+  actions: unknown;
+  label: string;
+  verify?: boolean | undefined;
+};
+
+async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInput) {
+  {
     const orgId = data.organizationId;
+
 
     // Writing invalidates the agent's cached picture of this workspace, so the
     // next plan is made against the site as it now really is.
