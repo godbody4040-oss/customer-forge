@@ -1,23 +1,40 @@
 /**
  * THE REVORA AGENT ORCHESTRATOR.
  *
- * UNDERSTAND → PLAN → EXECUTE → REFLECT → VERIFY → REPORT.
+ * UNDERSTAND → INSPECT → DESIGN → PLAN → REFLECT → CRITIQUE → AUTO-FIX →
+ * VERIFY → REPORT. Execution itself happens after the owner approves, in
+ * `applyWebsiteChanges`.
  *
  * This module owns the pipeline itself and nothing else: understanding comes
- * from `understanding.server`, the workspace picture from
- * `workspace-context.server`, the plan from the site planner, and the writes
- * from `applyWebsiteChanges` after the owner approves. Keeping the stages apart
- * is what lets the agent grow without rewriting the builder.
+ * from `understanding.server`, the workspace picture (INSPECT) from
+ * `workspace-context.server`, the design direction from `design-brief.server`,
+ * the plan from the site planner, the grading from `critique.server`, and the
+ * writes from `applyWebsiteChanges` after the owner approves. Keeping the
+ * stages apart is what lets the agent grow without rewriting the builder.
  *
- * Two honesty rules are enforced here, not just prompted:
- * - a requirement is only reported as covered when the review pass says so, and
- * - reflection is skipped for simple requests, so a small ask stays cheap.
+ * Three honesty rules are enforced here, not just prompted:
+ * - a requirement is only reported as covered when the review pass says so,
+ * - reflection and grading are skipped for simple requests, so a small ask
+ *   stays cheap, and
+ * - a score is only shown when a grading pass actually ran.
  */
 
 import type { AgentContext } from "@/lib/site-agent.server";
 import type { AgentAttachment, AgentTurn } from "@/lib/site-agent";
 import { capabilityBrief } from "@/lib/agent/capabilities";
 import { understandRequest, type Understanding } from "@/lib/agent/understanding.server";
+import {
+  designBrief,
+  designDirection,
+  designWithoutModel,
+  type DesignDirection,
+} from "@/lib/agent/design-brief.server";
+import {
+  QUALITY_THRESHOLD,
+  critiquePlan,
+  improvementBrief,
+  type Critique,
+} from "@/lib/agent/critique.server";
 
 export type RequirementCheck = { label: string; covered: boolean };
 
@@ -25,6 +42,9 @@ export type OrchestratedPlan = {
   /** Raw model plan in the shape the existing validator already accepts. */
   raw: Record<string, unknown>;
   understanding: Understanding;
+  design: DesignDirection;
+  /** Present only when a grading pass actually ran. */
+  critique: Critique | null;
   requirements: RequirementCheck[];
   /** One line per pipeline stage that actually ran, for the report. */
   trace: string[];
@@ -66,8 +86,15 @@ function mergeActions(first: object[], second: object[]) {
   return out;
 }
 
-/** The brief the planner receives: the owner's words plus the agent's reading. */
-export function planningBrief(instruction: string, understanding: Understanding) {
+/**
+ * The brief the planner receives: the owner's words, the agent's reading of
+ * them, and the design direction it committed to.
+ */
+export function planningBrief(
+  instruction: string,
+  understanding: Understanding,
+  design?: DesignDirection,
+) {
   const { guidance, handoffs } = capabilityBrief(understanding.capabilities);
   const lines = [
     `THE OWNER ASKED, IN THEIR OWN WORDS:\n${instruction}`,
@@ -76,10 +103,14 @@ export function planningBrief(instruction: string, understanding: Understanding)
     "",
     "REQUIREMENTS THIS PLAN WILL BE CHECKED AGAINST:",
     ...understanding.requirements.map((requirement, index) => `${index + 1}. ${requirement}`),
+  ];
+  if (design) lines.push("", designBrief(design));
+  lines.push(
     "",
     "AREAS THIS TOUCHES, AND WHAT YOU MAY DO IN EACH:",
     ...guidance.map((line) => `- ${line}`),
-  ];
+  );
+
   if (understanding.tasks.length > 1) {
     lines.push(
       "",
@@ -144,6 +175,15 @@ export async function orchestrate(options: {
     workspaceSummary: string,
     history: AgentTurn[],
   ) => Promise<Understanding>;
+  /** Injectable design stage. */
+  design?: (
+    instruction: string,
+    goal: string,
+    workspaceSummary: string,
+    industry?: string | null,
+  ) => Promise<DesignDirection>;
+  /** Injectable grading stage. */
+  critique?: typeof critiquePlan;
 }): Promise<OrchestratedPlan> {
   const { context, instruction, history, attachments, plan } = options;
   const trace: string[] = [];
@@ -161,9 +201,32 @@ export async function orchestrate(options: {
   if (understanding.tasks.length > 1)
     trace.push(`Broke it into ${understanding.tasks.length} coordinated tasks`);
 
+  // DESIGN. Visual and conversion decisions are made once, up front, so the
+  // planner never falls back on a generic template arrangement — and so the
+  // owner is never asked to name a layout, colour or font.
+  const industry = context.business.industry;
+  let design: DesignDirection;
+  try {
+    design = await (options.design ?? designDirection)(
+      instruction,
+      understanding.goal,
+      options.workspaceSummary,
+      industry,
+    );
+  } catch {
+    design = designWithoutModel(industry);
+  }
+  trace.push(
+    design.source === "model"
+      ? `Set the design direction: ${design.layout}`
+      : `Set the design direction from Revora's built-in direction for this trade: ${design.layout}`,
+  );
+
+  const brief = designBrief(design);
+
   const first = await plan(
     context,
-    planningBrief(instruction, understanding),
+    planningBrief(instruction, understanding, design),
     history,
     attachments,
   );
@@ -179,7 +242,8 @@ export async function orchestrate(options: {
   // Reflection is where a plan earns the right to be called finished. It costs a
   // second call, so only complex work gets it — and only when there is a plan to
   // review and no blocking question outstanding.
-  if (understanding.complexity === "complex" && actions.length && !questions.length) {
+  const reviewable = actions.length > 0 && questions.length === 0;
+  if (understanding.complexity === "complex" && reviewable) {
     try {
       const second = await plan(
         context,
@@ -207,6 +271,49 @@ export async function orchestrate(options: {
     }
   }
 
+  // CRITIQUE, then AUTO-FIX. The agent grades its own plan on the ten things
+  // that decide whether a website earns customers. Below the professional
+  // threshold it improves the plan itself rather than shipping a weak draft.
+  let critique: Critique | null = null;
+  if (understanding.complexity === "complex" && reviewable) {
+    const graded = await (options.critique ?? critiquePlan)({
+      goal: understanding.goal,
+      designBrief: brief,
+      actions,
+      requirements: understanding.requirements,
+    });
+    if (graded.source === "model") {
+      critique = graded;
+      trace.push(
+        `Graded its own work ${graded.overall}/10${graded.verdict ? ` — ${graded.verdict}` : ""}`,
+      );
+      if (graded.overall < QUALITY_THRESHOLD && graded.fixes.length) {
+        try {
+          const improved = await plan(
+            context,
+            improvementBrief(graded, understanding.goal, actions),
+            [],
+            [],
+          );
+          const extra = actionList(improved["actions"]);
+          if (extra.length) {
+            actions = mergeActions(actions, extra);
+            notes = [...new Set([...notes, ...strings(improved["notes"], 6)])].slice(0, 6);
+            reply = str(improved["reply"], 1500) || reply;
+            summary = str(improved["summary"], 300) || summary;
+            trace.push(
+              `Raised it itself with ${extra.length} further change${extra.length === 1 ? "" : "s"} before showing you`,
+            );
+          } else {
+            trace.push("Tried to raise the plan further but found nothing more it could change");
+          }
+        } catch {
+          trace.push("Could not run the improvement pass — showing the reviewed plan");
+        }
+      }
+    }
+  }
+
   const unmet = new Set(missing.map((entry) => entry.toLowerCase()));
   const requirements: RequirementCheck[] = understanding.requirements.map((label) => ({
     label,
@@ -229,6 +336,8 @@ export async function orchestrate(options: {
       questions,
     },
     understanding,
+    design,
+    critique,
     requirements,
     trace,
   };

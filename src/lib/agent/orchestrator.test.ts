@@ -7,6 +7,9 @@ import {
 } from "@/lib/agent/workspace-context.server";
 import { orchestrate, planningBrief } from "@/lib/agent/orchestrator.server";
 import { understandWithoutModel } from "@/lib/agent/understanding.server";
+import { designWithoutModel } from "@/lib/agent/design-brief.server";
+import { CRITIQUE_DIMENSIONS } from "@/lib/agent/critique.server";
+
 import type { AgentContext } from "@/lib/site-agent.server";
 import type { Understanding } from "@/lib/agent/understanding.server";
 
@@ -139,6 +142,24 @@ describe("orchestrator pipeline", () => {
 
   const understand = async () => understanding.complex;
 
+  // The design and grading stages are stubbed here so the pipeline is tested,
+  // not the gateway. `strongCritique` keeps the auto-fix pass out of the way;
+  // the auto-fix test below supplies a weak grade on purpose.
+  const design = async () => designWithoutModel("roofing");
+  const grade =
+    (overall: number, fixes: string[] = []) =>
+    async () => ({
+      scores: Object.fromEntries(CRITIQUE_DIMENSIONS.map((d) => [d, overall])) as Record<
+        (typeof CRITIQUE_DIMENSIONS)[number],
+        number
+      >,
+      overall,
+      fixes,
+      verdict: "Reviewed",
+      source: "model" as const,
+    });
+  const critique = grade(9);
+
   it("merges the review pass, never repeating an identical action", async () => {
     const first = {
       reply: "Here we go",
@@ -169,6 +190,8 @@ describe("orchestrator pipeline", () => {
       attachments: [],
       plan,
       understand,
+      design,
+      critique,
     });
 
     expect(plan).toHaveBeenCalledTimes(2);
@@ -201,6 +224,8 @@ describe("orchestrator pipeline", () => {
       attachments: [],
       plan,
       understand,
+      design,
+      critique,
     });
 
     const open = result.requirements.find((r) => r.label === "Clear single call to action");
@@ -227,9 +252,100 @@ describe("orchestrator pipeline", () => {
       attachments: [],
       plan,
       understand,
+      design,
+      critique,
     });
     expect((result.raw["actions"] as unknown[]).length).toBe(1);
     expect(result.trace.join(" ")).toMatch(/first drafted/);
+  });
+
+  it("carries the design direction into the planning brief", async () => {
+    const plan = vi.fn().mockResolvedValue({
+      reply: "Done",
+      actions: [{ type: "set_backdrop", backdrop: "aurora" }],
+      questions: [],
+      notes: [],
+    } as Record<string, unknown>);
+
+    const result = await orchestrate({
+      context,
+      workspaceSummary: "",
+      instruction: "make my website amazing",
+      history: [],
+      attachments: [],
+      plan,
+      understand,
+      design,
+      critique,
+    });
+
+    const brief = String(plan.mock.calls[0]?.[1] ?? "");
+    expect(brief).toMatch(/THE DESIGN DIRECTION/);
+    expect(brief).toMatch(/must NOT look like/);
+    expect(result.design.story.length).toBeGreaterThan(0);
+    expect(result.critique?.overall).toBe(9);
+  });
+
+  it("improves its own plan when it grades itself below the professional bar", async () => {
+    const plan = vi
+      .fn()
+      .mockResolvedValueOnce({
+        reply: "First pass",
+        actions: [{ type: "set_backdrop", backdrop: "aurora" }],
+        questions: [],
+        notes: [],
+      } as Record<string, unknown>)
+      .mockResolvedValueOnce({
+        reply: "Reviewed",
+        actions: [],
+        missing: [],
+        notes: [],
+      } as Record<string, unknown>)
+      .mockResolvedValueOnce({
+        reply: "Raised",
+        actions: [{ type: "set_section_effect", sectionId: "x", effect: "rise" }],
+        notes: [],
+      } as Record<string, unknown>);
+
+    const result = await orchestrate({
+      context,
+      workspaceSummary: "",
+      instruction: "make my homepage amazing",
+      history: [],
+      attachments: [],
+      plan,
+      understand,
+      design,
+      critique: grade(5, ["Give the hero a real headline about the outcome"]),
+    });
+
+    expect(plan).toHaveBeenCalledTimes(3);
+    expect((result.raw["actions"] as unknown[]).length).toBe(2);
+    expect(result.trace.join(" ")).toMatch(/Raised it itself/);
+  });
+
+  it("does not grade or improve a simple request", async () => {
+    const plan = vi.fn().mockResolvedValue({
+      reply: "Done",
+      actions: [{ type: "set_backdrop", backdrop: "aurora" }],
+      questions: [],
+      notes: [],
+    } as Record<string, unknown>);
+
+    const result = await orchestrate({
+      context,
+      workspaceSummary: "",
+      instruction: "change my phone number",
+      history: [],
+      attachments: [],
+      plan,
+      understand: async () => ({ ...understanding.complex, complexity: "simple" as const }),
+      design,
+      critique,
+    });
+
+    expect(plan).toHaveBeenCalledTimes(1);
+    expect(result.critique).toBeNull();
   });
 });
 
