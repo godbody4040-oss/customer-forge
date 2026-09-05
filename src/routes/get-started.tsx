@@ -12,7 +12,8 @@ import type { GrowthSystemIntake } from "@/lib/stripe.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { REVORA, revoraMailto } from "@/lib/brand";
-import { trackConversion } from "@/lib/conversion";
+import { getAttribution, trackConversion } from "@/lib/conversion";
+import { provisionWorkspace, recordAccountCreated } from "@/lib/platform-funnel.functions";
 import { useStepScroll } from "@/lib/use-step-scroll";
 import { safeSlug } from "@/lib/website-plan";
 import { smartIntakeValue } from "@/lib/intake-smart";
@@ -158,7 +159,6 @@ function GetStarted() {
       return;
     }
     setError(null);
-    trackConversion("signup_completed", { email: intake.email.trim() });
     setStep(1);
   };
 
