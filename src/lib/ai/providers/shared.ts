@@ -53,18 +53,6 @@ export async function providerHttpError(
     category,
     retryAfterSeconds: retryAfter,
     provider,
-    // Keep a short, non-sensitive diagnostic tail for server logs only.
-  }).withDetail(detail.slice(0, 300));
+    detail: detail.slice(0, 300),
+  });
 }
-
-declare module "@/lib/ai/errors" {
-  interface RevoraAiError {
-    detail?: string;
-    withDetail(detail: string): RevoraAiError;
-  }
-}
-
-RevoraAiError.prototype.withDetail = function withDetail(this: RevoraAiError, detail: string) {
-  this.detail = detail;
-  return this;
-};

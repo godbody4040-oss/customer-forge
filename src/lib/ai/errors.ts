@@ -27,6 +27,8 @@ export class RevoraAiError extends Error {
   category: AiErrorCategory;
   retryAfterSeconds: number | null;
   provider: string | null;
+  /** Short, non-sensitive provider diagnostic kept for server logs only. */
+  detail: string | null;
 
   constructor(
     status: number,
@@ -35,6 +37,7 @@ export class RevoraAiError extends Error {
       category?: AiErrorCategory;
       retryAfterSeconds?: number | null;
       provider?: string | null;
+      detail?: string | null;
     } = {},
   ) {
     super(message);
@@ -43,6 +46,7 @@ export class RevoraAiError extends Error {
     this.category = options.category ?? categoryForStatus(status);
     this.retryAfterSeconds = options.retryAfterSeconds ?? null;
     this.provider = options.provider ?? null;
+    this.detail = options.detail ?? null;
   }
 
   get retryable() {
