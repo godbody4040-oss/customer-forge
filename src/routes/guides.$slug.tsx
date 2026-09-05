@@ -133,6 +133,7 @@ function GuidePage() {
             <Link to="/guides">More guides</Link>
           </Button>
         </div>
+        <RelatedLinks path={`/guides/${guide.slug}`} />
       </main>
       <SiteFooter />
     </div>

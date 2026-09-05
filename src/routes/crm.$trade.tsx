@@ -194,6 +194,7 @@ function CrmSolutionPage() {
             </Link>
           </div>
         </section>
+        <RelatedLinks path={`/crm/${solution.slug}`} />
       </main>
       <SiteFooter />
     </div>

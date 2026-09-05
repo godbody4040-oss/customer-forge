@@ -195,6 +195,7 @@ function IndustryPage() {
             ))}
           </ul>
         </section>
+        <RelatedLinks path={`/industries/${industrySlug(industry.name)}`} />
       </main>
       <SiteFooter />
     </div>

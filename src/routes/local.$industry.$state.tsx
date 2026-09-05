@@ -237,6 +237,7 @@ function LocalIndustryStatePage() {
             </div>
           </div>
         </section>
+        <RelatedLinks path={content.path} />
       </main>
       <SiteFooter />
     </div>

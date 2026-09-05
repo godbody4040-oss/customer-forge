@@ -144,6 +144,7 @@ function ComparePage() {
             </Link>
           </Button>
         </div>
+        <RelatedLinks path={`/compare/${comparison.slug}`} />
       </main>
       <SiteFooter />
     </div>
