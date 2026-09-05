@@ -8,6 +8,7 @@ import { useSignOut } from "@/lib/use-tenant";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 import { GROWTH_SYSTEM } from "@/lib/offer";
 import { MarketingConversionKit } from "@/components/marketing/ConversionKit";
+import { AuthActions, SIGN_IN_SEARCH, SIGN_UP_SEARCH } from "@/components/marketing/AuthButtons";
 
 const NAV = [
   { to: "/demo", label: "Product" },
@@ -67,12 +68,12 @@ export function SiteHeader() {
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link to="/auth" className="text-primary">
+                <Link to="/auth" search={SIGN_IN_SEARCH} className="text-primary">
                   Sign in
                 </Link>
               </Button>
               <Button asChild variant="signal" size="sm">
-                <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+                <Link to="/auth" search={SIGN_UP_SEARCH}>
                   <Sparkles className="size-3.5" aria-hidden="true" />
                   Start free
                 </Link>
@@ -81,15 +82,20 @@ export function SiteHeader() {
           )}
         </div>
 
-        <button
-          type="button"
-          className="grid size-10 cursor-pointer place-items-center rounded-md border border-border text-muted-foreground md:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="size-4" /> : <Menu className="size-4" />}
-        </button>
+        {/* On a phone the two doors stay visible next to the menu button, so
+            signing in never requires opening the menu first. */}
+        <div className="flex items-center gap-1.5 md:hidden">
+          <AuthActions variant="compact" />
+          <button
+            type="button"
+            className="grid size-10 cursor-pointer place-items-center rounded-md border border-border text-muted-foreground"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="size-4" /> : <Menu className="size-4" />}
+          </button>
+        </div>
       </div>
 
       {open ? (
@@ -131,17 +137,18 @@ export function SiteHeader() {
             ) : (
               <>
                 <Button asChild variant="signal">
-                  <Link
-                    to="/auth"
-                    search={{ mode: "signup", redirect: "/get-started" }}
-                    onClick={() => setOpen(false)}
-                  >
+                  <Link to="/auth" search={SIGN_UP_SEARCH} onClick={() => setOpen(false)}>
                     <Sparkles className="size-3.5" aria-hidden="true" />
                     {`Start free — ${GROWTH_SYSTEM.fullAccessTrialDays} days full access`}
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link to="/auth" onClick={() => setOpen(false)} className="text-primary">
+                  <Link
+                    to="/auth"
+                    search={SIGN_IN_SEARCH}
+                    onClick={() => setOpen(false)}
+                    className="text-primary"
+                  >
                     Sign in
                   </Link>
                 </Button>
@@ -257,6 +264,16 @@ export function SiteFooter() {
                 <li>
                   <Link
                     to="/auth"
+                    search={SIGN_UP_SEARCH}
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
+                  >
+                    Create a free account
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/auth"
+                    search={SIGN_IN_SEARCH}
                     className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     Sign in
