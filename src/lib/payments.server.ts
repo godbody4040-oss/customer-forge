@@ -42,17 +42,29 @@ export function stripeChargeRef(
   return null;
 }
 
-/** Activates whatever the customer paid for. Guarded by entitlement_applied. */
+/**
+ * Activates whatever the customer paid for. Guarded by entitlement_applied.
+ *
+ * Two hard rules:
+ *  - Only a verified LIVE payment may grant production access or write the
+ *    canonical billing columns. Sandbox payments are bookkeeping only.
+ *  - Every write is checked: a partial failure throws so Stripe retries the
+ *    event instead of leaving a half-activated workspace behind.
+ */
 export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
   if (payment.entitlement_applied) return;
+  const environment = payment.environment === "live" ? "live" : "sandbox";
+  const isLive = environment === "live";
 
-  const { data: product } = payment.product_id
+  const { data: product, error: productError } = payment.product_id
     ? await admin
         .from("payment_products")
         .select("id, name, kind, plan_id, billing_interval, entitlement_key")
         .eq("id", payment.product_id)
         .maybeSingle()
-    : { data: null };
+    : { data: null, error: null };
+  if (productError)
+    throw new Error(`entitlement_product_lookup_failed:${productError.code ?? productError.message}`);
 
   if (product?.kind === "subscription" && product.plan_id) {
     const interval = product.billing_interval ?? "monthly";
@@ -60,29 +72,46 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
       Date.now() + (interval === "annual" ? 365 : 30) * 86_400_000,
     ).toISOString();
 
-    await admin
-      .from("organizations")
-      .update({ plan_id: product.plan_id, subscription_status: "active" })
-      .eq("id", payment.organization_id);
+    if (isLive) {
+      const { error: orgError } = await admin
+        .from("organizations")
+        .update({ plan_id: product.plan_id, subscription_status: "active" })
+        .eq("id", payment.organization_id);
+      if (orgError)
+        throw new Error(`entitlement_org_update_failed:${orgError.code ?? orgError.message}`);
+    }
 
-    const { data: existing } = await admin
+    // Subscription identity is always organization + provider + environment.
+    const { data: existingRows, error: existingError } = await admin
       .from("subscriptions")
       .select("id")
       .eq("organization_id", payment.organization_id)
-      .maybeSingle();
+      .eq("payment_provider", payment.payment_provider ?? "stripe")
+      .eq("environment", environment)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (existingError)
+      throw new Error(
+        `entitlement_subscription_lookup_failed:${existingError.code ?? existingError.message}`,
+      );
 
     const subscription = {
       organization_id: payment.organization_id,
       plan_id: product.plan_id,
       status: "active" as const,
       billing_interval: interval,
+      payment_provider: payment.payment_provider ?? "stripe",
+      environment,
       provider_subscription_id: payment.provider_subscription_id,
       current_period_end: periodEnd,
     };
-    if (existing?.id) await admin.from("subscriptions").update(subscription).eq("id", existing.id);
-    else await admin.from("subscriptions").insert(subscription);
+    const { error: subError } = existingRows?.[0]?.id
+      ? await admin.from("subscriptions").update(subscription).eq("id", existingRows[0].id)
+      : await admin.from("subscriptions").insert(subscription);
+    if (subError)
+      throw new Error(`entitlement_subscription_write_failed:${subError.code ?? subError.message}`);
 
-    await admin
+    const { error: periodError } = await admin
       .from("payments")
       .update({
         period_start: new Date().toISOString(),
@@ -90,30 +119,45 @@ export async function applyEntitlement(admin: Admin, payment: PaymentRow) {
         plan_id: product.plan_id,
       })
       .eq("id", payment.id);
+    if (periodError)
+      throw new Error(`entitlement_period_update_failed:${periodError.code ?? periodError.message}`);
   }
 
-  // Paid website builds unblock the build queue for that business.
-  if (product?.entitlement_key === "website_build") {
-    await admin
+  // Paid website builds unblock the build queue for that business — real money only.
+  if (product?.entitlement_key === "website_build" && isLive) {
+    const { error: buildError } = await admin
       .from("website_requests")
       .update({ status: "in_progress" })
       .eq("organization_id", payment.organization_id)
       .eq("status", "requested");
+    if (buildError)
+      throw new Error(`entitlement_build_release_failed:${buildError.code ?? buildError.message}`);
   }
 
   const meta = (payment.metadata ?? {}) as Record<string, unknown>;
-  await admin.from("invoices").insert({
-    organization_id: payment.organization_id,
-    amount: payment.amount,
-    status: "paid",
-    provider_invoice_id:
-      (typeof meta["stripe_payment_intent"] === "string" ? meta["stripe_payment_intent"] : null) ??
-      (typeof meta["stripe_session_id"] === "string" ? meta["stripe_session_id"] : null),
-    period_start: payment.period_start,
-    period_end: payment.period_end,
-  });
+  if (isLive) {
+    const { error: invoiceError } = await admin.from("invoices").insert({
+      organization_id: payment.organization_id,
+      amount: payment.amount,
+      status: "paid",
+      provider_invoice_id:
+        (typeof meta["stripe_payment_intent"] === "string"
+          ? meta["stripe_payment_intent"]
+          : null) ??
+        (typeof meta["stripe_session_id"] === "string" ? meta["stripe_session_id"] : null),
+      period_start: payment.period_start,
+      period_end: payment.period_end,
+    });
+    if (invoiceError)
+      throw new Error(`entitlement_invoice_failed:${invoiceError.code ?? invoiceError.message}`);
+  }
 
-  await admin.from("payments").update({ entitlement_applied: true }).eq("id", payment.id);
+  const { error: flagError } = await admin
+    .from("payments")
+    .update({ entitlement_applied: true })
+    .eq("id", payment.id);
+  if (flagError)
+    throw new Error(`entitlement_flag_update_failed:${flagError.code ?? flagError.message}`);
 }
 
 /** Client notification + admin-visible audit entry, from real payment data. */
