@@ -81,15 +81,21 @@ export function SiteHeader() {
           )}
         </div>
 
-        <button
-          type="button"
-          className="grid size-10 cursor-pointer place-items-center rounded-md border border-border text-muted-foreground md:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="size-4" /> : <Menu className="size-4" />}
-        </button>
+        {/* On a phone the two doors stay visible next to the menu button, so
+            signing in never requires opening the menu first. */}
+        <div className="flex items-center gap-1.5 md:hidden">
+          <AuthActions variant="compact" />
+          <button
+            type="button"
+            className="grid size-10 cursor-pointer place-items-center rounded-md border border-border text-muted-foreground"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="size-4" /> : <Menu className="size-4" />}
+          </button>
+        </div>
+
       </div>
 
       {open ? (
