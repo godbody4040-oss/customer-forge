@@ -219,18 +219,24 @@ export async function recordStripeTransaction(
   if (insertError)
     throw new Error(`payment_insert_failed:${insertError.code ?? insertError.message}`);
 
-  await admin.from("notifications").insert({
-    organization_id: input.organizationId,
-    title: input.status === "completed" ? "Payment received" : "Payment failed",
-    body:
-      input.status === "completed"
-        ? `${input.description} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: input.currency.toUpperCase() }).format(input.amount)} paid.`
-        : `${input.description} — the card payment did not go through. Update your payment method to keep access.`,
-    kind: input.status === "completed" ? "success" : "warning",
-    link: "/app/billing",
-  });
+  // Customer-facing billing notices come from real (live) money only — a test
+  // charge must never reach a real customer's inbox or notification feed.
+  if (input.environment === "live") {
+    const { error: notifyError } = await admin.from("notifications").insert({
+      organization_id: input.organizationId,
+      title: input.status === "completed" ? "Payment received" : "Payment failed",
+      body:
+        input.status === "completed"
+          ? `${input.description} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: input.currency.toUpperCase() }).format(input.amount)} paid.`
+          : `${input.description} — the card payment did not go through. Update your payment method to keep access.`,
+      kind: input.status === "completed" ? "success" : "warning",
+      link: "/app/billing",
+    });
+    if (notifyError)
+      throw new Error(`payment_notification_failed:${notifyError.code ?? notifyError.message}`);
+  }
 
-  await admin.from("audit_logs").insert({
+  const { error: auditError } = await admin.from("audit_logs").insert({
     organization_id: input.organizationId,
     action: `payment.${input.status}`,
     entity: "payment",
@@ -243,6 +249,7 @@ export async function recordStripeTransaction(
       plan_id: input.planId ?? null,
     },
   });
+  if (auditError) throw new Error(`payment_audit_failed:${auditError.code ?? auditError.message}`);
 
   return { inserted: true as const };
 }
