@@ -257,7 +257,97 @@ describe("orchestrator pipeline", () => {
     expect((result.raw["actions"] as unknown[]).length).toBe(1);
     expect(result.trace.join(" ")).toMatch(/first drafted/);
   });
+
+  it("carries the design direction into the planning brief", async () => {
+    const plan = vi.fn().mockResolvedValue({
+      reply: "Done",
+      actions: [{ type: "set_backdrop", backdrop: "aurora" }],
+      questions: [],
+      notes: [],
+    } as Record<string, unknown>);
+
+    const result = await orchestrate({
+      context,
+      workspaceSummary: "",
+      instruction: "make my website amazing",
+      history: [],
+      attachments: [],
+      plan,
+      understand,
+      design,
+      critique,
+    });
+
+    const brief = String(plan.mock.calls[0]?.[1] ?? "");
+    expect(brief).toMatch(/THE DESIGN DIRECTION/);
+    expect(brief).toMatch(/must NOT look like/);
+    expect(result.design.story.length).toBeGreaterThan(0);
+    expect(result.critique?.overall).toBe(9);
+  });
+
+  it("improves its own plan when it grades itself below the professional bar", async () => {
+    const plan = vi
+      .fn()
+      .mockResolvedValueOnce({
+        reply: "First pass",
+        actions: [{ type: "set_backdrop", backdrop: "aurora" }],
+        questions: [],
+        notes: [],
+      } as Record<string, unknown>)
+      .mockResolvedValueOnce({
+        reply: "Reviewed",
+        actions: [],
+        missing: [],
+        notes: [],
+      } as Record<string, unknown>)
+      .mockResolvedValueOnce({
+        reply: "Raised",
+        actions: [{ type: "set_section_effect", sectionId: "x", effect: "rise" }],
+        notes: [],
+      } as Record<string, unknown>);
+
+    const result = await orchestrate({
+      context,
+      workspaceSummary: "",
+      instruction: "make my homepage amazing",
+      history: [],
+      attachments: [],
+      plan,
+      understand,
+      design,
+      critique: grade(5, ["Give the hero a real headline about the outcome"]),
+    });
+
+    expect(plan).toHaveBeenCalledTimes(3);
+    expect((result.raw["actions"] as unknown[]).length).toBe(2);
+    expect(result.trace.join(" ")).toMatch(/Raised it itself/);
+  });
+
+  it("does not grade or improve a simple request", async () => {
+    const plan = vi.fn().mockResolvedValue({
+      reply: "Done",
+      actions: [{ type: "set_backdrop", backdrop: "aurora" }],
+      questions: [],
+      notes: [],
+    } as Record<string, unknown>);
+
+    const result = await orchestrate({
+      context,
+      workspaceSummary: "",
+      instruction: "change my phone number",
+      history: [],
+      attachments: [],
+      plan,
+      understand: async () => ({ ...understanding.complex, complexity: "simple" as const }),
+      design,
+      critique,
+    });
+
+    expect(plan).toHaveBeenCalledTimes(1);
+    expect(result.critique).toBeNull();
+  });
 });
+
 
 describe("deterministic fallback understanding", () => {
   it("never rejects a request and never demands Revora vocabulary", () => {
