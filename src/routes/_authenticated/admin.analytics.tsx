@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getTrafficReport } from "@/lib/conversion.functions";
+import { getFunnelDetails, getPlatformFunnel } from "@/lib/platform-funnel.functions";
 import { getPlatformSettings, setGaMeasurementId } from "@/lib/platform-settings.functions";
 import { number } from "@/lib/format";
 import { SITE_URL } from "@/lib/seo";
@@ -31,15 +32,27 @@ export const Route = createFileRoute("/_authenticated/admin/analytics")({
 function AdminAnalytics() {
   const qc = useQueryClient();
   const trafficFn = useServerFn(getTrafficReport);
+  const funnelFn = useServerFn(getPlatformFunnel);
+  const detailsFn = useServerFn(getFunnelDetails);
   const settingsFn = useServerFn(getPlatformSettings);
   const saveFn = useServerFn(setGaMeasurementId);
 
   const [days, setDays] = useState(30);
+  const [showDetails, setShowDetails] = useState(false);
   const [gaId, setGaId] = useState("");
 
   const traffic = useQuery({
     queryKey: ["admin", "traffic", days],
     queryFn: () => trafficFn({ data: { days } }),
+  });
+  const funnel = useQuery({
+    queryKey: ["admin", "funnel", days],
+    queryFn: () => funnelFn({ data: { days } }),
+  });
+  const details = useQuery({
+    queryKey: ["admin", "funnel-details", days],
+    queryFn: () => detailsFn({ data: { days } }),
+    enabled: showDetails,
   });
   const settings = useQuery({
     queryKey: ["admin", "platform-settings"],
