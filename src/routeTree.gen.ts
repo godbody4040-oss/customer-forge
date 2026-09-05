@@ -38,6 +38,8 @@ import { Route as AuthenticatedMyRouteImport } from './routes/_authenticated/my'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as CompareIndexRouteImport } from './routes/compare.index'
 import { Route as CompareSlugRouteImport } from './routes/compare.$slug'
+import { Route as CrmIndexRouteImport } from './routes/crm.index'
+import { Route as CrmTradeRouteImport } from './routes/crm.$trade'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoDashboardRouteImport } from './routes/demo.dashboard'
 import { Route as GuidesIndexRouteImport } from './routes/guides.index'
@@ -237,6 +239,16 @@ const CompareIndexRoute = CompareIndexRouteImport.update({
 const CompareSlugRoute = CompareSlugRouteImport.update({
   id: '/compare/$slug',
   path: '/compare/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmIndexRoute = CrmIndexRouteImport.update({
+  id: '/crm/',
+  path: '/crm/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrmTradeRoute = CrmTradeRouteImport.update({
+  id: '/crm/$trade',
+  path: '/crm/$trade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoIndexRoute = DemoIndexRouteImport.update({
@@ -567,6 +579,7 @@ export interface FileRoutesByFullPath {
   '/my': typeof AuthenticatedMyRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
+  '/crm/$trade': typeof CrmTradeRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -576,6 +589,7 @@ export interface FileRoutesByFullPath {
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
   '/compare/': typeof CompareIndexRoute
+  '/crm/': typeof CrmIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/industries/': typeof IndustriesIndexRoute
@@ -648,6 +662,7 @@ export interface FileRoutesByTo {
   '/website-audit': typeof WebsiteAuditRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
+  '/crm/$trade': typeof CrmTradeRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -657,6 +672,7 @@ export interface FileRoutesByTo {
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
   '/compare': typeof CompareIndexRoute
+  '/crm': typeof CrmIndexRoute
   '/demo': typeof DemoIndexRoute
   '/guides': typeof GuidesIndexRoute
   '/industries': typeof IndustriesIndexRoute
@@ -736,6 +752,7 @@ export interface FileRoutesById {
   '/_authenticated/my': typeof AuthenticatedMyRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/compare/$slug': typeof CompareSlugRoute
+  '/crm/$trade': typeof CrmTradeRoute
   '/demo/dashboard': typeof DemoDashboardRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/industries/$slug': typeof IndustriesSlugRoute
@@ -745,6 +762,7 @@ export interface FileRoutesById {
   '/s/$slug': typeof SSlugRouteWithChildren
   '/states/$state': typeof StatesStateRoute
   '/compare/': typeof CompareIndexRoute
+  '/crm/': typeof CrmIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/guides/': typeof GuidesIndexRoute
   '/industries/': typeof IndustriesIndexRoute
@@ -824,6 +842,7 @@ export interface FileRouteTypes {
     | '/my'
     | '/onboarding'
     | '/compare/$slug'
+    | '/crm/$trade'
     | '/demo/dashboard'
     | '/guides/$slug'
     | '/industries/$slug'
@@ -833,6 +852,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/states/$state'
     | '/compare/'
+    | '/crm/'
     | '/demo/'
     | '/guides/'
     | '/industries/'
@@ -905,6 +925,7 @@ export interface FileRouteTypes {
     | '/website-audit'
     | '/onboarding'
     | '/compare/$slug'
+    | '/crm/$trade'
     | '/demo/dashboard'
     | '/guides/$slug'
     | '/industries/$slug'
@@ -914,6 +935,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/states/$state'
     | '/compare'
+    | '/crm'
     | '/demo'
     | '/guides'
     | '/industries'
@@ -992,6 +1014,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my'
     | '/_authenticated/onboarding'
     | '/compare/$slug'
+    | '/crm/$trade'
     | '/demo/dashboard'
     | '/guides/$slug'
     | '/industries/$slug'
@@ -1001,6 +1024,7 @@ export interface FileRouteTypes {
     | '/s/$slug'
     | '/states/$state'
     | '/compare/'
+    | '/crm/'
     | '/demo/'
     | '/guides/'
     | '/industries/'
@@ -1076,6 +1100,7 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   WebsiteAuditRoute: typeof WebsiteAuditRoute
   CompareSlugRoute: typeof CompareSlugRoute
+  CrmTradeRoute: typeof CrmTradeRoute
   GuidesSlugRoute: typeof GuidesSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   LocationsCityRoute: typeof LocationsCityRoute
@@ -1083,6 +1108,7 @@ export interface RootRouteChildren {
   SSlugRoute: typeof SSlugRouteWithChildren
   StatesStateRoute: typeof StatesStateRoute
   CompareIndexRoute: typeof CompareIndexRoute
+  CrmIndexRoute: typeof CrmIndexRoute
   GuidesIndexRoute: typeof GuidesIndexRoute
   LocalIndexRoute: typeof LocalIndexRoute
   LocationsIndexRoute: typeof LocationsIndexRoute
@@ -1301,6 +1327,20 @@ declare module '@tanstack/react-router' {
       path: '/compare/$slug'
       fullPath: '/compare/$slug'
       preLoaderRoute: typeof CompareSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/': {
+      id: '/crm/'
+      path: '/crm'
+      fullPath: '/crm/'
+      preLoaderRoute: typeof CrmIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crm/$trade': {
+      id: '/crm/$trade'
+      path: '/crm/$trade'
+      fullPath: '/crm/$trade'
+      preLoaderRoute: typeof CrmTradeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/': {
@@ -1880,6 +1920,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   WebsiteAuditRoute: WebsiteAuditRoute,
   CompareSlugRoute: CompareSlugRoute,
+  CrmTradeRoute: CrmTradeRoute,
   GuidesSlugRoute: GuidesSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   LocationsCityRoute: LocationsCityRoute,
@@ -1887,6 +1928,7 @@ const rootRouteChildren: RootRouteChildren = {
   SSlugRoute: SSlugRouteWithChildren,
   StatesStateRoute: StatesStateRoute,
   CompareIndexRoute: CompareIndexRoute,
+  CrmIndexRoute: CrmIndexRoute,
   GuidesIndexRoute: GuidesIndexRoute,
   LocalIndexRoute: LocalIndexRoute,
   LocationsIndexRoute: LocationsIndexRoute,
