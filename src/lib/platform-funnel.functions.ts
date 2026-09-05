@@ -145,9 +145,19 @@ export interface PlatformFunnel {
   from: string;
   to: string;
   stages: FunnelStage[];
+  /** Step-by-step conversion rates, as percentages. null = not computable. */
+  rates: {
+    visitorsToAccounts: number | null;
+    accountsToTrials: number | null;
+    trialsToPaid: number | null;
+    visitorsToPaid: number | null;
+  };
+  /** Trials the payment webhook has confirmed turned into paid customers. */
+  convertedTrials: number | null;
   /** Present only when at least one query failed. */
   errors: string[];
 }
+
 
 const pct = (numerator: number | null, denominator: number | null) => {
   if (numerator === null || denominator === null || denominator <= 0) return null;
