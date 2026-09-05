@@ -117,6 +117,15 @@ export const provisionWorkspace = createServerFn({ method: "POST" })
     return { organizationId: organizationId as string };
   });
 
+/**
+ * Where a number comes from:
+ *  - "database": written by the server only (accounts, trials, payments). Exact.
+ *  - "measured":  first-party browser measurement (page views, sessions,
+ *                 visitors). Real traffic, but ad blockers and private windows
+ *                 can hide some visits, so treat it as a floor, not a census.
+ */
+export type FunnelSource = "database" | "measured";
+
 export interface FunnelStage {
   key: string;
   label: string;
@@ -125,7 +134,11 @@ export interface FunnelStage {
   /** Percentage of the previous meaningful stage, or null when not applicable. */
   rate: number | null;
   rateLabel?: string | undefined;
+  source: FunnelSource;
+  /** Plain-language note shown under the number. */
+  note?: string | undefined;
 }
+
 
 export interface PlatformFunnel {
   days: number;
