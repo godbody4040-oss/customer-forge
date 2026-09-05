@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { capabilityBrief, CAPABILITIES } from "@/lib/agent/capabilities";
-import { workspaceSummary, getWorkspaceContext, invalidateWorkspaceContext } from "@/lib/agent/workspace-context.server";
+import {
+  workspaceSummary,
+  getWorkspaceContext,
+  invalidateWorkspaceContext,
+} from "@/lib/agent/workspace-context.server";
 import { orchestrate, planningBrief } from "@/lib/agent/orchestrator.server";
 import { understandWithoutModel } from "@/lib/agent/understanding.server";
 import type { AgentContext } from "@/lib/site-agent.server";

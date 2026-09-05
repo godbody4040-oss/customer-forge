@@ -41,7 +41,9 @@ const str = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
 
 const actionList = (value: unknown) =>
-  Array.isArray(value) ? (value.filter((item) => item && typeof item === "object") as object[]) : [];
+  Array.isArray(value)
+    ? (value.filter((item) => item && typeof item === "object") as object[])
+    : [];
 
 const strings = (value: unknown, limit: number) =>
   Array.isArray(value)
@@ -121,7 +123,7 @@ function reviewBrief(understanding: Understanding, actions: object[]) {
     '- "missing" lists, word for word, any requirement above that still is not satisfied and that you cannot satisfy with the actions available,',
     '- "reply" is one sentence to the owner about the finished plan,',
     '- "notes" records anything you deliberately left alone.',
-    "Do not repeat an action that is already listed above. Do not invent facts to close a gap — list it in \"missing\" instead.",
+    'Do not repeat an action that is already listed above. Do not invent facts to close a gap — list it in "missing" instead.',
   ].join("\n");
 }
 
@@ -159,7 +161,12 @@ export async function orchestrate(options: {
   if (understanding.tasks.length > 1)
     trace.push(`Broke it into ${understanding.tasks.length} coordinated tasks`);
 
-  const first = await plan(context, planningBrief(instruction, understanding), history, attachments);
+  const first = await plan(
+    context,
+    planningBrief(instruction, understanding),
+    history,
+    attachments,
+  );
   let actions = actionList(first["actions"]);
   trace.push(`Planned ${actions.length} change${actions.length === 1 ? "" : "s"} across the site`);
 

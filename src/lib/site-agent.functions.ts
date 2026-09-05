@@ -136,9 +136,8 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
     const orgId = data.organizationId;
     const { planChanges, AGENT_MODEL } = await import("@/lib/site-agent.server");
     const { orchestrate } = await import("@/lib/agent/orchestrator.server");
-    const { getWorkspaceContext, workspaceSummary } = await import(
-      "@/lib/agent/workspace-context.server"
-    );
+    const { getWorkspaceContext, workspaceSummary } =
+      await import("@/lib/agent/workspace-context.server");
 
     // The workspace picture is assembled once and reused for a short window, so
     // a follow-up message does not re-read the whole website to say the same
@@ -359,7 +358,6 @@ export const planWebsiteChanges = createServerFn({ method: "POST" })
 
     return plan;
   });
-
 
 /* --------------------------------- applying -------------------------------- */
 
