@@ -139,7 +139,6 @@ export interface FunnelStage {
   note?: string | undefined;
 }
 
-
 export interface PlatformFunnel {
   days: number;
   from: string;
@@ -157,7 +156,6 @@ export interface PlatformFunnel {
   /** Present only when at least one query failed. */
   errors: string[];
 }
-
 
 const pct = (numerator: number | null, denominator: number | null) => {
   if (numerator === null || denominator === null || denominator <= 0) return null;
@@ -377,7 +375,6 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
       errors,
     };
   });
-
 
 export interface FunnelDetails {
   /** Per-day traffic, so the visitor and session stages can be opened up too. */

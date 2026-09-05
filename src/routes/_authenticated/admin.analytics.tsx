@@ -189,7 +189,8 @@ function AdminAnalytics() {
               two numbers the server wrote itself (sign-ups, workspaces, confirmed payments). Rates
               marked <strong className="font-semibold text-foreground">estimate</strong> divide by
               visitors, which are counted in the browser — ad blockers and private windows hide some
-              visits, so the true visitor number is a little higher and the true rate a little lower.
+              visits, so the true visitor number is a little higher and the true rate a little
+              lower.
               {funnel.data?.convertedTrials !== null && funnel.data?.convertedTrials !== undefined
                 ? ` ${funnel.data.convertedTrials} trial${funnel.data.convertedTrials === 1 ? "" : "s"} in this window turned into a paid subscription, confirmed by the payment webhook.`
                 : ""}
@@ -197,7 +198,6 @@ function AdminAnalytics() {
           </Panel>
         </>
       )}
-
 
       <Panel className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

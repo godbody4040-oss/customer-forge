@@ -148,7 +148,6 @@ export async function syncStripeSubscription(
   return { ok: true, organizationId };
 }
 
-
 /** Records a verified Stripe charge/invoice payment. Idempotent on the Stripe id. */
 export async function recordStripeTransaction(
   admin: Admin,
