@@ -103,7 +103,7 @@ export const provisionWorkspace = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: organizationId, error } = await context.supabase.rpc("provision_workspace", {
       _name: data.name,
-      _industry: data.industry,
+      _industry: data.industry ?? undefined,
       _profile: data.profile as never,
       _trial_days: GROWTH_SYSTEM.fullAccessTrialDays,
     });
@@ -121,7 +121,7 @@ export interface FunnelStage {
   count: number | null;
   /** Percentage of the previous meaningful stage, or null when not applicable. */
   rate: number | null;
-  rateLabel?: string;
+  rateLabel?: string | undefined;
 }
 
 export interface PlatformFunnel {

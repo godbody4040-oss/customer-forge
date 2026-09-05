@@ -120,7 +120,7 @@ function AdminAnalytics() {
                     ? `${stage.rate}% ${stage.rateLabel ?? ""}`.trim()
                     : (stage.rateLabel ?? `Last ${funnel.data?.days} days`)
               }
-              tone={stage.key === "paid" ? "signal" : undefined}
+              {...(stage.key === "paid" ? { tone: "signal" as const } : {})}
             />
           ))}
         </div>
