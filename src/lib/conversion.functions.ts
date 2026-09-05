@@ -16,7 +16,13 @@ const EVENTS = [
   "first_quote_request",
   "first_booking",
   "checkout_started",
+  // Legacy: previously fired by the browser after a Stripe redirect. Kept so
+  // historical rows stay readable, but it is NEVER a paid customer signal.
   "checkout_completed",
+  /** Visitor came back from Stripe. Marketing telemetry only — untrusted. */
+  "checkout_return",
+  /** Marketing mirror of the authoritative platform_accounts row. */
+  "account_created",
 ] as const;
 
 export type ConversionEvent = (typeof EVENTS)[number];
@@ -156,18 +162,30 @@ export const getConversionReport = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
 
-    const { data: rows, error } = await supabaseAdmin
-      .from("marketing_conversions")
-      .select("event_name, industry_slug, landing_path, metadata, created_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(5000);
-    if (error) throw new Error(error.message);
+    // Aggregate every row in the window: analytics must never be truncated.
+    const rows: {
+      event_name: string;
+      industry_slug: string | null;
+      landing_path: string | null;
+      metadata: unknown;
+      created_at: string;
+    }[] = [];
+    for (let page = 0; page < 200; page += 1) {
+      const { data: batch, error } = await supabaseAdmin
+        .from("marketing_conversions")
+        .select("event_name, industry_slug, landing_path, metadata, created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .range(page * 1000, page * 1000 + 999);
+      if (error) throw new Error("Analytics unavailable");
+      rows.push(...(batch ?? []));
+      if ((batch?.length ?? 0) < 1000) break;
+    }
 
     const grouped = new Map<string, FunnelRow>();
     const variants = new Map<string, VariantRow>();
 
-    for (const row of rows ?? []) {
+    for (const row of rows) {
       const key = row.industry_slug ?? row.landing_path ?? "direct";
       const entry =
         grouped.get(key) ??
@@ -221,20 +239,22 @@ export const getConversionReport = createServerFn({ method: "GET" })
       }))
       .sort((a, b) => a.experiment.localeCompare(b.experiment) || b.signupRate - a.signupRate);
 
-    return { days: data.days, total: rows?.length ?? 0, report, variantReport };
+    return { days: data.days, total: rows.length, report, variantReport };
   });
 
 export interface TrafficPage {
   path: string;
   views: number;
-  visitors: number;
+  /** Distinct browser sessions, not verified unique people. */
+  sessions: number;
 }
 
 export interface TrafficSource {
   source: string;
-  visitors: number;
-  signups: number;
-  paid: number;
+  /** Distinct browser sessions, not verified unique people. */
+  sessions: number;
+  signupStarts: number;
+  checkoutReturns: number;
 }
 
 /**
@@ -255,24 +275,39 @@ export const getTrafficReport = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
 
-    const { data: rows, error } = await supabaseAdmin
-      .from("marketing_conversions")
-      .select("event_name, landing_path, session_id, referrer, utm_source, created_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(20000);
-    if (error) throw new Error(error.message);
+    const rows: {
+      event_name: string;
+      landing_path: string | null;
+      session_id: string | null;
+      referrer: string | null;
+      utm_source: string | null;
+      created_at: string;
+    }[] = [];
+    for (let page = 0; page < 200; page += 1) {
+      const { data: batch, error } = await supabaseAdmin
+        .from("marketing_conversions")
+        .select("event_name, landing_path, session_id, referrer, utm_source, created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .range(page * 1000, page * 1000 + 999);
+      if (error) throw new Error("Analytics unavailable");
+      rows.push(...(batch ?? []));
+      if ((batch?.length ?? 0) < 1000) break;
+    }
 
     const pages = new Map<string, { views: number; sessions: Set<string> }>();
-    const sources = new Map<string, { visitors: Set<string>; signups: number; paid: number }>();
+    const sources = new Map<
+      string,
+      { sessions: Set<string>; signupStarts: number; checkoutReturns: number }
+    >();
     const allSessions = new Set<string>();
     const portalSessions = new Set<string>();
     const byDay = new Map<string, Set<string>>();
     let views = 0;
-    let signups = 0;
-    let paid = 0;
+    let signupStarts = 0;
+    let checkoutReturns = 0;
 
-    for (const row of rows ?? []) {
+    for (const row of rows) {
       const session = row.session_id ?? "";
       if (session) allSessions.add(session);
 
@@ -291,8 +326,10 @@ export const getTrafficReport = createServerFn({ method: "GET" })
       }
 
       if (row.event_name === "portal_view" && session) portalSessions.add(session);
-      if (row.event_name === "signup_completed") signups += 1;
-      if (row.event_name === "checkout_completed") paid += 1;
+      if (row.event_name === "signup_started") signupStarts += 1;
+      // Untrusted browser telemetry: a return from Stripe is not a payment.
+      if (row.event_name === "checkout_return" || row.event_name === "checkout_completed")
+        checkoutReturns += 1;
 
       // Attribute by utm_source, else referring host, else direct.
       let source = row.utm_source?.trim().toLowerCase() ?? "";
@@ -305,45 +342,47 @@ export const getTrafficReport = createServerFn({ method: "GET" })
       }
       source = source || "direct";
       const bucket = sources.get(source) ?? {
-        visitors: new Set<string>(),
-        signups: 0,
-        paid: 0,
+        sessions: new Set<string>(),
+        signupStarts: 0,
+        checkoutReturns: 0,
       };
-      if (session) bucket.visitors.add(session);
-      if (row.event_name === "signup_completed") bucket.signups += 1;
-      if (row.event_name === "checkout_completed") bucket.paid += 1;
+      if (session) bucket.sessions.add(session);
+      if (row.event_name === "signup_started") bucket.signupStarts += 1;
+      if (row.event_name === "checkout_return" || row.event_name === "checkout_completed")
+        bucket.checkoutReturns += 1;
       sources.set(source, bucket);
     }
 
     const topPages: TrafficPage[] = [...pages.entries()]
-      .map(([path, value]) => ({ path, views: value.views, visitors: value.sessions.size }))
+      .map(([path, value]) => ({ path, views: value.views, sessions: value.sessions.size }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 15);
 
     const topSources: TrafficSource[] = [...sources.entries()]
       .map(([source, value]) => ({
         source,
-        visitors: value.visitors.size,
-        signups: value.signups,
-        paid: value.paid,
+        sessions: value.sessions.size,
+        signupStarts: value.signupStarts,
+        checkoutReturns: value.checkoutReturns,
       }))
-      .sort((a, b) => b.visitors - a.visitors)
+      .sort((a, b) => b.sessions - a.sessions)
       .slice(0, 12);
 
     const daily = [...byDay.entries()]
-      .map(([day, set]) => ({ day, visitors: set.size }))
+      .map(([day, set]) => ({ day, sessions: set.size }))
       .sort((a, b) => a.day.localeCompare(b.day));
 
-    const visitors = allSessions.size;
+    const sessions = allSessions.size;
     return {
       days: data.days,
       views,
-      visitors,
-      portalVisitors: portalSessions.size,
-      signups,
-      paid,
-      portalRate: visitors > 0 ? Math.round((portalSessions.size / visitors) * 1000) / 10 : 0,
-      leadRate: visitors > 0 ? Math.round((signups / visitors) * 1000) / 10 : 0,
+      /** Distinct browser sessions in the window — NOT verified unique people. */
+      sessions,
+      portalSessions: portalSessions.size,
+      signupStarts,
+      checkoutReturns,
+      portalRate: sessions > 0 ? Math.round((portalSessions.size / sessions) * 1000) / 10 : 0,
+      signupStartRate: sessions > 0 ? Math.round((signupStarts / sessions) * 1000) / 10 : 0,
       topPages,
       topSources,
       daily,
