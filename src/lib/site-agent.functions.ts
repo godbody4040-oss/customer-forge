@@ -379,7 +379,9 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       requirements: requirements.slice(0, 8),
       // What the agent actually did to get here, stage by stage.
       trace: trace.slice(0, 8),
+      unavailable: null as { reason: string; retryable: boolean; instruction: string } | null,
     };
+
 
     await supabase.from("ai_generations").insert({
       organization_id: orgId,
