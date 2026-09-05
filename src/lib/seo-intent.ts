@@ -364,7 +364,7 @@ export function seoInventory(): SeoPage[] {
       page(
         `/compare/${comparison.slug}`,
         `revora vs ${comparison.slug.replace(/-/g, " ")}`,
-        comparison.metaTitle ?? comparison.title,
+        comparison.title,
         comparison.description,
         520,
       ),
@@ -376,8 +376,8 @@ export function seoInventory(): SeoPage[] {
       page(
         `/crm/${solution.slug}`,
         `crm for ${solution.slug.replace(/-/g, " ")}`,
-        solution.metaTitle ?? solution.title,
-        solution.metaDescription ?? solution.description,
+        solution.metaTitle,
+        solution.description,
         700,
       ),
     );
