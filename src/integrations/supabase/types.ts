@@ -1976,6 +1976,33 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_accounts: {
+        Row: {
+          created_at: string
+          first_landing_path: string | null
+          first_referrer: string | null
+          first_utm_campaign: string | null
+          first_utm_source: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_landing_path?: string | null
+          first_referrer?: string | null
+          first_utm_campaign?: string | null
+          first_utm_source?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_landing_path?: string | null
+          first_referrer?: string | null
+          first_utm_campaign?: string | null
+          first_utm_source?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           ga_measurement_id: string | null
@@ -1996,6 +2023,51 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      platform_trials: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          organization_id: string
+          started_at: string
+          started_by: string | null
+          trial_ends_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          organization_id: string
+          started_at?: string
+          started_by?: string | null
+          trial_ends_at: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          organization_id?: string
+          started_at?: string
+          started_by?: string | null
+          trial_ends_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_trials_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_trials_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -3517,6 +3589,15 @@ export type Database = {
           role: string
           user_id: string
         }[]
+      }
+      provision_workspace: {
+        Args: {
+          _industry?: string
+          _name: string
+          _profile?: Json
+          _trial_days?: number
+        }
+        Returns: string
       }
       restore_website_state: {
         Args: { _organization_id: string; _snapshot: Json }
