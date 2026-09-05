@@ -139,6 +139,23 @@ describe("orchestrator pipeline", () => {
 
   const understand = async () => understanding.complex;
 
+  // The design and grading stages are stubbed here so the pipeline is tested,
+  // not the gateway. `strongCritique` keeps the auto-fix pass out of the way;
+  // the auto-fix test below supplies a weak grade on purpose.
+  const design = async () => designWithoutModel("roofing");
+  const grade = (overall: number, fixes: string[] = []) => async () => ({
+    scores: Object.fromEntries(CRITIQUE_DIMENSIONS.map((d) => [d, overall])) as Record<
+      (typeof CRITIQUE_DIMENSIONS)[number],
+      number
+    >,
+    overall,
+    fixes,
+    verdict: "Reviewed",
+    source: "model" as const,
+  });
+  const critique = grade(9);
+
+
   it("merges the review pass, never repeating an identical action", async () => {
     const first = {
       reply: "Here we go",
