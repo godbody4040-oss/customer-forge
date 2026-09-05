@@ -269,13 +269,36 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     const instruction =
       data.instruction || "(see the attached file(s) — follow what they show or say)";
 
-    // The builder never dead-ends on a keyword guess. Transient busy answers are
-    // retried with backoff; when the writer is genuinely unavailable the request
-    // comes back as a queued, retryable state so the owner's words are kept and
-    // resent, instead of a rule-based plan that only pretends to understand.
+    // FREE-FIRST: Revora's own deterministic builder answers first. It uses the
+    // trade playbooks, the section library, the design system and the
+    // workspace's own facts — no AI provider, no credits, no per-request cost.
+    // A language model is only consulted when the request needs judgement the
+    // rules cannot supply, and if no provider is available the deterministic
+    // plan is still returned, so the builder is never unusable.
+    const { buildDeterministicPlan } = await import("@/lib/builder/deterministic");
+    const deterministic = data.attachments.length
+      ? null
+      : buildDeterministicPlan(agentContext, instruction);
+
     let raw: Record<string, unknown>;
     let requirements: { label: string; covered: boolean }[] = [];
     let trace: string[] = [];
+    const deterministicRaw = () => {
+      if (!deterministic) return null;
+      requirements = [...new Set(deterministic.intent.verbs)].map((verb) => ({
+        label: verb,
+        covered: true,
+      }));
+      trace = deterministic.trace;
+      return {
+        reply: deterministic.reply,
+        summary: deterministic.summary,
+        actions: deterministic.actions as unknown,
+        questions: deterministic.questions,
+        notes: deterministic.notes,
+      } as Record<string, unknown>;
+    };
+
     const runAgent = async () => {
       const result = await orchestrate({
         context: agentContext,
