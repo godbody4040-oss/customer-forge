@@ -195,6 +195,7 @@ export async function orchestrate(options: {
       missing = strings(second["missing"], 8);
       notes = [...new Set([...notes, ...strings(second["notes"], 6)])].slice(0, 6);
       reply = str(second["reply"], 1500) || reply;
+      summary = str(second["summary"], 300) || summary;
       trace.push(
         extra.length
           ? `Reviewed the plan and added ${extra.length} change${extra.length === 1 ? "" : "s"} it was missing`
