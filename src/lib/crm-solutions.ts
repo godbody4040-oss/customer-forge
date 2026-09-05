@@ -14,10 +14,11 @@
  * - Say plainly when something else is the better answer.
  */
 
-import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 
-const SETUP = usdExact(GROWTH_SYSTEM.setupPrice);
-const MONTHLY = usdExact(GROWTH_SYSTEM.monthlyPrice);
+// Short, human price forms for titles and prose ("$750", not "$750.00").
+const SETUP = `$${GROWTH_SYSTEM.setupPrice}`;
+const MONTHLY = `$${GROWTH_SYSTEM.monthlyPrice}`;
 
 export interface CrmPoint {
   title: string;

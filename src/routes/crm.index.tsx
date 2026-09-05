@@ -4,11 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
 import { CRM_SOLUTIONS } from "@/lib/crm-solutions";
-import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
+import { GROWTH_SYSTEM } from "@/lib/offer";
 import { breadcrumbSchema, canonicalLink, ogUrl } from "@/lib/seo";
 
-const SETUP = usdExact(GROWTH_SYSTEM.setupPrice);
-const MONTHLY = usdExact(GROWTH_SYSTEM.monthlyPrice);
+const SETUP = `$${GROWTH_SYSTEM.setupPrice}`;
+const MONTHLY = `$${GROWTH_SYSTEM.monthlyPrice}`;
 
 const TITLE = `CRM Software for Contractors & Trades — By Trade | Revora`;
 const DESCRIPTION = `CRM software built for contractors and trades: capture leads, send written quotes, book jobs, follow up automatically and collect reviews. ${SETUP} setup, first month free, then ${MONTHLY}/month.`;
