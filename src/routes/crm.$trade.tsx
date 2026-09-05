@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { RelatedLinks } from "@/components/marketing/SeoLinks";
 import { Button } from "@/components/ui/button";
 import { CRM_SOLUTIONS, findCrmSolution, type CrmSolution } from "@/lib/crm-solutions";
 import { GROWTH_SYSTEM } from "@/lib/offer";

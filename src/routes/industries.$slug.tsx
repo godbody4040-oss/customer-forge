@@ -3,6 +3,7 @@ import { trackConversion } from "@/lib/conversion";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CalendarCheck, Calculator, LineChart, Search, Star, Users } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { RelatedLinks } from "@/components/marketing/SeoLinks";
 import { SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
