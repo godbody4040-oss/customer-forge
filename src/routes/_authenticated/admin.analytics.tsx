@@ -125,7 +125,6 @@ function AdminAnalytics() {
         </label>
       </div>
 
-
       {funnel.isLoading ? (
         <LoadingRows rows={3} />
       ) : funnel.isError ? (

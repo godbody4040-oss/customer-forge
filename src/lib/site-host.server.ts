@@ -156,41 +156,43 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
     const industryPaths = INDUSTRIES.map((i) => `/industries/${industrySlug(i.name)}`);
     const locationPaths = NC_LOCATIONS.map((l) => `/locations/${l.slug}`);
     const statePaths = US_STATES.map((s) => `/states/${s.slug}`);
-    return [
-      "",
-      "/pricing",
-      "/get-started",
-      "/portal",
-      "/share",
-      "/growth-assessment",
-      "/website-audit",
-      "/tools",
-      "/industries",
-      ...industryPaths,
-      "/locations",
-      ...locationPaths,
-      "/states",
-      ...statePaths,
-      ...localPaths(),
-      "/compare",
-      ...comparePaths(),
-      "/guides",
-      ...guidePaths(),
-      "/crm-for-contractors",
-      "/about",
-      "/contact",
-      "/demo",
-      "/demo/dashboard",
-      "/privacy",
-      "/terms",
-    ]
-      // comparePaths()/guidePaths() already include their index page, so the
-      // hub entries above can repeat; a sitemap must never list a URL twice.
-      .filter((path, i, all) => all.indexOf(path) === i)
-      .map((path) => ({
-        loc: `${origin}${path}`,
-        lastmod: null as string | null,
-      }));
+    return (
+      [
+        "",
+        "/pricing",
+        "/get-started",
+        "/portal",
+        "/share",
+        "/growth-assessment",
+        "/website-audit",
+        "/tools",
+        "/industries",
+        ...industryPaths,
+        "/locations",
+        ...locationPaths,
+        "/states",
+        ...statePaths,
+        ...localPaths(),
+        "/compare",
+        ...comparePaths(),
+        "/guides",
+        ...guidePaths(),
+        "/crm-for-contractors",
+        "/about",
+        "/contact",
+        "/demo",
+        "/demo/dashboard",
+        "/privacy",
+        "/terms",
+      ]
+        // comparePaths()/guidePaths() already include their index page, so the
+        // hub entries above can repeat; a sitemap must never list a URL twice.
+        .filter((path, i, all) => all.indexOf(path) === i)
+        .map((path) => ({
+          loc: `${origin}${path}`,
+          lastmod: null as string | null,
+        }))
+    );
   }
   const paths = [{ slug: "home", updatedAt: null as string | null }, ...site.pages].filter(
     (p, i, all) => all.findIndex((x) => x.slug === p.slug) === i,
