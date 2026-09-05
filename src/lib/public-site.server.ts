@@ -107,11 +107,21 @@ export async function loadSite(
   if (!org?.id) return null;
   const orgId: string = org.id;
 
-  const { data: gate } = await supabase
-    .from("website_settings")
-    .select("publish_state, published")
-    .eq("organization_id", orgId)
-    .maybeSingle();
+  // The publish gate reads the same source the rendering read uses: the safe
+  // published-only projection for visitors, the base row for an authorised
+  // draft preview.
+  const { data: gate } = await (allowUnpublished
+    ? supabase
+        .from("website_settings")
+        .select("publish_state, published")
+        .eq("organization_id", orgId)
+        .maybeSingle()
+    : supabase
+        .from("public_website_settings")
+        .select("publish_state, published")
+        .eq("organization_id", orgId)
+        .maybeSingle());
+
 
   // A client site is served on its public address only once it is published.
   // Unpublished work stays private: the owner previews it inside the builder,
