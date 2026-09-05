@@ -486,7 +486,7 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
       string,
       { views: number; sessions: Set<string>; visitors: Set<string> }
     >();
-    for (const row of trafficRes.data ?? []) {
+    for (const row of trafficRes.rows) {
       const day = row.created_at.slice(0, 10);
       const bucket = byDay.get(day) ?? {
         views: 0,
@@ -509,8 +509,8 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
           sessions: bucket.sessions.size,
           visitors: bucket.visitors.size,
         })),
-      accounts: (accountsRes.data ?? []).map((a) => ({ id: a.user_id, createdAt: a.created_at })),
-      trials: (trialsRes.data ?? [])
+      accounts: (accountsRes.rows).map((a) => ({ id: a.user_id, createdAt: a.created_at })),
+      trials: (trialsRes.rows)
         .filter((t) => orgs.get(t.organization_id) && !orgs.get(t.organization_id)!.is_demo)
         .map((t) => {
           const org = orgs.get(t.organization_id)!;
