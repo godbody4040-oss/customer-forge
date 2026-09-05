@@ -126,7 +126,11 @@ function AnalyticsPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <MetricCard label="Visitors" value={String(model.views)} hint="page views" />
+        <MetricCard
+          label="Page views"
+          value={String(model.views)}
+          hint="every page opened — one session can open several"
+        />
         <MetricCard label="Leads" value={String(model.leads)} tone="signal" hint="captured" />
         <MetricCard
           label="Bookings"
@@ -145,7 +149,11 @@ function AnalyticsPage() {
       </div>
 
       <Panel className="p-5">
-        <SectionHeading eyebrow="Trend" title="Visitors and leads per day" />
+        <SectionHeading
+          eyebrow="Trend"
+          title="Unique sessions and leads per day"
+          description="A unique session is one browsing visit to your site."
+        />
         <div className="mt-5 flex h-40 items-end gap-1" aria-hidden="true">
           {model.daily.map((day) => (
             <div key={day.date.toISOString()} className="flex flex-1 flex-col justify-end gap-0.5">

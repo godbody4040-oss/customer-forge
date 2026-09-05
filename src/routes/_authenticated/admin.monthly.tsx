@@ -156,7 +156,7 @@ function MonthlyReport() {
         <MetricCard
           label="Workspaces earning"
           value={number(current?.workspaces ?? 0)}
-          hint={`${number(current?.visitors ?? 0)} unique visitors this month`}
+          hint={`${number(current?.visitors ?? 0)} unique sessions this month (one browsing visit each)`}
         />
       </div>
 
@@ -266,7 +266,7 @@ function MonthlyReport() {
                       <dd className="font-medium">{number(row.visits)}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Visitors</dt>
+                      <dt className="text-muted-foreground">Unique sessions</dt>
                       <dd className="font-medium">{number(row.visitors)}</dd>
                     </div>
                   </dl>
