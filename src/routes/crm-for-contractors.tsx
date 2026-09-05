@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
 import { Button } from "@/components/ui/button";
+import { CRM_SOLUTIONS } from "@/lib/crm-solutions";
 import { GROWTH_SYSTEM } from "@/lib/offer";
 
 const TITLE = "CRM for Contractors — Leads, Quotes & Follow-Up | Revora";
