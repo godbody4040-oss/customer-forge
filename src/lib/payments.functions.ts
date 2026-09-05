@@ -59,7 +59,9 @@ export const refundPayment = createServerFn({ method: "POST" })
     }
 
     try {
-      const stripe = createStripeClient(payment.environment === "live" ? "live" : data.environment);
+      // The refund ALWAYS uses the environment the payment was taken in.
+      // Client input is never allowed to redirect a refund to Stripe sandbox.
+      const stripe = createStripeClient(payment.environment === "live" ? "live" : "sandbox");
       const refund = await stripe.refunds.create({
         ...(reference.kind === "payment_intent"
           ? { payment_intent: reference.id }
