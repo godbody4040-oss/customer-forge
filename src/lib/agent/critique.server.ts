@@ -13,6 +13,7 @@
  */
 
 import { callJson } from "@/lib/site-agent.server";
+import type { ModelRole } from "@/lib/ai/config";
 
 export const CRITIQUE_DIMENSIONS = [
   "design",
@@ -43,7 +44,7 @@ export type Critique = {
 /** Below this, the plan is improved automatically before it is shown. */
 export const QUALITY_THRESHOLD = 7.5;
 
-const CRITIQUE_MODEL = "google/gemini-3.7-flash";
+const CRITIQUE_ROLE: ModelRole = "fast";
 
 const SYSTEM = `You are a demanding design lead reviewing a planned set of changes to a real local
 business website before it goes live. You are not encouraging and you are not harsh — you are accurate.
@@ -82,7 +83,7 @@ export async function critiquePlan(options: {
   requirements: string[];
 }): Promise<Critique> {
   try {
-    const raw = await callJson(CRITIQUE_MODEL, [
+    const raw = await callJson(CRITIQUE_ROLE, [
       { role: "system", content: SYSTEM },
       {
         role: "user",
@@ -98,7 +99,7 @@ export async function critiquePlan(options: {
           JSON.stringify(options.actions).slice(0, 14_000),
         ].join("\n"),
       },
-    ]);
+    ], { task: "agent.critique" });
 
     const rawScores = (raw["scores"] ?? {}) as Record<string, unknown>;
     const scores = Object.fromEntries(

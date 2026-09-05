@@ -79,6 +79,129 @@ export type Database = {
           },
         ]
       }
+      ai_tool_audit: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          id: string
+          ok: boolean
+          organization_id: string | null
+          reason: string | null
+          request_id: string
+          tool: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          ok: boolean
+          organization_id?: string | null
+          reason?: string | null
+          request_id: string
+          tool: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          ok?: boolean
+          organization_id?: string | null
+          reason?: string | null
+          request_id?: string
+          tool?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tool_audit_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_tool_audit_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_usage_events: {
+        Row: {
+          created_at: string
+          error_category: string | null
+          estimated_cost_usd: number | null
+          fallback_used: boolean
+          id: string
+          input_tokens: number | null
+          latency_ms: number
+          model: string
+          ok: boolean
+          organization_id: string | null
+          output_tokens: number | null
+          provider: string
+          request_id: string
+          task: string
+          tool_calls: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_category?: string | null
+          estimated_cost_usd?: number | null
+          fallback_used?: boolean
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number
+          model: string
+          ok: boolean
+          organization_id?: string | null
+          output_tokens?: number | null
+          provider: string
+          request_id: string
+          task: string
+          tool_calls?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_category?: string | null
+          estimated_cost_usd?: number | null
+          fallback_used?: boolean
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number
+          model?: string
+          ok?: boolean
+          organization_id?: string | null
+          output_tokens?: number | null
+          provider?: string
+          request_id?: string
+          task?: string
+          tool_calls?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           campaign: string | null

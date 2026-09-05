@@ -41,7 +41,32 @@ inside a server function or route handler, never at module scope.
 | `SUPABASE_SERVICE_ROLE_KEY`     | server | Privileged server-only access  |
 | `STRIPE_SECRET_KEY`             | server | Live Stripe API access         |
 | `STRIPE_WEBHOOK_SECRET`         | server | Webhook signature verification |
-| `LOVABLE_API_KEY`               | server | AI Gateway access              |
+| `AI_DEFAULT_PROVIDER`           | server | First AI provider: google/openai|
+| `AI_FALLBACK_PROVIDER`          | server | Provider used if the first fails|
+| `GOOGLE_AI_API_KEY`             | server | Revora's Google AI account      |
+| `OPENAI_API_KEY`                | server | Revora's OpenAI account         |
+| `LOVABLE_API_KEY`               | server | Transactional email delivery    |
+
+### Revora AI
+
+All AI work — the builder, copy engine, image studio, voice notes, video chapters — runs through
+Revora's own AI layer in `src/lib/ai/`:
+
+```text
+caller  ->  router.server.ts   choice of model class, limits, timeouts, retries,
+            (the orchestrator)  provider fallback, circuit breaking, telemetry
+        ->  providers/*.ts     one thin adapter per provider (Google, OpenAI)
+        ->  the provider API   called directly with Revora's own key
+```
+
+Nothing outside `src/lib/ai/providers/` knows which provider served a request, and no other
+module holds a provider key. Adding a provider means one new adapter file. With no key
+configured every AI feature fails closed with a single clear message rather than degrading
+silently, and each deterministic Revora fallback (the built-in site builder, the built-in
+request reader) still completes the job.
+
+Usage is recorded in `ai_usage_events` and every attempted tool call in `ai_tool_audit`.
+Neither table stores prompts, generated content, keys or personal details.
 
 ## Architecture
 

@@ -12,6 +12,7 @@
  */
 
 import { callJson } from "@/lib/site-agent.server";
+import type { ModelRole } from "@/lib/ai/config";
 import { translateIntent, type IntentArea } from "@/lib/intent-translator";
 import { BASELINE_CAPABILITIES, isCapabilityId, type CapabilityId } from "@/lib/agent/capabilities";
 
@@ -38,7 +39,7 @@ export type Understanding = {
   source: "model" | "fallback";
 };
 
-const UNDERSTAND_MODEL = "google/gemini-3.7-flash";
+const UNDERSTAND_ROLE: ModelRole = "fast";
 
 const SYSTEM = `You read a small business owner's request about their website or business
 software and work out what it MEANS. You never ask them to use special vocabulary and you
@@ -120,12 +121,12 @@ export async function understandRequest(
   if (!trimmed) return understandWithoutModel(trimmed);
 
   try {
-    const raw = await callJson(UNDERSTAND_MODEL, [
+    const raw = await callJson(UNDERSTAND_ROLE, [
       { role: "system", content: SYSTEM },
       { role: "user", content: `THE WORKSPACE, IN BRIEF:\n${workspaceSummary}` },
       ...history.slice(-4).map((turn) => ({ role: turn.role, content: turn.content })),
       { role: "user", content: `THE OWNER'S REQUEST:\n${trimmed}` },
-    ]);
+    ], { task: "agent.understand" });
 
     const capabilities = [
       ...new Set(

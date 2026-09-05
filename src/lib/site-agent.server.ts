@@ -11,7 +11,10 @@
  * were not supplied).
  */
 
-import { AiGatewayError } from "@/lib/site-engine.server";
+import { RevoraAiError } from "@/lib/ai/errors";
+import { generateStructuredOutput, transcribeAudio } from "@/lib/ai/router.server";
+import type { AiCaller, AiMessage, AiPart } from "@/lib/ai/types";
+import type { ModelRole } from "@/lib/ai/config";
 import { translateIntent } from "@/lib/intent-translator";
 import {
   MAX_ACTIONS,
@@ -21,11 +24,13 @@ import {
   type AgentTurn,
 } from "@/lib/site-agent";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-
-/** Planning is a reasoning job: a strong model first, a fast one as fallback. */
-export const AGENT_MODEL = "google/gemini-3.1-pro-preview";
-export const AGENT_FALLBACK_MODEL = "google/gemini-3.7-flash";
+/**
+ * Planning is a reasoning job, so it asks Revora AI for the "coding" model
+ * class. Which provider and model that resolves to is decided by Revora's own
+ * AI configuration, never here.
+ */
+export const AGENT_ROLE: ModelRole = "coding";
+export const AGENT_FALLBACK_ROLE: ModelRole = "fast";
 
 export type SiteMapPage = {
   id: string;
@@ -165,84 +170,38 @@ function siteMap(context: AgentContext) {
   );
 }
 
-type TextPart = { type: "text"; text: string };
-type ImagePart = { type: "image_url"; image_url: { url: string } };
-type VideoPart = { type: "video_url"; video_url: { url: string } };
-type AudioPart = { type: "input_audio"; input_audio: { data: string; format: string } };
-type ContentPart = TextPart | ImagePart | VideoPart | AudioPart;
-export type ChatMessage = { role: string; content: string | ContentPart[] };
+type ContentPart = AiPart;
+export type ChatMessage = AiMessage;
 
-/** Maps an attachment onto the gateway's multimodal content-part shape. */
+/** Maps an attachment onto Revora AI's provider-independent content part. */
 function attachmentPart(attachment: AgentAttachment): ContentPart {
   if (attachment.kind === "image")
-    return { type: "image_url", image_url: { url: attachment.dataUrl } };
+    return { type: "image", dataUrl: attachment.dataUrl, mimeType: attachment.mimeType };
   if (attachment.kind === "video")
-    return { type: "video_url", video_url: { url: attachment.dataUrl } };
-  const format = attachment.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "webm";
-  return {
-    type: "input_audio",
-    input_audio: { data: attachment.dataUrl.slice(attachment.dataUrl.indexOf(",") + 1), format },
-  };
+    return { type: "video", dataUrl: attachment.dataUrl, mimeType: attachment.mimeType };
+  return { type: "audio", dataUrl: attachment.dataUrl, mimeType: attachment.mimeType };
 }
 
 /**
- * One JSON call to the AI gateway. Shared by every stage of the agent so that
- * error handling, retry semantics and JSON repair live in exactly one place.
+ * One JSON call through Revora's own AI layer. Every stage of the agent goes
+ * through here, so provider choice, fallback, limits, timeouts, retries and
+ * telemetry live in exactly one place — and swapping provider changes nothing
+ * in this file.
  */
-export async function callJson(model: string, messages: ChatMessage[]) {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("The website assistant isn't configured for this workspace.");
-
-  const response = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model, messages, response_format: { type: "json_object" } }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    if (response.status === 429) {
-      const retryAfter = Number(response.headers.get("retry-after")) || null;
-      throw new AiGatewayError(
-        429,
-        "The assistant is busy right now. Try again in a moment.",
-        retryAfter,
-      );
-    }
-    if (response.status === 402)
-      throw new AiGatewayError(
-        402,
-        "Revora's AI writer is paused right now — the built-in builder will handle this request.",
-      );
-    if (response.status === 403)
-      throw new AiGatewayError(
-        403,
-        "Revora's AI writer is unavailable right now — the built-in builder will handle this request.",
-      );
-
-    if (response.status === 413)
-      throw new AiGatewayError(
-        413,
-        "That attachment is too large for the assistant. Try a shorter clip or a smaller photo.",
-      );
-    console.error("[site-agent] gateway error", response.status, body.slice(0, 500));
-    throw new AiGatewayError(response.status, "The assistant couldn't be reached. Try again.");
-  }
-
-  const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-  const raw = payload.choices?.[0]?.message?.content ?? "";
-  const cleaned = raw
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/, "")
-    .trim();
-  try {
-    const parsed = JSON.parse(cleaned) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
-      throw new Error("bad shape");
-    return parsed as Record<string, unknown>;
-  } catch {
-    throw new Error("The assistant returned an unexpected response. Try rewording the request.");
-  }
+export async function callJson(
+  role: ModelRole,
+  messages: ChatMessage[],
+  caller?: Partial<AiCaller>,
+) {
+  const result = await generateStructuredOutput(
+    {
+      task: caller?.task ?? "site.agent",
+      organizationId: caller?.organizationId ?? null,
+      userId: caller?.userId ?? null,
+    },
+    { messages, role },
+  );
+  return result.data;
 }
 
 /**
@@ -256,6 +215,7 @@ export async function planChanges(
   instruction: string,
   history: AgentTurn[],
   attachments: AgentAttachment[] = [],
+  caller?: Partial<AiCaller>,
 ): Promise<Record<string, unknown>> {
   const intent = translateIntent(instruction);
   const parts: ContentPart[] = [
@@ -297,78 +257,54 @@ export async function planChanges(
     { role: "system", content: SYSTEM },
     { role: "user", content: `SITE MAP AND BUSINESS FACTS:\n${siteMap(context)}` },
     ...history.slice(-8).map((turn) => ({ role: turn.role, content: turn.content })),
-    { role: "user", content: parts.length === 1 ? (parts[0] as TextPart).text : parts },
+    {
+      role: "user",
+      content: parts.length === 1 ? (parts[0] as { text: string }).text : parts,
+    },
   ];
 
+  const plannerCaller = { ...caller, task: caller?.task ?? "site.plan" };
   try {
-    return await callJson(AGENT_MODEL, messages);
+    return await callJson(AGENT_ROLE, messages, plannerCaller);
   } catch (error) {
-    // Quota, policy and rate limits are not fixed by a different model.
-    if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
-    return await callJson(AGENT_FALLBACK_MODEL, messages);
+    // A missing provider, a refused key, a usage limit or a rate limit is not
+    // fixed by asking for a different model class.
+    if (
+      error instanceof RevoraAiError &&
+      ["not_configured", "unauthorized", "quota", "policy", "rate_limited", "too_large"].includes(
+        error.category,
+      )
+    )
+      throw error;
+    return await callJson(AGENT_FALLBACK_ROLE, messages, plannerCaller);
   }
 }
 
 /* ------------------------------ voice commands ----------------------------- */
 
-const TRANSCRIBE_URL = "https://ai.gateway.lovable.dev/v1/audio/transcriptions";
-export const TRANSCRIBE_MODEL = "openai/gpt-4o-mini-transcribe";
-
 /**
- * Turns a recorded voice command into editable text. The owner sees the words
- * before anything is planned, so a mis-heard phrase never becomes a site edit.
+ * Turns a recorded voice command into editable text through Revora's own
+ * transcription provider. The owner sees the words before anything is planned,
+ * so a mis-heard phrase never becomes a site edit.
  */
-export async function transcribeVoice(attachment: AgentAttachment): Promise<string> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Voice commands aren't configured for this workspace.");
-
-  const base64 = attachment.dataUrl.slice(attachment.dataUrl.indexOf(",") + 1);
-  const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
-  const extension = attachment.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "webm";
-
-  const form = new FormData();
-  form.append("file", new Blob([bytes], { type: attachment.mimeType }), `voice.${extension}`);
-  form.append("model", TRANSCRIBE_MODEL);
-
-  const response = await fetch(TRANSCRIBE_URL, {
-    method: "POST",
-    headers: { authorization: `Bearer ${key}` },
-    body: form,
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    if (response.status === 429)
-      throw new AiGatewayError(
-        429,
-        "Voice is busy right now. Try again in a moment.",
-        Number(response.headers.get("retry-after")) || null,
-      );
-    if (response.status === 402)
-      throw new AiGatewayError(
-        402,
-        "Voice input is paused right now. Type your request instead — nothing else is limited.",
-      );
-    if (response.status === 403)
-      throw new AiGatewayError(
-        403,
-        "Voice input is unavailable right now. Type your request instead — nothing else is limited.",
-      );
-
-    console.error("[site-agent] transcribe error", response.status, body.slice(0, 300));
-    throw new AiGatewayError(
-      response.status,
-      "Couldn't transcribe that recording. Try again or type the request.",
-    );
-  }
-
-  const payload = (await response.json()) as { text?: string };
-  return (payload.text ?? "").trim();
+export async function transcribeVoice(
+  attachment: AgentAttachment,
+  caller?: Partial<AiCaller>,
+): Promise<string> {
+  const result = await transcribeAudio(
+    {
+      task: caller?.task ?? "site.voice",
+      organizationId: caller?.organizationId ?? null,
+      userId: caller?.userId ?? null,
+    },
+    { dataUrl: attachment.dataUrl, mimeType: attachment.mimeType, name: attachment.name },
+  );
+  return result.text.trim();
 }
 
 /* ---------------------------- video chapters ------------------------------- */
 
-export const CHAPTER_MODEL = "google/gemini-3.7-flash";
+export const CHAPTER_ROLE: ModelRole = "vision";
 
 /**
  * Writes short "chapters" for an attached clip so the owner can reference a
@@ -377,6 +313,7 @@ export const CHAPTER_MODEL = "google/gemini-3.7-flash";
  */
 export async function summarizeChapters(
   attachment: AgentAttachment,
+  caller?: Partial<AiCaller>,
 ): Promise<{ summary: string; chapters: AgentChapter[] }> {
   const messages: ChatMessage[] = [
     {
@@ -396,7 +333,10 @@ export async function summarizeChapters(
     },
   ];
 
-  const raw = await callJson(CHAPTER_MODEL, messages);
+  const raw = await callJson(CHAPTER_ROLE, messages, {
+    ...caller,
+    task: caller?.task ?? "site.video",
+  });
   const summary = typeof raw["summary"] === "string" ? raw["summary"].slice(0, 400) : "";
   return { summary, chapters: readChapters(raw["chapters"]) };
 }

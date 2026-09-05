@@ -55,7 +55,10 @@ export const generateStudioImage = createServerFn({ method: "POST" })
       return { ok: false, message: "You don't have permission to add photos to this website." };
     }
 
-    const image = await generateImageBase64(data.prompt);
+    const image = await generateImageBase64(data.prompt, {
+      organizationId: data.organizationId,
+      userId: context.userId ? String(context.userId) : null,
+    });
     if (!image.ok) return { ok: false, blocked: image.blocked, message: image.message };
 
     const bytes = decodeBase64(image.base64);
