@@ -95,7 +95,7 @@ function AdminAnalytics() {
         description="Accounts come from real sign-ups, trials from provisioned workspaces, paid customers from verified Stripe billing. Nothing is estimated. Select a stage to see the records behind the number."
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {[1, 7, 30, 90].map((option) => (
           <Button
             key={option}
@@ -106,6 +106,23 @@ function AdminAnalytics() {
             {option === 1 ? "Today" : `Last ${option} days`}
           </Button>
         ))}
+        <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
+          Custom
+          <input
+            type="number"
+            min={1}
+            max={365}
+            inputMode="numeric"
+            aria-label="Custom number of days"
+            value={days}
+            onChange={(event) => {
+              const next = Number(event.target.value);
+              if (Number.isFinite(next)) setDays(Math.min(365, Math.max(1, Math.round(next))));
+            }}
+            className="h-8 w-20 rounded-md border border-border bg-background px-2 text-[13px] text-foreground"
+          />
+          days
+        </label>
       </div>
 
       {funnel.isLoading ? (
