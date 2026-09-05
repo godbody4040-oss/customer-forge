@@ -269,16 +269,13 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     const instruction =
       data.instruction || "(see the attached file(s) — follow what they show or say)";
 
-    // The builder is included in the subscription, so no request may dead-end on
-    // an AI provider limit. One quiet retry for transient busy/rate-limit
-    // responses, then Revora's own rule-based planner answers instead.
+    // The builder never dead-ends on a keyword guess. Transient busy answers are
+    // retried with backoff; when the writer is genuinely unavailable the request
+    // comes back as a queued, retryable state so the owner's words are kept and
+    // resent, instead of a rule-based plan that only pretends to understand.
     let raw: Record<string, unknown>;
     let requirements: { label: string; covered: boolean }[] = [];
     let trace: string[] = [];
-    const planOffline = async (reason: string) => {
-      const { planWithoutAi } = await import("@/lib/site-agent.offline");
-      return planWithoutAi(instruction, agentContext, reason) as unknown as Record<string, unknown>;
-    };
     const runAgent = async () => {
       const result = await orchestrate({
         context: agentContext,
@@ -292,20 +289,42 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       trace = result.trace;
       return result.raw;
     };
-    try {
-      raw = await runAgent();
-    } catch (error) {
-      const status = (error as { status?: number } | null)?.status;
-      if (status === 429 || status === 503) {
-        try {
-          await new Promise((resolve) => setTimeout(resolve, 1200));
-          raw = await runAgent();
-        } catch {
-          raw = await planOffline("AI writer busy");
+    const queued = (reason: string, retryable: boolean) => ({
+      reply: retryable
+        ? "Revora's writer is busy right now. Your request is saved — press Retry and it will pick up exactly where it left off."
+        : "Revora's writer is paused for this workspace at the moment, so nothing was changed. Your request is saved and can be retried once it's available again.",
+      summary: "",
+      steps: [] as AgentStep[],
+      questions: [] as string[],
+      notes: [reason],
+      requirements: [] as { label: string; covered: boolean }[],
+      trace: [reason],
+      unavailable: { reason, retryable, instruction } as {
+        reason: string;
+        retryable: boolean;
+        instruction: string;
+      } | null,
+    });
+
+    let attempt = 0;
+    for (;;) {
+      attempt += 1;
+      try {
+        raw = await runAgent();
+        break;
+      } catch (error) {
+        const status = (error as { status?: number } | null)?.status;
+        if ((status === 429 || status === 503) && attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+          continue;
         }
-      } else if (status === 402 || status === 403 || status === 500 || status === 502) {
-        raw = await planOffline("AI writer paused");
-      } else {
+        if (status === 429 || status === 503) return queued("The AI writer is busy", true);
+        if (status === 402 || status === 403)
+          return queued("The AI writer is paused for this workspace", false);
+        if (status === 500 || status === 502) {
+          if (attempt < 2) continue;
+          return queued("The AI writer could not be reached", true);
+        }
         throw error;
       }
     }
@@ -358,6 +377,7 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       requirements: requirements.slice(0, 8),
       // What the agent actually did to get here, stage by stage.
       trace: trace.slice(0, 8),
+      unavailable: null as { reason: string; retryable: boolean; instruction: string } | null,
     };
 
     await supabase.from("ai_generations").insert({
@@ -405,6 +425,11 @@ type ApplyInput = {
 async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInput) {
   {
     const orgId = data.organizationId;
+    // One id for this whole apply. Every row it touches, the restore point it
+    // took, and any rollback it had to run are all recorded against this id, so
+    // a change is always traceable as a single operation rather than a scatter
+    // of unrelated edits.
+    const operationId = crypto.randomUUID();
 
     // Writing invalidates the agent's cached picture of this workspace, so the
     // next plan is made against the site as it now really is.
@@ -702,7 +727,13 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
         kind: "agent_apply_rolled_back",
         model: "applied",
         instruction: snapshotLabel,
-        result: { applied, failed, reversal } as unknown as never,
+        result: {
+          operationId,
+          applied,
+          failed,
+          reversal,
+          mutations: undoSteps.length,
+        } as unknown as never,
         created_by: userId,
       });
       invalidateWorkspaceContext(orgId);
@@ -718,7 +749,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
       kind: "agent_apply",
       model: "applied",
       instruction: snapshotLabel,
-      result: { applied, failed } as unknown as never,
+      result: { operationId, applied, failed, mutations: undoSteps.length } as unknown as never,
       created_by: userId,
     });
 
@@ -743,7 +774,13 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           kind: "agent_apply_failed_verification",
           model: "applied",
           instruction: snapshotLabel,
-          result: { applied, verification, reversal } as unknown as never,
+          result: {
+            operationId,
+            applied,
+            verification,
+            reversal,
+            mutations: undoSteps.length,
+          } as unknown as never,
           created_by: userId,
         });
         invalidateWorkspaceContext(orgId);
@@ -765,6 +802,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
       failed: failed.length,
       snapshotLabel,
       snapshotVersion,
+      operationId,
       verification,
     };
   }
