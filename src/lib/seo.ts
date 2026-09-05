@@ -160,12 +160,20 @@ export const WEBSITE_SCHEMA = {
   publisher: { "@id": `${SITE_URL}/#organization` },
 };
 
-/** The single canonical offer, expressed for search engines. */
+/**
+ * The single canonical offer, expressed for search engines.
+ *
+ * Revora sells a done-for-you service, not a retail product, so this is a
+ * `Service` with real service offers — no Merchant Listing Product schema, no
+ * invented SKU/GTIN, shipping, returns, inventory, reviews or ratings.
+ */
 export const GROWTH_SYSTEM_SCHEMA = {
   "@context": "https://schema.org",
-  "@type": "Product",
+  "@type": "Service",
   name: GROWTH_SYSTEM.name,
-  brand: { "@type": "Brand", name: "Revora Growth Systems" },
+  serviceType: "Customer acquisition system for local service businesses",
+  provider: { "@id": `${SITE_URL}/#organization` },
+  areaServed: BUSINESS.areasServed.map((name) => ({ "@type": "AdministrativeArea", name })),
   description:
     "A complete done-for-you customer acquisition system: lead-generating website, lead capture, CRM, instant quotes, online booking, automated follow-up, review requests, local SEO and analytics.",
   url: absoluteUrl("/pricing"),
@@ -174,6 +182,7 @@ export const GROWTH_SYSTEM_SCHEMA = {
       "@type": "Offer",
       name: "One-time setup",
       price: GROWTH_SYSTEM.setupPrice,
+      category: "Service",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
       url: absoluteUrl("/pricing"),

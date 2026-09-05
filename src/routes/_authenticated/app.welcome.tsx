@@ -39,7 +39,9 @@ function WelcomePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") !== "complete") return;
-    trackConversion("checkout_completed");
+    // Marketing telemetry only. Paid status comes exclusively from the
+    // signature-verified Stripe webhook, never from this browser return.
+    trackConversion("checkout_return");
     void queryClient.invalidateQueries({ queryKey: ["workspace"] });
     if (orgId) {
       void queryClient.invalidateQueries({ queryKey: ["billing_state", orgId] });

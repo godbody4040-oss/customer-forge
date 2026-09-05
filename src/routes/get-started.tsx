@@ -15,7 +15,6 @@ import { REVORA, revoraMailto } from "@/lib/brand";
 import { getAttribution, trackConversion } from "@/lib/conversion";
 import { provisionWorkspace, recordAccountCreated } from "@/lib/platform-funnel.functions";
 import { useStepScroll } from "@/lib/use-step-scroll";
-import { safeSlug } from "@/lib/website-plan";
 import { smartIntakeValue } from "@/lib/intake-smart";
 
 export const Route = createFileRoute("/get-started")({
@@ -217,8 +216,6 @@ function GetStarted() {
     setStartingTrial(true);
     try {
       await ensureWorkspace();
-
-
       navigate({ to: "/app" });
     } catch (cause) {
       setError(
