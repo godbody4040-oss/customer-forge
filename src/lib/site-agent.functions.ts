@@ -428,6 +428,12 @@ type ApplyInput = {
 async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInput) {
   {
     const orgId = data.organizationId;
+    // One id for this whole apply. Every row it touches, the restore point it
+    // took, and any rollback it had to run are all recorded against this id, so
+    // a change is always traceable as a single operation rather than a scatter
+    // of unrelated edits.
+    const operationId = crypto.randomUUID();
+
 
     // Writing invalidates the agent's cached picture of this workspace, so the
     // next plan is made against the site as it now really is.
