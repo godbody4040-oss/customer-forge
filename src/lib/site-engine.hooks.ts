@@ -241,12 +241,14 @@ export function useScoreFacts(organizationId: string | undefined) {
           .select("id", { count: "exact", head: true })
           .eq("organization_id", orgId)
           .eq("is_active", true),
-        supabase
-          .from("analytics_events")
-          .select("event_type")
-          .eq("organization_id", orgId)
-          .gte("created_at", since)
-          .limit(20000),
+        fetchAllRows<{ event_type: string }>((from, to) =>
+          supabase
+            .from("analytics_events")
+            .select("event_type")
+            .eq("organization_id", orgId)
+            .gte("created_at", since)
+            .range(from, to),
+        ),
         supabase
           .from("leads")
           .select("id", { count: "exact", head: true })

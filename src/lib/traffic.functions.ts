@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { fetchAllRows } from "@/lib/paginate";
 
 /**
  * Traffic report for the caller's own website, plus notifications for problems
@@ -17,13 +18,22 @@ export const getTrafficReport = createServerFn({ method: "POST" })
     const since = new Date(Date.now() - data.days * 2 * 86_400_000).toISOString();
 
     const [events, settings, quote, services, reviews, leads] = await Promise.all([
-      context.supabase
-        .from("analytics_events")
-        .select("event_type, path, source, device, session_id, created_at")
-        .eq("organization_id", data.organizationId)
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(20000),
+      fetchAllRows<{
+        event_type: string;
+        path: string | null;
+        source: string | null;
+        device: string | null;
+        session_id: string | null;
+        created_at: string;
+      }>((from, to) =>
+        context.supabase
+          .from("analytics_events")
+          .select("event_type, path, source, device, session_id, created_at")
+          .eq("organization_id", data.organizationId)
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      ),
       context.supabase
         .from("website_settings")
         .select("publish_state, custom_domain, dns_ok, ssl_ok, traffic_alerts_enabled")
@@ -54,7 +64,7 @@ export const getTrafficReport = createServerFn({ method: "POST" })
 
     if (settings.error) throw new Error("You don't have access to that workspace.");
 
-    const summary = summarizeTraffic(events.data ?? [], data.days);
+    const summary = summarizeTraffic(events.rows, data.days);
     const issues = detectTrafficIssues({
       summary,
       published: settings.data?.publish_state === "published",
