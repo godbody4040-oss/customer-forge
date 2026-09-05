@@ -164,7 +164,7 @@ export const aiEditSiteCopy = createServerFn({ method: "POST" })
       const { assertOrgEntitled } = await import("@/lib/entitlement.server");
       await assertOrgEntitled(supabase, orgId);
     }
-    const { rewriteCopyFields, COPY_MODEL } = await import("@/lib/site-engine.server");
+    const { rewriteCopyFields, COPY_ROLE } = await import("@/lib/site-engine.server");
 
     const [org, profile, services] = await Promise.all([
       supabase
@@ -206,7 +206,7 @@ export const aiEditSiteCopy = createServerFn({ method: "POST" })
     await supabase.from("ai_generations").insert({
       organization_id: orgId,
       kind: "copy_edit",
-      model: COPY_MODEL,
+      model: COPY_ROLE,
       instruction: data.instruction,
       result: result as unknown as never,
       created_by: userId,
@@ -235,7 +235,7 @@ export const aiEditSiteSections = createServerFn({ method: "POST" })
       const { assertOrgEntitled } = await import("@/lib/entitlement.server");
       await assertOrgEntitled(supabase, orgId);
     }
-    const { proposeSectionEdits, COPY_MODEL } = await import("@/lib/site-engine.server");
+    const { proposeSectionEdits, COPY_ROLE } = await import("@/lib/site-engine.server");
 
     const [org, profile, services, sections] = await Promise.all([
       supabase.from("organizations").select("name, industry").eq("id", orgId).maybeSingle(),
@@ -287,7 +287,7 @@ export const aiEditSiteSections = createServerFn({ method: "POST" })
     await supabase.from("ai_generations").insert({
       organization_id: orgId,
       kind: "section_edit",
-      model: COPY_MODEL,
+      model: COPY_ROLE,
       instruction: data.instruction,
       result: result as unknown as never,
       created_by: userId,
@@ -330,7 +330,7 @@ export const analyzeSiteBrief = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const orgId = data.organizationId;
     const { gatherBriefFacts } = await import("@/lib/site-brief.server");
-    const { analyzeBusiness, fallbackBrief, AiGatewayError } =
+    const { analyzeBusiness, fallbackBrief, RevoraAiError } =
       await import("@/lib/site-engine.server");
     const { readBrief } = await import("@/lib/site-brief");
 
@@ -350,7 +350,7 @@ export const analyzeSiteBrief = createServerFn({ method: "POST" })
     } catch (error) {
       // Credit/policy denials never block analysis — the deterministic brief
       // built from the owner's own answers is used instead.
-      if (error instanceof AiGatewayError && error.status === 429) throw error;
+      if (error instanceof RevoraAiError && error.status === 429) throw error;
       aiError = error instanceof Error ? error.message : "Analysis unavailable";
     }
 

@@ -344,7 +344,7 @@ Never assert reviews, credentials, prices, guarantees or history that were not s
 
   let data: Record<string, unknown>;
   try {
-    data = await attempt(ANALYSIS_MODEL);
+    data = await attempt(ANALYSIS_ROLE);
   } catch (error) {
     // Credit and policy failures must surface so the queue can pause correctly.
     if (
@@ -352,10 +352,10 @@ Never assert reviews, credentials, prices, guarantees or history that were not s
       (error.status === 402 || error.status === 403 || error.status === 429)
     )
       throw error;
-    data = await attempt(COPY_MODEL);
+    data = await attempt(COPY_ROLE);
   }
 
-  const brief = readBrief({ ...data, source: ANALYSIS_MODEL });
+  const brief = readBrief({ ...data, source: ANALYSIS_ROLE });
   return brief ?? fallbackBrief(facts);
 }
 

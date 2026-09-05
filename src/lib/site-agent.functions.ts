@@ -151,7 +151,7 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
   {
     const orgId = data.organizationId;
 
-    const { planChanges, AGENT_MODEL } = await import("@/lib/site-agent.server");
+    const { planChanges } = await import("@/lib/site-agent.server");
     const { orchestrate } = await import("@/lib/agent/orchestrator.server");
     const { getWorkspaceContext, workspaceSummary } =
       await import("@/lib/agent/workspace-context.server");
@@ -383,7 +383,7 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     await supabase.from("ai_generations").insert({
       organization_id: orgId,
       kind: "agent_plan",
-      model: AGENT_MODEL,
+      model: "revora-ai",
       instruction:
         data.instruction.slice(0, 4000) +
         (data.attachments.length

@@ -125,8 +125,8 @@ async function runJob(
     analyzeBusiness,
     fallbackBrief,
     fallbackCopy,
-    AiGatewayError,
-    COPY_MODEL,
+    RevoraAiError,
+    COPY_ROLE,
   } = await import("@/lib/site-engine.server");
 
   const done: string[] = [];
@@ -233,8 +233,8 @@ async function runJob(
         approved: false,
       };
     } catch (error) {
-      if (error instanceof AiGatewayError && error.status === 429) throw error;
-      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
+      if (error instanceof RevoraAiError && error.status === 429) throw error;
+      if (error instanceof RevoraAiError && [402, 403].includes(error.status)) aiDenied = true;
       console.error("[site-engine] analysis fell back to rules", error);
     }
 
@@ -275,10 +275,10 @@ async function runJob(
   if (!aiDenied) {
     try {
       copy = await generateSiteCopy(copyFactsForWrite, brief);
-      copyModel = COPY_MODEL;
+      copyModel = COPY_ROLE;
     } catch (error) {
-      if (error instanceof AiGatewayError && error.status === 429) throw error;
-      if (error instanceof AiGatewayError && [402, 403].includes(error.status)) aiDenied = true;
+      if (error instanceof RevoraAiError && error.status === 429) throw error;
+      if (error instanceof RevoraAiError && [402, 403].includes(error.status)) aiDenied = true;
       console.error("[site-engine] copy fell back to rules", error);
     }
   }
@@ -334,7 +334,7 @@ async function runJob(
     crmConnected: true,
     analyticsConfigured: true,
     briefSource: brief.source,
-    copyModel: COPY_MODEL,
+    copyModel: COPY_ROLE,
     checks: qa.checks,
     attention: [
       ...qa.blockers.map((c) => c.fix),
@@ -454,9 +454,9 @@ export async function drainSiteEngineQueue(
       processed += 1;
       if (state.paused || state.consecutive_rate_limits > 0) await resumeQueue(db);
     } catch (error) {
-      const { AiGatewayError } = await import("@/lib/site-engine.server");
-      const isGateway = error instanceof AiGatewayError;
-      const status = isGateway ? (error as InstanceType<typeof AiGatewayError>).status : 0;
+      const { RevoraAiError } = await import("@/lib/site-engine.server");
+      const isGateway = error instanceof RevoraAiError;
+      const status = isGateway ? (error as InstanceType<typeof RevoraAiError>).status : 0;
       const message = error instanceof Error ? error.message : "Generation failed.";
 
       // Credit/policy denials must never stop the builder. Every generation
