@@ -170,7 +170,7 @@ type ImagePart = { type: "image_url"; image_url: { url: string } };
 type VideoPart = { type: "video_url"; video_url: { url: string } };
 type AudioPart = { type: "input_audio"; input_audio: { data: string; format: string } };
 type ContentPart = TextPart | ImagePart | VideoPart | AudioPart;
-type ChatMessage = { role: string; content: string | ContentPart[] };
+export type ChatMessage = { role: string; content: string | ContentPart[] };
 
 /** Maps an attachment onto the gateway's multimodal content-part shape. */
 function attachmentPart(attachment: AgentAttachment): ContentPart {
@@ -185,7 +185,11 @@ function attachmentPart(attachment: AgentAttachment): ContentPart {
   };
 }
 
-async function call(model: string, messages: ChatMessage[]) {
+/**
+ * One JSON call to the AI gateway. Shared by every stage of the agent so that
+ * error handling, retry semantics and JSON repair live in exactly one place.
+ */
+export async function callJson(model: string, messages: ChatMessage[]) {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("The website assistant isn't configured for this workspace.");
 
@@ -297,11 +301,11 @@ export async function planChanges(
   ];
 
   try {
-    return await call(AGENT_MODEL, messages);
+    return await callJson(AGENT_MODEL, messages);
   } catch (error) {
     // Quota, policy and rate limits are not fixed by a different model.
     if (error instanceof AiGatewayError && [402, 403, 429].includes(error.status)) throw error;
-    return await call(AGENT_FALLBACK_MODEL, messages);
+    return await callJson(AGENT_FALLBACK_MODEL, messages);
   }
 }
 
@@ -392,7 +396,7 @@ export async function summarizeChapters(
     },
   ];
 
-  const raw = await call(CHAPTER_MODEL, messages);
+  const raw = await callJson(CHAPTER_MODEL, messages);
   const summary = typeof raw["summary"] === "string" ? raw["summary"].slice(0, 400) : "";
   return { summary, chapters: readChapters(raw["chapters"]) };
 }
