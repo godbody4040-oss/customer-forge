@@ -1342,6 +1342,7 @@ export type Database = {
           utm_campaign: string | null
           utm_medium: string | null
           utm_source: string | null
+          visitor_id: string | null
         }
         Insert: {
           amount_cents?: number | null
@@ -1357,6 +1358,7 @@ export type Database = {
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+          visitor_id?: string | null
         }
         Update: {
           amount_cents?: number | null
@@ -1372,6 +1374,7 @@ export type Database = {
           utm_campaign?: string | null
           utm_medium?: string | null
           utm_source?: string | null
+          visitor_id?: string | null
         }
         Relationships: []
       }
