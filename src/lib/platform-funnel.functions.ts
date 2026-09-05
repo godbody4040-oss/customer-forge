@@ -284,8 +284,8 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         key: "sessions",
         label: "Unique sessions",
         count: sessions,
-        rate: pct(sessions, visitors),
-        rateLabel: "visits per visitor shown as %",
+        rate: null,
+        rateLabel: "browsing visits — one visitor can have several",
       },
       {
         key: "accounts",
@@ -320,6 +320,8 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
   });
 
 export interface FunnelDetails {
+  /** Per-day traffic, so the visitor and session stages can be opened up too. */
+  traffic: { day: string; views: number; sessions: number; visitors: number }[];
   accounts: { id: string; createdAt: string }[];
   trials: {
     organizationId: string;
@@ -351,7 +353,14 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
 
-    const [accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
+    const [trafficRes, accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
+      supabaseAdmin
+        .from("marketing_conversions")
+        .select("created_at, session_id, visitor_id")
+        .eq("event_name", "page_view")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(20000),
       supabaseAdmin
         .from("platform_accounts")
         .select("user_id, created_at")
@@ -374,7 +383,7 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
         ),
     ]);
 
-    const firstError = accountsRes.error ?? trialsRes.error ?? orgsRes.error ?? subsRes.error;
+    const firstError = trafficRes.error ?? accountsRes.error ?? trialsRes.error ?? orgsRes.error ?? subsRes.error;
     if (firstError) {
       console.error("[funnel] details query failed", firstError.code ?? firstError.message);
       throw new Error("Analytics unavailable");
@@ -383,7 +392,28 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const orgs = new Map((orgsRes.data ?? []).map((o) => [o.id, o] as const));
     const now = Date.now();
 
+    // Group traffic by UTC day: page views, distinct sessions, distinct visitors.
+    const byDay = new Map<string, { views: number; sessions: Set<string>; visitors: Set<string> }>();
+    for (const row of trafficRes.data ?? []) {
+      const day = row.created_at.slice(0, 10);
+      const bucket =
+        byDay.get(day) ?? { views: 0, sessions: new Set<string>(), visitors: new Set<string>() };
+      bucket.views += 1;
+      if (row.session_id) bucket.sessions.add(row.session_id);
+      if (row.visitor_id) bucket.visitors.add(row.visitor_id);
+      else if (row.session_id) bucket.visitors.add(`session:${row.session_id}`);
+      byDay.set(day, bucket);
+    }
+
     return {
+      traffic: [...byDay.entries()]
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .map(([day, bucket]) => ({
+          day,
+          views: bucket.views,
+          sessions: bucket.sessions.size,
+          visitors: bucket.visitors.size,
+        })),
       accounts: (accountsRes.data ?? []).map((a) => ({ id: a.user_id, createdAt: a.created_at })),
       trials: (trialsRes.data ?? [])
         .filter((t) => orgs.get(t.organization_id) && !orgs.get(t.organization_id)!.is_demo)
