@@ -163,18 +163,25 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
     const since = from.toISOString();
     const errors: string[] = [];
 
-    // 1. Sessions + page views (browser telemetry, deduplicated by session id).
+    // 1. Page views, unique sessions and unique visitors (browser telemetry).
+    //    A session is one browsing visit; a visitor is one browser, counted
+    //    once however often it comes back (privacy-safe random id, no personal
+    //    data). Rows recorded before visitor ids existed have none, so those
+    //    sessions are added on so the visitor count is never understated.
     let sessions: number | null = null;
+    let visitors: number | null = null;
     let views: number | null = null;
     {
-      const seen = new Set<string>();
+      const seenSessions = new Set<string>();
+      const seenVisitors = new Set<string>();
+      let sessionsWithoutVisitor = new Set<string>();
       let count = 0;
       let page = 0;
       let failed = false;
       for (;;) {
         const { data: rows, error } = await supabaseAdmin
           .from("marketing_conversions")
-          .select("session_id")
+          .select("session_id, visitor_id")
           .eq("event_name", "page_view")
           .gte("created_at", since)
           .order("created_at", { ascending: false })
@@ -186,13 +193,20 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         }
         for (const row of rows ?? []) {
           count += 1;
-          if (row.session_id) seen.add(row.session_id);
+          if (row.session_id) seenSessions.add(row.session_id);
+          if (row.visitor_id) seenVisitors.add(row.visitor_id);
+          else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
         }
         if ((rows?.length ?? 0) < 1000 || page >= 50) break;
         page += 1;
       }
       if (!failed) {
-        sessions = seen.size;
+        sessions = seenSessions.size;
+        // Sessions that carry a visitor id must not be double counted.
+        sessionsWithoutVisitor = new Set(
+          [...sessionsWithoutVisitor].filter((id) => !seenVisitors.has(id)),
+        );
+        visitors = seenVisitors.size + sessionsWithoutVisitor.size;
         views = count;
       }
     }
@@ -260,18 +274,25 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
 
     const stages: FunnelStage[] = [
       {
+        key: "visitors",
+        label: "Unique visitors",
+        count: visitors,
+        rate: null,
+        rateLabel: views === null ? undefined : `${views} page views in total`,
+      },
+      {
         key: "sessions",
         label: "Unique sessions",
         count: sessions,
         rate: null,
-        rateLabel: views === null ? undefined : `${views} page views`,
+        rateLabel: "browsing visits — one visitor can have several",
       },
       {
         key: "accounts",
         label: "Accounts created",
         count: accounts,
-        rate: pct(accounts, sessions),
-        rateLabel: "of sessions",
+        rate: pct(accounts, visitors),
+        rateLabel: "of unique visitors",
       },
       {
         key: "trials",
@@ -299,6 +320,8 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
   });
 
 export interface FunnelDetails {
+  /** Per-day traffic, so the visitor and session stages can be opened up too. */
+  traffic: { day: string; views: number; sessions: number; visitors: number }[];
   accounts: { id: string; createdAt: string }[];
   trials: {
     organizationId: string;
@@ -330,7 +353,14 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
 
-    const [accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
+    const [trafficRes, accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
+      supabaseAdmin
+        .from("marketing_conversions")
+        .select("created_at, session_id, visitor_id")
+        .eq("event_name", "page_view")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(20000),
       supabaseAdmin
         .from("platform_accounts")
         .select("user_id, created_at")
@@ -353,7 +383,8 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
         ),
     ]);
 
-    const firstError = accountsRes.error ?? trialsRes.error ?? orgsRes.error ?? subsRes.error;
+    const firstError =
+      trafficRes.error ?? accountsRes.error ?? trialsRes.error ?? orgsRes.error ?? subsRes.error;
     if (firstError) {
       console.error("[funnel] details query failed", firstError.code ?? firstError.message);
       throw new Error("Analytics unavailable");
@@ -362,7 +393,34 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const orgs = new Map((orgsRes.data ?? []).map((o) => [o.id, o] as const));
     const now = Date.now();
 
+    // Group traffic by UTC day: page views, distinct sessions, distinct visitors.
+    const byDay = new Map<
+      string,
+      { views: number; sessions: Set<string>; visitors: Set<string> }
+    >();
+    for (const row of trafficRes.data ?? []) {
+      const day = row.created_at.slice(0, 10);
+      const bucket = byDay.get(day) ?? {
+        views: 0,
+        sessions: new Set<string>(),
+        visitors: new Set<string>(),
+      };
+      bucket.views += 1;
+      if (row.session_id) bucket.sessions.add(row.session_id);
+      if (row.visitor_id) bucket.visitors.add(row.visitor_id);
+      else if (row.session_id) bucket.visitors.add(`session:${row.session_id}`);
+      byDay.set(day, bucket);
+    }
+
     return {
+      traffic: [...byDay.entries()]
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .map(([day, bucket]) => ({
+          day,
+          views: bucket.views,
+          sessions: bucket.sessions.size,
+          visitors: bucket.visitors.size,
+        })),
       accounts: (accountsRes.data ?? []).map((a) => ({ id: a.user_id, createdAt: a.created_at })),
       trials: (trialsRes.data ?? [])
         .filter((t) => orgs.get(t.organization_id) && !orgs.get(t.organization_id)!.is_demo)

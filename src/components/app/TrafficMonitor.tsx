@@ -114,7 +114,7 @@ export function TrafficMonitor({
                   </span>
                 )}
               </Stat>
-              <Stat label="People" value={summary.visitors} />
+              <Stat label="Unique sessions" value={summary.visitors} />
               <Stat label="Enquiries" value={summary.conversions} />
               <Stat label="Enquiry rate" value={`${summary.conversionRate}%`} />
             </dl>

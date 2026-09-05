@@ -23,6 +23,31 @@ function newSessionId() {
   }
 }
 
+/**
+ * Privacy-safe visitor id.
+ *
+ * A random value created in this browser and kept in this browser. It is not
+ * derived from IP address, user agent, screen size, email or any other personal
+ * detail, so it identifies nobody — it only lets repeat visits from the same
+ * browser be counted once instead of as several separate sessions. If storage
+ * is unavailable (private mode, blocked cookies) the visit is simply counted as
+ * a session with no visitor id, never fingerprinted as a fallback.
+ */
+const VISITOR_KEY = "revora.visitor.v1";
+
+export function getVisitorId(): string | null {
+  if (!isBrowser()) return null;
+  try {
+    const existing = window.localStorage.getItem(VISITOR_KEY);
+    if (existing && /^[a-z0-9-]{8,60}$/i.test(existing)) return existing;
+    const fresh = newSessionId();
+    window.localStorage.setItem(VISITOR_KEY, fresh);
+    return fresh;
+  } catch {
+    return null;
+  }
+}
+
 /** Captures (once per browser session) where the visitor first landed. */
 export function getAttribution(): Attribution | null {
   if (!isBrowser()) return null;
@@ -100,6 +125,7 @@ export function trackConversion(
       utmMedium: attribution?.utmMedium ?? null,
       utmCampaign: attribution?.utmCampaign ?? null,
       sessionId: attribution?.sessionId ?? null,
+      visitorId: getVisitorId(),
       email: extra?.email ?? null,
       amountCents: extra?.amountCents ?? null,
       metadata,

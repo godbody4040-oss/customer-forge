@@ -36,6 +36,8 @@ export interface ConversionInput {
   utmMedium?: string | null;
   utmCampaign?: string | null;
   sessionId?: string | null;
+  /** Random per-browser id (see getVisitorId) — never personal data. */
+  visitorId?: string | null;
   email?: string | null;
   amountCents?: number | null;
   /** Small flat bag: experiment variants, workspace id, milestone details. */
@@ -81,6 +83,7 @@ export const recordConversion = createServerFn({ method: "POST" })
       utmMedium: clean(input?.utmMedium, 80),
       utmCampaign: clean(input?.utmCampaign, 120),
       sessionId: clean(input?.sessionId, 60),
+      visitorId: clean(input?.visitorId, 60),
       email: clean(input?.email, 160),
       amountCents: amount,
       metadata: cleanMetadata(input?.metadata),
@@ -97,6 +100,7 @@ export const recordConversion = createServerFn({ method: "POST" })
       utm_medium: data.utmMedium,
       utm_campaign: data.utmCampaign,
       session_id: data.sessionId,
+      visitor_id: data.visitorId,
       email: data.email,
       amount_cents: data.amountCents,
       metadata: (data.metadata ?? null) as never,
