@@ -174,8 +174,8 @@ function ContractorCrmPage() {
         <section className="mt-16">
           <h2 className="font-display text-[19px] font-semibold">Built around your trade</h2>
           <p className="mt-2 text-[13px] text-muted-foreground">
-            Same system, written for how each trade actually works — including where a different tool
-            would serve you better.
+            Same system, written for how each trade actually works — including where a different
+            tool would serve you better.
           </p>
           <div className="mt-4 flex flex-wrap gap-2.5 text-[13px]">
             {CRM_SOLUTIONS.map((solution) => (

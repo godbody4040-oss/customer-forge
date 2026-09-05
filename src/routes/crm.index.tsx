@@ -50,9 +50,10 @@ function CrmHubPage() {
         </h1>
         <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">
           A CRM only pays for itself when it matches how your trade actually works. An electrician
-          juggles same-day service calls against panel estimates decided next week. A roofer waits on
-          insurance. A landscaper lives or dies on spring renewals. Below is how the Revora system
-          handles each one — including, on every page, where a different tool would serve you better.
+          juggles same-day service calls against panel estimates decided next week. A roofer waits
+          on insurance. A landscaper lives or dies on spring renewals. Below is how the Revora
+          system handles each one — including, on every page, where a different tool would serve you
+          better.
         </p>
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
           Every version includes the same complete system: your website, lead capture, instant

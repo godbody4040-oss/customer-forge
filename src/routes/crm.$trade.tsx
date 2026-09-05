@@ -116,7 +116,9 @@ function CrmSolutionPage() {
         </section>
 
         <section className="mt-11">
-          <h2 className="font-display text-[19px] font-semibold">How the Revora system handles it</h2>
+          <h2 className="font-display text-[19px] font-semibold">
+            How the Revora system handles it
+          </h2>
           <ol className="mt-4 space-y-4">
             {solution.workflow.map((step, i) => (
               <li key={step.title} className="rounded-2xl border border-border/60 bg-card/40 p-5">
@@ -142,8 +144,8 @@ function CrmSolutionPage() {
         <section className="mt-11 rounded-2xl border border-primary/30 bg-primary/5 p-5">
           <h2 className="font-display text-[17px] font-semibold">What it costs</h2>
           <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
-            {GROWTH_SYSTEM.explainer} Cancel anytime, and your website, customer list and job history
-            stay yours and exportable.
+            {GROWTH_SYSTEM.explainer} Cancel anytime, and your website, customer list and job
+            history stay yours and exportable.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild>
