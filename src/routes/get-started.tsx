@@ -83,14 +83,17 @@ function GetStarted() {
       // that can only fail with "workspace already has a subscription".
       let hasActiveSubscription = false;
       if (membership?.organization_id) {
-        const { data: sub } = await supabase
+        // Only a real (live) Stripe subscription counts as "already paying" —
+        // sandbox rows must never block a real customer's checkout.
+        const { data: subs } = await supabase
           .from("subscriptions")
           .select("status")
           .eq("organization_id", membership.organization_id)
+          .eq("payment_provider", "stripe")
+          .eq("environment", "live")
           .in("status", ["active", "trialing"])
-          .limit(1)
-          .maybeSingle();
-        hasActiveSubscription = Boolean(sub);
+          .limit(1);
+        hasActiveSubscription = (subs ?? []).length > 0;
       }
       return {
         userId: data.user.id,
