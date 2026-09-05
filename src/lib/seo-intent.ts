@@ -289,9 +289,9 @@ export function seoInventory(): SeoPage[] {
     pages.push(
       page(
         `/locations/${location.slug}`,
-        `local business website design ${location.name.toLowerCase()}`,
-        `${location.name} website design & lead generation — Revora`,
-        `Revora builds ${location.name} businesses a website, quoting, booking and follow-up system.`,
+        `local business website design ${location.city.toLowerCase()}`,
+        `${location.city} website design & lead generation — Revora`,
+        `Revora builds ${location.city} businesses a website with instant quotes, online booking, CRM and automatic follow-up, serving ${location.county}.`,
         420,
       ),
     );
