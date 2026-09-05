@@ -274,24 +274,41 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
             new Date(o.trial_ends_at).getTime() > now,
         ).length;
 
-    // 5. Paid customers — verified Stripe subscription state only.
+    // 5. Paid customers — verified LIVE Stripe state only. A paid customer is a
+    //    real (non-demo) workspace with a LIVE active subscription OR a
+    //    completed LIVE setup payment. Sandbox rows are never counted.
     const subs = await supabaseAdmin
       .from("subscriptions")
-      .select("organization_id, status, provider_subscription_id, created_at");
+      .select("organization_id, status, provider_subscription_id, created_at")
+      .eq("payment_provider", "stripe")
+      .eq("environment", "live");
     if (subs.error) errors.push("paid");
-    const paid =
-      subs.error || orgRows.error
-        ? null
-        : new Set(
-            (subs.data ?? [])
-              .filter(
-                (s) =>
-                  s.status === "active" &&
-                  s.organization_id !== null &&
-                  realOrgs.has(s.organization_id),
-              )
-              .map((s) => s.organization_id as string),
-          ).size;
+
+    const setupPayments = await fetchAllRows<{ organization_id: string | null }>((from, to) =>
+      supabaseAdmin
+        .from("payments")
+        .select("organization_id")
+        .eq("payment_provider", "stripe")
+        .eq("environment", "live")
+        .eq("status", "completed")
+        .range(from, to),
+    );
+    if (setupPayments.error) errors.push("paid");
+
+    const activeLiveSubscribers = new Set(
+      (subs.data ?? [])
+        .filter(
+          (s) =>
+            s.status === "active" && s.organization_id !== null && realOrgs.has(s.organization_id),
+        )
+        .map((s) => s.organization_id as string),
+    );
+    const paidOrgs = new Set(activeLiveSubscribers);
+    for (const row of setupPayments.rows) {
+      if (row.organization_id && realOrgs.has(row.organization_id))
+        paidOrgs.add(row.organization_id);
+    }
+    const paid = subs.error || setupPayments.error || orgRows.error ? null : paidOrgs.size;
 
     // Trials in this window the payment webhook has confirmed converted.
     const convertedTrials =
