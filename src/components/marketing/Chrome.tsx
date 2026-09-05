@@ -8,6 +8,7 @@ import { useSignOut } from "@/lib/use-tenant";
 import { MAIL_SUBJECTS, REVORA, revoraMailto, revoraTel } from "@/lib/brand";
 import { GROWTH_SYSTEM } from "@/lib/offer";
 import { MarketingConversionKit } from "@/components/marketing/ConversionKit";
+import { AuthActions, SIGN_IN_SEARCH, SIGN_UP_SEARCH } from "@/components/marketing/AuthButtons";
 
 const NAV = [
   { to: "/demo", label: "Product" },
@@ -67,12 +68,12 @@ export function SiteHeader() {
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link to="/auth" className="text-primary">
+                <Link to="/auth" search={SIGN_IN_SEARCH} className="text-primary">
                   Sign in
                 </Link>
               </Button>
               <Button asChild variant="signal" size="sm">
-                <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+                <Link to="/auth" search={SIGN_UP_SEARCH}>
                   <Sparkles className="size-3.5" aria-hidden="true" />
                   Start free
                 </Link>
@@ -139,7 +140,7 @@ export function SiteHeader() {
                 <Button asChild variant="signal">
                   <Link
                     to="/auth"
-                    search={{ mode: "signup", redirect: "/get-started" }}
+                    search={SIGN_UP_SEARCH}
                     onClick={() => setOpen(false)}
                   >
                     <Sparkles className="size-3.5" aria-hidden="true" />
@@ -147,7 +148,12 @@ export function SiteHeader() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
-                  <Link to="/auth" onClick={() => setOpen(false)} className="text-primary">
+                  <Link
+                    to="/auth"
+                    search={SIGN_IN_SEARCH}
+                    onClick={() => setOpen(false)}
+                    className="text-primary"
+                  >
                     Sign in
                   </Link>
                 </Button>
