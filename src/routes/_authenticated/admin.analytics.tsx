@@ -133,33 +133,71 @@ function AdminAnalytics() {
           description="The funnel could not be read from the database. This is not zero — retry in a moment."
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(funnel.data?.stages ?? []).map((stage) => (
-            <button
-              key={stage.key}
-              type="button"
-              onClick={() => setOpenStage(openStage === stage.key ? null : stage.key)}
-              aria-pressed={openStage === stage.key}
-              className={`rounded-xl text-left transition ${
-                openStage === stage.key ? "ring-2 ring-ring" : "hover:opacity-90"
-              }`}
-            >
-              <MetricCard
-                label={stage.label}
-                value={stage.count === null ? "Analytics unavailable" : number(stage.count)}
-                hint={
-                  stage.count === null
-                    ? "Query failed — this is not zero"
-                    : stage.rate !== null
-                      ? `${stage.rate}% ${stage.rateLabel ?? ""}`.trim()
-                      : (stage.rateLabel ?? `Last ${funnel.data?.days} days`)
-                }
-                {...(stage.key === "paid" ? { tone: "signal" as const } : {})}
-              />
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {(funnel.data?.stages ?? []).map((stage) => (
+              <button
+                key={stage.key}
+                type="button"
+                onClick={() => setOpenStage(openStage === stage.key ? null : stage.key)}
+                aria-pressed={openStage === stage.key}
+                className={`rounded-xl text-left transition ${
+                  openStage === stage.key ? "ring-2 ring-ring" : "hover:opacity-90"
+                }`}
+              >
+                <MetricCard
+                  label={`${stage.label} — ${stage.source === "database" ? "exact" : "measured"}`}
+                  value={stage.count === null ? "Analytics unavailable" : number(stage.count)}
+                  hint={
+                    stage.count === null
+                      ? "Query failed — this is not zero"
+                      : stage.rate !== null
+                        ? `${stage.rate}% ${stage.rateLabel ?? ""}`.trim()
+                        : (stage.rateLabel ?? `Last ${funnel.data?.days} days`)
+                  }
+                  {...(stage.key === "paid" ? { tone: "signal" as const } : {})}
+                />
+              </button>
+            ))}
+          </div>
+
+          <Panel className="space-y-3">
+            <p className="font-display text-[15px] font-semibold">Conversion rates</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {(
+                [
+                  ["Visitors → Accounts", funnel.data?.rates.visitorsToAccounts, "estimate"],
+                  ["Accounts → Trials", funnel.data?.rates.accountsToTrials, "exact"],
+                  ["Trials → Paid", funnel.data?.rates.trialsToPaid, "exact"],
+                  ["Visitors → Paid", funnel.data?.rates.visitorsToPaid, "estimate"],
+                ] as const
+              ).map(([label, value, kind]) => (
+                <MetricCard
+                  key={label}
+                  label={`${label} — ${kind}`}
+                  value={value === null || value === undefined ? "—" : `${value}%`}
+                  hint={
+                    kind === "exact"
+                      ? "Both numbers come from the database"
+                      : "Visitor side is browser-measured, so the real rate is likely a little lower"
+                  }
+                />
+              ))}
+            </div>
+            <p className="text-[12px] text-muted-foreground">
+              Rates marked <strong className="font-semibold text-foreground">exact</strong> compare
+              two numbers the server wrote itself (sign-ups, workspaces, confirmed payments). Rates
+              marked <strong className="font-semibold text-foreground">estimate</strong> divide by
+              visitors, which are counted in the browser — ad blockers and private windows hide some
+              visits, so the true visitor number is a little higher and the true rate a little lower.
+              {funnel.data?.convertedTrials !== null && funnel.data?.convertedTrials !== undefined
+                ? ` ${funnel.data.convertedTrials} trial${funnel.data.convertedTrials === 1 ? "" : "s"} in this window turned into a paid subscription, confirmed by the payment webhook.`
+                : ""}
+            </p>
+          </Panel>
+        </>
       )}
+
 
       <Panel className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
