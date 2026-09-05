@@ -330,28 +330,45 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       } | null,
     });
 
-    let attempt = 0;
-    for (;;) {
-      attempt += 1;
-      try {
-        raw = await runAgent();
-        break;
-      } catch (error) {
-        const status = (error as { status?: number } | null)?.status;
-        if ((status === 429 || status === 503) && attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
-          continue;
+    if (deterministic && deterministic.coverage === "full") {
+      // Handled entirely by Revora's own rules: no provider call is made at all.
+      raw = deterministicRaw()!;
+    } else {
+      let attempt = 0;
+      for (;;) {
+        attempt += 1;
+        try {
+          raw = await runAgent();
+          break;
+        } catch (error) {
+          const status = (error as { status?: number } | null)?.status;
+          if ((status === 429 || status === 503) && attempt < 3) {
+            await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+            continue;
+          }
+          const transient = status === 429 || status === 503 || status === 500 || status === 502;
+          if (transient && status !== 429 && status !== 503 && attempt < 2) continue;
+          // Optional help was unavailable. Revora still builds: the
+          // deterministic plan is used whenever it produced real work, and only
+          // a request with nothing to act on comes back as retryable.
+          const fallback = deterministic?.actions.length ? deterministicRaw() : null;
+          if (fallback) {
+            raw = fallback;
+            trace = [
+              ...deterministic!.trace,
+              "Built this with Revora's own builder — no outside AI was needed.",
+            ];
+            break;
+          }
+          if (transient) return queued("The AI writer could not be reached", true);
+          if (status === 402 || status === 403)
+            return queued("The AI writer is paused for this workspace", false);
+          throw error;
         }
-        if (status === 429 || status === 503) return queued("The AI writer is busy", true);
-        if (status === 402 || status === 403)
-          return queued("The AI writer is paused for this workspace", false);
-        if (status === 500 || status === 502) {
-          if (attempt < 2) continue;
-          return queued("The AI writer could not be reached", true);
-        }
-        throw error;
       }
     }
+
+
 
     const allSections = agentContext.pages.flatMap((page) =>
       page.sections.map((section) => ({ ...section, pageId: page.id })),
