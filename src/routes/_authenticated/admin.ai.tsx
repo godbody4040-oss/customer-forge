@@ -42,7 +42,9 @@ function AdminAi() {
 
   const data = health.data;
   const failureRate =
-    data && data.window.calls > 0 ? Math.round((data.window.failures / data.window.calls) * 100) : 0;
+    data && data.window.calls > 0
+      ? Math.round((data.window.failures / data.window.calls) * 100)
+      : 0;
 
   return (
     <div className="space-y-4">

@@ -94,9 +94,12 @@ describe("provider configuration", () => {
   it("fails closed with exactly one message when no provider is configured", async () => {
     const { generateText } = await import("@/lib/ai/router.server");
     await expect(
-      generateText({ task: "test", organizationId: null, userId: null }, {
-        messages: [{ role: "user", content: "hello" }],
-      }),
+      generateText(
+        { task: "test", organizationId: null, userId: null },
+        {
+          messages: [{ role: "user", content: "hello" }],
+        },
+      ),
     ).rejects.toThrow(AI_NOT_CONFIGURED_MESSAGE);
   });
 
@@ -187,18 +190,24 @@ describe("provider fallback", () => {
     );
     const { generateText } = await import("@/lib/ai/router.server");
     await expect(
-      generateText({ task: "test.auth", organizationId: null, userId: null }, {
-        messages: [{ role: "user", content: "hello" }],
-      }),
+      generateText(
+        { task: "test.auth", organizationId: null, userId: null },
+        {
+          messages: [{ role: "user", content: "hello" }],
+        },
+      ),
     ).rejects.toMatchObject({ name: "RevoraAiError", category: "unauthorized" });
   });
 
   it("refuses an oversized request before paying a provider to refuse it", async () => {
     const { generateText } = await import("@/lib/ai/router.server");
     await expect(
-      generateText({ task: "test.size", organizationId: null, userId: null }, {
-        messages: [{ role: "user", content: "x".repeat(aiLimits().maxRequestChars + 1) }],
-      }),
+      generateText(
+        { task: "test.size", organizationId: null, userId: null },
+        {
+          messages: [{ role: "user", content: "x".repeat(aiLimits().maxRequestChars + 1) }],
+        },
+      ),
     ).rejects.toThrow(/too long/i);
   });
 });

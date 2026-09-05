@@ -13,9 +13,7 @@ import { base64FromDataUrl, providerHttpError } from "@/lib/ai/providers/shared"
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 
-type GeminiPart =
-  | { text: string }
-  | { inline_data: { mime_type: string; data: string } };
+type GeminiPart = { text: string } | { inline_data: { mime_type: string; data: string } };
 
 function partsOf(content: string | AiPart[]): GeminiPart[] {
   if (typeof content === "string") return [{ text: content }];

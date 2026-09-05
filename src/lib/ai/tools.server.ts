@@ -51,7 +51,13 @@ export type ToolContext = {
 
 export type ToolResult =
   | { ok: true; tool: string; data: unknown; durationMs: number }
-  | { ok: false; tool: string; error: string; reason: "invalid_input" | "forbidden" | "tenant_mismatch" | "timeout" | "failed"; durationMs: number };
+  | {
+      ok: false;
+      tool: string;
+      error: string;
+      reason: "invalid_input" | "forbidden" | "tenant_mismatch" | "timeout" | "failed";
+      durationMs: number;
+    };
 
 export type ToolDefinition<Input> = {
   name: string;
@@ -198,7 +204,13 @@ export function findTool(name: string) {
 
 async function audit(
   context: ToolContext,
-  entry: { tool: string; ok: boolean; reason: string | null; durationMs: number; requestId: string },
+  entry: {
+    tool: string;
+    ok: boolean;
+    reason: string | null;
+    durationMs: number;
+    requestId: string;
+  },
 ) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

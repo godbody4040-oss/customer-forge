@@ -34,18 +34,18 @@ npm run dev        # http://localhost:8080
 Client variables are `VITE_`-prefixed and public. Everything else is server-only and read
 inside a server function or route handler, never at module scope.
 
-| Variable                        | Scope  | Purpose                        |
-| ------------------------------- | ------ | ------------------------------ |
-| `VITE_SUPABASE_URL`             | client | Supabase project URL           |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Publishable (anon) key         |
-| `SUPABASE_SERVICE_ROLE_KEY`     | server | Privileged server-only access  |
-| `STRIPE_SECRET_KEY`             | server | Live Stripe API access         |
-| `STRIPE_WEBHOOK_SECRET`         | server | Webhook signature verification |
-| `AI_DEFAULT_PROVIDER`           | server | First AI provider: google/openai|
-| `AI_FALLBACK_PROVIDER`          | server | Provider used if the first fails|
-| `GOOGLE_AI_API_KEY`             | server | Revora's Google AI account      |
-| `OPENAI_API_KEY`                | server | Revora's OpenAI account         |
-| `LOVABLE_API_KEY`               | server | Transactional email delivery    |
+| Variable                        | Scope  | Purpose                          |
+| ------------------------------- | ------ | -------------------------------- |
+| `VITE_SUPABASE_URL`             | client | Supabase project URL             |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Publishable (anon) key           |
+| `SUPABASE_SERVICE_ROLE_KEY`     | server | Privileged server-only access    |
+| `STRIPE_SECRET_KEY`             | server | Live Stripe API access           |
+| `STRIPE_WEBHOOK_SECRET`         | server | Webhook signature verification   |
+| `AI_DEFAULT_PROVIDER`           | server | First AI provider: google/openai |
+| `AI_FALLBACK_PROVIDER`          | server | Provider used if the first fails |
+| `GOOGLE_AI_API_KEY`             | server | Revora's Google AI account       |
+| `OPENAI_API_KEY`                | server | Revora's OpenAI account          |
+| `LOVABLE_API_KEY`               | server | Transactional email delivery     |
 
 ### Revora AI
 
