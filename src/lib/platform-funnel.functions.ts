@@ -383,7 +383,8 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
         ),
     ]);
 
-    const firstError = trafficRes.error ?? accountsRes.error ?? trialsRes.error ?? orgsRes.error ?? subsRes.error;
+    const firstError =
+      trafficRes.error ?? accountsRes.error ?? trialsRes.error ?? orgsRes.error ?? subsRes.error;
     if (firstError) {
       console.error("[funnel] details query failed", firstError.code ?? firstError.message);
       throw new Error("Analytics unavailable");
@@ -393,11 +394,17 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const now = Date.now();
 
     // Group traffic by UTC day: page views, distinct sessions, distinct visitors.
-    const byDay = new Map<string, { views: number; sessions: Set<string>; visitors: Set<string> }>();
+    const byDay = new Map<
+      string,
+      { views: number; sessions: Set<string>; visitors: Set<string> }
+    >();
     for (const row of trafficRes.data ?? []) {
       const day = row.created_at.slice(0, 10);
-      const bucket =
-        byDay.get(day) ?? { views: 0, sessions: new Set<string>(), visitors: new Set<string>() };
+      const bucket = byDay.get(day) ?? {
+        views: 0,
+        sessions: new Set<string>(),
+        visitors: new Set<string>(),
+      };
       bucket.views += 1;
       if (row.session_id) bucket.sessions.add(row.session_id);
       if (row.visitor_id) bucket.visitors.add(row.visitor_id);

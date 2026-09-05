@@ -147,7 +147,9 @@ function AdminAnalytics() {
       <Panel className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="font-display text-[15px] font-semibold">
-            {openStage ? `${STAGE_TITLES[openStage] ?? "Stage"} — the records behind it` : "Where each number comes from"}
+            {openStage
+              ? `${STAGE_TITLES[openStage] ?? "Stage"} — the records behind it`
+              : "Where each number comes from"}
           </p>
           {openStage ? (
             <Button size="sm" variant="outline" onClick={() => setOpenStage(null)}>
@@ -157,9 +159,9 @@ function AdminAnalytics() {
         </div>
 
         <p className="text-[12px] text-muted-foreground">
-          <strong className="font-semibold text-foreground">Unique visitors</strong> counts browsers,
-          each one once however often it returns, using a random ID stored in that browser — no
-          names, emails, IP addresses or device fingerprints.{" "}
+          <strong className="font-semibold text-foreground">Unique visitors</strong> counts
+          browsers, each one once however often it returns, using a random ID stored in that browser
+          — no names, emails, IP addresses or device fingerprints.{" "}
           <strong className="font-semibold text-foreground">Unique sessions</strong> counts separate
           browsing visits, so one visitor coming back three times is 1 visitor and 3 sessions.
           Accounts are one record per sign-in identity, trials one per workspace, paid customers one
@@ -246,7 +248,6 @@ function AdminAnalytics() {
           </ul>
         )}
       </Panel>
-
 
       <SectionHeading
         eyebrow="Marketing traffic"
