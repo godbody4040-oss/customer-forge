@@ -202,7 +202,6 @@ export function SiteChatbot({
             (result.failed
               ? ` ${result.failed} step${result.failed === 1 ? "" : "s"} couldn't be applied.`
               : ""),
-
         },
       ]);
       setPlan(null);
