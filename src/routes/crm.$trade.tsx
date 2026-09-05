@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
-import { RelatedLinks } from "@/components/marketing/SeoLinks";
+import { AnswerFirst, RelatedLinks } from "@/components/marketing/SeoLinks";
 import { Button } from "@/components/ui/button";
 import { CRM_SOLUTIONS, findCrmSolution, type CrmSolution } from "@/lib/crm-solutions";
 import { GROWTH_SYSTEM } from "@/lib/offer";
@@ -99,6 +99,11 @@ function CrmSolutionPage() {
           {solution.heading}
         </h1>
         <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">{solution.intro}</p>
+
+        <AnswerFirst
+          question={`What is a CRM for ${solution.trade}?`}
+          answer={`A CRM for ${solution.trade} is one place that holds every enquiry — calls, forms, quotes and bookings — and moves each one through the stages of your real job: contacted, quoted, scheduled, completed and paid. Revora adds the parts a generic CRM leaves to you: instant quoting on your own factors, online booking on your availability, automatic follow-up until the customer replies, and a review request after the job is done.`}
+        />
 
         <section className="mt-10">
           <h2 className="font-display text-[19px] font-semibold">
