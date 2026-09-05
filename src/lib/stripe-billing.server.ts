@@ -122,6 +122,14 @@ export async function syncStripeSubscription(
 
   const orgStatus =
     status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
+
+  // Sandbox/test Stripe traffic is bookkept in its own `subscriptions` row and
+  // stops there. It may NEVER touch the canonical production billing columns,
+  // production access, or the trial -> paid conversion the funnel counts.
+  if (env !== "live") {
+    return { ok: true, organizationId, canonical: false };
+  }
+
   const { error: orgError } = await admin
     .from("organizations")
     .update({
@@ -133,8 +141,8 @@ export async function syncStripeSubscription(
   if (orgError)
     throw new Error(`organization_billing_update_failed:${orgError.code ?? orgError.message}`);
 
-  // Authoritative trial -> paid conversion, stamped only from verified Stripe
-  // state. Set once (first payment wins) so retries stay idempotent.
+  // Authoritative trial -> paid conversion, stamped only from verified LIVE
+  // Stripe state. Set once (first payment wins) so retries stay idempotent.
   if (orgStatus === "active") {
     const { error: trialError } = await admin
       .from("platform_trials")
@@ -145,7 +153,7 @@ export async function syncStripeSubscription(
       throw new Error(`trial_conversion_update_failed:${trialError.code ?? trialError.message}`);
   }
 
-  return { ok: true, organizationId };
+  return { ok: true, organizationId, canonical: true };
 }
 
 /** Records a verified Stripe charge/invoice payment. Idempotent on the Stripe id. */
