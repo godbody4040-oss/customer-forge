@@ -1,29 +1,134 @@
-# Welcome to your Lovable project
+# Revora Growth Systems
 
-This project was built with [Lovable](https://lovable.dev).
+An AI growth platform for local service businesses. Each customer gets a workspace with a
+published website, a CRM for leads and quotes, bookings, reviews, analytics and billing —
+built and improved through a natural-language AI builder.
 
-## Build with Lovable
+## Stack
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+| Layer     | Technology                                                     |
+| --------- | -------------------------------------------------------------- |
+| Framework | TanStack Start v1 (React 19, Vite 7, SSR on Cloudflare Workers) |
+| Styling   | Tailwind CSS v4 (`src/styles.css`, CSS-first config)            |
+| Backend   | Supabase (Postgres, Auth, Storage, RLS)                        |
+| Payments  | Stripe (setup fee + monthly subscription, live/sandbox split)   |
+| AI        | Lovable AI Gateway                                             |
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Getting started
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+npm install
+npm run dev        # http://localhost:8080
 ```
 
-## Built with
+| Script              | Purpose                        |
+| ------------------- | ------------------------------ |
+| `npm run dev`       | Local dev server               |
+| `npm run typecheck` | TypeScript, no emit            |
+| `npm run lint`      | ESLint                         |
+| `npx vitest run`    | Test suite                     |
+| `npm run build`     | Production build               |
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Environment
+
+Client variables are `VITE_`-prefixed and public. Everything else is server-only and read
+inside a server function or route handler, never at module scope.
+
+| Variable                        | Scope  | Purpose                          |
+| ------------------------------- | ------ | -------------------------------- |
+| `VITE_SUPABASE_URL`             | client | Supabase project URL             |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Publishable (anon) key           |
+| `SUPABASE_SERVICE_ROLE_KEY`     | server | Privileged server-only access    |
+| `STRIPE_SECRET_KEY`             | server | Live Stripe API access           |
+| `STRIPE_WEBHOOK_SECRET`         | server | Webhook signature verification   |
+| `LOVABLE_API_KEY`               | server | AI Gateway access                |
+
+## Architecture
+
+```text
+src/routes/                 file-based routes
+  index.tsx, crm.*, ...     public marketing + SEO pages
+  _authenticated/app.*      customer workspace
+  _authenticated/admin.*    platform admin (super_admin only)
+  s.$slug.tsx, p.$token.tsx tenant site preview + signed draft link
+  api/public/*              webhooks and cron (auth bypassed — verify in handler)
+src/lib/                    server functions, agent, billing, SEO, tenancy
+src/components/             marketing, workspace, tenant-site rendering
+supabase/                   configuration; migrations are applied through Lovable
+```
+
+App-internal server logic uses `createServerFn` (`*.functions.ts`); privileged helpers live in
+`*.server.ts` and are never imported by client code. Raw HTTP endpoints — Stripe webhooks and
+scheduled jobs — are file routes under `src/routes/api/public/`.
+
+## Domains
+
+- `revoragrowthsystems.com` — the only primary platform domain.
+- `revoraweb.site` — traffic only. Apex and `www` redirect to the platform preserving path and
+  query; nested subdomains return 404 and never resolve a tenant.
+- Customer websites are served **only** on a verified customer-owned custom domain, or through
+  the `/s/:slug` preview path. Unpublished work is private and reachable only via a signed
+  `/p/:token` link.
+
+Cloudflare Worker configuration lives in `cloudflare/`.
+
+## The AI builder
+
+The agent runs a staged pipeline in `src/lib/agent/`:
+
+```text
+UNDERSTAND → INSPECT → DESIGN → PLAN → REFLECT → CRITIQUE → AUTO-FIX → VERIFY → REPORT
+```
+
+| Stage             | Module                        |
+| ----------------- | ----------------------------- |
+| Understand        | `understanding.server.ts`     |
+| Inspect           | `workspace-context.server.ts` |
+| Design            | `design-brief.server.ts`      |
+| Plan / reflect    | `orchestrator.server.ts`      |
+| Critique/auto-fix | `critique.server.ts`          |
+| Capabilities      | `capabilities.ts`             |
+
+Owners describe changes in ordinary language; no Revora vocabulary is required and requests are
+never rejected for being vague. The agent commits to a design direction, plans real content
+edits, grades its own plan out of 10 across design, UX, branding, hierarchy, conversion, mobile,
+accessibility, SEO, content and consistency, and improves the plan itself when it scores below
+the professional threshold. Anything outside website content is reported as an honest handoff
+rather than silently skipped.
+
+Every plan is shown for approval before it is applied. Applied changes are validated against
+real pages, sections, components, slugs and ownership, and are written under the owner's own
+session so RLS enforces tenant isolation.
+
+## Billing
+
+- $750 one-time setup, first month of $100/month free, then $100/month.
+- 3-day trials are recorded in `platform_trials`; accounts in `platform_accounts`.
+- Live and sandbox Stripe are fully isolated: sandbox events are bookkept separately and can
+  never change production entitlement, trials, access or revenue metrics.
+- Payment identity is `organization_id` + provider + environment. Refunds use the environment
+  stored on the payment.
+- Webhooks are signature-verified and idempotent; database errors are thrown so Stripe retries.
+
+## Security
+
+- RLS on every tenant table; anonymous reads go through narrow public projections such as
+  `public_business_profiles`, `public_reviews` and `public_website_settings`.
+- `SECURITY DEFINER` functions pin `search_path`, validate identity with `auth.uid()`, and check
+  tenant authorisation.
+- Platform admin access requires a `super_admin` row in `user_roles`; role writes are guarded and
+  client writes revoked.
+- Public link URLs are constrained on write and sanitised again at render time.
+- Domain verification probes reject unsafe schemes, credentials, non-standard ports, IP literals,
+  internal DNS targets and redirects.
+
+## Backups and restore
+
+Nightly backups run through `api/public/jobs/backup`. Website restore is transactional: a
+snapshot is captured before significant changes and `restore_website_state` puts the whole page,
+section and component tree back in a single database transaction, or not at all.
+
+## Deployment
+
+Publish from Lovable. Migrations are additive — never rewrite a deployed migration; add a new
+one and backfill safely. Before shipping, run typecheck, lint, tests and the production build.
