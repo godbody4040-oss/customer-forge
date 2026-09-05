@@ -14,6 +14,7 @@ import { US_STATES } from "@/lib/us-states";
 import { NC_LOCATIONS } from "@/lib/business-identity";
 import { localPaths } from "@/lib/local-pages";
 import { comparePaths } from "@/lib/compare";
+import { crmSolutionPaths } from "@/lib/crm-solutions";
 import { guidePaths } from "@/lib/guides";
 
 import {
@@ -178,6 +179,7 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
         "/guides",
         ...guidePaths(),
         "/crm-for-contractors",
+        ...crmSolutionPaths(),
         "/about",
         "/contact",
         "/demo",
