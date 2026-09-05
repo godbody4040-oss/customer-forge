@@ -176,6 +176,15 @@ export async function orchestrate(options: {
     workspaceSummary: string,
     history: AgentTurn[],
   ) => Promise<Understanding>;
+  /** Injectable design stage. */
+  design?: (
+    instruction: string,
+    goal: string,
+    workspaceSummary: string,
+    industry?: string | null,
+  ) => Promise<DesignDirection>;
+  /** Injectable grading stage. */
+  critique?: typeof critiquePlan;
 }): Promise<OrchestratedPlan> {
   const { context, instruction, history, attachments, plan } = options;
   const trace: string[] = [];
@@ -193,9 +202,32 @@ export async function orchestrate(options: {
   if (understanding.tasks.length > 1)
     trace.push(`Broke it into ${understanding.tasks.length} coordinated tasks`);
 
+  // DESIGN. Visual and conversion decisions are made once, up front, so the
+  // planner never falls back on a generic template arrangement — and so the
+  // owner is never asked to name a layout, colour or font.
+  const industry = context.business.industry;
+  let design: DesignDirection;
+  try {
+    design = await (options.design ?? designDirection)(
+      instruction,
+      understanding.goal,
+      options.workspaceSummary,
+      industry,
+    );
+  } catch {
+    design = designWithoutModel(industry);
+  }
+  trace.push(
+    design.source === "model"
+      ? `Set the design direction: ${design.layout}`
+      : `Set the design direction from Revora's built-in direction for this trade: ${design.layout}`,
+  );
+
+  const brief = designBrief(design);
+
   const first = await plan(
     context,
-    planningBrief(instruction, understanding),
+    planningBrief(instruction, understanding, design),
     history,
     attachments,
   );
@@ -211,7 +243,8 @@ export async function orchestrate(options: {
   // Reflection is where a plan earns the right to be called finished. It costs a
   // second call, so only complex work gets it — and only when there is a plan to
   // review and no blocking question outstanding.
-  if (understanding.complexity === "complex" && actions.length && !questions.length) {
+  const reviewable = actions.length > 0 && questions.length === 0;
+  if (understanding.complexity === "complex" && reviewable) {
     try {
       const second = await plan(
         context,
@@ -239,6 +272,47 @@ export async function orchestrate(options: {
     }
   }
 
+  // CRITIQUE, then AUTO-FIX. The agent grades its own plan on the ten things
+  // that decide whether a website earns customers. Below the professional
+  // threshold it improves the plan itself rather than shipping a weak draft.
+  let critique: Critique | null = null;
+  if (understanding.complexity === "complex" && reviewable) {
+    const graded = await (options.critique ?? critiquePlan)({
+      goal: understanding.goal,
+      designBrief: brief,
+      actions,
+      requirements: understanding.requirements,
+    });
+    if (graded.source === "model") {
+      critique = graded;
+      trace.push(`Graded its own work ${graded.overall}/10${graded.verdict ? ` — ${graded.verdict}` : ""}`);
+      if (graded.overall < QUALITY_THRESHOLD && graded.fixes.length) {
+        try {
+          const improved = await plan(
+            context,
+            improvementBrief(graded, understanding.goal, actions),
+            [],
+            [],
+          );
+          const extra = actionList(improved["actions"]);
+          if (extra.length) {
+            actions = mergeActions(actions, extra);
+            notes = [...new Set([...notes, ...strings(improved["notes"], 6)])].slice(0, 6);
+            reply = str(improved["reply"], 1500) || reply;
+            summary = str(improved["summary"], 300) || summary;
+            trace.push(
+              `Raised it itself with ${extra.length} further change${extra.length === 1 ? "" : "s"} before showing you`,
+            );
+          } else {
+            trace.push("Tried to raise the plan further but found nothing more it could change");
+          }
+        } catch {
+          trace.push("Could not run the improvement pass — showing the reviewed plan");
+        }
+      }
+    }
+  }
+
   const unmet = new Set(missing.map((entry) => entry.toLowerCase()));
   const requirements: RequirementCheck[] = understanding.requirements.map((label) => ({
     label,
@@ -261,7 +335,10 @@ export async function orchestrate(options: {
       questions,
     },
     understanding,
+    design,
+    critique,
     requirements,
     trace,
   };
+
 }
