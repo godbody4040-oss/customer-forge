@@ -96,7 +96,6 @@ export function SiteHeader() {
             {open ? <X className="size-4" /> : <Menu className="size-4" />}
           </button>
         </div>
-
       </div>
 
       {open ? (
@@ -138,11 +137,7 @@ export function SiteHeader() {
             ) : (
               <>
                 <Button asChild variant="signal">
-                  <Link
-                    to="/auth"
-                    search={SIGN_UP_SEARCH}
-                    onClick={() => setOpen(false)}
-                  >
+                  <Link to="/auth" search={SIGN_UP_SEARCH} onClick={() => setOpen(false)}>
                     <Sparkles className="size-3.5" aria-hidden="true" />
                     {`Start free — ${GROWTH_SYSTEM.fullAccessTrialDays} days full access`}
                   </Link>
@@ -269,6 +264,16 @@ export function SiteFooter() {
                 <li>
                   <Link
                     to="/auth"
+                    search={SIGN_UP_SEARCH}
+                    className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
+                  >
+                    Create a free account
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/auth"
+                    search={SIGN_IN_SEARCH}
                     className="inline-flex min-h-11 items-center text-muted-foreground transition-colors hover:text-primary sm:min-h-0"
                   >
                     Sign in

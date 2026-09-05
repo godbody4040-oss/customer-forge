@@ -93,7 +93,11 @@ export function AuthHint({ className = "" }: { className?: string }) {
   return (
     <p className={`text-[12.5px] text-muted-foreground ${className}`}>
       No card needed to start. Already have a Revora account?{" "}
-      <Link to="/auth" search={SIGN_IN_SEARCH} className="text-primary underline-offset-2 hover:underline">
+      <Link
+        to="/auth"
+        search={SIGN_IN_SEARCH}
+        className="text-primary underline-offset-2 hover:underline"
+      >
         Sign in here
       </Link>
       .

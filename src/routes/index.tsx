@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { AuthActions, AuthHint } from "@/components/marketing/AuthButtons";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
 import { TRUST_INDUSTRIES, WithoutWith } from "@/components/marketing/Journey";
 import { TrustSection } from "@/components/marketing/TrustSection";
@@ -311,7 +312,13 @@ function Landing() {
                 — so the work finds you, books itself, and shows up in your calendar while you work.
               </p>
 
-              <PrimaryCta className="mt-8" />
+              {/* The two doors, right in the hero: create an account, or sign
+                  back into an existing one. Signed-in visitors see their
+                  dashboard here instead. */}
+              <AuthActions className="mt-8" />
+              <AuthHint className="mt-3" />
+
+              <PrimaryCta className="mt-6" />
               <PriceLine className="mt-4" />
               <FreeAccessBanner className="mt-6 max-w-xl" />
 
