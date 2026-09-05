@@ -22,6 +22,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { GROWTH_SYSTEM } from "@/lib/offer";
+import { fetchAllRows } from "@/lib/paginate";
 
 const clean = (value: unknown, max: number) => {
   const text = typeof value === "string" ? value.trim() : "";
