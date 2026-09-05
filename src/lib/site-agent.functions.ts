@@ -23,6 +23,7 @@ import {
   type SiteIndex,
 } from "@/lib/site-agent";
 import { safeLinkUrl } from "@/lib/website-content";
+import { captureUndo, rollback, type JournalClient, type UndoStep } from "@/lib/site-agent.atomic";
 
 const orgIdOf = (input: { organizationId?: unknown }) => {
   const organizationId = String(input?.organizationId ?? "");
@@ -415,19 +416,50 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
         })),
       ),
     ]);
-    await supabase.from("website_versions").insert({
-      organization_id: orgId,
-      version: (latest?.version ?? 0) + 1,
-      label: snapshotLabel,
-      pages: snapshotContent(contentTree as never) as unknown as never,
-      created_by: userId,
-    });
+    // The restore point must exist BEFORE anything is written, and it must be
+    // verified — a failed snapshot insert used to be ignored, which meant a
+    // change could be applied with nothing to go back to. Two members applying
+    // at the same moment can collide on the version number, so the insert is
+    // retried on the next free version.
+    const snapshotPages = snapshotContent(contentTree as never) as unknown as never;
+    let snapshotVersion = Number(latest?.version ?? 0);
+    let snapshotId: string | null = null;
+    let snapshotError: unknown = null;
+    for (let attempt = 0; attempt < 5 && !snapshotId; attempt += 1) {
+      snapshotVersion += 1;
+      const { data: saved, error } = await supabase
+        .from("website_versions")
+        .insert({
+          organization_id: orgId,
+          version: snapshotVersion,
+          label: snapshotLabel,
+          pages: snapshotPages,
+          created_by: userId,
+        })
+        .select("id")
+        .maybeSingle();
+      if (saved?.id) snapshotId = String(saved.id);
+      else snapshotError = error;
+    }
+    if (!snapshotId) {
+      console.error("[site-agent] restore point could not be saved", snapshotError);
+      throw new Error(
+        "Revora couldn't save a restore point for your website, so nothing was changed. Please try again in a moment.",
+      );
+    }
 
     const sortOf = new Map(site.sections.map((section) => [section.id, section.sort_order]));
     const applied: string[] = [];
     const failed: string[] = [];
 
+    // Every write records how to reverse itself first. The first failure stops
+    // the run and reverses everything already applied, so an approved plan is
+    // either fully in place or the site is exactly as it was.
+    const undoSteps: UndoStep[] = [];
+    let fatal: unknown = null;
+
     const run = async (label: string, work: () => PromiseLike<unknown>) => {
+      if (fatal) return;
       try {
         const result = (await work()) as { error?: unknown } | null;
         if (result && result.error) throw result.error;
@@ -435,10 +467,19 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
       } catch (error) {
         console.error("[site-agent] action failed", label, error);
         failed.push(label);
+        fatal = error;
       }
     };
 
     for (const action of actions as AgentAction[]) {
+      if (fatal) break;
+      try {
+        undoSteps.push(...(await captureUndo(supabase as unknown as JournalClient, orgId, action)));
+      } catch (error) {
+        console.error("[site-agent] could not record an undo step", action.type, error);
+        fatal = error;
+        break;
+      }
       switch (action.type) {
         case "set_section_text":
           await run(action.type, () =>
@@ -621,6 +662,24 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
       void sortOf;
     }
 
+    if (fatal) {
+      const reversal = await rollback(undoSteps);
+      await supabase.from("ai_generations").insert({
+        organization_id: orgId,
+        kind: "agent_apply_rolled_back",
+        model: "applied",
+        instruction: snapshotLabel,
+        result: { applied, failed, reversal } as unknown as never,
+        created_by: userId,
+      });
+      invalidateWorkspaceContext(orgId);
+      throw new Error(
+        reversal.failed === 0
+          ? "One of those steps couldn't be saved, so Revora put your website back exactly as it was. Nothing changed — please try again."
+          : `One of those steps couldn't be saved. Revora undid what it could and saved the restore point "${snapshotLabel}" — open Version history to return your website to it.`,
+      );
+    }
+
     await supabase.from("ai_generations").insert({
       organization_id: orgId,
       kind: "agent_apply",
@@ -631,7 +690,12 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
     });
 
     invalidateWorkspaceContext(orgId);
-    return { applied: applied.length, failed: failed.length, snapshotLabel };
+    return {
+      applied: applied.length,
+      failed: failed.length,
+      snapshotLabel,
+      snapshotVersion,
+    };
   });
 
 /* ------------------------------ voice commands ----------------------------- */

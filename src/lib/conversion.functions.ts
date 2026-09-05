@@ -63,6 +63,10 @@ const cleanMetadata = (value: unknown): Record<string, string | number | boolean
   return Object.keys(out).length > 0 ? out : null;
 };
 
+/** How many events one browser may record per window, and how long that window is. */
+export const RATE_LIMIT_PER_WINDOW = 40;
+export const RATE_WINDOW_MS = 60_000;
+
 /** Records a Revora marketing funnel event (landing page -> signup -> paid checkout). */
 export const recordConversion = createServerFn({ method: "POST" })
   .inputValidator((input: ConversionInput) => {
@@ -91,6 +95,26 @@ export const recordConversion = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // This endpoint is public by design — a visitor has no account yet — so it
+    // is rate limited per browser. Without this, anyone could flood the funnel
+    // with fabricated page views and make the owner's own numbers untrue.
+    const identity = data.visitorId ?? data.sessionId;
+    if (identity) {
+      const windowStart = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
+      const column = data.visitorId ? "visitor_id" : "session_id";
+      const { count, error: countError } = await supabaseAdmin
+        .from("marketing_conversions")
+        .select("id", { count: "exact", head: true })
+        .eq(column, identity)
+        .gte("created_at", windowStart);
+      if (countError) {
+        console.error("recordConversion rate check failed", countError.message);
+        return { ok: false };
+      }
+      if ((count ?? 0) >= RATE_LIMIT_PER_WINDOW) return { ok: true, throttled: true };
+    }
+
     const { error } = await supabaseAdmin.from("marketing_conversions").insert({
       event_name: data.event,
       landing_path: data.landingPath,
