@@ -1,23 +1,40 @@
 /**
  * THE REVORA AGENT ORCHESTRATOR.
  *
- * UNDERSTAND → PLAN → EXECUTE → REFLECT → VERIFY → REPORT.
+ * UNDERSTAND → INSPECT → DESIGN → PLAN → REFLECT → CRITIQUE → AUTO-FIX →
+ * VERIFY → REPORT. Execution itself happens after the owner approves, in
+ * `applyWebsiteChanges`.
  *
  * This module owns the pipeline itself and nothing else: understanding comes
- * from `understanding.server`, the workspace picture from
- * `workspace-context.server`, the plan from the site planner, and the writes
- * from `applyWebsiteChanges` after the owner approves. Keeping the stages apart
- * is what lets the agent grow without rewriting the builder.
+ * from `understanding.server`, the workspace picture (INSPECT) from
+ * `workspace-context.server`, the design direction from `design-brief.server`,
+ * the plan from the site planner, the grading from `critique.server`, and the
+ * writes from `applyWebsiteChanges` after the owner approves. Keeping the
+ * stages apart is what lets the agent grow without rewriting the builder.
  *
- * Two honesty rules are enforced here, not just prompted:
- * - a requirement is only reported as covered when the review pass says so, and
- * - reflection is skipped for simple requests, so a small ask stays cheap.
+ * Three honesty rules are enforced here, not just prompted:
+ * - a requirement is only reported as covered when the review pass says so,
+ * - reflection and grading are skipped for simple requests, so a small ask
+ *   stays cheap, and
+ * - a score is only shown when a grading pass actually ran.
  */
 
 import type { AgentContext } from "@/lib/site-agent.server";
 import type { AgentAttachment, AgentTurn } from "@/lib/site-agent";
 import { capabilityBrief } from "@/lib/agent/capabilities";
 import { understandRequest, type Understanding } from "@/lib/agent/understanding.server";
+import {
+  designBrief,
+  designDirection,
+  designWithoutModel,
+  type DesignDirection,
+} from "@/lib/agent/design-brief.server";
+import {
+  QUALITY_THRESHOLD,
+  critiquePlan,
+  improvementBrief,
+  type Critique,
+} from "@/lib/agent/critique.server";
 
 export type RequirementCheck = { label: string; covered: boolean };
 
@@ -25,6 +42,9 @@ export type OrchestratedPlan = {
   /** Raw model plan in the shape the existing validator already accepts. */
   raw: Record<string, unknown>;
   understanding: Understanding;
+  design: DesignDirection;
+  /** Present only when a grading pass actually ran. */
+  critique: Critique | null;
   requirements: RequirementCheck[];
   /** One line per pipeline stage that actually ran, for the report. */
   trace: string[];
@@ -36,6 +56,7 @@ export type PlanFn = (
   history: AgentTurn[],
   attachments: AgentAttachment[],
 ) => Promise<Record<string, unknown>>;
+
 
 const str = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
