@@ -114,13 +114,15 @@ export async function syncStripeSubscription(
     trial_ends_at: iso(subscription?.trial_end),
   };
 
-  await admin
+  const { error: subError } = await admin
     .from("subscriptions")
     .upsert(record, { onConflict: "organization_id,payment_provider,environment" });
+  // A failed write must surface so Stripe retries — never a silent success.
+  if (subError) throw new Error(`subscription_upsert_failed:${subError.code ?? subError.message}`);
 
   const orgStatus =
     status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
-  await admin
+  const { error: orgError } = await admin
     .from("organizations")
     .update({
       ...(record.plan_id ? { plan_id: record.plan_id } : {}),
@@ -128,6 +130,7 @@ export async function syncStripeSubscription(
       ...(periodEnd ? { trial_ends_at: null } : {}),
     })
     .eq("id", organizationId);
+  if (orgError) throw new Error(`organization_billing_update_failed:${orgError.code ?? orgError.message}`);
 
   return { ok: true, organizationId };
 }
@@ -150,20 +153,25 @@ export async function recordStripeTransaction(
     periodEnd?: string | null;
   },
 ) {
-  const { data: existing } = await admin
+  const { data: existing, error: lookupError } = await admin
     .from("payments")
     .select("id, status")
     .eq("organization_id", input.organizationId)
     .contains("metadata", { stripe_id: input.stripeId })
     .maybeSingle();
+  if (lookupError) throw new Error(`payment_lookup_failed:${lookupError.code ?? lookupError.message}`);
 
   if (existing) {
     if (existing.status === input.status) return { inserted: false as const };
-    await admin.from("payments").update({ status: input.status }).eq("id", existing.id);
+    const { error } = await admin
+      .from("payments")
+      .update({ status: input.status })
+      .eq("id", existing.id);
+    if (error) throw new Error(`payment_update_failed:${error.code ?? error.message}`);
     return { inserted: false as const };
   }
 
-  await admin.from("payments").insert({
+  const { error: insertError } = await admin.from("payments").insert({
     organization_id: input.organizationId,
     plan_id: input.planId ?? null,
     payment_provider: "stripe",
@@ -180,6 +188,7 @@ export async function recordStripeTransaction(
     entitlement_applied: input.status === "completed",
     metadata: { stripe_id: input.stripeId },
   });
+  if (insertError) throw new Error(`payment_insert_failed:${insertError.code ?? insertError.message}`);
 
   await admin.from("notifications").insert({
     organization_id: input.organizationId,
