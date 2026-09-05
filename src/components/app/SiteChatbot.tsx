@@ -54,6 +54,10 @@ type Plan = {
   steps: AgentStep[];
   questions: string[];
   notes: string[];
+  /** What Revora understood it had to satisfy, and whether the plan does. */
+  requirements: { label: string; covered: boolean }[];
+  /** What Revora actually did to reach this plan, stage by stage. */
+  trace: string[];
 };
 
 /**
@@ -148,6 +152,8 @@ export function SiteChatbot({
         steps,
         questions: result.questions,
         notes: result.notes,
+        requirements: result.requirements ?? [],
+        trace: result.trace ?? [],
       };
       setMessages((prior) => [...prior, { role: "assistant", content: result.reply, plan: next }]);
       setPlan(next);
@@ -534,10 +540,45 @@ export function SiteChatbot({
 
       {plan ? (
         <div className="mt-5 space-y-3">
+          {plan.trace.length ? (
+            <div className="rounded-md border border-border/70 bg-elevated/40 p-3.5">
+              <p className="text-[12px] font-medium text-muted-foreground">How Revora worked</p>
+              <ul className="mt-1.5 space-y-1 text-[12px] text-muted-foreground">
+                {plan.trace.map((line) => (
+                  <li key={line}>· {line}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {plan.requirements.length ? (
+            <div className="rounded-md border border-border/70 p-3.5">
+              <p className="text-[12px] font-medium text-muted-foreground">
+                Checked against what you asked for
+              </p>
+              <ul className="mt-1.5 space-y-1 text-[13px]">
+                {plan.requirements.map((requirement) => (
+                  <li key={requirement.label} className="flex gap-2">
+                    <span
+                      aria-hidden="true"
+                      className={requirement.covered ? "text-primary" : "text-muted-foreground"}
+                    >
+                      {requirement.covered ? "✓" : "•"}
+                    </span>
+                    <span className={requirement.covered ? "" : "text-muted-foreground"}>
+                      {requirement.label}
+                      {requirement.covered ? "" : " — still open"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           {plan.questions.length ? (
             <div className="rounded-md border border-accent/40 bg-accent/5 p-3.5">
               <p className="text-[12px] font-medium">
-                Revora needs these facts before it can go further
+                One thing only you can tell Revora — everything else is already decided
               </p>
               <ul className="mt-1.5 list-disc space-y-1 pl-4 text-[13px] text-muted-foreground">
                 {plan.questions.map((question) => (
