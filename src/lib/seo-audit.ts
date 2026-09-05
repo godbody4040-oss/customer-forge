@@ -75,7 +75,12 @@ export function auditSeo(inventory: SeoPage[] = seoInventory()): SeoIssue[] {
         path: p.path,
         detail: `Description is ${p.description.length} characters (aim for ${DESCRIPTION_MAX}).`,
       });
-    if (p.words < MIN_INDEXABLE_WORDS)
+    // Thin content only matters for pages meant to answer a search. A contact
+    // form or a sign-in entry point is short by design, not underweight.
+    const contentIntent = ["commercial", "informational", "local", "industry", "comparison"].includes(
+      p.intent,
+    );
+    if (contentIntent && p.words < MIN_INDEXABLE_WORDS)
       issues.push({
         level: "error",
         code: "thin_content",
