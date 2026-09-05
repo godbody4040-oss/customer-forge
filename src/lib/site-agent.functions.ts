@@ -632,6 +632,7 @@ export const applyWebsiteChanges = createServerFn({ method: "POST" })
       created_by: userId,
     });
 
+    invalidateWorkspaceContext(orgId);
     return { applied: applied.length, failed: failed.length, snapshotLabel };
   });
 
