@@ -198,6 +198,7 @@ export function SiteChatbot({
           content:
             `Done — ${result.applied} change${result.applied === 1 ? "" : "s"} are live in your draft.` +
             ` I saved a version called "${result.snapshotLabel}" first, so you can roll back any time.` +
+            (result.verification ? ` ${result.verification.summary}` : "") +
             (result.failed
               ? ` ${result.failed} step${result.failed === 1 ? "" : "s"} couldn't be applied.`
               : ""),
