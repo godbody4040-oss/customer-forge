@@ -183,10 +183,14 @@ export function sitemapUrls(site: HostSite | null, origin: string) {
       "/demo/dashboard",
       "/privacy",
       "/terms",
-    ].map((path) => ({
-      loc: `${origin}${path}`,
-      lastmod: null as string | null,
-    }));
+    ]
+      // comparePaths()/guidePaths() already include their index page, so the
+      // hub entries above can repeat; a sitemap must never list a URL twice.
+      .filter((path, i, all) => all.indexOf(path) === i)
+      .map((path) => ({
+        loc: `${origin}${path}`,
+        lastmod: null as string | null,
+      }));
   }
   const paths = [{ slug: "home", updatedAt: null as string | null }, ...site.pages].filter(
     (p, i, all) => all.findIndex((x) => x.slug === p.slug) === i,
