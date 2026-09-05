@@ -59,7 +59,9 @@ export const refundPayment = createServerFn({ method: "POST" })
     }
 
     try {
-      const stripe = createStripeClient(payment.environment === "live" ? "live" : data.environment);
+      // The refund ALWAYS uses the environment the payment was taken in.
+      // Client input is never allowed to redirect a refund to Stripe sandbox.
+      const stripe = createStripeClient(payment.environment === "live" ? "live" : "sandbox");
       const refund = await stripe.refunds.create({
         ...(reference.kind === "payment_intent"
           ? { payment_intent: reference.id }
@@ -75,7 +77,7 @@ export const refundPayment = createServerFn({ method: "POST" })
 
       const refunded = Number(payment.refunded_amount) + (data.amount ?? Number(payment.amount));
       const full = refunded >= Number(payment.amount) - 0.005;
-      const { data: updated } = await admin
+      const { data: updated, error: refundWriteError } = await admin
         .from("payments")
         .update({
           status: full ? "refunded" : "partially_refunded",
@@ -85,6 +87,17 @@ export const refundPayment = createServerFn({ method: "POST" })
         .eq("id", payment.id)
         .select("*")
         .single();
+      if (refundWriteError) {
+        logPaymentError("refund_record", {
+          paymentId: payment.id,
+          code: refundWriteError.code ?? null,
+        });
+        return {
+          ok: false as const,
+          error:
+            "The refund went through at Stripe but we could not record it. Check the payment record before retrying.",
+        };
+      }
       if (updated) await logPaymentActivity(admin, updated, "refunded");
       return { ok: true as const, status: full ? "refunded" : "partially_refunded" };
     } catch (error) {

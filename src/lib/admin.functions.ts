@@ -90,16 +90,20 @@ export const listClients = createServerFn({ method: "GET" })
           .select("organization_id")
           .in("organization_id", ids)
           .limit(20000),
+        // Financial truth is LIVE Stripe only.
         supabaseAdmin
           .from("subscriptions")
           .select(
             "organization_id, status, provider_customer_id, provider_subscription_id, current_period_end, cancel_at_period_end, price_id",
           )
-          .in("organization_id", ids),
+          .in("organization_id", ids)
+          .eq("payment_provider", "stripe")
+          .eq("environment", "live"),
         supabaseAdmin
           .from("payments")
           .select("organization_id, amount, status")
-          .in("organization_id", ids),
+          .in("organization_id", ids)
+          .eq("environment", "live"),
       ]);
 
     const countBy = (rows: { organization_id: string }[] | null, id: string) =>

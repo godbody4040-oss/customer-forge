@@ -197,29 +197,24 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
       const seenVisitors = new Set<string>();
       let sessionsWithoutVisitor = new Set<string>();
       let count = 0;
-      let page = 0;
-      let failed = false;
-      for (;;) {
-        const { data: rows, error } = await supabaseAdmin
-          .from("marketing_conversions")
-          .select("session_id, visitor_id")
-          .eq("event_name", "page_view")
-          .gte("created_at", since)
-          .order("created_at", { ascending: false })
-          .range(page * 1000, page * 1000 + 999);
-        if (error) {
-          errors.push("sessions");
-          failed = true;
-          break;
-        }
-        for (const row of rows ?? []) {
-          count += 1;
-          if (row.session_id) seenSessions.add(row.session_id);
-          if (row.visitor_id) seenVisitors.add(row.visitor_id);
-          else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
-        }
-        if ((rows?.length ?? 0) < 1000 || page >= 50) break;
-        page += 1;
+      // Every page view in the window is counted — no page ceiling.
+      const paged = await fetchAllRows<{ session_id: string | null; visitor_id: string | null }>(
+        (from, to) =>
+          supabaseAdmin
+            .from("marketing_conversions")
+            .select("session_id, visitor_id")
+            .eq("event_name", "page_view")
+            .gte("created_at", since)
+            .order("created_at", { ascending: false })
+            .range(from, to),
+      );
+      const failed = Boolean(paged.error);
+      if (failed) errors.push("sessions");
+      for (const row of paged.rows) {
+        count += 1;
+        if (row.session_id) seenSessions.add(row.session_id);
+        if (row.visitor_id) seenVisitors.add(row.visitor_id);
+        else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
       }
       if (!failed) {
         sessions = seenSessions.size;
@@ -232,7 +227,11 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
       }
     }
 
-    // 2. Accounts created (one row per Supabase Auth user).
+    // 2. Accounts created (one row per Supabase Auth user). Auth is the source
+    //    of truth, so reconcile first: every real sign-up gets exactly one row,
+    //    and nothing is ever invented.
+    const reconcile = await supabaseAdmin.rpc("sync_platform_accounts");
+    if (reconcile.error) errors.push("accounts");
     const accountsQuery = await supabaseAdmin
       .from("platform_accounts")
       .select("user_id", { count: "exact", head: true })
@@ -275,24 +274,41 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
             new Date(o.trial_ends_at).getTime() > now,
         ).length;
 
-    // 5. Paid customers — verified Stripe subscription state only.
+    // 5. Paid customers — verified LIVE Stripe state only. A paid customer is a
+    //    real (non-demo) workspace with a LIVE active subscription OR a
+    //    completed LIVE setup payment. Sandbox rows are never counted.
     const subs = await supabaseAdmin
       .from("subscriptions")
-      .select("organization_id, status, provider_subscription_id, created_at");
+      .select("organization_id, status, provider_subscription_id, created_at")
+      .eq("payment_provider", "stripe")
+      .eq("environment", "live");
     if (subs.error) errors.push("paid");
-    const paid =
-      subs.error || orgRows.error
-        ? null
-        : new Set(
-            (subs.data ?? [])
-              .filter(
-                (s) =>
-                  s.status === "active" &&
-                  s.organization_id !== null &&
-                  realOrgs.has(s.organization_id),
-              )
-              .map((s) => s.organization_id as string),
-          ).size;
+
+    const setupPayments = await fetchAllRows<{ organization_id: string | null }>((from, to) =>
+      supabaseAdmin
+        .from("payments")
+        .select("organization_id")
+        .eq("payment_provider", "stripe")
+        .eq("environment", "live")
+        .eq("status", "completed")
+        .range(from, to),
+    );
+    if (setupPayments.error) errors.push("paid");
+
+    const activeLiveSubscribers = new Set(
+      (subs.data ?? [])
+        .filter(
+          (s) =>
+            s.status === "active" && s.organization_id !== null && realOrgs.has(s.organization_id),
+        )
+        .map((s) => s.organization_id as string),
+    );
+    const paidOrgs = new Set(activeLiveSubscribers);
+    for (const row of setupPayments.rows) {
+      if (row.organization_id && realOrgs.has(row.organization_id))
+        paidOrgs.add(row.organization_id);
+    }
+    const paid = subs.error || setupPayments.error || orgRows.error ? null : paidOrgs.size;
 
     // Trials in this window the payment webhook has confirmed converted.
     const convertedTrials =

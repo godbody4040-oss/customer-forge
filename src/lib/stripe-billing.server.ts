@@ -82,7 +82,7 @@ export async function syncStripeSubscription(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscription: any,
   env: StripeEnv,
-): Promise<{ ok: boolean; organizationId?: string; reason?: string }> {
+): Promise<{ ok: boolean; organizationId?: string; reason?: string; canonical?: boolean }> {
   const organizationId = subscription?.metadata?.organizationId as string | undefined;
   if (!organizationId) return { ok: false, reason: "missing_organization_metadata" };
 
@@ -122,6 +122,14 @@ export async function syncStripeSubscription(
 
   const orgStatus =
     status === "canceled" && periodEnd && new Date(periodEnd) > new Date() ? "active" : status;
+
+  // Sandbox/test Stripe traffic is bookkept in its own `subscriptions` row and
+  // stops there. It may NEVER touch the canonical production billing columns,
+  // production access, or the trial -> paid conversion the funnel counts.
+  if (env !== "live") {
+    return { ok: true, organizationId, canonical: false };
+  }
+
   const { error: orgError } = await admin
     .from("organizations")
     .update({
@@ -133,8 +141,8 @@ export async function syncStripeSubscription(
   if (orgError)
     throw new Error(`organization_billing_update_failed:${orgError.code ?? orgError.message}`);
 
-  // Authoritative trial -> paid conversion, stamped only from verified Stripe
-  // state. Set once (first payment wins) so retries stay idempotent.
+  // Authoritative trial -> paid conversion, stamped only from verified LIVE
+  // Stripe state. Set once (first payment wins) so retries stay idempotent.
   if (orgStatus === "active") {
     const { error: trialError } = await admin
       .from("platform_trials")
@@ -145,7 +153,7 @@ export async function syncStripeSubscription(
       throw new Error(`trial_conversion_update_failed:${trialError.code ?? trialError.message}`);
   }
 
-  return { ok: true, organizationId };
+  return { ok: true, organizationId, canonical: true };
 }
 
 /** Records a verified Stripe charge/invoice payment. Idempotent on the Stripe id. */
@@ -166,14 +174,20 @@ export async function recordStripeTransaction(
     periodEnd?: string | null;
   },
 ) {
-  const { data: existing, error: lookupError } = await admin
+  // Identity is always organization + provider + environment + Stripe id, so a
+  // sandbox charge can never be mistaken for (or overwrite) a live one.
+  const { data: existingRows, error: lookupError } = await admin
     .from("payments")
     .select("id, status")
     .eq("organization_id", input.organizationId)
+    .eq("payment_provider", "stripe")
+    .eq("environment", input.environment)
     .contains("metadata", { stripe_id: input.stripeId })
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
   if (lookupError)
     throw new Error(`payment_lookup_failed:${lookupError.code ?? lookupError.message}`);
+  const existing = existingRows?.[0] ?? null;
 
   if (existing) {
     if (existing.status === input.status) return { inserted: false as const };
@@ -205,18 +219,24 @@ export async function recordStripeTransaction(
   if (insertError)
     throw new Error(`payment_insert_failed:${insertError.code ?? insertError.message}`);
 
-  await admin.from("notifications").insert({
-    organization_id: input.organizationId,
-    title: input.status === "completed" ? "Payment received" : "Payment failed",
-    body:
-      input.status === "completed"
-        ? `${input.description} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: input.currency.toUpperCase() }).format(input.amount)} paid.`
-        : `${input.description} — the card payment did not go through. Update your payment method to keep access.`,
-    kind: input.status === "completed" ? "success" : "warning",
-    link: "/app/billing",
-  });
+  // Customer-facing billing notices come from real (live) money only — a test
+  // charge must never reach a real customer's inbox or notification feed.
+  if (input.environment === "live") {
+    const { error: notifyError } = await admin.from("notifications").insert({
+      organization_id: input.organizationId,
+      title: input.status === "completed" ? "Payment received" : "Payment failed",
+      body:
+        input.status === "completed"
+          ? `${input.description} — ${new Intl.NumberFormat("en-US", { style: "currency", currency: input.currency.toUpperCase() }).format(input.amount)} paid.`
+          : `${input.description} — the card payment did not go through. Update your payment method to keep access.`,
+      kind: input.status === "completed" ? "success" : "warning",
+      link: "/app/billing",
+    });
+    if (notifyError)
+      throw new Error(`payment_notification_failed:${notifyError.code ?? notifyError.message}`);
+  }
 
-  await admin.from("audit_logs").insert({
+  const { error: auditError } = await admin.from("audit_logs").insert({
     organization_id: input.organizationId,
     action: `payment.${input.status}`,
     entity: "payment",
@@ -229,6 +249,7 @@ export async function recordStripeTransaction(
       plan_id: input.planId ?? null,
     },
   });
+  if (auditError) throw new Error(`payment_audit_failed:${auditError.code ?? auditError.message}`);
 
   return { inserted: true as const };
 }

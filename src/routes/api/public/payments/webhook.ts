@@ -190,14 +190,20 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
           console.error("[payments:webhook] growth session org mismatch", session.id);
           break;
         }
-        await admin
-          .from("organizations")
-          .update({
-            setup_paid_at: new Date().toISOString(),
-            setup_checkout_session_id: String(session.id),
-            plan_id: GROWTH_PLAN_ID,
-          })
-          .eq("id", organizationId);
+        // Only verified LIVE money unlocks production access. A sandbox setup
+        // session is bookkept as a sandbox payment row and nothing more.
+        if (env === "live") {
+          const { error: orgError } = await admin
+            .from("organizations")
+            .update({
+              setup_paid_at: new Date().toISOString(),
+              setup_checkout_session_id: String(session.id),
+              plan_id: GROWTH_PLAN_ID,
+            })
+            .eq("id", organizationId);
+          if (orgError)
+            throw new Error(`setup_activation_failed:${orgError.code ?? orgError.message}`);
+        }
         await recordStripeTransaction(admin, {
           organizationId,
           stripeId: `setup:${String(session.id)}`,
@@ -219,14 +225,20 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       if (md["kind"] !== "service" || !md["paymentId"]) break;
       if (object?.payment_status !== "paid") break;
 
-      const { data: payment } = await admin
+      // A payment row belongs to exactly one Stripe environment: a sandbox
+      // event can never complete (or fail) a live payment record.
+      const { data: payment, error: paymentError } = await admin
         .from("payments")
         .select("*")
         .eq("id", md["paymentId"])
+        .eq("payment_provider", "stripe")
+        .eq("environment", env)
         .maybeSingle();
+      if (paymentError)
+        throw new Error(`payment_lookup_failed:${paymentError.code ?? paymentError.message}`);
       if (!payment || payment.status === "completed") break;
 
-      const { data: updated } = await admin
+      const { data: updated, error: updateError } = await admin
         .from("payments")
         .update({
           status: "completed",
@@ -243,6 +255,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         .eq("id", payment.id)
         .select("*")
         .single();
+      if (updateError)
+        throw new Error(`payment_complete_failed:${updateError.code ?? updateError.message}`);
 
       if (updated) {
         const { applyEntitlement, logPaymentActivity } = await import("@/lib/payments.server");
@@ -254,18 +268,25 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
     case "checkout.session.expired": {
       const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
       if (md["kind"] !== "service" || !md["paymentId"]) break;
-      const { data: payment } = await admin
+      const { data: payment, error: expiredLookupError } = await admin
         .from("payments")
         .select("*")
         .eq("id", md["paymentId"])
+        .eq("payment_provider", "stripe")
+        .eq("environment", env)
         .maybeSingle();
+      if (expiredLookupError)
+        throw new Error(
+          `payment_lookup_failed:${expiredLookupError.code ?? expiredLookupError.message}`,
+        );
       if (!payment || payment.status === "completed") break;
-      const { data: failed } = await admin
+      const { data: failed, error: failError } = await admin
         .from("payments")
         .update({ status: "failed", failure_reason: "Checkout session expired" })
         .eq("id", payment.id)
         .select("*")
         .single();
+      if (failError) throw new Error(`payment_fail_failed:${failError.code ?? failError.message}`);
       if (failed) {
         const { logPaymentActivity } = await import("@/lib/payments.server");
         await logPaymentActivity(admin, failed, "failed");
@@ -279,7 +300,7 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       const organizationId = (object?.metadata?.organizationId as string | undefined) ?? null;
       const succeeded = event.type === "payment_intent.succeeded";
       if (organizationId) {
-        await admin.from("audit_logs").insert({
+        const { error: auditError } = await admin.from("audit_logs").insert({
           organization_id: organizationId,
           action: `payment_intent.${succeeded ? "succeeded" : "failed"}`,
           entity: "payment_intent",
@@ -295,14 +316,21 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
                 "Card payment failed"),
           },
         });
-        if (!succeeded) {
-          await admin.from("notifications").insert({
+        if (auditError)
+          throw new Error(`payment_intent_audit_failed:${auditError.code ?? auditError.message}`);
+        // Only real (live) card failures warn a real customer.
+        if (!succeeded && env === "live") {
+          const { error: notifyError } = await admin.from("notifications").insert({
             organization_id: organizationId,
             title: "Card payment failed",
             body: `${(object?.last_payment_error?.message as string | undefined) ?? "The card payment did not go through."} Update your payment method to activate or keep your Revora system.`,
             kind: "warning",
             link: "/app/billing",
           });
+          if (notifyError)
+            throw new Error(
+              `payment_intent_notification_failed:${notifyError.code ?? notifyError.message}`,
+            );
         }
       }
       break;
