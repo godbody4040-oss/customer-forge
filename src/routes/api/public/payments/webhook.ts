@@ -225,14 +225,20 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
       if (md["kind"] !== "service" || !md["paymentId"]) break;
       if (object?.payment_status !== "paid") break;
 
-      const { data: payment } = await admin
+      // A payment row belongs to exactly one Stripe environment: a sandbox
+      // event can never complete (or fail) a live payment record.
+      const { data: payment, error: paymentError } = await admin
         .from("payments")
         .select("*")
         .eq("id", md["paymentId"])
+        .eq("payment_provider", "stripe")
+        .eq("environment", env)
         .maybeSingle();
+      if (paymentError)
+        throw new Error(`payment_lookup_failed:${paymentError.code ?? paymentError.message}`);
       if (!payment || payment.status === "completed") break;
 
-      const { data: updated } = await admin
+      const { data: updated, error: updateError } = await admin
         .from("payments")
         .update({
           status: "completed",
@@ -249,6 +255,8 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
         .eq("id", payment.id)
         .select("*")
         .single();
+      if (updateError)
+        throw new Error(`payment_complete_failed:${updateError.code ?? updateError.message}`);
 
       if (updated) {
         const { applyEntitlement, logPaymentActivity } = await import("@/lib/payments.server");
@@ -260,18 +268,25 @@ async function handleEvent(event: { type: string; data: { object: any } }, env: 
     case "checkout.session.expired": {
       const md = (object?.metadata ?? {}) as Record<string, string | undefined>;
       if (md["kind"] !== "service" || !md["paymentId"]) break;
-      const { data: payment } = await admin
+      const { data: payment, error: expiredLookupError } = await admin
         .from("payments")
         .select("*")
         .eq("id", md["paymentId"])
+        .eq("payment_provider", "stripe")
+        .eq("environment", env)
         .maybeSingle();
+      if (expiredLookupError)
+        throw new Error(
+          `payment_lookup_failed:${expiredLookupError.code ?? expiredLookupError.message}`,
+        );
       if (!payment || payment.status === "completed") break;
-      const { data: failed } = await admin
+      const { data: failed, error: failError } = await admin
         .from("payments")
         .update({ status: "failed", failure_reason: "Checkout session expired" })
         .eq("id", payment.id)
         .select("*")
         .single();
+      if (failError) throw new Error(`payment_fail_failed:${failError.code ?? failError.message}`);
       if (failed) {
         const { logPaymentActivity } = await import("@/lib/payments.server");
         await logPaymentActivity(admin, failed, "failed");
