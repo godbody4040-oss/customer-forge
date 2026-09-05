@@ -48,10 +48,6 @@ function SharePage() {
   const [name, setName] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
 
-  useEffect(() => {
-    trackConversion("page_view", { metadata: { page: "/share" } });
-  }, []);
-
   const campaign = useMemo(() => (name.trim() ? `share-${name.trim()}` : "share"), [name]);
   const assets = useMemo(() => buildChannelAssets({ campaign, audience }), [campaign, audience]);
   const mainLink = useMemo(
