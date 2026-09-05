@@ -833,14 +833,17 @@ export const transcribeVoiceCommand = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!org) throw new Error("Workspace not found.");
 
-    const { transcribeVoice, TRANSCRIBE_MODEL } = await import("@/lib/site-agent.server");
-    const text = await transcribeVoice(data.attachment);
+    const { transcribeVoice } = await import("@/lib/site-agent.server");
+    const text = await transcribeVoice(data.attachment, {
+      organizationId: data.organizationId,
+      userId,
+    });
     if (!text) return { text: "", message: "I couldn't hear anything in that recording." };
 
     await supabase.from("ai_generations").insert({
       organization_id: data.organizationId,
       kind: "voice_command",
-      model: TRANSCRIBE_MODEL,
+      model: "revora-ai",
       instruction: "(voice note)",
       result: { text: text.slice(0, 4000) } as unknown as never,
       created_by: userId,
@@ -875,14 +878,17 @@ export const summarizeClipChapters = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!org) throw new Error("Workspace not found.");
 
-    const { summarizeChapters, CHAPTER_MODEL } = await import("@/lib/site-agent.server");
-    const result = await summarizeChapters(data.attachment);
+    const { summarizeChapters } = await import("@/lib/site-agent.server");
+    const result = await summarizeChapters(data.attachment, {
+      organizationId: data.organizationId,
+      userId,
+    });
 
     if (result.chapters.length) {
       await supabase.from("ai_generations").insert({
         organization_id: data.organizationId,
         kind: "video_chapters",
-        model: CHAPTER_MODEL,
+        model: "revora-ai",
         instruction: `(clip: ${data.attachment.name})`,
         result: result as unknown as never,
         created_by: userId,

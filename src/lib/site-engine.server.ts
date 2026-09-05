@@ -339,8 +339,10 @@ toneNotes (max 200 chars, how the copy should sound for this buyer),
 missingFacts (array of up to 5 short items the owner should supply to make the site stronger).
 Never assert reviews, credentials, prices, guarantees or history that were not supplied.`;
 
-  const attempt = async (model: string) =>
-    chatJson(system, `Analyse this business.\n\nFACTS:\n${factSheet(facts)}`, model);
+  const attempt = async (role: ModelRole) =>
+    chatJson(system, `Analyse this business.\n\nFACTS:\n${factSheet(facts)}`, role, {
+      task: "copy.analyse",
+    });
 
   let data: Record<string, unknown>;
   try {
@@ -348,8 +350,8 @@ Never assert reviews, credentials, prices, guarantees or history that were not s
   } catch (error) {
     // Credit and policy failures must surface so the queue can pause correctly.
     if (
-      error instanceof AiGatewayError &&
-      (error.status === 402 || error.status === 403 || error.status === 429)
+      error instanceof RevoraAiError &&
+      ["not_configured", "unauthorized", "quota", "policy", "rate_limited"].includes(error.category)
     )
       throw error;
     data = await attempt(COPY_ROLE);
