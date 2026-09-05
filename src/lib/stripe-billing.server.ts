@@ -133,6 +133,18 @@ export async function syncStripeSubscription(
   if (orgError)
     throw new Error(`organization_billing_update_failed:${orgError.code ?? orgError.message}`);
 
+  // Authoritative trial -> paid conversion, stamped only from verified Stripe
+  // state. Set once (first payment wins) so retries stay idempotent.
+  if (orgStatus === "active") {
+    const { error: trialError } = await admin
+      .from("platform_trials")
+      .update({ converted_at: new Date().toISOString() })
+      .eq("organization_id", organizationId)
+      .is("converted_at", null);
+    if (trialError)
+      throw new Error(`trial_conversion_update_failed:${trialError.code ?? trialError.message}`);
+  }
+
   return { ok: true, organizationId };
 }
 

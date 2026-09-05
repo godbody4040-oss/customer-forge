@@ -2029,6 +2029,7 @@ export type Database = {
       }
       platform_trials: {
         Row: {
+          converted_at: string | null
           created_at: string
           id: string
           kind: string
@@ -2038,6 +2039,7 @@ export type Database = {
           trial_ends_at: string
         }
         Insert: {
+          converted_at?: string | null
           created_at?: string
           id?: string
           kind?: string
@@ -2047,6 +2049,7 @@ export type Database = {
           trial_ends_at: string
         }
         Update: {
+          converted_at?: string | null
           created_at?: string
           id?: string
           kind?: string
