@@ -705,13 +705,53 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
     });
 
     invalidateWorkspaceContext(orgId);
+
+    // TEST, then INSPECT. The writes are in place, so Revora now loads the real
+    // pages a visitor would see and checks them. Anything that would be broken
+    // for a visitor is reversed here — a change is never left live because the
+    // database said it saved.
+    let verification: VerificationReport | null = null;
+    if (data.verify !== false) {
+      try {
+        const { verifyWorkspaceSite } = await import("@/lib/agent/verify.server");
+        verification = await verifyWorkspaceSite(supabase, orgId);
+      } catch (error) {
+        console.error("[site-agent] verification could not run", error);
+      }
+      if (verification && verification.critical > 0) {
+        const reversal = await rollback(undoSteps);
+        await supabase.from("ai_generations").insert({
+          organization_id: orgId,
+          kind: "agent_apply_failed_verification",
+          model: "applied",
+          instruction: snapshotLabel,
+          result: { applied, verification, reversal } as unknown as never,
+          created_by: userId,
+        });
+        invalidateWorkspaceContext(orgId);
+        const worst = verification.checks
+          .filter((check) => !check.ok && check.severity === "critical")
+          .slice(0, 3)
+          .map((check) => `${check.where}: ${check.label.toLowerCase()}`)
+          .join("; ");
+        throw new Error(
+          reversal.failed === 0
+            ? `Revora made those changes, checked your live pages, and found a problem (${worst}). It put your website back exactly as it was — nothing changed.`
+            : `Revora found a problem after saving (${worst}) and undid what it could. Open Version history and return to "${snapshotLabel}".`,
+        );
+      }
+    }
+
     return {
       applied: applied.length,
       failed: failed.length,
       snapshotLabel,
       snapshotVersion,
+      verification,
     };
-  });
+  }
+}
+
 
 /* ------------------------------ voice commands ----------------------------- */
 
