@@ -269,13 +269,36 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     const instruction =
       data.instruction || "(see the attached file(s) — follow what they show or say)";
 
-    // The builder never dead-ends on a keyword guess. Transient busy answers are
-    // retried with backoff; when the writer is genuinely unavailable the request
-    // comes back as a queued, retryable state so the owner's words are kept and
-    // resent, instead of a rule-based plan that only pretends to understand.
+    // FREE-FIRST: Revora's own deterministic builder answers first. It uses the
+    // trade playbooks, the section library, the design system and the
+    // workspace's own facts — no AI provider, no credits, no per-request cost.
+    // A language model is only consulted when the request needs judgement the
+    // rules cannot supply, and if no provider is available the deterministic
+    // plan is still returned, so the builder is never unusable.
+    const { buildDeterministicPlan } = await import("@/lib/builder/deterministic");
+    const deterministic = data.attachments.length
+      ? null
+      : buildDeterministicPlan(agentContext, instruction);
+
     let raw: Record<string, unknown>;
     let requirements: { label: string; covered: boolean }[] = [];
     let trace: string[] = [];
+    const deterministicRaw = () => {
+      if (!deterministic) return null;
+      requirements = [...new Set(deterministic.intent.verbs)].map((verb) => ({
+        label: verb,
+        covered: true,
+      }));
+      trace = deterministic.trace;
+      return {
+        reply: deterministic.reply,
+        summary: deterministic.summary,
+        actions: deterministic.actions as unknown,
+        questions: deterministic.questions,
+        notes: deterministic.notes,
+      } as Record<string, unknown>;
+    };
+
     const runAgent = async () => {
       const result = await orchestrate({
         context: agentContext,
@@ -307,28 +330,45 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       } | null,
     });
 
-    let attempt = 0;
-    for (;;) {
-      attempt += 1;
-      try {
-        raw = await runAgent();
-        break;
-      } catch (error) {
-        const status = (error as { status?: number } | null)?.status;
-        if ((status === 429 || status === 503) && attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
-          continue;
+    if (deterministic && deterministic.coverage === "full") {
+      // Handled entirely by Revora's own rules: no provider call is made at all.
+      raw = deterministicRaw()!;
+    } else {
+      let attempt = 0;
+      for (;;) {
+        attempt += 1;
+        try {
+          raw = await runAgent();
+          break;
+        } catch (error) {
+          const status = (error as { status?: number } | null)?.status;
+          if ((status === 429 || status === 503) && attempt < 3) {
+            await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+            continue;
+          }
+          const transient = status === 429 || status === 503 || status === 500 || status === 502;
+          if (transient && status !== 429 && status !== 503 && attempt < 2) continue;
+          // Optional help was unavailable. Revora still builds: the
+          // deterministic plan is used whenever it produced real work, and only
+          // a request with nothing to act on comes back as retryable.
+          const fallback = deterministic?.actions.length ? deterministicRaw() : null;
+          if (fallback) {
+            raw = fallback;
+            trace = [
+              ...deterministic!.trace,
+              "Built this with Revora's own builder — no outside AI was needed.",
+            ];
+            break;
+          }
+          if (transient) return queued("The AI writer could not be reached", true);
+          if (status === 402 || status === 403)
+            return queued("The AI writer is paused for this workspace", false);
+          throw error;
         }
-        if (status === 429 || status === 503) return queued("The AI writer is busy", true);
-        if (status === 402 || status === 403)
-          return queued("The AI writer is paused for this workspace", false);
-        if (status === 500 || status === 502) {
-          if (attempt < 2) continue;
-          return queued("The AI writer could not be reached", true);
-        }
-        throw error;
       }
     }
+
+
 
     const allSections = agentContext.pages.flatMap((page) =>
       page.sections.map((section) => ({ ...section, pageId: page.id })),
