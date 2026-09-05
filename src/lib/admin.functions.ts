@@ -392,10 +392,14 @@ export const updateClientOrg = createServerFn({ method: "POST" })
       if (data.subscription_status !== undefined) {
         subPatch.status = data.subscription_status as SubscriptionStatus;
       }
-      await supabaseAdmin
+      // Admin edits only ever touch the canonical LIVE billing row.
+      const { error: subError } = await supabaseAdmin
         .from("subscriptions")
         .update(subPatch)
-        .eq("organization_id", data.organizationId);
+        .eq("organization_id", data.organizationId)
+        .eq("payment_provider", "stripe")
+        .eq("environment", "live");
+      if (subError) throw new Error(subError.message);
     }
 
     await supabaseAdmin.from("audit_logs").insert({
