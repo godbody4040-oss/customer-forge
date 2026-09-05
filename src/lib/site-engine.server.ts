@@ -115,7 +115,6 @@ async function chatJson(
   }
 }
 
-
 const factSheet = (facts: CopyFacts) =>
   JSON.stringify(
     {

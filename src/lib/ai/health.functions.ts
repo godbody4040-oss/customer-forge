@@ -90,8 +90,14 @@ export const getAiHealth = createServerFn({ method: "GET" })
     const events = rows ?? [];
     const day = events.filter((row) => new Date(row.created_at).getTime() >= dayAgo);
 
-    const tasks = new Map<string, { calls: number; failures: number; latency: number[]; cost: number; priced: boolean }>();
-    const models = new Map<string, { provider: string; model: string; calls: number; failures: number }>();
+    const tasks = new Map<
+      string,
+      { calls: number; failures: number; latency: number[]; cost: number; priced: boolean }
+    >();
+    const models = new Map<
+      string,
+      { provider: string; model: string; calls: number; failures: number }
+    >();
     const categories = new Map<string, number>();
     let input = 0;
     let output = 0;
@@ -131,8 +137,12 @@ export const getAiHealth = createServerFn({ method: "GET" })
       tasks.set(row.task, task);
 
       const key = `${row.provider}:${row.model}`;
-      const model =
-        models.get(key) ?? { provider: row.provider, model: row.model, calls: 0, failures: 0 };
+      const model = models.get(key) ?? {
+        provider: row.provider,
+        model: row.model,
+        calls: 0,
+        failures: 0,
+      };
       model.calls += 1;
       if (!row.ok) model.failures += 1;
       models.set(key, model);
@@ -148,8 +158,11 @@ export const getAiHealth = createServerFn({ method: "GET" })
     const refused = new Map<string, { tool: string; reason: string; count: number }>();
     for (const row of audit ?? []) {
       const key = `${row.tool}:${row.reason ?? "unknown"}`;
-      const entry =
-        refused.get(key) ?? { tool: row.tool, reason: row.reason ?? "unknown", count: 0 };
+      const entry = refused.get(key) ?? {
+        tool: row.tool,
+        reason: row.reason ?? "unknown",
+        count: 0,
+      };
       entry.count += 1;
       refused.set(key, entry);
     }

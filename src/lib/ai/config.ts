@@ -15,13 +15,7 @@ import { notConfigured } from "@/lib/ai/errors";
 export type ProviderName = "google" | "openai";
 
 /** The kinds of work Revora routes; each maps to a model per provider. */
-export type ModelRole =
-  | "primary"
-  | "fast"
-  | "vision"
-  | "coding"
-  | "image"
-  | "transcription";
+export type ModelRole = "primary" | "fast" | "vision" | "coding" | "image" | "transcription";
 
 export type ProviderConfig = {
   name: ProviderName;

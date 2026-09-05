@@ -13,6 +13,7 @@ import {
   LifeBuoy,
   Receipt,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const NAV = [
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
   { to: "/admin/payments", label: "Payments", icon: CreditCard, exact: false },
   { to: "/admin/backups", label: "Backups", icon: DatabaseBackup, exact: false },
+  { to: "/admin/ai", label: "AI health", icon: Sparkles, exact: false },
   { to: "/admin/monitoring", label: "Monitoring", icon: Activity, exact: false },
 ] as const;
 

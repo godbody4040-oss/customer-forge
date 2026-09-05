@@ -117,8 +117,7 @@ function messageChars(messages: AiMessage[]) {
   let total = 0;
   for (const message of messages) {
     if (typeof message.content === "string") total += message.content.length;
-    else
-      for (const part of message.content) total += part.type === "text" ? part.text.length : 0;
+    else for (const part of message.content) total += part.type === "text" ? part.text.length : 0;
   }
   return total;
 }
@@ -158,8 +157,21 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function run<T>(
   caller: AiCaller,
   role: ModelRole,
-  execute: (input: { adapter: ProviderAdapter; config: ProviderConfig; model: string; signal: AbortSignal }) => Promise<{ value: T; inputTokens?: number | null; outputTokens?: number | null }>,
-): Promise<{ value: T; provider: ProviderName; model: string; fallbackUsed: boolean; requestId: string; inputTokens: number | null; outputTokens: number | null }> {
+  execute: (input: {
+    adapter: ProviderAdapter;
+    config: ProviderConfig;
+    model: string;
+    signal: AbortSignal;
+  }) => Promise<{ value: T; inputTokens?: number | null; outputTokens?: number | null }>,
+): Promise<{
+  value: T;
+  provider: ProviderName;
+  model: string;
+  fallbackUsed: boolean;
+  requestId: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+}> {
   const limits = aiLimits();
   const requestId = caller.requestId ?? newRequestId();
   const chain = requireProviderChain();
@@ -174,7 +186,10 @@ async function run<T>(
     });
 
   try {
-    const ordered = [...chain.filter((entry) => providerHealthy(entry.name)), ...chain.filter((entry) => !providerHealthy(entry.name))];
+    const ordered = [
+      ...chain.filter((entry) => providerHealthy(entry.name)),
+      ...chain.filter((entry) => !providerHealthy(entry.name)),
+    ];
     let lastError: unknown = null;
 
     for (let index = 0; index < ordered.length; index += 1) {
@@ -269,28 +284,32 @@ async function run<T>(
 /* ------------------------------ public surface ----------------------------- */
 
 /** Plain text generation. */
-export async function generateText(
-  caller: AiCaller,
-  request: AiRequest,
-): Promise<AiTextResult> {
+export async function generateText(caller: AiCaller, request: AiRequest): Promise<AiTextResult> {
   guardRequest(request.messages);
   const limits = aiLimits();
-  const outcome = await run(caller, request.role ?? "primary", async ({ adapter, config, model, signal }) => {
-    const result = await adapter.chat({
-      apiKey: config.apiKey,
-      model,
-      messages: request.messages,
-      json: request.json === true,
-      maxOutputTokens: Math.min(request.maxOutputTokens ?? limits.maxOutputTokens, limits.maxOutputTokens),
-      ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
-      signal,
-    });
-    return {
-      value: result.text,
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-    };
-  });
+  const outcome = await run(
+    caller,
+    request.role ?? "primary",
+    async ({ adapter, config, model, signal }) => {
+      const result = await adapter.chat({
+        apiKey: config.apiKey,
+        model,
+        messages: request.messages,
+        json: request.json === true,
+        maxOutputTokens: Math.min(
+          request.maxOutputTokens ?? limits.maxOutputTokens,
+          limits.maxOutputTokens,
+        ),
+        ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
+        signal,
+      });
+      return {
+        value: result.text,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+      };
+    },
+  );
   return {
     text: outcome.value,
     provider: outcome.provider,
@@ -421,22 +440,31 @@ async function imageCall(
 export async function streamResponse(
   caller: AiCaller,
   request: AiRequest,
-): Promise<{ stream: ReadableStream<Uint8Array>; provider: ProviderName; model: string; requestId: string }> {
+): Promise<{
+  stream: ReadableStream<Uint8Array>;
+  provider: ProviderName;
+  model: string;
+  requestId: string;
+}> {
   guardRequest(request.messages);
   const limits = aiLimits();
-  const outcome = await run(caller, request.role ?? "primary", async ({ adapter, config, model, signal }) => {
-    const stream = await adapter.stream({
-      apiKey: config.apiKey,
-      model,
-      messages: request.messages,
-      maxOutputTokens: Math.min(
-        request.maxOutputTokens ?? limits.maxOutputTokens,
-        limits.maxOutputTokens,
-      ),
-      signal,
-    });
-    return { value: stream };
-  });
+  const outcome = await run(
+    caller,
+    request.role ?? "primary",
+    async ({ adapter, config, model, signal }) => {
+      const stream = await adapter.stream({
+        apiKey: config.apiKey,
+        model,
+        messages: request.messages,
+        maxOutputTokens: Math.min(
+          request.maxOutputTokens ?? limits.maxOutputTokens,
+          limits.maxOutputTokens,
+        ),
+        signal,
+      });
+      return { value: stream };
+    },
+  );
   return {
     stream: outcome.value,
     provider: outcome.provider,
