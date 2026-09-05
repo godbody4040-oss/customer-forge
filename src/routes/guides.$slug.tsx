@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { RelatedLinks } from "@/components/marketing/SeoLinks";
 import { Button } from "@/components/ui/button";
 import { findGuide, type Guide } from "@/lib/guides";
 import { BUSINESS } from "@/lib/business-identity";
@@ -132,6 +133,7 @@ function GuidePage() {
             <Link to="/guides">More guides</Link>
           </Button>
         </div>
+        <RelatedLinks path={`/guides/${guide.slug}`} />
       </main>
       <SiteFooter />
     </div>

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { ArrowRight, Check } from "lucide-react";
 
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { RelatedLinks } from "@/components/marketing/SeoLinks";
 import { Button } from "@/components/ui/button";
 import { BUSINESS } from "@/lib/business-identity";
 import { GROWTH_SYSTEM, usdExact } from "@/lib/offer";
@@ -236,6 +237,7 @@ function LocalIndustryStatePage() {
             </div>
           </div>
         </section>
+        <RelatedLinks path={content.path} />
       </main>
       <SiteFooter />
     </div>

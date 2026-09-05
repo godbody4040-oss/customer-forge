@@ -217,6 +217,18 @@ export const GUIDES: readonly Guide[] = [
         title: "Revisit prices on a schedule",
         body: "Costs move. Pick a quarter, review your ranges, and update the site — a quoting system that is one edit away makes this a five-minute job instead of a project.",
       },
+      {
+        title: "Package the common jobs so buyers can compare themselves",
+        body: "Most local businesses sell the same three or four jobs over and over. Give each one a name, a starting-at price, and a short list of exactly what is included and what is not. A buyer who can place their own job into one of your packages is a buyer who arrives already qualified, already expecting your price band, and asking to book rather than asking what it costs.",
+      },
+      {
+        title: "Show what changes the price before the customer asks",
+        body: "List the two or three factors that genuinely move your number — access, condition, size, urgency, after-hours work — with a plain sentence each. This is the same conversation you already have on the phone, done once, on the page, at 11pm while you are asleep. It prevents the awkward revision on site, because the customer read the reason for it before you arrived.",
+      },
+      {
+        title: "Make the next step obvious next to every price",
+        body: "A price with no adjacent action is a dead end. Every published range should sit beside one button that starts the instant quote or the booking, so the moment the number feels acceptable there is nothing left to do but continue. Pricing pages lose more revenue to missing buttons than to being too expensive.",
+      },
     ],
     takeaway:
       "Published ranges qualify buyers before they cost you a drive. Revora's quote builder turns your factors and add-ons into an instant range and sends you the completed answers with the lead.",
@@ -228,6 +240,14 @@ export const GUIDES: readonly Guide[] = [
       {
         q: "What if my jobs are too custom to price?",
         a: "Then price the entry point and the common cases, and be explicit that complex work is quoted after a visit. Something beats nothing.",
+      },
+      {
+        q: "Should I show prices if I am the most expensive option in my area?",
+        a: "Yes, and say why in the same breath: what is included, what you carry, what you guarantee, how fast you turn up. Price-shoppers were never going to be profitable customers, and buyers who care about the job being done properly need a reason to accept a higher number. Hiding the number only delays that conversation until after you have driven out.",
+      },
+      {
+        q: "How often should published prices change?",
+        a: "Review quarterly, and change immediately whenever your own costs step up — materials, insurance, fuel, labour. Small regular adjustments are absorbed without comment; one large overdue jump is the change customers argue about.",
       },
     ],
   },

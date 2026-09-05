@@ -3,6 +3,7 @@ import { trackConversion } from "@/lib/conversion";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CalendarCheck, Calculator, LineChart, Search, Star, Users } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketing/Chrome";
+import { AnswerFirst, RelatedLinks } from "@/components/marketing/SeoLinks";
 import { SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
 import { INDUSTRIES, industrySlug } from "@/lib/domain";
@@ -137,6 +138,10 @@ function IndustryPage() {
           capture every lead, quote instantly, book customers online and follow up automatically —
           so no opportunity slips while you're working.
         </p>
+        <AnswerFirst
+          question={`What does a ${industry.name.toLowerCase()} growth system include?`}
+          answer={`For a ${industry.name.toLowerCase()} business, Revora builds and runs one connected system: a fast local website, instant quotes based on the details you ask for, online booking on your real availability, a CRM holding every lead in one pipeline, automatic first replies and follow-up, review requests after completed jobs, local search content and analytics showing which pages and channels produce paying customers.`}
+        />
         <div className="mt-7 flex flex-wrap gap-3">
           <Button asChild variant="signal" size="lg">
             <Link to="/get-started">Get my {industry.name.toLowerCase()} website</Link>
@@ -194,6 +199,7 @@ function IndustryPage() {
             ))}
           </ul>
         </section>
+        <RelatedLinks path={`/industries/${industrySlug(industry.name)}`} />
       </main>
       <SiteFooter />
     </div>
