@@ -163,18 +163,25 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
     const since = from.toISOString();
     const errors: string[] = [];
 
-    // 1. Sessions + page views (browser telemetry, deduplicated by session id).
+    // 1. Page views, unique sessions and unique visitors (browser telemetry).
+    //    A session is one browsing visit; a visitor is one browser, counted
+    //    once however often it comes back (privacy-safe random id, no personal
+    //    data). Rows recorded before visitor ids existed have none, so those
+    //    sessions are added on so the visitor count is never understated.
     let sessions: number | null = null;
+    let visitors: number | null = null;
     let views: number | null = null;
     {
-      const seen = new Set<string>();
+      const seenSessions = new Set<string>();
+      const seenVisitors = new Set<string>();
+      let sessionsWithoutVisitor = new Set<string>();
       let count = 0;
       let page = 0;
       let failed = false;
       for (;;) {
         const { data: rows, error } = await supabaseAdmin
           .from("marketing_conversions")
-          .select("session_id")
+          .select("session_id, visitor_id")
           .eq("event_name", "page_view")
           .gte("created_at", since)
           .order("created_at", { ascending: false })
@@ -186,13 +193,20 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
         }
         for (const row of rows ?? []) {
           count += 1;
-          if (row.session_id) seen.add(row.session_id);
+          if (row.session_id) seenSessions.add(row.session_id);
+          if (row.visitor_id) seenVisitors.add(row.visitor_id);
+          else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
         }
         if ((rows?.length ?? 0) < 1000 || page >= 50) break;
         page += 1;
       }
       if (!failed) {
-        sessions = seen.size;
+        sessions = seenSessions.size;
+        // Sessions that carry a visitor id must not be double counted.
+        sessionsWithoutVisitor = new Set(
+          [...sessionsWithoutVisitor].filter((id) => !seenVisitors.has(id)),
+        );
+        visitors = seenVisitors.size + sessionsWithoutVisitor.size;
         views = count;
       }
     }
@@ -260,18 +274,25 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
 
     const stages: FunnelStage[] = [
       {
+        key: "visitors",
+        label: "Unique visitors",
+        count: visitors,
+        rate: null,
+        rateLabel: views === null ? undefined : `${views} page views in total`,
+      },
+      {
         key: "sessions",
         label: "Unique sessions",
         count: sessions,
-        rate: null,
-        rateLabel: views === null ? undefined : `${views} page views`,
+        rate: pct(sessions, visitors),
+        rateLabel: "visits per visitor shown as %",
       },
       {
         key: "accounts",
         label: "Accounts created",
         count: accounts,
-        rate: pct(accounts, sessions),
-        rateLabel: "of sessions",
+        rate: pct(accounts, visitors),
+        rateLabel: "of unique visitors",
       },
       {
         key: "trials",
