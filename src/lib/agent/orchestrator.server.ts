@@ -55,6 +55,8 @@ export type PlanFn = (
   instruction: string,
   history: AgentTurn[],
   attachments: AgentAttachment[],
+  /** Who the run belongs to, for AI usage limits and telemetry. */
+  caller?: { organizationId?: string | null; userId?: string | null; task?: string },
 ) => Promise<Record<string, unknown>>;
 
 const str = (value: unknown, max: number) =>
@@ -169,6 +171,8 @@ export async function orchestrate(options: {
   history: AgentTurn[];
   attachments: AgentAttachment[];
   plan: PlanFn;
+  /** Who the run belongs to, for AI usage limits and telemetry. */
+  caller?: { organizationId?: string | null; userId?: string | null };
   /** Injectable understanding stage, so the pipeline stays testable. */
   understand?: (
     instruction: string,
@@ -229,6 +233,7 @@ export async function orchestrate(options: {
     planningBrief(instruction, understanding, design),
     history,
     attachments,
+    options.caller,
   );
   let actions = actionList(first["actions"]);
   trace.push(`Planned ${actions.length} change${actions.length === 1 ? "" : "s"} across the site`);
@@ -253,6 +258,7 @@ export async function orchestrate(options: {
           { role: "assistant", content: JSON.stringify({ actions }).slice(0, 8000) } as AgentTurn,
         ],
         [],
+        options.caller,
       );
       const extra = actionList(second["actions"]);
       actions = mergeActions(actions, extra);

@@ -284,6 +284,7 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
         history: data.history,
         attachments: data.attachments,
         plan: planChanges,
+        caller: { organizationId: orgId, userId },
       });
       requirements = result.requirements;
       trace = result.trace;
