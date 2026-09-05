@@ -126,9 +126,9 @@ describe("automated SEO audit", () => {
 describe("Search Console feedback loop", () => {
   it("returns nothing without usable data", () => {
     expect(seoOpportunities([])).toEqual([]);
-    expect(seoOpportunities([{ page: "/pricing", clicks: 0, impressions: 0, position: 12 }])).toEqual(
-      [],
-    );
+    expect(
+      seoOpportunities([{ page: "/pricing", clicks: 0, impressions: 0, position: 12 }]),
+    ).toEqual([]);
   });
 
   it("prioritises striking-distance commercial queries", () => {

@@ -7,12 +7,7 @@
  */
 
 import { SITE_URL } from "@/lib/seo";
-import {
-  MIN_INDEXABLE_WORDS,
-  isPrivatePath,
-  seoInventory,
-  type SeoPage,
-} from "@/lib/seo-intent";
+import { MIN_INDEXABLE_WORDS, isPrivatePath, seoInventory, type SeoPage } from "@/lib/seo-intent";
 import { internalLinksFor } from "@/lib/seo-links";
 
 export type SeoIssueLevel = "error" | "warning";
@@ -53,7 +48,8 @@ export function auditSeo(inventory: SeoPage[] = seoInventory()): SeoIssue[] {
   const byDescription = new Map<string, string[]>();
 
   for (const p of indexable) {
-    if (!p.title.trim()) issues.push({ level: "error", code: "missing_title", path: p.path, detail: "No title." });
+    if (!p.title.trim())
+      issues.push({ level: "error", code: "missing_title", path: p.path, detail: "No title." });
     if (!p.description.trim())
       issues.push({
         level: "error",
@@ -77,9 +73,13 @@ export function auditSeo(inventory: SeoPage[] = seoInventory()): SeoIssue[] {
       });
     // Thin content only matters for pages meant to answer a search. A contact
     // form or a sign-in entry point is short by design, not underweight.
-    const contentIntent = ["commercial", "informational", "local", "industry", "comparison"].includes(
-      p.intent,
-    );
+    const contentIntent = [
+      "commercial",
+      "informational",
+      "local",
+      "industry",
+      "comparison",
+    ].includes(p.intent);
     if (contentIntent && p.words < MIN_INDEXABLE_WORDS)
       issues.push({
         level: "error",

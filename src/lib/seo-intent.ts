@@ -139,8 +139,8 @@ export function seoInventory(): SeoPage[] {
     page(
       "/",
       "ai growth software for local business",
-      "Revora — The AI Growth System That Books Local Jobs 24/7",
-      "AI growth platform for local businesses: website, instant quotes, online booking, CRM, automated follow-up, reviews, local SEO and analytics in one system.",
+      "Revora — AI Growth Software That Books Local Jobs 24/7",
+      "AI growth software for local service businesses: lead-generating website, instant quotes, online booking, CRM, automated follow-up, review requests, local SEO and analytics in one system.",
       900,
     ),
     page(
@@ -235,7 +235,13 @@ export function seoInventory(): SeoPage[] {
       360,
     ),
     page("/about", "about revora", "About Revora", "Who builds Revora and why it exists.", 320),
-    page("/contact", "contact revora", "Contact Revora", "Talk to Revora about your business.", 220),
+    page(
+      "/contact",
+      "contact revora",
+      "Contact Revora",
+      "Talk to Revora about your business.",
+      220,
+    ),
     page(
       "/portal",
       "revora client portal",
@@ -355,7 +361,13 @@ export function seoInventory(): SeoPage[] {
       guide.steps.reduce((sum, s) => sum + countWords(s.title) + countWords(s.body), 0) +
       guide.faqs.reduce((sum, f) => sum + countWords(f.q) + countWords(f.a), 0);
     pages.push(
-      page(`/guides/${guide.slug}`, guide.title.toLowerCase(), guide.metaTitle, guide.description, words),
+      page(
+        `/guides/${guide.slug}`,
+        guide.title.toLowerCase(),
+        guide.metaTitle,
+        guide.description,
+        words,
+      ),
     );
   }
 

@@ -103,15 +103,15 @@ export const Route = createFileRoute("/")({
           }
         : ({
             meta: [
-              { title: "Revora — The AI Growth System That Books Local Jobs 24/7" },
+              { title: "Revora — AI Growth Software That Books Local Jobs 24/7" },
               {
                 name: "description",
                 content:
-                  "Revora builds local businesses a complete AI growth system: website, instant quotes, booking, CRM, automated follow-up, reviews, local SEO and analytics — working while you sleep. 3 days free full access, $750 setup, first month free, then $100/month.",
+                  "AI growth software for local service businesses: lead-generating website, instant quotes, online booking, CRM, automated follow-up, review requests, local SEO and analytics in one system. 3 days free full access, $750 setup, first month free, then $100/month.",
               },
               {
                 property: "og:title",
-                content: "Revora — the AI growth system that books local jobs 24/7",
+                content: "Revora — AI growth software for local service businesses",
               },
               {
                 property: "og:description",

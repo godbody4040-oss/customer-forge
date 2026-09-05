@@ -35,14 +35,13 @@ export interface SeoOpportunity {
   /** Higher means work on it sooner. */
   priority: number;
   clicks: number;
-  impressions: number
+  impressions: number;
   position: number;
   ctr: number;
   recommendation: string;
 }
 
-const ctrOf = (row: ConsoleRow) =>
-  row.impressions > 0 ? row.clicks / row.impressions : 0;
+const ctrOf = (row: ConsoleRow) => (row.impressions > 0 ? row.clicks / row.impressions : 0);
 
 const isCommercial = (query: string | undefined) => {
   if (!query) return false;
