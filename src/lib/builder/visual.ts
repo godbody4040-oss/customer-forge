@@ -17,6 +17,48 @@
 /** The widths every website is judged at, phone first. */
 export const VIEWPORTS = [320, 360, 375, 390, 414, 430, 768, 1024, 1280, 1440, 1920] as const;
 
+/** What a browser can prove about how usable a page is, beyond geometry. */
+export type AccessibilityMeasurement = {
+  /** Pictures carrying meaning with no description for a screen reader. */
+  imagesMissingAlt: string[];
+  /** Buttons and links with no readable name at all. */
+  unlabeledControls: string[];
+  /** Form fields with no label. */
+  unlabeledInputs: string[];
+  /** Headings that jump a level, e.g. an h4 straight after an h2. */
+  headingOrderProblems: string[];
+  /** Whether the page has more than one top-level heading, or none. */
+  h1Count: number;
+  hasMain: boolean;
+  hasNav: boolean;
+  /** Controls a keyboard can reach, out of all controls found. */
+  controls: number;
+  keyboardReachable: number;
+  /** Text whose contrast against its background is below 4.5:1. */
+  lowContrast: { selector: string; ratio: number }[];
+  /** True when the page stops a visitor pinching to zoom. */
+  zoomBlocked: boolean;
+};
+
+/** Lab timings and weights taken from the browser's own Performance APIs. */
+export type PerformanceMeasurement = {
+  /** Milliseconds; null whenever the browser could not report the metric. */
+  ttfb: number | null;
+  fcp: number | null;
+  lcp: number | null;
+  cls: number | null;
+  inp: number | null;
+  longTasks: number | null;
+  resources: number;
+  scriptBytes: number;
+  imageBytes: number;
+  fontBytes: number;
+  failedRequests: number;
+  /** Images shipped far larger than the box they render in. */
+  oversizedImages: string[];
+  renderBlocking: number;
+};
+
 export type ViewportMeasurement = {
   width: number;
   /** Widest scrollable extent of the document at this width. */
@@ -37,6 +79,18 @@ export type ViewportMeasurement = {
   navigable: boolean;
   /** Number of visible calls to action found. */
   ctas: number;
+  /** Buttons and links that lead nowhere (`#`, empty, `javascript:`). */
+  deadControls?: string[];
+  /** Pictures stretched or squashed out of their real shape. */
+  distortedImages?: string[];
+  /** Blocks of text sitting on top of each other. */
+  overlapping?: string[];
+  /** Content columns so narrow that words break awkwardly. */
+  narrowColumns?: string[];
+  /** A fixed bar covering the bottom of the page, in px. */
+  stickyFooterHeight?: number;
+  accessibility?: AccessibilityMeasurement | undefined;
+  performance?: PerformanceMeasurement | undefined;
 };
 
 export type VisualFinding = {
@@ -47,7 +101,12 @@ export type VisualFinding = {
   fix: string;
   /** The width the problem appears at. */
   width: number;
+  /** Which page the problem was seen on, when a whole site was measured. */
+  page?: string;
 };
+
+/** Which judgements a run actually had evidence for. Unmeasured is never a pass. */
+export type VisualCoverage = { accessibility: boolean; performance: boolean };
 
 export type VisualReport = {
   /** 0–100, from the measurements only. */
@@ -56,7 +115,11 @@ export type VisualReport = {
   passed: boolean;
   findings: VisualFinding[];
   widths: number[];
+  /** Page paths covered by this report. */
+  pages?: string[];
+  coverage?: VisualCoverage;
 };
+
 
 const px = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
 
