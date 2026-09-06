@@ -259,7 +259,7 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
           heading: "Our promise to you",
           // Only the owner's own words — Revora never writes a promise on their
           // behalf. Without one, the block asks them to add it and stays hidden.
-          subheading: facts.guarantee?.trim() || null,
+          subheading: facts.guarantee?.trim() || undefined,
         },
       ],
     });
