@@ -20,7 +20,10 @@ function wait(ms: number): Promise<void> {
 
 function waitForLoad(iframe: HTMLIFrameElement): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("The preview page took too long to load.")), 30000);
+    const timer = setTimeout(
+      () => reject(new Error("The preview page took too long to load.")),
+      30000,
+    );
     iframe.addEventListener(
       "load",
       () => {

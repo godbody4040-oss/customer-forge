@@ -51,9 +51,9 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
             column: string,
             options: { ascending: boolean },
           ) => {
-            limit: (
-              count: number,
-            ) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null }> };
+            limit: (count: number) => {
+              maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
+            };
           };
         };
       };
