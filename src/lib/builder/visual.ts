@@ -202,20 +202,19 @@ export const MEASURE_SCRIPT = `(() => {
     return box.width > 0 && box.height > 0;
   };
   const all = [...document.querySelectorAll('body *')].filter(visible);
-  const decorative = (el) => {
-    const style = getComputedStyle(el);
-    if (style.pointerEvents === 'none') return true;
-    if (style.position === 'absolute' || style.position === 'fixed') {
-      // A decorative glow may sit outside the text column as long as an ancestor clips it.
-      let parent = el.parentElement;
-      while (parent) {
-        const ps = getComputedStyle(parent);
-        if (ps.overflow !== 'visible' || ps.overflowX !== 'visible') return true;
-        parent = parent.parentElement;
-      }
+  // An element only breaks the page when nothing above it clips or scrolls
+  // sideways: a deliberate swipe strip or a clipped glow is not a fault.
+  const contained = (el) => {
+    if (getComputedStyle(el).pointerEvents === 'none') return true;
+    let parent = el.parentElement;
+    while (parent && parent !== document.documentElement) {
+      const ps = getComputedStyle(parent);
+      if (ps.overflowX !== 'visible' || ps.overflow !== 'visible') return true;
+      parent = parent.parentElement;
     }
     return false;
   };
+  const decorative = contained;
   const overflowing = all
     .filter((el) => el.getBoundingClientRect().right > width + 1 && !decorative(el))
     .slice(0, 10)
