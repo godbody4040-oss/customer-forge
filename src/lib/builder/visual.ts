@@ -260,7 +260,16 @@ export const MEASURE_SCRIPT = `(() => {
       const y = Math.min(window.innerHeight - 1, Math.max(1, box.top + box.height / 2));
       if (box.top < 0 || box.top > window.innerHeight) return false;
       const hit = document.elementFromPoint(x, y);
-      return !!hit && !el.contains(hit) && !hit.contains(el);
+      if (!hit || el.contains(hit) || hit.contains(el)) return false;
+      // A sticky call bar covers whatever it floats over until the visitor
+      // scrolls, which is normal; only a permanent cover is a fault.
+      let over = hit;
+      while (over && over !== document.documentElement) {
+        const pos = getComputedStyle(over).position;
+        if (pos === 'fixed' || pos === 'sticky') return false;
+        over = over.parentElement;
+      }
+      return true;
     })
     .slice(0, 10)
     .map(label);
