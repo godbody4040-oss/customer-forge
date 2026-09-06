@@ -175,6 +175,9 @@ export function readActions(
 ): AgentAction[] {
   if (!Array.isArray(value)) return [];
   const out: AgentAction[] = [];
+  /** Temporary page names declared by an earlier add_page in this same plan. */
+  const refs = new Set<string>();
+  const knownPage = (id: string) => known.pageIds.has(id) || refs.has(id);
 
   for (const raw of value.slice(0, MAX_ACTIONS * 2)) {
     if (!raw || typeof raw !== "object") continue;
