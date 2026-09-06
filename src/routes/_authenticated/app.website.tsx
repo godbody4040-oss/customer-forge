@@ -523,6 +523,12 @@ function WebsitePage() {
             canManage={manage}
             result={launchFlow.result}
           />
+          <VisualCheckPanel
+            organizationId={orgId}
+            slug={org?.slug}
+            publishState={settings?.publish_state ?? "draft"}
+            canManage={manage}
+          />
           <LaunchChecks
             checks={qa.checks}
             blockers={qa.blockers}
