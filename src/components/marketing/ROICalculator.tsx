@@ -67,7 +67,7 @@ export function ROICalculator() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-      <Panel className="p-5 sm:p-6">
+      <Panel className="min-w-0 p-5 sm:p-6">
         <p className="eyebrow">Your numbers</p>
         <div className="mt-5 space-y-6">
           {FIELDS.map((f) => {
@@ -108,7 +108,7 @@ export function ROICalculator() {
         </div>
       </Panel>
 
-      <Panel className="flex flex-col p-5 sm:p-6">
+      <Panel className="flex min-w-0 flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <p className="eyebrow">Your estimate</p>
           <Pill tone="attention">Estimate — not a guarantee</Pill>
