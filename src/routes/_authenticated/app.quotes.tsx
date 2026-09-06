@@ -196,6 +196,7 @@ function QuotesPage() {
             {form ? (
               <label className="flex items-center gap-2 text-[13px]">
                 <Switch
+                  aria-label="Show this quote form on my website"
                   checked={form.is_active}
                   onCheckedChange={(checked) =>
                     m.saveForm.mutate({
