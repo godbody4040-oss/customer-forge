@@ -845,11 +845,7 @@ function WebsitePage() {
         description="Answer these once. Revora reuses them across your whole website."
         onClose={() => setSetupOpen(false)}
       >
-        <MissingFactsPanel
-          organizationId={orgId}
-          gaps={readiness?.gaps ?? []}
-          canManage={manage}
-        />
+        <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
         <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
         <BuilderWizard
           organizationId={orgId}
