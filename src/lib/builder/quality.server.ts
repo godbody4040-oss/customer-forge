@@ -132,6 +132,12 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
       title: page["seo_title"] ?? page["title"],
       description: page["seo_description"],
     })),
+    // Layer 2 only counts when a real browser check exists and nothing on the
+    // site has changed since it ran.
+    visual: freshVisualReport(visualRow.data, [
+      ...pageRows.map((page) => page["updated_at"] as string | undefined),
+      ...sectionRows.map((section) => section["updated_at"] as string | undefined),
+    ]),
   };
 
   return auditWebsite(input);
