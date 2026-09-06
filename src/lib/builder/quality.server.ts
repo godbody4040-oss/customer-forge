@@ -162,12 +162,16 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
       title: page["seo_title"] ?? page["title"],
       description: page["seo_description"],
     })),
-    // Layer 2 only counts when a real browser check exists and nothing on the
-    // site has changed since it ran.
-    visual: freshVisualReport(visualRow.data, [
-      ...pageRows.map((page) => page["updated_at"] as string | undefined),
-      ...sectionRows.map((section) => section["updated_at"] as string | undefined),
-    ]),
+    // Layer 2 only counts when EVERY visible page has been checked in a real
+    // browser and nothing on the site has changed since those checks ran.
+    visual: freshSiteVisualReport(
+      (visualRows.data ?? []) as Record<string, unknown>[],
+      pageRows.map((page) => String(page["slug"] ?? "")).filter(Boolean),
+      [
+        ...pageRows.map((page) => page["updated_at"] as string | undefined),
+        ...sectionRows.map((section) => section["updated_at"] as string | undefined),
+      ],
+    ),
   };
 
   return auditWebsite(input);
