@@ -23,7 +23,9 @@ if (!urls.length) {
 const { VIEWPORTS, MEASURE_SCRIPT, gradeVisual } = await import(
   pathToFileURL(new URL("../src/lib/builder/visual.ts", import.meta.url).pathname).href
 ).catch(() => {
-  throw new Error("Run this with bun so TypeScript sources can be imported: bun scripts/visual-qa.mjs <url>");
+  throw new Error(
+    "Run this with bun so TypeScript sources can be imported: bun scripts/visual-qa.mjs <url>",
+  );
 });
 
 void readFileSync;

@@ -32,7 +32,6 @@ import { captureUndo, rollback, type JournalClient, type UndoStep } from "@/lib/
 /** A real database id, as opposed to a plan's temporary page name. */
 const UUID_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-
 const orgIdOf = (input: { organizationId?: unknown }) => {
   const organizationId = String(input?.organizationId ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
