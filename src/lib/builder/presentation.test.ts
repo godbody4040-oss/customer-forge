@@ -215,7 +215,9 @@ describe("quality gate", () => {
   it("passes a clean site on content, but is not production-ready until it is measured", () => {
     const report = auditWebsite(base());
     expect(report.blockers).toHaveLength(0);
-    expect(report.score).toBe(70);
+    // Accessibility and speed are unproven without a browser check, so they
+    // earn at most half — an unmeasured website can never look finished.
+    expect(report.score).toBe(63);
     expect(report.ready).toBe(true);
     expect(report.measured).toBe(false);
     expect(report.productionReady).toBe(false);

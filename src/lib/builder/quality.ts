@@ -373,7 +373,7 @@ export function auditWebsite(input: QualityInput): QualityReport {
     damage[category] = (damage[category] ?? 0) + (finding.severity === "p0" ? 1 : 0.25);
   }
 
-  const measured = !!input.visual && input.visual.widths.length > 0 && !!input.visual.pages?.length;
+  const measured = !!input.visual && input.visual.widths.length > 0;
   const coverage = input.visual?.coverage;
   const categories = (Object.keys(CATEGORY_WEIGHTS) as QualityCategory[]).map((name) => {
     const weight = CATEGORY_WEIGHTS[name];

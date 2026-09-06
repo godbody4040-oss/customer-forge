@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   gradeViewport,
+  gradeSite,
   gradeVisual,
   VIEWPORTS,
   type ViewportMeasurement,
@@ -21,6 +22,34 @@ const clean = (width: number): ViewportMeasurement => ({
   unreachable: [],
   navigable: true,
   ctas: 2,
+  accessibility: {
+    imagesMissingAlt: [],
+    unlabeledControls: [],
+    unlabeledInputs: [],
+    headingOrderProblems: [],
+    h1Count: 1,
+    hasMain: true,
+    hasNav: true,
+    controls: 6,
+    keyboardReachable: 6,
+    lowContrast: [],
+    zoomBlocked: false,
+  },
+  performance: {
+    ttfb: 120,
+    fcp: 900,
+    lcp: 1600,
+    cls: 0.01,
+    inp: null,
+    longTasks: 0,
+    resources: 20,
+    scriptBytes: 200_000,
+    imageBytes: 400_000,
+    fontBytes: 40_000,
+    failedRequests: 0,
+    oversizedImages: [],
+    renderBlocking: 0,
+  },
 });
 
 describe("rendered visual quality", () => {
@@ -94,6 +123,32 @@ const goodInput = (visual: VisualReport | null): QualityInput => ({
     { title: "Contact Elite Mobile Cars", description: "Book a mobile detail." },
   ],
   visual,
+});
+
+describe("what was never measured is never a pass", () => {
+  it("keeps a website off production when nobody measured how usable or fast it is", () => {
+    const bare = VIEWPORTS.map((width) => {
+      const measurement = { ...clean(width) };
+      delete measurement.accessibility;
+      delete measurement.performance;
+      return measurement;
+    });
+    const report = auditWebsite(goodInput(gradeVisual(bare)));
+    expect(report.productionReady).toBe(false);
+    // Half credit at most for a category nothing proved.
+    expect(report.categories.find((c) => c.name === "accessibility")?.earned).toBeLessThanOrEqual(5);
+    expect(report.categories.find((c) => c.name === "performance")?.earned).toBeLessThanOrEqual(2.5);
+  });
+
+  it("fails the whole site when one visible page was never opened", () => {
+    const measured = gradeVisual(
+      VIEWPORTS.map((width) => clean(width)),
+      "home",
+    );
+    const site = gradeSite(["home", "services"], [{ page: "home", report: measured }]);
+    expect(site.passed).toBe(false);
+    expect(site.findings.some((f) => f.severity === "p0")).toBe(true);
+  });
 });
 
 describe("two-layer quality score", () => {
