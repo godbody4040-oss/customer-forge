@@ -808,3 +808,21 @@ export const MEASURE_SCRIPT = `(() => {
   };
 })()`;
 
+
+/**
+ * Installed in the page as soon as it loads, before anything is measured, so
+ * layout shift is observed as it happens instead of guessed at afterwards.
+ */
+export const OBSERVE_SCRIPT = `(() => {
+  if (window.__revoraClsInstalled) return true;
+  window.__revoraClsInstalled = true;
+  window.__revoraCls = 0;
+  try {
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!entry.hadRecentInput) window.__revoraCls += entry.value;
+      }
+    }).observe({ type: 'layout-shift', buffered: true });
+  } catch (e) { window.__revoraCls = undefined; }
+  return true;
+})()`;
