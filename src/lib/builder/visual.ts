@@ -128,7 +128,7 @@ export function gradeViewport(measurement: ViewportMeasurement): VisualFinding[]
     add(
       "unreachable_control",
       "p0",
-      `At ${width}px “${element.selector ?? element}” can't be tapped — something covers it.`,
+      `At ${width}px “${element}” can't be tapped — something covers it.`,
       "Move the covering bar, or add space below the content.",
     );
   }
