@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+import { readActions } from "@/lib/site-agent";
 
 describe("building a page and filling it in one plan", () => {
   const known = {
