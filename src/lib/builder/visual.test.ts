@@ -123,3 +123,33 @@ describe("two-layer quality score", () => {
     expect(report.categories.reduce((total, c) => total + c.weight, 0)).toBe(100);
   });
 });
+
+describe("freshVisualReport", () => {
+  const cleanMeasurements = VIEWPORTS.map((width) => clean(width));
+  const row = (measuredAt: string) => ({
+    measured_at: measuredAt,
+    measurements: cleanMeasurements,
+  });
+
+  it("re-grades a fresh stored report from its raw measurements", () => {
+    const report = freshVisualReport(row("2026-09-06T00:00:00Z"), ["2026-09-05T00:00:00Z"]);
+    expect(report?.passed).toBe(true);
+    expect(report?.widths.length).toBe(VIEWPORTS.length);
+  });
+
+  it("treats a report older than the newest content edit as unmeasured", () => {
+    expect(
+      freshVisualReport(row("2026-09-05T00:00:00Z"), [
+        "2026-09-04T00:00:00Z",
+        "2026-09-06T00:00:00Z",
+      ]),
+    ).toBeNull();
+  });
+
+  it("ignores missing or unreadable rows instead of guessing", () => {
+    expect(freshVisualReport(null, [])).toBeNull();
+    expect(freshVisualReport({ measured_at: "not-a-date", measurements: [] }, [])).toBeNull();
+    expect(freshVisualReport({ measured_at: "2026-09-06T00:00:00Z", measurements: [] }, []))
+      .toBeNull();
+  });
+});
