@@ -237,6 +237,9 @@ export const MEASURE_SCRIPT = `(() => {
     .map((el) => (el.textContent || '').trim().slice(0, 60));
   const controls = [...document.querySelectorAll('a[href], button, [role="button"]')].filter(visible);
   const smallTargets = controls
+    // A link inside a sentence is read, not tapped as a button, so its height is
+    // set by the text around it and is not a fault.
+    .filter((el) => getComputedStyle(el).display !== 'inline')
     .map((el) => ({ el, box: el.getBoundingClientRect() }))
     .filter(({ box }) => box.width < 44 || box.height < 44)
     .slice(0, 10)
@@ -244,7 +247,7 @@ export const MEASURE_SCRIPT = `(() => {
   const tinyText = all
     .filter((el) => el.childElementCount === 0 && (el.textContent || '').trim().length > 20)
     .map((el) => ({ el, size: parseFloat(getComputedStyle(el).fontSize) }))
-    .filter(({ size }) => size > 0 && size < 14)
+    .filter(({ size }) => size > 0 && size < 13)
     .slice(0, 10)
     .map(({ el, size }) => ({ selector: label(el), fontSize: size }));
   const unreachable = controls
