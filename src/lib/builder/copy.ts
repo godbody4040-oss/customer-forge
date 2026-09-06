@@ -98,7 +98,11 @@ export function ctaTarget(facts: CopyFacts): { url: string; label: string } | nu
   return { url: "/contact", label: "Get in touch" };
 }
 
-export type SectionCopy = { heading: string; subheading?: string; body?: string };
+export type SectionCopy = {
+  heading: string;
+  subheading?: string | undefined;
+  body?: string | undefined;
+};
 
 /**
  * Heading and supporting words for a section kind. Only trade-shaped structure
