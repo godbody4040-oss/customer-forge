@@ -181,24 +181,48 @@ export function buildDeterministicPlan(
 
   /* --- COMPLETE-WEBSITE MODE: pages, sections, CTA, SEO, in one request --- */
   if (wholeSite) {
-    task("Create the pages this trade needs", () => {
+    task("Create the pages this trade needs, finished in one go", () => {
       let created = false;
+      let index = 0;
       for (const wanted of playbook.pages) {
         const slug = slugify(wanted.slug || wanted.title);
         if (!slug) continue;
         if (context.pages.some((existing) => existing.slug.replace(/^\//, "") === slug)) continue;
         const kind = context.pageKinds.includes(wanted.kind) ? wanted.kind : "custom";
-        push({ type: "add_page", kind, title: wanted.title, slug });
+        // The page is given a temporary name so its own sections, copy and
+        // call to action are written in the SAME request — a new page is never
+        // left blank waiting for a second attempt.
+        const ref = `temp_page_${index++}`;
+        push({ type: "add_page", kind, title: wanted.title, slug, ref });
+        let position = 0;
+        for (const sectionKind of pageSectionPlan(kind)) {
+          if (!allowedSections.has(sectionKind)) continue;
+          const copy = sectionCopy(sectionKind, facts, playbook);
+          push({
+            type: "add_section",
+            pageId: ref,
+            kind: sectionKind,
+            heading: copy.heading,
+            subheading: copy.subheading,
+            body: copy.body,
+            position: position++,
+          });
+        }
+        const title = `${wanted.title} — ${facts.businessName}`.slice(0, 70);
+        push({
+          type: "set_page",
+          pageId: ref,
+          patch: { seo_title: title, seo_description: wanted.why.slice(0, 165) },
+        });
         created = true;
       }
       if (created) {
         done.push("pages");
-        notes.push(
-          "New pages are created first. Their sections are filled in on the next request, because a page has no id until it exists.",
-        );
+        trace.push("Built each new page complete with its sections, copy and search details.");
       }
       return created;
     });
+
 
     task("Lay out the home page in buyer-decision order", () => {
       if (!page) return false;
