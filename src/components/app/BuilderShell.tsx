@@ -144,7 +144,7 @@ export function BuilderShell({
             </div>
           </div>
 
-          <div className="flex w-full min-w-0 items-center justify-end gap-2 sm:w-auto">
+          <div className="flex w-full min-w-0 flex-nowrap items-center justify-end gap-2 overflow-x-auto sm:w-auto [&_a]:whitespace-nowrap [&_button]:shrink-0 [&_button]:whitespace-nowrap">
             <UndoRedo />
             {actions}
           </div>
