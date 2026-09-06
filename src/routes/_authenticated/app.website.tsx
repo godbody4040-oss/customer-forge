@@ -323,7 +323,11 @@ function WebsitePage() {
       node: (
         <div className="space-y-5">
           <EnvironmentBanner status={production} />
-          <AiRequestPanel organizationId={orgId} canManage={manage} onOpenAi={() => goTo("ai")} />
+          <AiRequestPanel
+            organizationId={orgId ?? null}
+            canManage={manage}
+            onOpenAi={() => goTo("ai")}
+          />
           {requiredCount > 0 && manage ? (
             <section className="panel border-accent/40 bg-accent/5 p-4">
               <p className="text-[13px] font-medium">
@@ -346,11 +350,11 @@ function WebsitePage() {
               onAction={() => goTo("pages")}
             />
           ) : (
-            <BuilderCanvas organizationId={orgId} pages={pages ?? []} canManage={manage} />
+            <BuilderCanvas organizationId={orgId ?? null} pages={pages ?? []} canManage={manage} />
           )}
           <Disclosure label="Next steps" hint="Setup, payment and going live">
             <ClientOnboardingFlow
-              organizationId={orgId}
+              organizationId={orgId ?? null}
               canManage={manage}
               contactPhone={(profile?.["phone"] as string | null) ?? null}
               contactEmail={(profile?.["email"] as string | null) ?? null}
@@ -368,7 +372,7 @@ function WebsitePage() {
           </Disclosure>
           <Disclosure label="Advanced" hint="Wording, project details and your Revora score">
             <AiCopyAssistant
-              organizationId={orgId}
+              organizationId={orgId ?? null}
               fields={copyFields}
               canManage={manage}
               onApply={(patch) =>
@@ -379,7 +383,7 @@ function WebsitePage() {
             />
             <BusinessBriefPanel brief={brief} />
             <WebsiteProject
-              organizationId={orgId}
+              organizationId={orgId ?? null}
               businessName={org?.name ?? null}
               industry={
                 (org?.industry as string | undefined) ?? (profile?.["industry"] as string) ?? null
@@ -471,7 +475,7 @@ function WebsitePage() {
                       </Button>
                     </div>
                   </section>
-                  <ConversionOptimizer organizationId={orgId} />
+                  <ConversionOptimizer organizationId={orgId ?? null} />
                 </>
               ),
             },
@@ -480,7 +484,7 @@ function WebsitePage() {
               label: "Visual",
               node: (
                 <EffectStudio
-                  organizationId={orgId}
+                  organizationId={orgId ?? null}
                   canManage={manage}
                   backdrop={readBackdrop(generation ?? null)}
                   onBackdrop={(backdrop) =>
@@ -494,7 +498,7 @@ function WebsitePage() {
               label: "Images",
               node: (
                 <ImageStudio
-                  organizationId={orgId}
+                  organizationId={orgId ?? null}
                   canManage={manage}
                   businessName={org?.name ?? null}
                   industry={(profile?.["industry"] as string) ?? null}
@@ -563,7 +567,7 @@ function WebsitePage() {
                   </section>
                   <Disclosure label="Every design control" hint="Backdrops, effects and imagery">
                     <EffectStudio
-                      organizationId={orgId}
+                      organizationId={orgId ?? null}
                       canManage={manage}
                       backdrop={readBackdrop(generation ?? null)}
                       onBackdrop={(backdrop) =>
@@ -586,10 +590,10 @@ function WebsitePage() {
       hint: "Pages and sections",
       node: (
         <div className="space-y-5">
-          <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
-          <WebsiteStructure organizationId={orgId} canManage={manage} />
+          <SiteEnginePanel organizationId={orgId ?? null} canManage={manage} hasCopy={!!copy} />
+          <WebsiteStructure organizationId={orgId ?? null} canManage={manage} />
           <Disclosure label="Lead capture" hint="Forms, booking and enquiry buttons">
-            <LeadEngine organizationId={orgId} canManage={manage} />
+            <LeadEngine organizationId={orgId ?? null} canManage={manage} />
           </Disclosure>
         </div>
       ),
@@ -601,7 +605,7 @@ function WebsitePage() {
       node: (
         <div className="space-y-5">
           <SiteChatbot
-            organizationId={orgId}
+            organizationId={orgId ?? null}
             canManage={manage}
             hasSections={visibleSections > 0}
             publishState={settings?.publish_state ?? "draft"}
@@ -616,11 +620,11 @@ function WebsitePage() {
             label="Improve my website"
             hint="Revora checks your site and fixes what it finds"
           >
-            <BuilderAudit organizationId={orgId} org={org ?? null} canManage={manage} />
+            <BuilderAudit organizationId={orgId ?? null} org={org ?? null} canManage={manage} />
           </Disclosure>
           <Disclosure label="Grow my business" hint="More calls, more quote requests, more trust">
             <UpgradeStudio
-              organizationId={orgId}
+              organizationId={orgId ?? null}
               canManage={manage}
               pages={pages ?? []}
               facts={{
@@ -631,7 +635,7 @@ function WebsitePage() {
           </Disclosure>
           <Disclosure label="Build a full website for me" hint="Describe it, Revora writes it">
             <RevoraGenius
-              organizationId={orgId}
+              organizationId={orgId ?? null}
               canManage={manage}
               pages={pages ?? []}
               facts={geniusFacts}
@@ -665,7 +669,7 @@ function WebsitePage() {
                     regressions={regressions}
                   />
                   <VisualCheckPanel
-                    organizationId={orgId}
+                    organizationId={orgId ?? null}
                     slug={org?.slug}
                     publishState={settings?.publish_state ?? "draft"}
                     canManage={manage}
@@ -708,12 +712,12 @@ function WebsitePage() {
               label: "Previews",
               node: (
                 <>
-                  <PreviewLinks organizationId={orgId} canManage={manage} />
+                  <PreviewLinks organizationId={orgId ?? null} canManage={manage} />
                   <Disclosure
                     label="Client portal access"
                     hint="Let your client log in and see their own dashboard, pages and live site"
                   >
-                    <PortalAccess organizationId={orgId} canManage={manage} />
+                    <PortalAccess organizationId={orgId ?? null} canManage={manage} />
                   </Disclosure>
                 </>
               ),
@@ -729,13 +733,13 @@ function WebsitePage() {
                     hint="Review, build report and platform checks"
                   >
                     <WebsiteReview
-                      organizationId={orgId}
+                      organizationId={orgId ?? null}
                       slug={org?.slug}
                       settings={settings}
                       canManage={manage}
                     />
                     <BuildReportPanel report={buildReport} />
-                    <EngineSelfTestPanel organizationId={orgId} />
+                    <EngineSelfTestPanel organizationId={orgId ?? null} />
                     <PlatformEngine
                       businessName={org?.name ?? null}
                       slug={org?.slug ?? null}
@@ -771,7 +775,7 @@ function WebsitePage() {
 
   return (
     <>
-      <BuilderHistoryProvider organizationId={orgId}>
+      <BuilderHistoryProvider organizationId={orgId ?? null}>
         <BuilderShell
           projectName={org?.name ? `${org.name} · website` : "Your website"}
           statusLabel={
@@ -799,7 +803,7 @@ function WebsitePage() {
               </Button>
               {org ? (
                 <PreviewSiteButton
-                  organizationId={orgId}
+                  organizationId={orgId ?? null}
                   slug={org.slug}
                   publishState={publishState}
                 />
@@ -829,9 +833,9 @@ function WebsitePage() {
           description="Every change Revora and your team made — restore any earlier version."
           onClose={() => setHistoryOpen(false)}
         >
-          <RestorePointPanel organizationId={orgId} canManage={manage} />
-          <VersionHistory organizationId={orgId} canManage={manage} />
-          <VersionDiff organizationId={orgId} />
+          <RestorePointPanel organizationId={orgId ?? null} canManage={manage} />
+          <VersionHistory organizationId={orgId ?? null} canManage={manage} />
+          <VersionDiff organizationId={orgId ?? null} />
         </OverlayPanel>
       </BuilderHistoryProvider>
 
@@ -841,10 +845,14 @@ function WebsitePage() {
         description="Answer these once. Revora reuses them across your whole website."
         onClose={() => setSetupOpen(false)}
       >
-        <MissingFactsPanel organizationId={orgId} gaps={readiness?.gaps ?? []} canManage={manage} />
-        <BriefReviewPanel organizationId={orgId} brief={brief} canManage={manage} />
+        <MissingFactsPanel
+          organizationId={orgId ?? null}
+          gaps={readiness?.gaps ?? []}
+          canManage={manage}
+        />
+        <BriefReviewPanel organizationId={orgId ?? null} brief={brief} canManage={manage} />
         <BuilderWizard
-          organizationId={orgId}
+          organizationId={orgId ?? null}
           org={org}
           profile={profile}
           servicesCount={servicesCount}

@@ -176,7 +176,9 @@ export function AiRequestPanel({
           {plan.steps.length ? (
             <ul className="mt-2 space-y-1 text-[12px] text-muted-foreground">
               {plan.steps.slice(0, 8).map((step) => (
-                <li key={step.key}>• {step.label}</li>
+                <li key={step.key}>
+                  • {step.title} <span className="opacity-70">({step.where})</span>
+                </li>
               ))}
             </ul>
           ) : null}
