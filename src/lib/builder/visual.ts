@@ -172,9 +172,16 @@ export function gradeVisual(measurements: ViewportMeasurement[]): VisualReport {
     };
 
   const findings = measurements.flatMap(gradeViewport);
-  const p0 = findings.filter((finding) => finding.severity === "p0").length;
-  const advice = findings.length - p0;
-  const score = Math.max(0, Math.min(100, 100 - p0 * 20 - advice * 3));
+  // One fault seen at eleven widths is still one fault, so each distinct problem
+  // is counted once. Otherwise a single small detail would sink every score.
+  const distinct = (severity: "p0" | "advice") =>
+    new Set(
+      findings
+        .filter((finding) => finding.severity === severity)
+        .map((finding) => `${finding.key}|${finding.detail.replace(/\d+px/g, "")}`),
+    ).size;
+  const p0 = distinct("p0");
+  const score = Math.max(0, Math.min(100, 100 - p0 * 20 - distinct("advice") * 3));
   return {
     score,
     passed: p0 === 0,
