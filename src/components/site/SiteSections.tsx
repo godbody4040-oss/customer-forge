@@ -38,21 +38,28 @@ const Shell = ({
   </section>
 );
 
-const Heading = ({ section }: { section: Section }) => (
-  <>
-    {section.heading ? (
-      <h2 className="font-display text-[28px] leading-tight font-semibold">{section.heading}</h2>
-    ) : null}
-    {section.subheading ? (
-      <p className="mt-2 text-[15px] text-muted-foreground">{section.subheading}</p>
-    ) : null}
-    {section.body ? (
-      <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
-        {section.body}
-      </p>
-    ) : null}
-  </>
-);
+/**
+ * Section copy, render-safe. Anything unfinished — stored data instead of
+ * words, a template instruction, an empty value — is dropped rather than shown.
+ */
+const Heading = ({ section }: { section: Section }) => {
+  const heading = safeText(section.heading);
+  const subheading = safeText(section.subheading);
+  const body = safeParagraph(section.body);
+  return (
+    <>
+      {heading ? (
+        <h2 className="font-display text-[28px] leading-tight font-semibold">{heading}</h2>
+      ) : null}
+      {subheading ? <p className="mt-2 text-[15px] text-muted-foreground">{subheading}</p> : null}
+      {body ? (
+        <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
+          {body}
+        </p>
+      ) : null}
+    </>
+  );
+};
 
 /** Buttons stored on a section. Internal links use the router, links out don't. */
 function SectionButtons({ site, components }: { site: Site; components: Component[] }) {
