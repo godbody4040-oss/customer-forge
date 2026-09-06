@@ -368,8 +368,6 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       }
     }
 
-
-
     const allSections = agentContext.pages.flatMap((page) =>
       page.sections.map((section) => ({ ...section, pageId: page.id })),
     );
