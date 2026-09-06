@@ -15,9 +15,9 @@
 import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
 import { trackConversion } from "@/lib/conversion";
 import { isValidMeasurementId, loadGa4 } from "@/lib/ga4";
+import { getPublicGaMeasurementId } from "@/lib/platform-settings.functions";
 
 const PRIVATE_PREFIXES = ["/app", "/admin", "/api", "/s/", "/p/", "/auth"];
 
