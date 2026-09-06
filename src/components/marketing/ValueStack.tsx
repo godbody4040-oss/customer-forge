@@ -43,7 +43,7 @@ export function ValueStack() {
                 </span>
                 {item}
               </span>
-              <span className="tnum shrink-0 text-[12px] text-muted-foreground line-through decoration-muted-foreground/50">
+              <span className="tnum shrink-0 text-[13px] text-muted-foreground line-through decoration-muted-foreground/50">
                 {elsewhere}
               </span>
             </li>
@@ -78,7 +78,7 @@ export function ValueStack() {
           <Panel className="p-4">
             <p className="tnum font-display text-[26px] leading-none font-semibold">
               <span className="gold-text">{usd(GROWTH_SYSTEM.monthlyPrice)}</span>
-              <span className="text-[12px] font-normal text-muted-foreground">/mo</span>
+              <span className="text-[13px] font-normal text-muted-foreground">/mo</span>
             </p>
             <p className="mt-1.5 text-[12.5px] text-primary">First month free</p>
             <p className="text-[11.5px] text-muted-foreground">

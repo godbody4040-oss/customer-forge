@@ -83,7 +83,7 @@ export function TrustSection() {
               <span className="grid size-9 place-items-center rounded-md border border-primary/35 bg-primary/10">
                 <Icon className="size-4 text-primary" aria-hidden="true" />
               </span>
-              <span className="tnum font-display text-[12px] font-semibold tracking-[0.16em] text-muted-foreground">
+              <span className="tnum font-display text-[13px] font-semibold tracking-[0.16em] text-muted-foreground">
                 {String(i + 1).padStart(2, "0")}
               </span>
             </div>
@@ -126,7 +126,7 @@ export function TrustSection() {
         </Link>
       </Panel>
 
-      <p className="mt-4 text-[12px] text-muted-foreground">
+      <p className="mt-4 text-[13px] text-muted-foreground">
         Questions before you start?{" "}
         <a className="text-primary hover:underline" href={revoraMailto(MAIL_SUBJECTS.inquiry)}>
           {REVORA.email}

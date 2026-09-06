@@ -181,7 +181,7 @@ function PortalPage() {
               </div>
             ) : (
               <form className="mt-5 space-y-3" onSubmit={submit}>
-                <label className="text-[12px] text-muted-foreground" htmlFor="portal-code">
+                <label className="text-[13px] text-muted-foreground" htmlFor="portal-code">
                   Portal code
                 </label>
                 <Input
@@ -195,11 +195,11 @@ function PortalPage() {
                     setCode(normalizePortalCode(event.target.value).slice(0, PORTAL_CODE_LENGTH))
                   }
                 />
-                {error ? <p className="text-[12px] text-destructive">{error}</p> : null}
+                {error ? <p className="text-[13px] text-destructive">{error}</p> : null}
                 <Button type="submit" variant="signal" className="w-full" disabled={!ready || busy}>
                   {busy ? "Joining…" : signedIn ? "Join workspace" : "Create account & join"}
                 </Button>
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-[13px] text-muted-foreground">
                   {signedIn === false
                     ? "You'll create your account first, then land straight back here to finish joining."
                     : "Codes are 10 characters. Ask your Revora contact if you don't have one."}
@@ -208,7 +208,7 @@ function PortalPage() {
             )}
 
             <div className="mt-6 border-t border-border pt-4">
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-[13px] text-muted-foreground">
                 Already have a portal?{" "}
                 <Link
                   to="/auth"
@@ -218,7 +218,7 @@ function PortalPage() {
                   Sign in
                 </Link>
               </p>
-              <p className="mt-1 text-[12px] text-muted-foreground">
+              <p className="mt-1 text-[13px] text-muted-foreground">
                 Not a client yet?{" "}
                 <Link to="/pricing" className="text-primary underline">
                   See pricing

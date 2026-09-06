@@ -270,10 +270,10 @@ export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" 
               required, nothing to install.
             </p>
             {status === "error" ? (
-              <p className="mt-2 text-[12px] text-destructive">{message}</p>
+              <p className="mt-2 text-[13px] text-destructive">{message}</p>
             ) : null}
             {status === "done" ? (
-              <p className="mt-2 text-[12px] text-primary">
+              <p className="mt-2 text-[13px] text-primary">
                 {emailed
                   ? "Sent — check your inbox for the full report."
                   : "Saved. Your results are below."}
@@ -354,7 +354,7 @@ export function GrowthAssessment({ mode = "assessment" }: { mode?: "assessment" 
             ) : null}
           </ul>
           {result.strengths.length > 0 ? (
-            <p className="mt-4 text-[12px] text-muted-foreground">
+            <p className="mt-4 text-[13px] text-muted-foreground">
               <span className="text-foreground">Already strong:</span>{" "}
               {result.strengths.slice(0, 4).join(" · ")}
             </p>

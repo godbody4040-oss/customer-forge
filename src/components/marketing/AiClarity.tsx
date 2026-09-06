@@ -92,7 +92,7 @@ export function AiClarity() {
             Watch it work <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </Button>
-        <p className="text-[12px] text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           AI drafts and suggests. <span className="gold-hl">You approve.</span> Every version is
           restorable.
         </p>
@@ -138,7 +138,7 @@ export function AutomationFlow() {
             <Panel className="card-lift h-full p-5">
               <div className="flex items-center justify-between">
                 <Icon className="size-5 text-primary" aria-hidden="true" />
-                <span className="tnum font-display text-[12px] text-muted-foreground">
+                <span className="tnum font-display text-[13px] text-muted-foreground">
                   0{index + 1}
                 </span>
               </div>
@@ -153,7 +153,7 @@ export function AutomationFlow() {
           </li>
         ))}
       </ol>
-      <p className="mt-5 text-[12px] text-muted-foreground">
+      <p className="mt-5 text-[13px] text-muted-foreground">
         Every automation is on from launch day and runs whether you're on a roof, under a sink or
         asleep.
       </p>

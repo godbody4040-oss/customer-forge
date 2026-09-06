@@ -340,7 +340,7 @@ function AuthPage() {
                 type="button"
                 onClick={() => void handleGoogle("switch")}
                 disabled={busy !== null}
-                className="mt-2 w-full cursor-pointer rounded-md py-2 text-[12px] text-primary underline-offset-4 transition-colors hover:underline disabled:opacity-60"
+                className="mt-2 w-full cursor-pointer rounded-md py-2 text-[13px] text-primary underline-offset-4 transition-colors hover:underline disabled:opacity-60"
               >
                 Use a different Google account
               </button>

@@ -99,7 +99,7 @@ export function ROICalculator() {
                   }}
                   className="mt-3 h-11 w-full cursor-pointer accent-[var(--primary)]"
                 />
-                <p id={`${id}-hint`} className="text-[12px] leading-snug text-muted-foreground">
+                <p id={`${id}-hint`} className="text-[13px] leading-snug text-muted-foreground">
                   {f.hint}
                 </p>
               </div>
@@ -138,13 +138,13 @@ export function ROICalculator() {
           <p className="tnum mt-1.5 font-display text-[clamp(1.6rem,4vw,2.2rem)] leading-none font-semibold text-primary">
             {currency(result.upside)}
           </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
             {state.lift} additional customers × {currency(state.value)} average value. That's{" "}
             {currency(result.annual)} across a year, before comparing it to a Revora subscription.
           </p>
         </div>
 
-        <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
+        <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
           Illustrative estimate only. Results vary by business, market, offer and execution. Revora
           does not guarantee specific results. These figures come only from the numbers you entered.
         </p>

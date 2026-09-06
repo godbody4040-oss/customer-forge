@@ -90,7 +90,7 @@ function GuidePage() {
         <h1 className="mt-4 font-display text-[clamp(1.6rem,4vw,2.3rem)] leading-tight font-semibold">
           {guide.title}
         </h1>
-        <p className="mt-2 text-[12px] text-muted-foreground/80">{guide.readMinutes} min read</p>
+        <p className="mt-2 text-[13px] text-muted-foreground/80">{guide.readMinutes} min read</p>
         <p className="mt-5 text-[15px] leading-relaxed text-muted-foreground">{guide.intro}</p>
 
         <ol className="mt-9 space-y-6">

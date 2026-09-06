@@ -87,7 +87,7 @@ function DemoBanner() {
   return (
     <div
       role="note"
-      className="flex items-start gap-2.5 rounded-md border border-accent/30 bg-accent/10 px-3 py-2.5 text-[12px] leading-relaxed text-accent"
+      className="flex items-start gap-2.5 rounded-md border border-accent/30 bg-accent/10 px-3 py-2.5 text-[13px] leading-relaxed text-accent"
     >
       <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <p>
@@ -204,7 +204,7 @@ function DemoDashboard() {
                     type="button"
                     aria-selected={tab === t.id}
                     onClick={() => setTab(t.id)}
-                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all duration-200 ${
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all duration-200 ${
                       tab === t.id
                         ? "border-primary/45 bg-primary/12 text-primary gold-glow"
                         : "border-border bg-elevated text-muted-foreground hover:-translate-y-px hover:border-primary/30 hover:text-foreground"
@@ -221,7 +221,7 @@ function DemoDashboard() {
                     type="button"
                     aria-pressed={range === r.id}
                     onClick={() => setRange(r.id)}
-                    className={`rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
+                    className={`rounded-md border px-2.5 py-1.5 text-[13px] transition-colors ${
                       range === r.id
                         ? "border-primary/40 bg-primary/12 text-primary"
                         : "border-border bg-elevated text-muted-foreground hover:text-foreground"
@@ -305,7 +305,7 @@ function DemoDashboard() {
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
                 <Panel className="min-w-0">
                   <SectionHeading eyebrow="The full flow" title="Visitor to repeat customer" />
-                  <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+                  <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                     Visitor → Lead → Quote → Follow-up → Booking → Customer → Review → Repeat. Tap
                     any step to open those demo records in the pipeline.
                   </p>
@@ -333,7 +333,7 @@ function DemoDashboard() {
                               <Pill tone={row.tone}>{row.count}</Pill>
                               {row.stage}
                             </span>
-                            <span className="tnum text-[12px] gold-hl">{usd(row.value)}</span>
+                            <span className="tnum text-[13px] gold-hl">{usd(row.value)}</span>
                           </div>
                           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-elevated">
                             <div
@@ -368,8 +368,8 @@ function DemoDashboard() {
                               <Icon className="size-3.5" aria-hidden="true" />
                             </span>
                             <div className="min-w-0">
-                              <p className="text-[12px] font-medium">{entry.title}</p>
-                              <p className="text-[12px] text-muted-foreground">{entry.detail}</p>
+                              <p className="text-[13px] font-medium">{entry.title}</p>
+                              <p className="text-[13px] text-muted-foreground">{entry.detail}</p>
                             </div>
                             <span className="tnum ml-auto shrink-0 text-[11px] text-muted-foreground">
                               {formatAgo(entry.minutesAgo)}
@@ -400,10 +400,10 @@ function DemoDashboard() {
                         className="card-lift rounded-md border border-border bg-elevated p-3"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-[12px] font-semibold">{stage.label}</p>
+                          <p className="text-[13px] font-semibold">{stage.label}</p>
                           <Pill tone={STAGE_TONE[stage.id]}>{count}</Pill>
                         </div>
-                        <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                        <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                           {stage.blurb}
                         </p>
                         <div className="mt-2">
@@ -453,10 +453,10 @@ function DemoDashboard() {
                           <span className="text-[13px] font-semibold">{lead.name}</span>
                           <Pill tone={STAGE_TONE[lead.stage]}>{stageLabel(lead.stage)}</Pill>
                         </div>
-                        <p className="mt-1 text-[12px] text-muted-foreground">
+                        <p className="mt-1 text-[13px] text-muted-foreground">
                           {lead.service} · {lead.city}
                         </p>
-                        <p className="tnum mt-1 text-[12px] text-muted-foreground">
+                        <p className="tnum mt-1 text-[13px] text-muted-foreground">
                           {lead.quoteHigh > 0
                             ? `${usd(lead.quoteLow)} – ${usd(lead.quoteHigh)}`
                             : "No quote yet"}{" "}
@@ -479,10 +479,10 @@ function DemoDashboard() {
                         <h2 className="font-display text-[16px] font-semibold">{selected.name}</h2>
                         <Pill tone={STAGE_TONE[selected.stage]}>{stageLabel(selected.stage)}</Pill>
                       </div>
-                      <p className="mt-1 text-[12px] text-muted-foreground">
+                      <p className="mt-1 text-[13px] text-muted-foreground">
                         {selected.service} · {selected.city}
                       </p>
-                      <dl className="mt-4 grid gap-2 text-[12px] sm:grid-cols-2">
+                      <dl className="mt-4 grid gap-2 text-[13px] sm:grid-cols-2">
                         <div className="rounded-md border border-border bg-elevated p-2.5">
                           <dt className="eyebrow">Source</dt>
                           <dd className="mt-1 text-muted-foreground">{selected.source}</dd>
@@ -506,7 +506,7 @@ function DemoDashboard() {
                           <dd className="mt-1 text-muted-foreground">{selected.emailMasked}</dd>
                         </div>
                       </dl>
-                      <p className="mt-3 rounded-md border border-border bg-elevated p-2.5 text-[12px] leading-relaxed text-muted-foreground">
+                      <p className="mt-3 rounded-md border border-border bg-elevated p-2.5 text-[13px] leading-relaxed text-muted-foreground">
                         <span className="font-semibold text-foreground">Note: </span>
                         {selected.note}
                       </p>
@@ -520,7 +520,7 @@ function DemoDashboard() {
                         ].map(({ icon: Icon, label }) => (
                           <span
                             key={label}
-                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-elevated px-2.5 py-1.5 text-[12px] text-muted-foreground"
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-elevated px-2.5 py-1.5 text-[13px] text-muted-foreground"
                           >
                             <Icon className="size-3.5" aria-hidden="true" />
                             {label}
@@ -549,7 +549,7 @@ function DemoDashboard() {
                               }`}
                             />
                             <div className="min-w-0">
-                              <p className="text-[12px] leading-relaxed">{entry.label}</p>
+                              <p className="text-[13px] leading-relaxed">{entry.label}</p>
                               <p className="text-[11px] text-muted-foreground">{entry.at}</p>
                             </div>
                           </li>
@@ -574,15 +574,15 @@ function DemoDashboard() {
                   >
                     <div className="min-w-0">
                       <p className="text-[13px] font-semibold">{booking.lead}</p>
-                      <p className="text-[12px] text-muted-foreground">
+                      <p className="text-[13px] text-muted-foreground">
                         {booking.service} · {booking.tech}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="tnum text-[12px]">
+                      <p className="tnum text-[13px]">
                         {workspace.formatAhead(booking.daysAhead)} · {booking.when}
                       </p>
-                      <p className="tnum text-[12px] text-muted-foreground">{usd(booking.value)}</p>
+                      <p className="tnum text-[13px] text-muted-foreground">{usd(booking.value)}</p>
                     </div>
                     <Pill
                       tone={
@@ -611,7 +611,7 @@ function DemoDashboard() {
                 title="Follow-up sequences that run themselves"
               />
               <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[620px] text-left text-[12px]">
+                <table className="w-full min-w-[620px] text-left text-[13px]">
                   <thead className="text-muted-foreground">
                     <tr>
                       <th className="pb-2 font-medium">Sequence</th>
@@ -677,7 +677,7 @@ function DemoDashboard() {
                         ))}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                       {review.text}
                     </p>
                     <p className="mt-1.5 text-[11px] text-muted-foreground">
@@ -708,7 +708,7 @@ function DemoDashboard() {
                     <li key={row.source}>
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="text-[13px] font-medium">{row.source}</span>
-                        <span className="tnum text-[12px] text-muted-foreground">
+                        <span className="tnum text-[13px] text-muted-foreground">
                           {visitors} visitors · {leadCount} leads
                         </span>
                       </div>

@@ -85,7 +85,7 @@ function About() {
               ].map(([value, label]) => (
                 <div key={label}>
                   <dt className="font-display text-[17px] leading-tight font-semibold">{value}</dt>
-                  <dd className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                  <dd className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                     {label}
                   </dd>
                 </div>
@@ -119,7 +119,7 @@ function About() {
                 A
               </span>
               <p className="mt-4 font-display text-[17px] font-semibold">{REVORA.founder.name}</p>
-              <p className="mt-1 text-[12px] text-muted-foreground">{REVORA.founder.role}</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">{REVORA.founder.role}</p>
               <p className="mt-4 text-[14px] leading-relaxed text-muted-foreground">
                 Revora was created with a simple goal: give businesses a better system for turning
                 online attention into real customers — without stitching five subscriptions

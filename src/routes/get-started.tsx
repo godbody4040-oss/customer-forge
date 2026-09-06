@@ -278,7 +278,7 @@ function GetStarted() {
             <li
               key={label}
               aria-current={step === index ? "step" : undefined}
-              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[12px] ${
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[13px] ${
                 step === index
                   ? "border-primary/50 bg-primary/10 font-semibold text-primary"
                   : step > index
@@ -300,7 +300,7 @@ function GetStarted() {
               <h2 className="font-display text-[17px] font-semibold">
                 Tell us about your business
               </h2>
-              <p className="mt-1 text-[12px] text-muted-foreground">
+              <p className="mt-1 text-[13px] text-muted-foreground">
                 This is what we use to build and configure your system — it takes about a minute.
               </p>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -362,7 +362,7 @@ function GetStarted() {
                   required
                 />
                 <div className="sm:col-span-2">
-                  <Label htmlFor="services" className="text-[12px]">
+                  <Label htmlFor="services" className="text-[13px]">
                     Primary services <span aria-hidden="true">*</span>
                   </Label>
                   <textarea
@@ -377,7 +377,7 @@ function GetStarted() {
                 </div>
               </div>
               {error ? (
-                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+                <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
                   {error}
                 </p>
               ) : null}
@@ -399,7 +399,7 @@ function GetStarted() {
                 <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
                   <div>
                     <p className="text-[14px] font-medium">{GROWTH_SYSTEM.name}</p>
-                    <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                    <p className="text-[13px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
                   </div>
                   <p className="tnum text-[15px] font-semibold whitespace-nowrap">
                     {usdExact(GROWTH_SYSTEM.setupPrice)}
@@ -408,7 +408,7 @@ function GetStarted() {
                 <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">
                   <div>
                     <p className="text-[14px] font-medium">Monthly subscription</p>
-                    <p className="text-[12px] text-muted-foreground">
+                    <p className="text-[13px] text-muted-foreground">
                       {GROWTH_SYSTEM.monthlyLabel}
                     </p>
                   </div>
@@ -416,7 +416,7 @@ function GetStarted() {
                     <p className="tnum text-[15px] font-semibold whitespace-nowrap text-primary">
                       $0 for 30 days
                     </p>
-                    <p className="tnum text-[12px] whitespace-nowrap text-muted-foreground">
+                    <p className="tnum text-[13px] whitespace-nowrap text-muted-foreground">
                       then {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month
                     </p>
                   </div>
@@ -428,10 +428,10 @@ function GetStarted() {
                   </p>
                 </div>
               </div>
-              <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
+              <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
                 {GROWTH_SYSTEM.explainer} Cancel anytime. No hidden fees.
               </p>
-              <dl className="mt-5 grid gap-2 border-t border-border pt-4 text-[12px] sm:grid-cols-2">
+              <dl className="mt-5 grid gap-2 border-t border-border pt-4 text-[13px] sm:grid-cols-2">
                 <Summary label="Name" value={intake.fullName} />
                 <Summary label="Business" value={intake.businessName} />
                 <Summary label="Email" value={intake.email} />
@@ -454,7 +454,7 @@ function GetStarted() {
                   <span className="gold-text">Not paying yet?</span> Start your{" "}
                   {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
                 </p>
-                <p className="mt-1 text-[12px] text-muted-foreground">
+                <p className="mt-1 text-[13px] text-muted-foreground">
                   Your business info is saved and your workspace opens instantly — website builder,
                   leads, quotes, bookings, automations and analytics, all unlocked for{" "}
                   {GROWTH_SYSTEM.fullAccessTrialDays} days. No card required.
@@ -497,7 +497,7 @@ function GetStarted() {
                 ) : !signedIn ? (
                   <div className="mt-4 rounded-md border border-border bg-muted/30 p-4">
                     <p className="text-[13px] font-medium">Create your Revora account to pay</p>
-                    <p className="mt-1 text-[12px] text-muted-foreground">
+                    <p className="mt-1 text-[13px] text-muted-foreground">
                       Your details are saved on this device, so nothing is re-entered. After
                       creating your account you'll come straight back here to complete payment.
                     </p>
@@ -519,7 +519,7 @@ function GetStarted() {
                     <p className="text-[13px] font-medium">
                       Your workspace already has an active Revora subscription.
                     </p>
-                    <p className="mt-1 text-[12px] text-muted-foreground">
+                    <p className="mt-1 text-[13px] text-muted-foreground">
                       There's nothing else to pay here. Manage your plan, payment method or invoices
                       from billing.
                     </p>
@@ -552,7 +552,7 @@ function GetStarted() {
                 )}
 
                 {step === 2 && error ? (
-                  <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+                  <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
                     {error}
                   </p>
                 ) : null}
@@ -564,7 +564,7 @@ function GetStarted() {
                         <span className="gold-text">Not paying yet?</span> Start your{" "}
                         {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
                       </p>
-                      <p className="mt-1 text-[12px] text-muted-foreground">
+                      <p className="mt-1 text-[13px] text-muted-foreground">
                         Your business info is saved and your workspace opens instantly — website
                         builder, leads, quotes, bookings, automations and analytics, all unlocked
                         for {GROWTH_SYSTEM.fullAccessTrialDays} days. No card required.
@@ -605,7 +605,7 @@ function GetStarted() {
           ) : null}
         </div>
 
-        <p className="mt-8 text-[12px] text-muted-foreground">
+        <p className="mt-8 text-[13px] text-muted-foreground">
           Questions before you start? {REVORA.phoneDisplay} ·{" "}
           <a className="text-primary hover:underline" href={revoraMailto("Revora Growth System")}>
             {REVORA.email}
@@ -637,7 +637,7 @@ function Field({
   const id = label.toLowerCase().replace(/[^a-z]+/g, "-");
   return (
     <div>
-      <Label htmlFor={id} className="text-[12px]">
+      <Label htmlFor={id} className="text-[13px]">
         {label} {required ? <span aria-hidden="true">*</span> : null}
       </Label>
       <Input

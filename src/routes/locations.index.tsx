@@ -100,7 +100,7 @@ function LocationsIndex() {
                   <MapPin className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                   <span>
                     <span className="block text-[14px] font-medium">{location.city}, NC</span>
-                    <span className="mt-1 block text-[12px] text-muted-foreground">
+                    <span className="mt-1 block text-[13px] text-muted-foreground">
                       {location.county} · {location.nearby.slice(0, 3).join(", ")}
                     </span>
                   </span>

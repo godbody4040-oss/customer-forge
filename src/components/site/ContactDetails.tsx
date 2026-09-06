@@ -7,12 +7,7 @@
  */
 import { Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  emailDisplay,
-  emailLink,
-  phoneDisplay,
-  phoneLink,
-} from "@/lib/builder/presentation";
+import { emailDisplay, emailLink, phoneDisplay, phoneLink } from "@/lib/builder/presentation";
 
 export type ContactInfo = {
   phone?: string | null;
@@ -51,7 +46,7 @@ export function DirectContact({
 
   return (
     <div className="rounded-lg border border-border bg-elevated/60 p-3">
-      <p className="text-[12px] text-muted-foreground">{label}</p>
+      <p className="text-[13px] text-muted-foreground">{label}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {phone && phoneHref ? (
           <Button asChild size="sm" variant="outline">

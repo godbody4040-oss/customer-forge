@@ -71,7 +71,7 @@ function StatesIndex() {
       <SiteHeader />
       <main>
         <section className="mx-auto max-w-6xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20">
-          <p className="text-[12px] font-semibold tracking-wide text-primary uppercase">
+          <p className="text-[13px] font-semibold tracking-wide text-primary uppercase">
             Nationwide · all 50 states
           </p>
           <h1 className="mt-3 max-w-3xl font-display text-[clamp(1.7rem,4vw,2.6rem)] leading-tight font-semibold">
@@ -110,7 +110,7 @@ function StatesIndex() {
                   <MapPin className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                   <span>
                     <span className="block text-[14px] font-medium">{state.name}</span>
-                    <span className="mt-1 block text-[12px] text-muted-foreground">
+                    <span className="mt-1 block text-[13px] text-muted-foreground">
                       {state.metros.slice(0, 3).join(" · ")}
                     </span>
                   </span>

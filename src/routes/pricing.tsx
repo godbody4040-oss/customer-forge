@@ -136,7 +136,7 @@ function Pricing() {
                     {usdExact(setupPrice)}
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Setup</p>
-                  <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                  <p className="text-[13px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
                 </div>
                 <div>
                   <p className="tnum font-display text-[40px] leading-none font-semibold">
@@ -144,7 +144,7 @@ function Pricing() {
                     <span className="text-[14px] font-normal text-muted-foreground">/month</span>
                   </p>
                   <p className="mt-1.5 text-[13px] font-medium">Ongoing</p>
-                  <p className="max-w-xs text-[12px] text-muted-foreground">
+                  <p className="max-w-xs text-[13px] text-muted-foreground">
                     {GROWTH_SYSTEM.monthlyLabel}
                   </p>
                 </div>
@@ -168,10 +168,10 @@ function Pricing() {
               <div className="mt-3">
                 <FreeAccessBanner />
               </div>
-              <p className="mt-2.5 text-[12px] text-muted-foreground">
+              <p className="mt-2.5 text-[13px] text-muted-foreground">
                 {GROWTH_SYSTEM.ctaSecondary}
               </p>
-              <p className="mt-4 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
+              <p className="mt-4 flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                 {GROWTH_SYSTEM.explainer}
               </p>

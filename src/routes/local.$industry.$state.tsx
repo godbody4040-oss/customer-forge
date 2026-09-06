@@ -142,7 +142,7 @@ function LocalIndustryStatePage() {
               <Link to="/pricing">See pricing</Link>
             </Button>
           </div>
-          <p className="mt-3 text-[12px] text-muted-foreground">
+          <p className="mt-3 text-[13px] text-muted-foreground">
             {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup · first month free · then{" "}
             {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month · cancel anytime
           </p>

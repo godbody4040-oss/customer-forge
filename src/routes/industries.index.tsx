@@ -68,7 +68,7 @@ function Industries() {
                   className="panel card-lift block h-full p-4 transition-colors hover:border-primary/40"
                 >
                   <p className="font-display text-[14px] font-semibold">{i.name}</p>
-                  <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                     {i.emphasis}
                   </p>
                 </Link>

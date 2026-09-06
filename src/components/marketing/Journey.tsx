@@ -20,7 +20,7 @@ export function CustomerJourney() {
       {JOURNEY.map((item, index) => (
         <li key={item.step} className="relative">
           <Panel className="h-full p-4">
-            <span className="tnum font-display text-[12px] font-semibold text-primary">
+            <span className="tnum font-display text-[13px] font-semibold text-primary">
               {String(index + 1).padStart(2, "0")}
             </span>
             <h3 className="mt-2 font-display text-[14px] leading-snug font-semibold">

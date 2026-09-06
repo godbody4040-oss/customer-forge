@@ -60,7 +60,7 @@ function GuidesIndex() {
               <span className="mt-1 block text-[14px] text-muted-foreground">
                 {guide.description}
               </span>
-              <span className="mt-2 block text-[12px] text-muted-foreground/80">
+              <span className="mt-2 block text-[13px] text-muted-foreground/80">
                 {guide.readMinutes} min read
               </span>
             </Link>

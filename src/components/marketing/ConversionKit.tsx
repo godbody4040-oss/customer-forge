@@ -163,7 +163,7 @@ function ExitIntentOffer() {
           </Button>
           <button
             type="button"
-            className="cursor-pointer text-[12px] text-muted-foreground underline-offset-2 hover:underline"
+            className="cursor-pointer text-[13px] text-muted-foreground underline-offset-2 hover:underline"
             onClick={() => setOpen(false)}
           >
             Keep looking around
@@ -220,7 +220,7 @@ export function LongTermValue() {
           </Panel>
         ))}
       </div>
-      <p className="mt-5 text-[12px] text-muted-foreground">
+      <p className="mt-5 text-[13px] text-muted-foreground">
         Month one launches the system. Every month after that it gets more pages ranked, more leads
         followed up and more reviews collected —{" "}
         <span className="gold-hl">that's why clients stay</span>.
