@@ -18,7 +18,12 @@ import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
 import { readSectionEffect, sectionEffectClass } from "@/lib/site-effects";
 import { businessFacts, factsAddressLine } from "@/lib/builder/facts";
-import { phoneDisplay, phoneLink } from "@/lib/builder/presentation";
+import {
+  phoneDisplay,
+  phoneLink,
+  safeParagraph,
+  safeText,
+} from "@/lib/builder/presentation";
 
 type Site = NonNullable<PublicSite>;
 type Section = NonNullable<Site["content"]>["sections"][number];
@@ -526,7 +531,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
     case "policy":
     case "lead_magnet":
     default:
-      if (!section.heading && !section.body) return null;
+      if (!safeText(section.heading) && !safeParagraph(section.body)) return null;
       return (
         <Shell>
           <Heading section={section} />
