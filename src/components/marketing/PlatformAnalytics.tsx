@@ -15,9 +15,9 @@
 import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
 import { trackConversion } from "@/lib/conversion";
 import { isValidMeasurementId, loadGa4 } from "@/lib/ga4";
+import { getPublicGaMeasurementId } from "@/lib/platform-settings.functions";
 
 const PRIVATE_PREFIXES = ["/app", "/admin", "/api", "/s/", "/p/", "/auth"];
 
@@ -28,18 +28,13 @@ export function PlatformAnalytics() {
   const path = useRouterState({ select: (state) => state.location.pathname });
   const lastTracked = useRef<string | null>(null);
 
-  // Load the configured GA4 property once per browser session.
+  // Load the configured GA4 property once per browser session. The ID comes
+  // from the backend — the settings table itself is not publicly readable.
   useEffect(() => {
     let cancelled = false;
-    void supabase
-      .from("platform_settings")
-      .select("ga_measurement_id")
-      .eq("id", "default")
-      .maybeSingle()
-      .then(({ data }) => {
-        const id = data?.ga_measurement_id;
-        if (!cancelled && isValidMeasurementId(id)) loadGa4(id);
-      });
+    void getPublicGaMeasurementId().then((id) => {
+      if (!cancelled && isValidMeasurementId(id)) loadGa4(id);
+    });
     return () => {
       cancelled = true;
     };
