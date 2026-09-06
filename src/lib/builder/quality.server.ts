@@ -16,7 +16,10 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
   const client = db as unknown as {
     from: (table: string) => {
       select: (columns: string) => {
-        eq: (column: string, value: unknown) => Promise<{ data: unknown[] | null }> & {
+        eq: (
+          column: string,
+          value: unknown,
+        ) => Promise<{ data: unknown[] | null }> & {
           eq: (column: string, value: unknown) => Promise<{ data: unknown[] | null }>;
           maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
         };

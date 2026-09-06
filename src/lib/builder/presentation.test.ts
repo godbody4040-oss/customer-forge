@@ -116,16 +116,20 @@ describe("place and address formatting", () => {
   });
 
   it("builds one clean address line and omits unknown parts", () => {
-    expect(addressDisplay({ address: "12 Oak Ave", city: "new york", state: "ny", zip: "10001" })).toBe(
-      "12 Oak Ave, New York, NY 10001",
-    );
+    expect(
+      addressDisplay({ address: "12 Oak Ave", city: "new york", state: "ny", zip: "10001" }),
+    ).toBe("12 Oak Ave, New York, NY 10001");
     expect(addressDisplay({})).toBeNull();
   });
 });
 
 describe("hours formatting", () => {
   it("renders a day map in order, never as an object", () => {
-    const value = hoursDisplay({ sun: "Closed", mon: "8:00 AM - 6:00 PM", sat: "9:00 AM - 4:00 PM" });
+    const value = hoursDisplay({
+      sun: "Closed",
+      mon: "8:00 AM - 6:00 PM",
+      sat: "9:00 AM - 4:00 PM",
+    });
     expect(value).toBe("Monday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 4:00 PM\nSunday: Closed");
   });
 
@@ -186,7 +190,10 @@ describe("business facts", () => {
 
 describe("quality gate", () => {
   const base = (overrides: Partial<QualityInput> = {}): QualityInput => ({
-    facts: businessFacts({ phone: "9196226620", email: "owner@elitemobile.co", city: "New York" }, "Elite Mobile Cars"),
+    facts: businessFacts(
+      { phone: "9196226620", email: "owner@elitemobile.co", city: "New York" },
+      "Elite Mobile Cars",
+    ),
     raw: { phone: "9196226620", email: "owner@elitemobile.co" },
     pages: [{ slug: "home", title: "Home", sections: 6 }],
     texts: ["Premium mobile detailing, wherever you park."],
@@ -196,7 +203,12 @@ describe("quality gate", () => {
     galleryCount: 0,
     showsReviews: false,
     showsGallery: false,
-    metadata: [{ title: "Elite Mobile Cars — Mobile detailing in New York", description: "Detailing that comes to you." }],
+    metadata: [
+      {
+        title: "Elite Mobile Cars — Mobile detailing in New York",
+        description: "Detailing that comes to you.",
+      },
+    ],
     ...overrides,
   });
 
@@ -214,9 +226,7 @@ describe("quality gate", () => {
   });
 
   it("blocks publishing on malformed contact details", () => {
-    const report = auditWebsite(
-      base({ raw: { phone: "96226620", email: "uauauauuwwuu" } }),
-    );
+    const report = auditWebsite(base({ raw: { phone: "96226620", email: "uauauauuwwuu" } }));
     expect(report.blockers.map((b) => b.key)).toEqual(
       expect.arrayContaining(["invalid_phone", "invalid_email"]),
     );
@@ -253,7 +263,12 @@ describe("quality gate", () => {
     );
     expect(report.blockers).toHaveLength(0);
     expect(report.issues.map((i) => i.key)).toEqual(
-      expect.arrayContaining(["nav_duplicate", "nav_too_long", "duplicate_metadata", "missing_description"]),
+      expect.arrayContaining([
+        "nav_duplicate",
+        "nav_too_long",
+        "duplicate_metadata",
+        "missing_description",
+      ]),
     );
     expect(report.ready).toBe(false);
   });

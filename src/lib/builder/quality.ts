@@ -180,9 +180,18 @@ function structureIssues(input: QualityInput): QualityIssue[] {
     );
   }
   const seen = new Set<string>();
-  if (labels.some((label) => (seen.has(label.toLowerCase()) ? true : (seen.add(label.toLowerCase()), false)))) {
+  if (
+    labels.some((label) =>
+      seen.has(label.toLowerCase()) ? true : (seen.add(label.toLowerCase()), false),
+    )
+  ) {
     found.push(
-      issue("nav_duplicate", "advice", "The menu repeats the same link.", "Remove the duplicate page."),
+      issue(
+        "nav_duplicate",
+        "advice",
+        "The menu repeats the same link.",
+        "Remove the duplicate page.",
+      ),
     );
   }
   if (labels.length > 7) {

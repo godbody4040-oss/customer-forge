@@ -156,16 +156,67 @@ export function emailLink(value: unknown): string | null {
 
 const SMALL_WORDS = new Set(["and", "of", "the", "de", "la"]);
 const US_STATE_CODES = new Set([
-  "al","ak","az","ar","ca","co","ct","de","fl","ga","hi","id","il","in","ia","ks","ky","la","me",
-  "md","ma","mi","mn","ms","mo","mt","ne","nv","nh","nj","nm","ny","nc","nd","oh","ok","or","pa",
-  "ri","sc","sd","tn","tx","ut","vt","va","wa","wv","wi","wy","dc",
+  "al",
+  "ak",
+  "az",
+  "ar",
+  "ca",
+  "co",
+  "ct",
+  "de",
+  "fl",
+  "ga",
+  "hi",
+  "id",
+  "il",
+  "in",
+  "ia",
+  "ks",
+  "ky",
+  "la",
+  "me",
+  "md",
+  "ma",
+  "mi",
+  "mn",
+  "ms",
+  "mo",
+  "mt",
+  "ne",
+  "nv",
+  "nh",
+  "nj",
+  "nm",
+  "ny",
+  "nc",
+  "nd",
+  "oh",
+  "ok",
+  "or",
+  "pa",
+  "ri",
+  "sc",
+  "sd",
+  "tn",
+  "tx",
+  "ut",
+  "vt",
+  "va",
+  "wa",
+  "wv",
+  "wi",
+  "wy",
+  "dc",
 ]);
 
 const titleWord = (word: string, index: number): string => {
   const lower = word.toLowerCase();
   if (index > 0 && SMALL_WORDS.has(lower)) return lower;
   if (US_STATE_CODES.has(lower) && word.length === 2) return lower.toUpperCase();
-  return lower.replace(/(^|[-'’])([a-z])/g, (_m, sep: string, ch: string) => sep + ch.toUpperCase());
+  return lower.replace(
+    /(^|[-'’])([a-z])/g,
+    (_m, sep: string, ch: string) => sep + ch.toUpperCase(),
+  );
 };
 
 /**

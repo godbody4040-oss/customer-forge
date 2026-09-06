@@ -528,10 +528,7 @@ export const getBuildReadiness = createServerFn({ method: "POST" })
     // Website quality gate: malformed contact details, unfinished copy, stored
     // data printed as words or unsupported claims block a publish outright.
     const { auditWorkspaceWebsite } = await import("@/lib/builder/quality.server");
-    const quality = await auditWorkspaceWebsite(
-      context.supabase as never,
-      data.organizationId,
-    );
+    const quality = await auditWorkspaceWebsite(context.supabase as never, data.organizationId);
     return {
       gaps,
       requiredGaps: gaps.filter((g) => g.required),
