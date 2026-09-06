@@ -107,7 +107,7 @@ export function SiteHeader() {
                 to={item.to}
                 {...("hash" in item ? { hash: item.hash } : {})}
                 onClick={() => setOpen(false)}
-                className="py-2.5 text-sm text-muted-foreground"
+                className="flex min-h-11 items-center py-2.5 text-sm text-muted-foreground"
                 activeProps={{ className: "text-foreground" }}
               >
                 {item.label}
