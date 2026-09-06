@@ -17,6 +17,8 @@ import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
 import { readSectionEffect, sectionEffectClass } from "@/lib/site-effects";
+import { businessFacts, factsAddressLine } from "@/lib/builder/facts";
+import { phoneDisplay, phoneLink } from "@/lib/builder/presentation";
 
 type Site = NonNullable<PublicSite>;
 type Section = NonNullable<Site["content"]>["sections"][number];
