@@ -67,10 +67,9 @@ export function heroSubheadline(facts: CopyFacts, playbook: IndustryPlaybook): s
         .map((service) => service.name.toLowerCase())
         .join(", ")
     : playbook.terminology.slice(0, 3).join(", ");
-  return tidy(where ? `${work} across ${where}. ${nextStep(playbook)}` : `${work}. ${nextStep(playbook)}`).slice(
-    0,
-    200,
-  );
+  return tidy(
+    where ? `${work} across ${where}. ${nextStep(playbook)}` : `${work}. ${nextStep(playbook)}`,
+  ).slice(0, 200);
 }
 
 /** The next step sentence, matched to what this trade wants visitors to do. */
@@ -118,7 +117,10 @@ export function sectionCopy(
 
   switch (kind) {
     case "hero":
-      return { heading: heroHeadline(facts, playbook), subheading: heroSubheadline(facts, playbook) };
+      return {
+        heading: heroHeadline(facts, playbook),
+        subheading: heroSubheadline(facts, playbook),
+      };
     case "intro":
       return {
         heading: facts.name ? `About ${facts.name}` : "About us",
@@ -154,7 +156,10 @@ export function sectionCopy(
     case "pricing":
       return { heading: "Pricing" };
     case "quote":
-      return { heading: "Request a quote", subheading: "Tell us what you need and we'll price it." };
+      return {
+        heading: "Request a quote",
+        subheading: "Tell us what you need and we'll price it.",
+      };
     case "booking":
       return { heading: "Book an appointment" };
     case "contact":
@@ -164,7 +169,10 @@ export function sectionCopy(
       };
     case "cta":
     case "sticky_cta":
-      return { heading: nextStep(playbook), subheading: where ? `${tidy(playbook.label)} in ${where}` : undefined };
+      return {
+        heading: nextStep(playbook),
+        subheading: where ? `${tidy(playbook.label)} in ${where}` : undefined,
+      };
     default:
       return { heading: tidy(kind.replace(/_/g, " ")) };
   }

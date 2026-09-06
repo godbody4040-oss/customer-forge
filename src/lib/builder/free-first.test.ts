@@ -143,10 +143,7 @@ describe("free-first builder — works with zero AI providers", () => {
   });
 
   it("asks for a contact detail instead of inventing one", () => {
-    const plan = buildDeterministicPlan(
-      context({ phone: null, email: null }),
-      "add a call button",
-    );
+    const plan = buildDeterministicPlan(context({ phone: null, email: null }), "add a call button");
     expect(plan.questions.length).toBeLessThanOrEqual(1);
     expect(JSON.stringify(plan.actions)).not.toMatch(/tel:\d/);
   });

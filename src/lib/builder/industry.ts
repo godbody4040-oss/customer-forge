@@ -158,7 +158,11 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       font: "sans",
       backdrop: "none",
     },
-    ["How long does a replacement take?", "Do you service my brand?", "Do you offer service plans?"],
+    [
+      "How long does a replacement take?",
+      "Do you service my brand?",
+      "Do you offer service plans?",
+    ],
     URGENT_TRADE,
   ),
   playbook(
@@ -539,8 +543,9 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
 ];
 
 /** The fallback playbook: safe, conversion-shaped, industry-neutral. */
-export const GENERIC_PLAYBOOK =
-  INDUSTRY_PLAYBOOKS.find((entry) => entry.slug === "local_business")!;
+export const GENERIC_PLAYBOOK = INDUSTRY_PLAYBOOKS.find(
+  (entry) => entry.slug === "local_business",
+)!;
 
 const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9 ]+/g, " ");
 

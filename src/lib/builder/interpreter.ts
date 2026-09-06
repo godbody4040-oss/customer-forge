@@ -28,14 +28,7 @@ export type BuilderVerb =
   | "fix";
 
 export type StyleMood =
-  | "professional"
-  | "premium"
-  | "minimal"
-  | "bold"
-  | "friendly"
-  | "modern"
-  | "dark"
-  | "bright";
+  "professional" | "premium" | "minimal" | "bold" | "friendly" | "modern" | "dark" | "bright";
 
 export type BuilderIntent = {
   /** The owner's words, whitespace-collapsed. Never used as a claim. */

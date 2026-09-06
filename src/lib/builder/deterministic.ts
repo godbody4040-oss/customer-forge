@@ -205,7 +205,12 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
     }
     if (intent.verbs.includes("rewrite") && existing) {
       const copy = sectionCopy(kind, facts, playbook);
-      push({ type: "set_section_text", sectionId: existing.id, field: "heading", value: copy.heading });
+      push({
+        type: "set_section_text",
+        sectionId: existing.id,
+        field: "heading",
+        value: copy.heading,
+      });
       if (copy.subheading)
         push({
           type: "set_section_text",
@@ -243,7 +248,9 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
       notes.push(`There is already a page at /${slug}, so it was left alone.`);
       continue;
     }
-    const kind = context.pageKinds.includes("services") ? "services" : (context.pageKinds[0] ?? "custom");
+    const kind = context.pageKinds.includes("services")
+      ? "services"
+      : (context.pageKinds[0] ?? "custom");
     push({
       type: "add_page",
       kind,
@@ -334,7 +341,16 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
     ? `Here's what I'll change — ${actions.length} update${actions.length === 1 ? "" : "s"} to your ${summaryBits.join(", ") || "website"}. Nothing goes live until you approve it.`
     : "I couldn't find anything to change from that on its own — tell me what you'd like different and I'll do it.";
 
-  return { reply, summary, actions, questions: questions.slice(0, 1), notes, coverage, trace, intent };
+  return {
+    reply,
+    summary,
+    actions,
+    questions: questions.slice(0, 1),
+    notes,
+    coverage,
+    trace,
+    intent,
+  };
 }
 
 /** True when the deterministic builder handled the whole request on its own. */
