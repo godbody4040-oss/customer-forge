@@ -137,10 +137,16 @@ export function sectionCopy(
         heading: "How it works",
         subheading: `${tidy(playbook.terminology[0] ?? "work")} from first contact to finished job`,
       };
+    // Reassurance sections deliberately carry NO claims. Licences, insurance,
+    // guarantees and ratings are facts Revora cannot verify, so the owner fills
+    // them in themselves rather than the builder asserting them.
     case "benefits":
-      return { heading: "Why work with us", subheading: playbook.trust.slice(0, 3).join(" · ") };
+      return {
+        heading: "Why work with us",
+        subheading: list.length ? list.slice(0, 4).join(" · ") : undefined,
+      };
     case "trust_bar":
-      return { heading: playbook.trust.slice(0, 4).join(" · ") };
+      return { heading: "Why customers choose us" };
     case "area":
     case "areas":
       return {

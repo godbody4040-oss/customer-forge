@@ -1,25 +1,38 @@
 /**
  * REVORA FREE-FIRST BUILDER — the website engine that needs no AI provider.
  *
- * This is the core of Revora's builder. It takes an owner's plain-English
- * request and the live workspace picture, and returns validated website actions
- * using only:
+ * This is the core of Revora's builder, and the primary brain. It takes an
+ * owner's plain-English request and the live workspace picture, and returns
+ * validated website actions using only:
  *   • the industry playbooks (what a good site for this trade looks like)
+ *   • the design decision engine (one coordinated direction, not random tweaks)
  *   • the existing section, page, theme and effect libraries
  *   • the workspace's own business facts
  *
+ * Pipeline: NORMALISE → INTENT → CONTEXT → ENTITY RESOLUTION → DECOMPOSE →
+ * CAPABILITY MATCH → PLAN → SELF-CHECK. Execution, verification and rollback
+ * stay where they already live, in `applyWebsiteChanges`.
+ *
  * It costs nothing to run, works when every AI provider is down, and never
- * invents a fact. A language model is optional polish on top — never a
- * requirement, and never something the customer pays for.
+ * invents a fact. An outside model is optional polish — never a requirement,
+ * and never something the customer pays for.
  */
 
 import type { AgentAction } from "@/lib/site-agent";
 import type { AgentContext } from "@/lib/site-agent.server";
-import { interpret, type BuilderIntent, type StyleMood } from "./interpreter";
+import { interpret, type BuilderIntent } from "./interpreter";
 import { playbookFor, type IndustryPlaybook } from "./industry";
-import { ctaTarget, pageSeo, place, sectionCopy, type CopyFacts } from "./copy";
+import { designDecision, hierarchySort } from "./design";
+import { ctaTarget, faqQuestions, pageSeo, place, sectionCopy, type CopyFacts } from "./copy";
 
+/** Hero layout names the renderer actually supports, by how roomy they are. */
+const HERO_LAYOUT = { full: "banner", standard: "split", compact: "stacked" } as const;
+
+/** A single tweak stays small; a whole-site build is allowed to be big. */
 const MAX_ACTIONS = 40;
+const MAX_ACTIONS_WHOLE_SITE = 160;
+
+export type BuilderTask = { title: string; done: boolean };
 
 export type DeterministicPlan = {
   reply: string;
@@ -31,11 +44,28 @@ export type DeterministicPlan = {
   coverage: "full" | "partial" | "none";
   trace: string[];
   intent: BuilderIntent;
+  /** The atomic jobs this request was broken into, and whether each landed. */
+  tasks: BuilderTask[];
+  /**
+   * True only when the request genuinely needs generative judgement Revora
+   * cannot supply safely on its own (free-form storytelling, reading an
+   * uploaded image's content, an ask with no recognisable website work).
+   */
+  requiresExternalReasoning: boolean;
+  /** Why, in one line, for the internal trace. Never shown as a limitation. */
+  externalReason: string | null;
 };
 
 type Ctx = AgentContext;
 type Page = Ctx["pages"][number];
 type Section = Page["sections"][number];
+
+export type BuilderOptions = {
+  /** Earlier messages from the owner, oldest first — used for "it"/"that". */
+  history?: string[];
+  /** What the owner attached, by kind, so the plan can account for it. */
+  attachments?: { kind: string; name: string }[];
+};
 
 const factsOf = (context: Ctx): CopyFacts => ({
   name: context.business.name,
@@ -75,100 +105,158 @@ const sectionsOf = (page: Page | null) => (page ? page.sections : []);
 const findSection = (page: Page | null, kind: string): Section | undefined =>
   sectionsOf(page).find((section) => section.kind === kind);
 
-/* --------------------------------- design --------------------------------- */
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
 
-/** Mood → design tokens, layered over the trade's own palette. */
-function themeForMood(playbook: IndustryPlaybook, moods: StyleMood[]) {
-  const patch: Record<string, string> = {
-    primary_color: playbook.visual.primary,
-    secondary_color: playbook.visual.secondary,
-    accent_color: playbook.visual.accent,
-    font_preference: playbook.visual.font,
-  };
-  let backdrop = playbook.visual.backdrop;
-
-  for (const mood of moods) {
-    if (mood === "premium") {
-      patch["secondary_color"] = "#0b0b12";
-      patch["accent_color"] = "#d4af37";
-      patch["font_preference"] = "serif";
-      backdrop = "nebula";
-    }
-    if (mood === "professional") {
-      patch["font_preference"] = "sans";
-      backdrop = "none";
-    }
-    if (mood === "minimal") backdrop = "none";
-    if (mood === "bold") {
-      backdrop = "gradient_mesh";
-      patch["accent_color"] = "#f97316";
-    }
-    if (mood === "modern") backdrop = "grid";
-    if (mood === "dark") patch["secondary_color"] = "#08080d";
-    if (mood === "bright") patch["secondary_color"] = "#f8fafc";
-    if (mood === "friendly") patch["font_preference"] = "sans";
-  }
-  return { patch, backdrop };
-}
+const titleCase = (value: string) =>
+  value.replace(/\b\w/g, (character) => character.toUpperCase()).slice(0, 120);
 
 /* -------------------------------- compiler -------------------------------- */
 
 /**
  * Compiles a request into website actions. Always returns a usable plan: when
- * nothing specific is recognised, `coverage` is `none` and the caller decides
- * whether to ask the optional writer or reply plainly.
+ * nothing specific is recognised, `coverage` is `none`, `requiresExternalReasoning`
+ * is true, and the caller decides whether to ask the optional writer.
  */
-export function buildDeterministicPlan(context: Ctx, instruction: string): DeterministicPlan {
-  const intent = interpret(instruction);
+export function buildDeterministicPlan(
+  context: Ctx,
+  instruction: string,
+  options: BuilderOptions = {},
+): DeterministicPlan {
+  const intent = interpret(instruction, options.history ?? []);
   const playbook = intent.industry ?? playbookFor(context.business.industry, instruction);
   const facts = factsOf(context);
   const actions: AgentAction[] = [];
   const notes: string[] = [];
   const questions: string[] = [];
   const trace: string[] = [`Understood the request without an AI provider (${playbook.label}).`];
+  const tasks: BuilderTask[] = [];
   const done: string[] = [];
   const page = targetPage(context, intent);
   const allowedSections = new Set(context.sectionKinds);
+  const attachments = options.attachments ?? [];
 
+  const wholeSite = intent.wholeSite || intent.verbs.includes("build");
+  const cap = wholeSite ? MAX_ACTIONS_WHOLE_SITE : MAX_ACTIONS;
   const push = (action: AgentAction) => {
-    if (actions.length < MAX_ACTIONS) actions.push(action);
+    if (actions.length < cap) actions.push(action);
+  };
+  const task = (title: string, work: () => boolean) => {
+    const before = actions.length;
+    const claimed = work();
+    tasks.push({ title, done: claimed || actions.length > before });
   };
 
-  /* --- whole-site build or refresh: design + missing sections + SEO --- */
-  const wantsDesign =
-    intent.wholeSite || intent.verbs.includes("restyle") || intent.moods.length > 0;
+  /* --- design: one coordinated direction, never isolated tweaks --- */
+  const wantsDesign = wholeSite || intent.verbs.includes("restyle") || intent.moods.length > 0;
+  const design = designDecision(playbook, intent.moods);
 
   if (wantsDesign) {
-    const { patch, backdrop } = themeForMood(playbook, intent.moods);
-    push({ type: "set_theme", patch });
-    push({ type: "set_backdrop", backdrop: backdrop as never });
-    const hero = findSection(page, "hero");
-    if (hero && intent.moods.includes("premium"))
-      push({ type: "set_section_effect", sectionId: hero.id, effect: "gold_glow" as never });
-    done.push("design");
-    trace.push("Applied a design direction from the trade playbook and the words used.");
+    task("Set the design direction", () => {
+      push({ type: "set_theme", patch: design.theme });
+      push({ type: "set_backdrop", backdrop: design.backdrop });
+      const hero = findSection(page, "hero") ?? sectionsOf(page)[0];
+      if (hero) {
+        push({ type: "set_section_effect", sectionId: hero.id, effect: design.heroEffect });
+        if (design.density !== "standard" && hero.kind === "hero")
+          push({
+            type: "set_section_variant",
+            sectionId: hero.id,
+            variant: HERO_LAYOUT[design.density],
+          });
+      }
+      if (design.bodyEffect !== "none")
+        for (const section of sectionsOf(page).slice(1, 5))
+          push({ type: "set_section_effect", sectionId: section.id, effect: design.bodyEffect });
+      done.push("design");
+      notes.push(...design.rationale.slice(1));
+      trace.push("Chose one design direction from the trade playbook and the words used.");
+      return true;
+    });
   }
 
-  /* --- add the sections this trade needs that the page is missing --- */
-  if (intent.wholeSite || intent.verbs.includes("build")) {
-    let position = sectionsOf(page).length;
-    for (const kind of playbook.homeSections) {
-      if (!allowedSections.has(kind)) continue;
-      if (findSection(page, kind)) continue;
-      if (!page) break;
-      const copy = sectionCopy(kind, facts, playbook);
-      push({
-        type: "add_section",
-        pageId: page.id,
-        kind,
-        heading: copy.heading,
-        subheading: copy.subheading,
-        body: copy.body,
-        position: position++,
-      });
-    }
-    done.push("sections");
-    trace.push("Filled in the sections this trade needs, in the order buyers decide in.");
+  /* --- COMPLETE-WEBSITE MODE: pages, sections, CTA, SEO, in one request --- */
+  if (wholeSite) {
+    task("Create the pages this trade needs", () => {
+      let created = false;
+      for (const wanted of playbook.pages) {
+        const slug = slugify(wanted.slug || wanted.title);
+        if (!slug) continue;
+        if (context.pages.some((existing) => existing.slug.replace(/^\//, "") === slug)) continue;
+        const kind = context.pageKinds.includes(wanted.kind) ? wanted.kind : "custom";
+        push({ type: "add_page", kind, title: wanted.title, slug });
+        created = true;
+      }
+      if (created) {
+        done.push("pages");
+        notes.push(
+          "New pages are created first. Their sections are filled in on the next request, because a page has no id until it exists.",
+        );
+      }
+      return created;
+    });
+
+    task("Lay out the home page in buyer-decision order", () => {
+      if (!page) return false;
+      let position = sectionsOf(page).length;
+      let added = false;
+      for (const kind of playbook.homeSections) {
+        if (!allowedSections.has(kind)) continue;
+        if (findSection(page, kind)) continue;
+        const copy = sectionCopy(kind, facts, playbook);
+        push({
+          type: "add_section",
+          pageId: page.id,
+          kind,
+          heading: copy.heading,
+          subheading: copy.subheading,
+          body: copy.body,
+          position: position++,
+        });
+        added = true;
+      }
+      if (added) {
+        done.push("sections");
+        trace.push("Filled in the sections this trade needs, in the order buyers decide in.");
+      }
+      return added;
+    });
+
+    task("Write the copy from your own business details", () => {
+      let written = false;
+      for (const section of sectionsOf(page).slice(0, 8)) {
+        if (section.heading) continue;
+        const copy = sectionCopy(section.kind, facts, playbook);
+        if (!copy.heading) continue;
+        push({
+          type: "set_section_text",
+          sectionId: section.id,
+          field: "heading",
+          value: copy.heading,
+        });
+        written = true;
+      }
+      if (written) done.push("copy");
+      return written;
+    });
+
+    task("Add the questions your customers ask", () => {
+      const faq = findSection(page, "faq");
+      if (!faq) return false;
+      const existing = new Set(faq.components.map((component) => component.label));
+      let added = false;
+      for (const question of faqQuestions(playbook).slice(0, 5)) {
+        if (existing.has(question)) continue;
+        push({ type: "add_component", sectionId: faq.id, kind: "faq", label: question });
+        added = true;
+      }
+      if (added) done.push("faq");
+      return added;
+    });
   }
 
   /* --- explicit section requests --- */
@@ -193,13 +281,13 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
     }
     if (intent.verbs.includes("resize") && existing) {
       const bigger = /\b(bigger|larger|taller|full ?screen)\b/i.test(intent.original);
-      push({
-        type: "set_section_variant",
-        sectionId: existing.id,
-        variant: bigger ? "full" : "compact",
-      });
-      if (bigger)
-        push({ type: "set_section_effect", sectionId: existing.id, effect: "rise" as never });
+      if (existing.kind === "hero")
+        push({
+          type: "set_section_variant",
+          sectionId: existing.id,
+          variant: bigger ? HERO_LAYOUT.full : HERO_LAYOUT.compact,
+        });
+      if (bigger) push({ type: "set_section_effect", sectionId: existing.id, effect: "rise" });
       done.push("sections");
       continue;
     }
@@ -236,13 +324,53 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
     }
   }
 
-  /* --- new pages --- */
+  /* --- rewrite a whole page when no section was named --- */
+  if (intent.verbs.includes("rewrite") && !intent.sectionKinds.length && page) {
+    task("Rewrite this page in your own facts", () => {
+      let written = false;
+      for (const section of sectionsOf(page).slice(0, 8)) {
+        const copy = sectionCopy(section.kind, facts, playbook);
+        if (!copy.heading) continue;
+        push({
+          type: "set_section_text",
+          sectionId: section.id,
+          field: "heading",
+          value: copy.heading,
+        });
+        if (copy.subheading)
+          push({
+            type: "set_section_text",
+            sectionId: section.id,
+            field: "subheading",
+            value: copy.subheading,
+          });
+        written = true;
+      }
+      if (written) done.push("copy");
+      return written;
+    });
+  }
+
+  /* --- visual hierarchy: put the deciding blocks where they are seen --- */
+  if (intent.verbs.includes("hierarchy") && page && sectionsOf(page).length > 2) {
+    task("Put the deciding information first", () => {
+      const sorted = hierarchySort(sectionsOf(page));
+      const changed = sorted.some((section, index) => section.id !== sectionsOf(page)[index]?.id);
+      if (!changed) return false;
+      push({
+        type: "reorder_sections",
+        pageId: page.id,
+        sectionIds: sorted.map((section) => section.id),
+      });
+      done.push("layout");
+      trace.push("Reordered the page so the headline, offer and next step come first.");
+      return true;
+    });
+  }
+
+  /* --- new pages named by the owner --- */
   for (const label of intent.newPages) {
-    const slug = label
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 60);
+    const slug = slugify(label);
     if (!slug) continue;
     if (context.pages.some((existing) => existing.slug.replace(/^\//, "") === slug)) {
       notes.push(`There is already a page at /${slug}, so it was left alone.`);
@@ -251,86 +379,127 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
     const kind = context.pageKinds.includes("services")
       ? "services"
       : (context.pageKinds[0] ?? "custom");
-    push({
-      type: "add_page",
-      kind,
-      title: label.replace(/\b\w/g, (character) => character.toUpperCase()).slice(0, 120),
-      slug,
-    });
-    notes.push(
-      `Created the /${slug} page. Ask for its sections next and Revora will fill it in — new pages have no id until they exist.`,
-    );
+    push({ type: "add_page", kind, title: titleCase(label), slug });
+    notes.push(`Created the /${slug} page — its sections are filled in on the next request.`);
     done.push("pages");
   }
 
-  /* --- calls to action --- */
-  if (intent.verbs.includes("cta") || intent.wholeSite) {
-    const hero = findSection(page, "hero") ?? sectionsOf(page)[0];
-    const target = ctaTarget(facts);
-    if (hero && target) {
-      const already = hero.components.some(
-        (component) => component.link_url === target.url || component.kind === "button",
-      );
-      if (!already)
+  /* --- calls to action, on one page or every page --- */
+  if (intent.verbs.includes("cta") || wholeSite) {
+    task("Put the next step in front of visitors", () => {
+      const target = ctaTarget(facts);
+      if (!target) return false;
+      const pages = intent.everyPage || wholeSite ? context.pages.slice(0, 8) : page ? [page] : [];
+      let added = false;
+      for (const candidate of pages) {
+        const host = candidate.sections.find((s) => s.kind === "hero") ?? candidate.sections[0];
+        if (!host) continue;
+        const already = host.components.some(
+          (component) => component.kind === "button" || component.link_url === target.url,
+        );
+        if (already) continue;
         push({
           type: "add_component",
-          sectionId: hero.id,
+          sectionId: host.id,
           kind: "button",
           label: playbook.ctaLabels.primary,
           link_url: target.url,
           link_label: playbook.ctaLabels.primary,
         });
+        added = true;
+      }
       if (!facts.phone && !facts.email)
         questions.push(
           "What phone number or email should the main button use? Right now it points at your contact page.",
         );
-      done.push("cta");
-      trace.push("Put the action this trade converts on in front of visitors.");
-    }
+      if (added) {
+        done.push("buttons");
+        trace.push("Put the action this trade converts on in front of visitors.");
+      }
+      return added;
+    });
   }
 
   /* --- SEO --- */
-  if (intent.verbs.includes("seo") || intent.wholeSite) {
-    for (const candidate of context.pages.slice(0, 8)) {
-      if (candidate.seo_title && candidate.seo_description) continue;
-      const seo = pageSeo(candidate.title || "Home", facts, playbook);
-      push({ type: "set_page", pageId: candidate.id, patch: seo });
-    }
-    done.push("seo");
-    trace.push("Wrote page titles and descriptions from your trade, town and services.");
+  if (intent.verbs.includes("seo") || wholeSite) {
+    task("Write titles and descriptions for search", () => {
+      let written = false;
+      for (const candidate of context.pages.slice(0, 12)) {
+        if (candidate.seo_title && candidate.seo_description) continue;
+        push({
+          type: "set_page",
+          pageId: candidate.id,
+          patch: pageSeo(candidate.title || "Home", facts, playbook),
+        });
+        written = true;
+      }
+      if (written) {
+        done.push("search listing");
+        trace.push("Wrote page titles and descriptions from your trade, town and services.");
+      }
+      return written;
+    });
   }
 
   /* --- mobile --- */
-  if (intent.verbs.includes("mobile")) {
+  if (intent.verbs.includes("mobile") || wholeSite) {
+    task("Check how it behaves on a phone", () => {
+      notes.push(
+        "Your website already lays itself out for phones and tablets — every section is built responsive, so nothing needed changing there.",
+      );
+      const sticky =
+        findSection(page, "sticky_cta") ??
+        actions.find((action) => action.type === "add_section" && action.kind === "sticky_cta");
+      if (!sticky && page && allowedSections.has("sticky_cta")) {
+        const copy = sectionCopy("sticky_cta", facts, playbook);
+        push({
+          type: "add_section",
+          pageId: page.id,
+          kind: "sticky_cta",
+          heading: copy.heading,
+          position: sectionsOf(page).length,
+        });
+        notes.push("Added an always-visible button on phones so the next step is one tap away.");
+      }
+      done.push("phone layout");
+      return true;
+    });
+  }
+
+  /* --- attachments: read what can be read for free, act on the rest --- */
+  if (attachments.length) {
+    const kinds = [...new Set(attachments.map((item) => item.kind))];
     notes.push(
-      "Your website already lays itself out for phones and tablets — every section is built responsive, so nothing needed changing there.",
+      `Kept your ${kinds.join(", ")} upload${attachments.length === 1 ? "" : "s"} with this request — anything Revora can act on structurally is already in the plan.`,
     );
-    const sticky = findSection(page, "sticky_cta");
-    if (!sticky && page && allowedSections.has("sticky_cta")) {
-      const copy = sectionCopy("sticky_cta", facts, playbook);
-      push({
-        type: "add_section",
-        pageId: page.id,
-        kind: "sticky_cta",
-        heading: copy.heading,
-        position: sectionsOf(page).length,
-      });
-      notes.push("Added an always-visible button on phones so the next step is one tap away.");
-    }
-    done.push("mobile");
+    trace.push(`Handled ${attachments.length} upload(s) without sending them anywhere by default.`);
   }
 
   /* --- missing facts we must not invent --- */
-  if (!place(facts) && (intent.wholeSite || intent.verbs.includes("seo")))
+  if (!place(facts) && (wholeSite || intent.verbs.includes("seo")))
     questions.push("Which town or area should your website say you cover?");
 
   const recognised =
-    intent.verbs.length > 0 || intent.sectionKinds.length > 0 || intent.newPages.length > 0;
+    intent.verbs.length > 0 ||
+    intent.sectionKinds.length > 0 ||
+    intent.newPages.length > 0 ||
+    intent.moods.length > 0;
+
   const coverage: DeterministicPlan["coverage"] = !actions.length
     ? "none"
     : recognised && !intent.unrecognised.length
       ? "full"
       : "partial";
+
+  // The only reason to spend an outside call: there is genuinely no website work
+  // Revora recognised, or an upload's content has to be read to know what to do.
+  const needsAttachmentReading =
+    attachments.length > 0 && !actions.length
+      ? "An upload has to be read before anything can be changed"
+      : null;
+  const externalReason = !actions.length
+    ? (needsAttachmentReading ?? "No website work was recognised in the request")
+    : null;
 
   const summaryBits = [...new Set(done)];
   const summary = summaryBits.length
@@ -339,17 +508,20 @@ export function buildDeterministicPlan(context: Ctx, instruction: string): Deter
 
   const reply = actions.length
     ? `Here's what I'll change — ${actions.length} update${actions.length === 1 ? "" : "s"} to your ${summaryBits.join(", ") || "website"}. Nothing goes live until you approve it.`
-    : "I couldn't find anything to change from that on its own — tell me what you'd like different and I'll do it.";
+    : "Tell me what you'd like different in your own words and I'll handle the rest.";
 
   return {
     reply,
     summary,
     actions,
     questions: questions.slice(0, 1),
-    notes,
+    notes: [...new Set(notes)].slice(0, 8),
     coverage,
     trace,
     intent,
+    tasks,
+    requiresExternalReasoning: externalReason !== null,
+    externalReason,
   };
 }
 
