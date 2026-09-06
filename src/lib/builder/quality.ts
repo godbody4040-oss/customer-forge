@@ -371,7 +371,7 @@ export function auditWebsite(input: QualityInput): QualityReport {
   return {
     score,
     /** Content is sound enough to publish. */
-    ready: contentReady && contentScore >= 80,
+    ready: contentReady && contentScore >= 90,
     /** Proven end-to-end: content clean, browser-measured, and 95+. */
     productionReady: contentReady && measured && !!input.visual?.passed && score >= 95,
     contentScore,
