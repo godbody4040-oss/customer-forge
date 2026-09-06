@@ -764,15 +764,35 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           );
           break;
         case "add_page":
-          await run(action.type, () =>
-            supabase.from("website_pages").insert({
-              organization_id: orgId,
-              kind: action.kind,
-              title: action.title,
-              slug: action.slug,
-              sort_order: site.pages.length,
-            }),
-          );
+          await run(action.type, async () => {
+            const { data: created, error } = await supabase
+              .from("website_pages")
+              .insert({
+                organization_id: orgId,
+                kind: action.kind,
+                title: action.title,
+                slug: action.slug,
+                sort_order: site.pages.length + newPages.size,
+              })
+              .select("id")
+              .maybeSingle();
+            if (error) return { error };
+            if (created?.id) {
+              const id = String(created.id);
+              if (action.ref) newPages.set(action.ref, id);
+              undoSteps.push({
+                label: "add_page:remove",
+                run: async () => {
+                  await supabase
+                    .from("website_pages")
+                    .delete()
+                    .eq("id", id)
+                    .eq("organization_id", orgId);
+                },
+              });
+            }
+            return null;
+          });
           break;
         case "set_page":
           await run(action.type, () =>
