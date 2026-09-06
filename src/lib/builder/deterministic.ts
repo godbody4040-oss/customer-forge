@@ -447,7 +447,9 @@ export function buildDeterministicPlan(
       notes.push(
         "Your website already lays itself out for phones and tablets — every section is built responsive, so nothing needed changing there.",
       );
-      const sticky = findSection(page, "sticky_cta");
+      const sticky =
+        findSection(page, "sticky_cta") ??
+        actions.find((action) => action.type === "add_section" && action.kind === "sticky_cta");
       if (!sticky && page && allowedSections.has("sticky_cta")) {
         const copy = sectionCopy("sticky_cta", facts, playbook);
         push({
