@@ -63,6 +63,8 @@ export type QualityReport = {
   ready: boolean;
   /** Both layers clean, browser-measured and 95+. */
   productionReady: boolean;
+  /** The score across only the parts provable from the content itself, 0-100. */
+  contentScore: number;
   /** Whether a real browser check backs the visual and responsive scores. */
   measured: boolean;
   categories: { name: QualityCategory; weight: number; earned: number }[];
