@@ -214,25 +214,33 @@ export function BuilderShell({
 
       {/* ------------------ Mobile bottom quick switcher ---------------- */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur lg:hidden">
-        <div className="flex gap-1 overflow-x-auto px-2 py-2">
+        <nav
+          aria-label="Builder modes"
+          className="grid px-1 py-1.5"
+          style={{ gridTemplateColumns: `repeat(${Math.max(sections.length, 1)}, minmax(0, 1fr))` }}
+        >
           {sections.map((section) => (
             <button
               key={section.key}
               type="button"
+              aria-current={section.key === active ? "page" : undefined}
               onClick={() => setActive(section.key)}
               className={cn(
-                "shrink-0 rounded-md border px-2.5 py-1.5 text-[11.5px] whitespace-nowrap transition-colors",
+                "min-h-11 cursor-pointer rounded-md px-1 py-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                 section.key === active
-                  ? "border-primary/50 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground",
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-elevated hover:text-foreground",
               )}
             >
-              {section.label}
-              {section.badge ? ` · ${section.badge}` : ""}
+              <span className="block truncate">{section.label}</span>
+              {section.badge ? (
+                <span className="mt-0.5 block text-[10px] text-accent">{section.badge}</span>
+              ) : null}
             </button>
           ))}
-        </div>
+        </nav>
       </div>
+
     </div>
   );
 }
