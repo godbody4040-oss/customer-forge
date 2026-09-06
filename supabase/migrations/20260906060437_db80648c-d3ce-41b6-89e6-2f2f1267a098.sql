@@ -1,0 +1,2 @@
+ALTER TABLE public.website_visual_reports ADD COLUMN IF NOT EXISTS page_slug TEXT;
+CREATE INDEX IF NOT EXISTS website_visual_reports_org_page_recent ON public.website_visual_reports (organization_id, page_slug, measured_at DESC);
