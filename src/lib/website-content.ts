@@ -534,7 +534,9 @@ export function buildContentBlueprint(input: BlueprintInput): BlueprintPage[] {
   home.push({
     kind: "guarantee",
     heading: "Our promise",
-    body: "Write the guarantee you genuinely stand behind — for example a satisfaction promise or a workmanship warranty. Hidden until you fill it in.",
+    // No body: a promise is a factual claim, so it stays empty until the owner
+    // writes their own. Builder prompts for it; visitors never see instructions.
+    body: null,
     is_visible: false,
     needs_input: true,
   });
