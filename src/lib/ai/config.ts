@@ -96,6 +96,16 @@ export function zeroAiCostMode(): boolean {
   return raw !== "false" && raw !== "0" && raw !== "off" && raw !== "no";
 }
 
+/**
+ * The website builder's own guard. Building customer websites must cost Revora
+ * nothing in outside inference, so external AI is off for the builder unless an
+ * operator explicitly sets `BUILDER_EXTERNAL_AI_ALLOWED=true` on the server.
+ */
+export function builderExternalAiAllowed(): boolean {
+  const raw = (env("BUILDER_EXTERNAL_AI_ALLOWED") ?? "").trim().toLowerCase();
+  return raw === "true" || raw === "1" || raw === "on" || raw === "yes";
+}
+
 /** A provider is available only when Revora's own key for it is present. */
 export function providerConfig(provider: ProviderName): ProviderConfig | null {
   const apiKey = env(KEY_ENV[provider]);

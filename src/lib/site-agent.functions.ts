@@ -351,8 +351,11 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     // not for attachments, not on an error, not on a retry. The native engine
     // answers, and a request it cannot place comes back as a plain question
     // rather than anything about providers, keys or credits.
-    const { zeroAiCostMode } = await import("@/lib/ai/config");
-    const zeroCost = zeroAiCostMode();
+    const { zeroAiCostMode, builderExternalAiAllowed } = await import("@/lib/ai/config");
+    // The website builder has its own switch on top of zero-cost mode, so an
+    // operator can enable outside AI elsewhere in Revora while customer website
+    // building stays free to run.
+    const zeroCost = zeroAiCostMode() || !builderExternalAiAllowed();
 
     if (deterministic.actions.length && !deterministic.requiresExternalReasoning) {
       // Handled entirely by Revora's own rules: no provider call is made at all.
