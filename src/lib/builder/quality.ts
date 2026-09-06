@@ -395,8 +395,14 @@ export function auditWebsite(input: QualityInput): QualityReport {
   const score = Math.round(categories.reduce((total, item) => total + item.earned, 0));
   // Publishing is judged on the parts that can be judged from the content alone,
   // so a site is never held back for a browser check that hasn't run yet.
+  // Anything that needs a browser to prove it is left out of the content score,
+  // so a site is never held back for a check that hasn't run yet.
   const provable = categories.filter(
-    (item) => item.name !== "visual" && item.name !== "responsive",
+    (item) =>
+      item.name !== "visual" &&
+      item.name !== "responsive" &&
+      !(item.name === "accessibility" && !coverage?.accessibility) &&
+      !(item.name === "performance" && !coverage?.performance),
   );
   const provableWeight = provable.reduce((total, item) => total + item.weight, 0);
   const contentScore = Math.round(
