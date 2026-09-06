@@ -471,7 +471,7 @@ function WebsitePage() {
                       </Button>
                     </div>
                   </section>
-                  <ConversionOptimizer organizationId={orgId} canManage={manage} />
+                  <ConversionOptimizer organizationId={orgId} />
                 </>
               ),
             },
@@ -557,12 +557,7 @@ function WebsitePage() {
                     <p className="mt-0.5 text-[12px] text-muted-foreground">
                       Revora can pick a cohesive look for your industry and apply it for you.
                     </p>
-                    <Button
-                      className="mt-3"
-                      size="sm"
-                      variant="signal"
-                      onClick={() => goTo("ai")}
-                    >
+                    <Button className="mt-3" size="sm" variant="signal" onClick={() => goTo("ai")}>
                       Let Revora choose
                     </Button>
                   </section>
@@ -771,7 +766,6 @@ function WebsitePage() {
       ),
     },
   ];
-
 
   const publishState = settings?.publish_state ?? "draft";
 
