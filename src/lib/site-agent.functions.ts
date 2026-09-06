@@ -611,8 +611,27 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
       }
     };
 
-    for (const action of actions as AgentAction[]) {
+    // A plan may create a page and then fill it in the same run. The new page's
+    // temporary name is swapped for its real id as soon as the row exists, so
+    // later steps land on it instead of being dropped.
+    const newPages = new Map<string, string>();
+    const nextSort = new Map<string, number>();
+    for (const section of site.sections)
+      nextSort.set(section.page_id, (nextSort.get(section.page_id) ?? 0) + 1);
+
+    for (const rawAction of actions as AgentAction[]) {
       if (fatal) break;
+      const action = (
+        "pageId" in rawAction && newPages.has(rawAction.pageId)
+          ? { ...rawAction, pageId: newPages.get(rawAction.pageId) }
+          : rawAction
+      ) as AgentAction;
+      // A step that still points at a page which was never created is skipped
+      // rather than written against a made-up id.
+      if ("pageId" in action && !UUID_ID.test(action.pageId)) {
+        failed.push(`${action.type}:unresolved_page`);
+        continue;
+      }
       try {
         undoSteps.push(...(await captureUndo(supabase as unknown as JournalClient, orgId, action)));
       } catch (error) {
