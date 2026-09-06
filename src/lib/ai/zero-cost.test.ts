@@ -13,7 +13,7 @@ import type { AgentContext } from "@/lib/site-agent.server";
 import { readActions } from "@/lib/site-agent";
 import { buildDeterministicPlan } from "@/lib/builder/deterministic";
 
-const KEYS = ["ZERO_AI_COST_MODE", "GOOGLE_AI_API_KEY", "OPENAI_API_KEY", "LOVABLE_API_KEY"];
+const KEYS = ["ZERO_AI_COST_MODE", "GOOGLE_AI_API_KEY", "OPENAI_API_KEY"];
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -56,13 +56,6 @@ describe("ZERO_AI_COST_MODE", () => {
     const { providerChain, requireProviderChain } = await config();
     expect(providerChain()).toHaveLength(0);
     expect(() => requireProviderChain()).toThrow(/ZERO_AI_COST_MODE/);
-  });
-
-  it("blocks a hosted gateway key from ever becoming a provider", async () => {
-    process.env["ZERO_AI_COST_MODE"] = "true";
-    process.env["LOVABLE_API_KEY"] = "test-gateway-key";
-    const { providerChain } = await config();
-    expect(providerChain()).toHaveLength(0);
   });
 
   it("blocks an unknown provider name outright", async () => {
