@@ -3620,21 +3620,6 @@ export type Database = {
           },
         ]
       }
-      public_ga_config: {
-        Row: {
-          ga_measurement_id: string | null
-          id: string | null
-        }
-        Insert: {
-          ga_measurement_id?: string | null
-          id?: string | null
-        }
-        Update: {
-          ga_measurement_id?: string | null
-          id?: string | null
-        }
-        Relationships: []
-      }
       public_organizations: {
         Row: {
           id: string | null
