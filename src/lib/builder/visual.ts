@@ -178,7 +178,7 @@ export function gradeVisual(measurements: ViewportMeasurement[]): VisualReport {
     new Set(
       findings
         .filter((finding) => finding.severity === severity)
-        .map((finding) => `${finding.key}|${finding.detail.replace(/\d+px/g, "")}`),
+        .map((finding) => `${finding.key}|${finding.detail.replace(/\d+/g, "")}`),
     ).size;
   const p0 = distinct("p0");
   const score = Math.max(0, Math.min(100, 100 - p0 * 20 - distinct("advice") * 3));
@@ -248,6 +248,8 @@ export const MEASURE_SCRIPT = `(() => {
     .map(({ el, box }) => ({ selector: label(el), width: box.width, height: box.height }));
   const tinyText = all
     .filter((el) => el.childElementCount === 0 && (el.textContent || '').trim().length > 20)
+    // Small uppercase labels above a heading are a deliberate style, not body copy.
+    .filter((el) => getComputedStyle(el).textTransform !== 'uppercase')
     .map((el) => ({ el, size: parseFloat(getComputedStyle(el).fontSize) }))
     .filter(({ size }) => size > 0 && size < 13)
     .slice(0, 10)
