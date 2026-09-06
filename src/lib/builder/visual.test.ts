@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { gradeViewport, gradeVisual, VIEWPORTS, type ViewportMeasurement } from "./visual";
+import {
+  gradeViewport,
+  gradeVisual,
+  VIEWPORTS,
+  type ViewportMeasurement,
+  type VisualReport,
+} from "./visual";
 import { auditWebsite, type QualityInput } from "./quality";
 import { businessFacts } from "./facts";
 
@@ -65,7 +71,7 @@ describe("rendered visual quality", () => {
   });
 });
 
-const goodInput = (visual: QualityInput["visual"]): QualityInput => ({
+const goodInput = (visual: VisualReport | null): QualityInput => ({
   facts: businessFacts(
     { phone: "+1 415 555 0132", email: "hello@elitemobilecars.com", city: "Austin" },
     "Elite Mobile Cars",
