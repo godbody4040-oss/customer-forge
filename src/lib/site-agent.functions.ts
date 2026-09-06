@@ -357,7 +357,10 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     } else if (zeroCost) {
       if (deterministic.actions.length) {
         raw = deterministicRaw()!;
-        trace = [...deterministic.trace, "Built with Revora's own engine — no outside AI involved."];
+        trace = [
+          ...deterministic.trace,
+          "Built with Revora's own engine — no outside AI involved.",
+        ];
       } else {
         return {
           reply:
