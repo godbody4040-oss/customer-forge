@@ -11,6 +11,7 @@
  */
 
 import { playbookFor, type IndustryPlaybook } from "./industry";
+import { normalise } from "./normalize";
 
 export type BuilderVerb =
   | "build"
@@ -25,6 +26,7 @@ export type BuilderVerb =
   | "seo"
   | "cta"
   | "mobile"
+  | "hierarchy"
   | "fix";
 
 export type StyleMood =
@@ -45,6 +47,12 @@ export type BuilderIntent = {
   industry: IndustryPlaybook | null;
   /** Whole-site build/refresh request rather than a single tweak. */
   wholeSite: boolean;
+  /** The request applies to every page, not just the one in view. */
+  everyPage: boolean;
+  /** The owner asked for their existing business details to be preserved. */
+  keepFacts: boolean;
+  /** Subject carried over from an earlier message, when "it" was used. */
+  carried: string | null;
   /** Things this interpreter could not place. */
   unrecognised: string[];
 };
@@ -94,7 +102,18 @@ const VERB_WORDS: Record<BuilderVerb, string[]> = {
     "full website",
     "start from scratch",
   ],
-  add: ["add", "put", "include", "insert", "create", "i need a", "i want a", "can you add"],
+  add: [
+    "add",
+    "put",
+    "include",
+    "insert",
+    "create",
+    "i need a",
+    "i want a",
+    "stick a",
+    "throw in",
+    "give me a",
+  ],
   remove: ["remove", "delete", "get rid of", "take off", "take out", "drop"],
   hide: ["hide", "turn off", "don't show", "dont show", "disable"],
   show: ["show", "turn on", "unhide", "enable", "bring back"],
@@ -152,6 +171,14 @@ const VERB_WORDS: Record<BuilderVerb, string[]> = {
     "convert",
   ],
   mobile: ["mobile", "phone", "responsive", "tablet", "small screen", "on my phone"],
+  hierarchy: [
+    "hierarchy",
+    "order of importance",
+    "prioritise",
+    "prioritize",
+    "most important first",
+    "visual hierarchy",
+  ],
   fix: ["fix", "broken", "not working", "wrong", "error", "typo"],
 };
 
@@ -195,9 +222,10 @@ function readNewPages(text: string): string[] {
  * Reads an owner's sentence. Always returns something usable — an empty verb
  * list simply means "nothing specific recognised", never "request refused".
  */
-export function interpret(instruction: string): BuilderIntent {
-  const original = clean(instruction);
-  const text = lower(original);
+export function interpret(instruction: string, history: string[] = []): BuilderIntent {
+  const normalised = normalise(instruction, history);
+  const original = normalised.original;
+  const text = normalised.text;
 
   const verbs: BuilderVerb[] = [];
   for (const [verb, words] of Object.entries(VERB_WORDS) as [BuilderVerb, string[]][])
@@ -220,6 +248,9 @@ export function interpret(instruction: string): BuilderIntent {
     verbs.includes("build") ||
     /\b(whole|entire|full|everything|all of it|the site|my site|my website)\b/.test(text);
 
+  const everyPage = /\bon every page\b/.test(text);
+  const keepFacts = /\bkeep business facts\b/.test(text);
+
   const unrecognised: string[] = [];
   if (!verbs.length && !sectionKinds.length && !moods.length && !newPages.length)
     unrecognised.push(original);
@@ -233,6 +264,9 @@ export function interpret(instruction: string): BuilderIntent {
     moods,
     industry,
     wholeSite,
+    everyPage,
+    keepFacts,
+    carried: normalised.carried,
     unrecognised,
   };
 }
