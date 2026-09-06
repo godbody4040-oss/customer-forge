@@ -80,15 +80,15 @@ export type ViewportMeasurement = {
   /** Number of visible calls to action found. */
   ctas: number;
   /** Buttons and links that lead nowhere (`#`, empty, `javascript:`). */
-  deadControls?: string[];
+  deadControls?: string[] | undefined;
   /** Pictures stretched or squashed out of their real shape. */
-  distortedImages?: string[];
+  distortedImages?: string[] | undefined;
   /** Blocks of text sitting on top of each other. */
-  overlapping?: string[];
+  overlapping?: string[] | undefined;
   /** Content columns so narrow that words break awkwardly. */
-  narrowColumns?: string[];
+  narrowColumns?: string[] | undefined;
   /** A fixed bar covering the bottom of the page, in px. */
-  stickyFooterHeight?: number;
+  stickyFooterHeight?: number | undefined;
   accessibility?: AccessibilityMeasurement | undefined;
   performance?: PerformanceMeasurement | undefined;
 };
