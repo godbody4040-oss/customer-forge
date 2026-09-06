@@ -47,6 +47,7 @@ import { useSelfHeal } from "@/lib/self-heal.hooks";
 import { ClientOnboardingFlow } from "@/components/app/ClientOnboardingFlow";
 
 import { LaunchChecks } from "@/components/app/LaunchChecks";
+import { VisualCheckPanel } from "@/components/app/VisualCheckPanel";
 import { PortalAccess } from "@/components/app/PortalAccess";
 import { PreviewLinks, PreviewSiteButton } from "@/components/app/PreviewLinks";
 import { VersionDiff } from "@/components/app/VersionDiff";
@@ -522,6 +523,12 @@ function WebsitePage() {
             isLaunching={launchFlow.isLaunching}
             canManage={manage}
             result={launchFlow.result}
+          />
+          <VisualCheckPanel
+            organizationId={orgId}
+            slug={org?.slug}
+            publishState={settings?.publish_state ?? "draft"}
+            canManage={manage}
           />
           <LaunchChecks
             checks={qa.checks}

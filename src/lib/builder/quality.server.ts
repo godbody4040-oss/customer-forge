@@ -8,8 +8,33 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { businessFacts } from "./facts";
 import { auditWebsite, type QualityInput, type QualityReport } from "./quality";
+import { gradeVisual, type VisualReport } from "./visual";
 
 type Db = SupabaseClient<never>;
+
+/**
+ * A rendered check only proves the website as it looked WHEN IT RAN. Any page
+ * or section saved afterwards makes the report stale, and a stale report never
+ * counts as measured.
+ */
+export function freshVisualReport(
+  row: Record<string, unknown> | null,
+  contentUpdatedAt: (string | undefined)[],
+): VisualReport | null {
+  if (!row) return null;
+  const measuredAt = Date.parse(String(row["measured_at"] ?? ""));
+  if (!Number.isFinite(measuredAt)) return null;
+  const latestEdit = contentUpdatedAt
+    .map((value) => (value ? Date.parse(value) : Number.NaN))
+    .filter((value) => Number.isFinite(value))
+    .reduce((latest, value) => Math.max(latest, value), 0);
+  if (latestEdit > measuredAt) return null;
+  // Re-grade from the stored raw measurements rather than trusting the stored
+  // verdict: the same judgement runs everywhere, always.
+  const measurements = Array.isArray(row["measurements"]) ? row["measurements"] : [];
+  const report = gradeVisual(measurements as never);
+  return report.widths.length ? report : null;
+}
 
 /** Audits one workspace's website. Every count comes from a real table. */
 export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<QualityReport> {
@@ -22,27 +47,43 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
         ) => Promise<{ data: unknown[] | null }> & {
           eq: (column: string, value: unknown) => Promise<{ data: unknown[] | null }>;
           maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
+          order: (
+            column: string,
+            options: { ascending: boolean },
+          ) => {
+            limit: (count: number) => {
+              maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
+            };
+          };
         };
       };
     };
   };
 
-  const [profile, org, pages, sections, reviews, media, quoteForms, bookable] = await Promise.all([
-    client.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
-    client.from("organizations").select("id, name").eq("id", orgId).maybeSingle(),
-    client
-      .from("website_pages")
-      .select("id, slug, title, seo_title, seo_description, is_visible")
-      .eq("organization_id", orgId),
-    client
-      .from("website_sections")
-      .select("id, page_id, kind, heading, subheading, body, is_visible")
-      .eq("organization_id", orgId),
-    client.from("reviews").select("id").eq("organization_id", orgId).eq("is_published", true),
-    client.from("media").select("id").eq("organization_id", orgId),
-    client.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
-    client.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
-  ]);
+  const [profile, org, pages, sections, reviews, media, quoteForms, bookable, visualRow] =
+    await Promise.all([
+      client.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
+      client.from("organizations").select("id, name").eq("id", orgId).maybeSingle(),
+      client
+        .from("website_pages")
+        .select("id, slug, title, seo_title, seo_description, is_visible, updated_at")
+        .eq("organization_id", orgId),
+      client
+        .from("website_sections")
+        .select("id, page_id, kind, heading, subheading, body, is_visible, updated_at")
+        .eq("organization_id", orgId),
+      client.from("reviews").select("id").eq("organization_id", orgId).eq("is_published", true),
+      client.from("media").select("id").eq("organization_id", orgId),
+      client.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
+      client.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
+      client
+        .from("website_visual_reports")
+        .select("measurements, measured_at")
+        .eq("organization_id", orgId)
+        .order("measured_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
   const profileRow = (profile.data ?? null) as Record<string, unknown> | null;
   const orgRow = (org.data ?? null) as Record<string, unknown> | null;
@@ -91,6 +132,12 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
       title: page["seo_title"] ?? page["title"],
       description: page["seo_description"],
     })),
+    // Layer 2 only counts when a real browser check exists and nothing on the
+    // site has changed since it ran.
+    visual: freshVisualReport(visualRow.data, [
+      ...pageRows.map((page) => page["updated_at"] as string | undefined),
+      ...sectionRows.map((section) => section["updated_at"] as string | undefined),
+    ]),
   };
 
   return auditWebsite(input);

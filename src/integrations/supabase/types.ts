@@ -3492,6 +3492,48 @@ export type Database = {
           },
         ]
       }
+      website_visual_reports: {
+        Row: {
+          id: string
+          measured_at: string
+          measurements: Json
+          organization_id: string
+          page_url: string
+          report: Json
+        }
+        Insert: {
+          id?: string
+          measured_at?: string
+          measurements: Json
+          organization_id: string
+          page_url: string
+          report: Json
+        }
+        Update: {
+          id?: string
+          measured_at?: string
+          measurements?: Json
+          organization_id?: string
+          page_url?: string
+          report?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_visual_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "website_visual_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "public_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_business_profiles: {
