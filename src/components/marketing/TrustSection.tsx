@@ -120,7 +120,7 @@ export function TrustSection() {
         </div>
         <Link
           to="/contact"
-          className="shrink-0 text-[13px] font-medium text-primary hover:underline"
+          className="inline-flex min-h-11 shrink-0 items-center text-[13px] font-medium text-primary hover:underline"
         >
           Talk to us
         </Link>

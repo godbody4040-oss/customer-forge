@@ -539,7 +539,7 @@ function Landing() {
                 </ul>
                 <Link
                   to="/pricing"
-                  className="mt-5 inline-block text-[13px] text-primary hover:underline"
+                  className="mt-5 inline-flex min-h-11 items-center text-[13px] text-primary hover:underline"
                 >
                   Full pricing details
                 </Link>
