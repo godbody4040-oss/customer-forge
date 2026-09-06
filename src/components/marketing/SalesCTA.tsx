@@ -142,7 +142,8 @@ export function RevoraMobileBar() {
         <Button asChild variant="signal" size="sm">
           <Link to="/demo">Book</Link>
         </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
