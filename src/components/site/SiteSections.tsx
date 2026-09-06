@@ -439,59 +439,60 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
         </Shell>
       );
 
-    case "contact":
+    case "contact": {
+      // Every value here is validated first: an unusable phone number, a broken
+      // email address or unreadable hours are hidden rather than rendered.
+      const facts = businessFacts(profile as Record<string, unknown> | null, site.org.name);
+      const addressLine = factsAddressLine(facts);
+      const area = facts.serviceArea ?? facts.city;
       return (
         <Shell id="contact">
           <Heading section={section} />
           <dl className="mt-7 grid gap-4 sm:grid-cols-3">
-            {profile?.phone ? (
+            {facts.phone && facts.phoneHref ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <Phone className="size-3.5" aria-hidden="true" /> Phone
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={telHref(profile.phone)} className="text-primary underline">
-                    {profile.phone}
+                  <a href={facts.phoneHref} className="text-primary underline">
+                    {facts.phone}
                   </a>
                 </dd>
               </div>
             ) : null}
-            {profile?.email ? (
+            {facts.email && facts.emailHref ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <Mail className="size-3.5" aria-hidden="true" /> Email
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={mailHref(profile.email)} className="text-primary underline">
-                    {profile.email}
+                  <a href={facts.emailHref} className="text-primary underline">
+                    {facts.email}
                   </a>
                 </dd>
               </div>
             ) : null}
-            {profile?.city || profile?.service_area ? (
+            {area ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <MapPin className="size-3.5" aria-hidden="true" /> Area
                 </dt>
-                <dd className="mt-1 text-[13px]">{profile.service_area ?? profile.city}</dd>
+                <dd className="mt-1 text-[13px]">{area}</dd>
               </div>
             ) : null}
-            {profile?.address ? (
+            {addressLine ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <MapPin className="size-3.5" aria-hidden="true" /> Address
                 </dt>
-                <dd className="mt-1 text-[13px]">
-                  {[profile.address, profile.city, profile.state, profile.zip]
-                    .filter(Boolean)
-                    .join(", ")}
-                </dd>
+                <dd className="mt-1 text-[13px]">{addressLine}</dd>
               </div>
             ) : null}
-            {profile?.hours ? (
+            {facts.hours ? (
               <div>
                 <dt className="eyebrow">Hours</dt>
-                <dd className="mt-1 whitespace-pre-line text-[13px]">{String(profile.hours)}</dd>
+                <dd className="mt-1 whitespace-pre-line text-[13px]">{facts.hours}</dd>
               </div>
             ) : null}
           </dl>
@@ -504,6 +505,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
           </div>
         </Shell>
       );
+    }
 
     case "sticky_cta":
       return null; // rendered once, fixed to the viewport
