@@ -209,7 +209,7 @@ export function readActions(
       }
       case "add_section": {
         const kind = text(row["kind"], 40).toLowerCase();
-        if (!known.pageIds.has(pageId) || !KIND.test(kind)) break;
+        if (!knownPage(pageId) || !KIND.test(kind)) break;
         const position = Number(row["position"]);
         out.push({
           type,
@@ -233,7 +233,7 @@ export function readActions(
               .map((id) => text(id, 40))
               .filter((id) => known.sectionIds.has(id))
           : [];
-        if (!known.pageIds.has(pageId) || ids.length < 2) break;
+        if (!knownPage(pageId) || ids.length < 2) break;
         out.push({ type, pageId, sectionIds: [...new Set(ids)] });
         break;
       }
@@ -298,12 +298,12 @@ export function readActions(
           patch.og_title = text(patchRaw["og_title"], 90);
         if (typeof patchRaw["og_description"] === "string")
           patch.og_description = text(patchRaw["og_description"], 200);
-        if (!known.pageIds.has(pageId) || Object.keys(patch).length === 0) break;
+        if (!knownPage(pageId) || Object.keys(patch).length === 0) break;
         out.push({ type, pageId, patch });
         break;
       }
       case "delete_page": {
-        if (!known.pageIds.has(pageId)) break;
+        if (!knownPage(pageId)) break;
         out.push({ type, pageId });
         break;
       }
