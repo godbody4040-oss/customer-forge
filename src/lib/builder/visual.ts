@@ -213,11 +213,173 @@ export function gradeViewport(measurement: ViewportMeasurement): VisualFinding[]
       "Use at least 14px for body text, 16px on phones.",
     );
   }
+  for (const control of (measurement.deadControls ?? []).slice(0, 5)) {
+    add(
+      "dead_control",
+      "p0",
+      `“${control}” looks like a button but leads nowhere.`,
+      "Point it at a real page, a phone number, or the booking form.",
+    );
+  }
+  for (const image of (measurement.distortedImages ?? []).slice(0, 5)) {
+    add(
+      "distorted_image",
+      "advice",
+      `A picture (${image}) is stretched out of its real shape.`,
+      "Let the picture keep its proportions, or crop it properly.",
+    );
+  }
+  for (const pair of (measurement.overlapping ?? []).slice(0, 5)) {
+    add(
+      "overlapping_content",
+      "p0",
+      `At ${width}px two blocks of text sit on top of each other (${pair}).`,
+      "Add space between them, or let them stack on small screens.",
+    );
+  }
+  for (const column of (measurement.narrowColumns ?? []).slice(0, 3)) {
+    add(
+      "narrow_column",
+      "advice",
+      `Text in “${column}” is squeezed into a very narrow column at ${width}px.`,
+      "Let the text use the width of the screen.",
+    );
+  }
+
+  const a11y = measurement.accessibility;
+  if (a11y) {
+    if (a11y.zoomBlocked)
+      add(
+        "zoom_blocked",
+        "p0",
+        "The page stops visitors pinching to zoom.",
+        "Allow zooming so people with low vision can read the page.",
+      );
+    for (const image of a11y.imagesMissingAlt.slice(0, 5))
+      add(
+        "image_missing_alt",
+        "advice",
+        `A picture (${image}) has no description for screen readers.`,
+        "Describe what the picture shows in a few words.",
+      );
+    for (const control of a11y.unlabeledControls.slice(0, 5))
+      add(
+        "unlabeled_control",
+        "advice",
+        `A button (${control}) has no readable name.`,
+        "Give the button words, or a spoken label.",
+      );
+    for (const input of a11y.unlabeledInputs.slice(0, 5))
+      add(
+        "unlabeled_input",
+        "p0",
+        `A form field (${input}) has no label, so visitors can't tell what to type.`,
+        "Add a label above the field.",
+      );
+    for (const heading of a11y.headingOrderProblems.slice(0, 3))
+      add(
+        "heading_order",
+        "advice",
+        `Headings skip a level around “${heading}”.`,
+        "Use headings in order so the page reads logically.",
+      );
+    if (a11y.h1Count === 0)
+      add(
+        "missing_h1",
+        "advice",
+        "The page has no main heading.",
+        "Give the page one clear main heading.",
+      );
+    if (a11y.h1Count > 1)
+      add(
+        "multiple_h1",
+        "advice",
+        `The page has ${a11y.h1Count} main headings.`,
+        "Keep one main heading per page.",
+      );
+    if (!a11y.hasMain)
+      add(
+        "missing_main_landmark",
+        "advice",
+        "The page has no main content landmark.",
+        "Wrap the page content in a main region.",
+      );
+    if (!a11y.hasNav)
+      add(
+        "missing_nav_landmark",
+        "advice",
+        "The page has no navigation landmark.",
+        "Mark the menu as navigation.",
+      );
+    if (a11y.controls > 0 && a11y.keyboardReachable < a11y.controls)
+      add(
+        "keyboard_unreachable",
+        "p0",
+        `${a11y.controls - a11y.keyboardReachable} button(s) can't be reached with a keyboard.`,
+        "Use real buttons and links so a keyboard can reach them.",
+      );
+    for (const item of a11y.lowContrast.slice(0, 5))
+      add(
+        "low_contrast",
+        "advice",
+        `Text in “${item.selector}” is only ${item.ratio.toFixed(1)}:1 against its background.`,
+        "Darken the text or lighten the background so it reaches 4.5:1.",
+      );
+  }
+
+  const perf = measurement.performance;
+  if (perf) {
+    if (perf.lcp !== null && perf.lcp > 4000)
+      add(
+        "slow_main_content",
+        "advice",
+        `The biggest part of the page took ${(perf.lcp / 1000).toFixed(1)}s to appear.`,
+        "Shrink the hero picture and load it first.",
+      );
+    if (perf.cls !== null && perf.cls > 0.1)
+      add(
+        "layout_shift",
+        "advice",
+        `Content jumps around while the page loads (shift score ${perf.cls.toFixed(2)}).`,
+        "Give pictures fixed sizes so nothing moves as they load.",
+      );
+    if (perf.ttfb !== null && perf.ttfb > 1500)
+      add(
+        "slow_server_response",
+        "advice",
+        `The server took ${(perf.ttfb / 1000).toFixed(1)}s to answer.`,
+        "This usually settles after publishing; check again on the live site.",
+      );
+    if (perf.failedRequests > 0)
+      add(
+        "failed_requests",
+        "p0",
+        `${perf.failedRequests} file(s) on the page failed to load.`,
+        "Replace or remove the missing files.",
+      );
+    if (perf.imageBytes > 3_000_000)
+      add(
+        "heavy_images",
+        "advice",
+        `The pictures on this page weigh ${(perf.imageBytes / 1_000_000).toFixed(1)}MB.`,
+        "Use smaller pictures so the page opens quickly on phones.",
+      );
+    for (const image of perf.oversizedImages.slice(0, 3))
+      add(
+        "oversized_image",
+        "advice",
+        `A picture (${image}) is far bigger than the space it fills.`,
+        "Upload a smaller version of that picture.",
+      );
+  }
   return found;
 }
 
 /** Judges every measured width together. No measurements means no pass. */
-export function gradeVisual(measurements: ViewportMeasurement[]): VisualReport {
+export function gradeVisual(
+  measurements: ViewportMeasurement[],
+  page?: string,
+): VisualReport {
   if (!measurements.length)
     return {
       score: 0,
@@ -229,29 +391,115 @@ export function gradeVisual(measurements: ViewportMeasurement[]): VisualReport {
           detail: "The website hasn't been checked in a real browser yet.",
           fix: "Run the visual check so Revora can see how the pages actually render.",
           width: 0,
+          ...(page ? { page } : {}),
         },
       ],
       widths: [],
+      ...(page ? { pages: [page] } : {}),
+      coverage: { accessibility: false, performance: false },
     };
 
-  const findings = measurements.flatMap(gradeViewport);
-  // One fault seen at eleven widths is still one fault, so each distinct problem
-  // is counted once. Otherwise a single small detail would sink every score.
+  const findings = measurements
+    .flatMap(gradeViewport)
+    .map((finding) => (page ? { ...finding, page } : finding));
+  const score = scoreFindings(findings);
+  return {
+    score,
+    passed: !findings.some((finding) => finding.severity === "p0"),
+    findings,
+    widths: measurements.map((measurement) => px(measurement.width)),
+    ...(page ? { pages: [page] } : {}),
+    coverage: {
+      accessibility: measurements.some((measurement) => !!measurement.accessibility),
+      performance: measurements.some((measurement) => !!measurement.performance),
+    },
+  };
+}
+
+/**
+ * One fault seen at eleven widths is still one fault, so each distinct problem
+ * is counted once. Otherwise a single small detail would sink every score.
+ */
+function scoreFindings(findings: VisualFinding[]): number {
   const distinct = (severity: "p0" | "advice") =>
     new Set(
       findings
         .filter((finding) => finding.severity === severity)
-        .map((finding) => `${finding.key}|${finding.detail.replace(/\d+/g, "")}`),
+        .map(
+          (finding) => `${finding.page ?? ""}|${finding.key}|${finding.detail.replace(/\d+/g, "")}`,
+        ),
     ).size;
-  const p0 = distinct("p0");
-  const score = Math.max(0, Math.min(100, 100 - p0 * 20 - distinct("advice") * 3));
+  return Math.max(0, Math.min(100, 100 - distinct("p0") * 20 - distinct("advice") * 3));
+}
+
+/**
+ * Judges a WHOLE WEBSITE. Every visible page must have its own fresh
+ * measurements: a clean home page has never been proof that Services, Pricing
+ * or Contact render correctly, so any page without a report fails the site
+ * outright.
+ */
+export function gradeSite(
+  expectedPages: string[],
+  reports: { page: string; report: VisualReport }[],
+): VisualReport {
+  const measured = new Map(reports.map((entry) => [entry.page, entry.report]));
+  const findings: VisualFinding[] = [];
+  const widths = new Set<number>();
+  const pages: string[] = [];
+  let accessibility = expectedPages.length > 0;
+  let performance = expectedPages.length > 0;
+
+  for (const page of expectedPages) {
+    const report = measured.get(page);
+    if (!report || !report.widths.length) {
+      findings.push({
+        key: "page_not_measured",
+        severity: "p0",
+        detail: `“${page}” hasn't been checked in a real browser yet.`,
+        fix: "Run the visual check so every page is measured, not just the home page.",
+        width: 0,
+        page,
+      });
+      accessibility = false;
+      performance = false;
+      continue;
+    }
+    pages.push(page);
+    for (const width of report.widths) widths.add(width);
+    findings.push(...report.findings.map((finding) => ({ ...finding, page })));
+    if (!report.coverage?.accessibility) accessibility = false;
+    if (!report.coverage?.performance) performance = false;
+  }
+
+  const missingWidths = VIEWPORTS.filter((width) => !widths.has(width));
+  if (pages.length && missingWidths.length)
+    findings.push({
+      key: "widths_not_measured",
+      severity: "p0",
+      detail: `The website wasn't checked at ${missingWidths.join(", ")}px.`,
+      fix: "Run the visual check again so every screen size is covered.",
+      width: 0,
+    });
+
+  if (!expectedPages.length)
+    findings.push({
+      key: "not_measured",
+      severity: "p0",
+      detail: "There are no visitor-visible pages to check yet.",
+      fix: "Build the website first, then run the visual check.",
+      width: 0,
+    });
+
   return {
-    score,
-    passed: p0 === 0,
+    score: scoreFindings(findings),
+    passed: !findings.some((finding) => finding.severity === "p0"),
     findings,
-    widths: measurements.map((measurement) => px(measurement.width)),
+    widths: [...widths].sort((a, b) => a - b),
+    pages,
+    coverage: { accessibility, performance },
   };
 }
+
 
 /**
  * The snippet a browser evaluates to produce one `ViewportMeasurement`. Kept as
