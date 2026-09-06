@@ -7,6 +7,7 @@ import {
   type VisualReport,
 } from "./visual";
 import { auditWebsite, type QualityInput } from "./quality";
+import { freshVisualReport } from "./quality.server";
 import { businessFacts } from "./facts";
 
 const clean = (width: number): ViewportMeasurement => ({
