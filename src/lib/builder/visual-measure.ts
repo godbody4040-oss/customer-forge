@@ -59,9 +59,11 @@ export async function measureWebsiteAtAllWidths(
     for (const [index, width] of VIEWPORTS.entries()) {
       iframe.style.width = `${width}px`;
       await wait(SETTLE_MS);
-      // Same-origin, so the preview's own window can evaluate the shared
-      // measurement snippet — no approximation, the real rendered numbers.
-      const measured = win.eval(`(${MEASURE_SCRIPT})`) as ViewportMeasurement;
+      // Same-origin, so the preview's own window runs the shared measurement
+      // snippet against its own document — the real rendered numbers, not an
+      // approximation taken from outside the frame.
+      const evaluate = (win as unknown as { eval: (code: string) => unknown }).eval;
+      const measured = evaluate.call(win, `(${MEASURE_SCRIPT})`) as ViewportMeasurement;
       measurements.push({ ...measured, width });
       onProgress?.(index + 1, VIEWPORTS.length);
     }
