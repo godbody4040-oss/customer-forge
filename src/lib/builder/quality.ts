@@ -40,11 +40,31 @@ export type QualityInput = {
   showsGallery: boolean;
   /** Page titles and descriptions, for duplicate metadata detection. */
   metadata: { title: unknown; description: unknown }[];
+  /** Layer 2: what a real browser measured, when a rendered check has run. */
+  visual?: VisualReport | null;
 };
+
+export type QualityCategory =
+  | "data"
+  | "content"
+  | "visual"
+  | "responsive"
+  | "conversion"
+  | "accessibility"
+  | "seo"
+  | "performance"
+  | "navigation"
+  | "technical";
 
 export type QualityReport = {
   score: number;
+  /** Content is clean enough to publish. */
   ready: boolean;
+  /** Both layers clean, browser-measured and 95+. */
+  productionReady: boolean;
+  /** Whether a real browser check backs the visual and responsive scores. */
+  measured: boolean;
+  categories: { name: QualityCategory; weight: number; earned: number }[];
   issues: QualityIssue[];
   blockers: QualityIssue[];
 };
