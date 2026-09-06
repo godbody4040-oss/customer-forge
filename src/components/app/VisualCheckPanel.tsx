@@ -67,7 +67,7 @@ export function VisualCheckPanel({
       }
       void queryClient.invalidateQueries({ queryKey: ["production-readiness"] });
       void queryClient.invalidateQueries({ queryKey: ["production-status"] });
-      void queryClient.invalidateQueries({ queryKey: ["build-readiness"] });
+      void queryClient.invalidateQueries({ queryKey: ["build_readiness"] });
     } catch (error) {
       toast.error(friendlyError(error, "The visual check couldn't run. Please try again."));
     } finally {

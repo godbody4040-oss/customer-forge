@@ -17,7 +17,7 @@ type Db = SupabaseClient<never>;
  * or section saved afterwards makes the report stale, and a stale report never
  * counts as measured.
  */
-function freshVisualReport(
+export function freshVisualReport(
   row: Record<string, unknown> | null,
   contentUpdatedAt: (string | undefined)[],
 ): VisualReport | null {
