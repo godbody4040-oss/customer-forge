@@ -618,17 +618,27 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
     // temporary name is swapped for its real id as soon as the row exists, so
     // later steps land on it instead of being dropped.
     const newPages = new Map<string, string>();
+    // Same idea for sections: a section created in this run can be filled with
+    // buttons and cards straight away.
+    const newSections = new Map<string, string>();
     const nextSort = new Map<string, number>();
     for (const section of site.sections)
       nextSort.set(section.page_id, (nextSort.get(section.page_id) ?? 0) + 1);
 
     for (const rawAction of actions as AgentAction[]) {
       if (fatal) break;
-      const action = (
-        "pageId" in rawAction && newPages.has(rawAction.pageId)
-          ? { ...rawAction, pageId: newPages.get(rawAction.pageId) }
-          : rawAction
-      ) as AgentAction;
+      let resolved: AgentAction = rawAction;
+      if ("pageId" in resolved && newPages.has(resolved.pageId))
+        resolved = { ...resolved, pageId: newPages.get(resolved.pageId)! } as AgentAction;
+      if ("sectionId" in resolved && newSections.has(resolved.sectionId))
+        resolved = { ...resolved, sectionId: newSections.get(resolved.sectionId)! } as AgentAction;
+      const action = resolved;
+      // A step that still points at a section which was never created is
+      // skipped rather than written against a made-up id.
+      if ("sectionId" in action && !UUID_ID.test(action.sectionId)) {
+        failed.push(`${action.type}:unresolved_section`);
+        continue;
+      }
       // A step that still points at a page which was never created is skipped
       // rather than written against a made-up id.
       if ("pageId" in action && !UUID_ID.test(action.pageId)) {
@@ -693,6 +703,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
             if (error) return { error };
             if (created?.id) {
               const id = String(created.id);
+              if (action.ref) newSections.set(action.ref, id);
               undoSteps.push({
                 label: "add_section:remove",
                 run: async () => {
