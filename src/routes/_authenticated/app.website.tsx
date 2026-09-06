@@ -20,6 +20,10 @@ import { BuilderWizard } from "@/components/app/BuilderWizard";
 import { BuilderShell, type BuilderSection } from "@/components/app/BuilderShell";
 import { Disclosure, OverlayPanel } from "@/components/app/BuilderTools";
 import { BuilderHistoryProvider } from "@/lib/builder-history.hooks";
+import { EmptyHint, GroupTabs } from "@/components/app/BuilderGroups";
+import { AiRequestPanel } from "@/components/app/AiRequestPanel";
+import { ConversionOptimizer } from "@/components/app/ConversionOptimizer";
+import { normalizeBuilderMode } from "@/lib/builder-modes";
 
 import { WebsiteStructure } from "@/components/app/WebsiteStructure";
 import { LeadEngine } from "@/components/app/LeadEngine";
@@ -128,7 +132,7 @@ function WebsitePage() {
   );
   const [setupOpen, setSetupOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [section, setSection] = useState(normalizeSection(sectionParam));
+  const [section, setSection] = useState(normalizeBuilderMode(sectionParam));
   /** Older deep links (and panels that ask to jump) resolve to the four areas. */
   const goTo = (key: string) => {
     if (key === "answers" || key === "setup") {
@@ -139,11 +143,11 @@ function WebsitePage() {
       setHistoryOpen(true);
       return;
     }
-    setSection(normalizeSection(key));
+    setSection(normalizeBuilderMode(key));
   };
   // A finding elsewhere can deep-link straight into the area that fixes it.
   useEffect(() => {
-    if (sectionParam) setSection(normalizeSection(sectionParam));
+    if (sectionParam) setSection(normalizeBuilderMode(sectionParam));
   }, [sectionParam]);
 
   const requiredCount = (readiness?.requiredGaps ?? []).length;
@@ -873,28 +877,4 @@ function WebsitePage() {
       />
     </>
   );
-}
-
-/** Old builder destinations now live inside Build / Design / AI / Launch. */
-const SECTION_ALIAS: Record<string, string> = {
-  overview: "build",
-  pages: "build",
-  canvas: "build",
-  content: "build",
-  structure: "build",
-  assistant: "ai",
-  growth: "ai",
-  audit: "ai",
-  upgrades: "ai",
-  media: "design",
-  effects: "design",
-  build: "build",
-  design: "design",
-  ai: "ai",
-  launch: "launch",
-};
-
-function normalizeSection(key: string | undefined): string {
-  if (!key) return "build";
-  return SECTION_ALIAS[key] ?? "build";
 }
