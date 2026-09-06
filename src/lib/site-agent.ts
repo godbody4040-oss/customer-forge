@@ -90,7 +90,19 @@ export type AgentAction =
       link_label?: string | undefined;
     }
   | { type: "delete_component"; componentId: string }
-  | { type: "add_page"; kind: string; title: string; slug: string }
+  | {
+      type: "add_page";
+      kind: string;
+      title: string;
+      slug: string;
+      /**
+       * Optional temporary name (e.g. "temp_page_1") that later actions in the
+       * same plan may use as their `pageId`. The executor swaps it for the real
+       * database id the moment the page is created, so one run can build a page
+       * AND everything on it.
+       */
+      ref?: string | undefined;
+    }
   | { type: "set_page"; pageId: string; patch: PageSeoPatch }
   | { type: "delete_page"; pageId: string }
   | { type: "set_theme"; patch: ThemePatch }
