@@ -277,7 +277,10 @@ export function readActions(
         const title = text(row["title"], 120);
         const slug = slugifyPath(text(row["slug"], 80) || title);
         if (!KIND.test(kind) || !title || !slug) break;
-        out.push({ type, kind, title, slug });
+        const ref = text(row["ref"], 40);
+        const usable = TEMP_REF.test(ref) && !refs.has(ref) ? ref : "";
+        if (usable) refs.add(usable);
+        out.push({ type, kind, title, slug, ref: usable || undefined });
         break;
       }
       case "set_page": {
