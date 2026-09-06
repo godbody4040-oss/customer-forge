@@ -186,35 +186,72 @@ export function SitePageView({
   );
 }
 
-/** Links to every published page, so visitors and search engines find them. */
+/**
+ * Site navigation, generated from the pages that actually exist.
+ *
+ * Phones get a real menu button and an expanding panel — the old horizontal
+ * strip clipped page names off the side of the screen. Desktop keeps the
+ * inline row. Menu items with no readable name are dropped, and duplicates are
+ * removed, so a visitor never sees a blank or repeated link.
+ */
 export function SiteNav({ site, current }: { site: NonNullable<PublicSite>; current?: string }) {
-  const pages = (site.nav ?? []).filter((p) => p.kind !== "thanks" && p.slug !== "home");
+  const [open, setOpen] = useState(false);
+  const seen = new Set<string>();
+  const pages = (site.nav ?? [])
+    .filter((p) => p.kind !== "thanks" && p.slug !== "home")
+    .map((p) => ({ slug: p.slug, title: safeText(p.title) }))
+    .filter((p): p is { slug: string; title: string } => {
+      if (!p.title || !p.slug || seen.has(p.slug)) return false;
+      seen.add(p.slug);
+      return true;
+    });
   if (!pages.length) return null;
+
+  const itemClass = (active: boolean) =>
+    `block rounded-md px-2 py-2.5 hover:text-foreground md:px-0 md:py-0 ${
+      active ? "text-foreground" : "text-muted-foreground"
+    }`;
+
   return (
     <nav aria-label="Site pages" className="border-t border-border">
-      <ul className="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-4 py-2.5 text-[12px]">
-        <li>
-          <SitePageLink
-            slug={site.org.slug}
-            className="whitespace-nowrap text-muted-foreground hover:text-foreground"
-          >
-            Home
-          </SitePageLink>
-        </li>
-        {pages.map((p) => (
-          <li key={p.slug}>
-            <SitePageLink
-              slug={site.org.slug}
-              page={p.slug}
-              className={`whitespace-nowrap hover:text-foreground ${
-                current === p.slug ? "text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {p.title}
+      <div className="mx-auto max-w-6xl px-4">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="site-nav-pages"
+          onClick={() => setOpen((value) => !value)}
+          className="flex min-h-11 w-full items-center justify-between gap-2 text-[13px] font-medium md:hidden"
+        >
+          <span>Menu</span>
+          {open ? (
+            <X className="size-4" aria-hidden="true" />
+          ) : (
+            <Menu className="size-4" aria-hidden="true" />
+          )}
+        </button>
+        <ul
+          id="site-nav-pages"
+          className={`${open ? "block" : "hidden"} pb-2 text-[13px] md:flex md:max-w-full md:flex-wrap md:gap-4 md:py-2.5 md:pb-2.5 md:text-[12px]`}
+        >
+          <li>
+            <SitePageLink slug={site.org.slug} className={itemClass(!current)}>
+              Home
             </SitePageLink>
           </li>
-        ))}
-      </ul>
+          {pages.map((p) => (
+            <li key={p.slug}>
+              <SitePageLink
+                slug={site.org.slug}
+                page={p.slug}
+                aria-current={current === p.slug ? "page" : undefined}
+                className={itemClass(current === p.slug)}
+              >
+                {p.title}
+              </SitePageLink>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 }
