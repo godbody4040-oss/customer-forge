@@ -668,19 +668,41 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           );
           break;
         case "add_section": {
-          const siblings = site.sections.filter((section) => section.page_id === action.pageId);
-          const position = action.position ?? siblings.length;
-          await run(action.type, () =>
-            supabase.from("website_sections").insert({
-              organization_id: orgId,
-              page_id: action.pageId,
-              kind: action.kind,
-              heading: action.heading ?? null,
-              subheading: action.subheading ?? null,
-              body: action.body ?? null,
-              sort_order: position,
-            }),
-          );
+          // Several sections added to the same page in one run must not all
+          // claim the same slot, so the running count is used, not the snapshot.
+          const used = nextSort.get(action.pageId) ?? 0;
+          const position = action.position ?? used;
+          nextSort.set(action.pageId, Math.max(used, position) + 1);
+          await run(action.type, async () => {
+            const { data: created, error } = await supabase
+              .from("website_sections")
+              .insert({
+                organization_id: orgId,
+                page_id: action.pageId,
+                kind: action.kind,
+                heading: action.heading ?? null,
+                subheading: action.subheading ?? null,
+                body: action.body ?? null,
+                sort_order: position,
+              })
+              .select("id")
+              .maybeSingle();
+            if (error) return { error };
+            if (created?.id) {
+              const id = String(created.id);
+              undoSteps.push({
+                label: "add_section:remove",
+                run: async () => {
+                  await supabase
+                    .from("website_sections")
+                    .delete()
+                    .eq("id", id)
+                    .eq("organization_id", orgId);
+                },
+              });
+            }
+            return null;
+          });
           break;
         }
         case "delete_section":
