@@ -285,8 +285,8 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
         .map((turn) => turn.content)
         .slice(-6),
       attachments: data.attachments.map((attachment) => ({
-        kind: attachment.mimeType?.split("/")[0] ?? "file",
-        name: attachment.name ?? "upload",
+        kind: attachment.kind,
+        name: attachment.name,
       })),
     });
 
