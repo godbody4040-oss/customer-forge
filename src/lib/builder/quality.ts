@@ -385,9 +385,11 @@ export function auditWebsite(input: QualityInput): QualityReport {
     // reported them. Unmeasured is provisional — half credit at most, never a
     // clean sheet, so nothing can reach 95 on an assumption.
     const proven =
-      name === "accessibility" ? !!coverage?.accessibility
-      : name === "performance" ? !!coverage?.performance
-      : true;
+      name === "accessibility"
+        ? !!coverage?.accessibility
+        : name === "performance"
+          ? !!coverage?.performance
+          : true;
     const earned = proven ? weight * share : weight * Math.min(share, 0.5);
     return { name, weight, earned: Math.round(earned * 10) / 10 };
   });

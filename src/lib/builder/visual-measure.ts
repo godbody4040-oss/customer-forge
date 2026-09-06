@@ -9,12 +9,7 @@
  * the server, which re-grades them itself — the browser never gets to decide
  * its own score.
  */
-import {
-  MEASURE_SCRIPT,
-  OBSERVE_SCRIPT,
-  VIEWPORTS,
-  type ViewportMeasurement,
-} from "./visual";
+import { MEASURE_SCRIPT, OBSERVE_SCRIPT, VIEWPORTS, type ViewportMeasurement } from "./visual";
 
 const IFRAME_HEIGHT = 900;
 /** Let styles, fonts and images settle after each resize before measuring. */

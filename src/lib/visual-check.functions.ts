@@ -123,9 +123,7 @@ export const recordVisualCheck = createServerFn({ method: "POST" })
 
     const writer = supabase as unknown as {
       from: (table: string) => {
-        insert: (
-          rows: Record<string, unknown>[],
-        ) => Promise<{ error: { message: string } | null }>;
+        insert: (rows: Record<string, unknown>[]) => Promise<{ error: { message: string } | null }>;
       };
     };
     const { error } = await writer.from("website_visual_reports").insert(

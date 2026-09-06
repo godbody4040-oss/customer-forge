@@ -66,7 +66,6 @@ export function freshSiteVisualReport(
   return gradeSite(visiblePages, reports);
 }
 
-
 /** Audits one workspace's website. Every count comes from a real table. */
 export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<QualityReport> {
   const client = db as unknown as {
@@ -113,7 +112,6 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
         .order("measured_at", { ascending: false })
         .limit(200),
     ]);
-
 
   const profileRow = (profile.data ?? null) as Record<string, unknown> | null;
   const orgRow = (org.data ?? null) as Record<string, unknown> | null;

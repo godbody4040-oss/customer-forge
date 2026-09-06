@@ -243,7 +243,6 @@ export function buildDeterministicPlan(
       return created;
     });
 
-
     task("Lay out the home page in buyer-decision order", () => {
       if (!page) return false;
       let position = sectionsOf(page).length;

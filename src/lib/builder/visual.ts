@@ -120,7 +120,6 @@ export type VisualReport = {
   coverage?: VisualCoverage;
 };
 
-
 const px = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
 
 /**
@@ -376,10 +375,7 @@ export function gradeViewport(measurement: ViewportMeasurement): VisualFinding[]
 }
 
 /** Judges every measured width together. No measurements means no pass. */
-export function gradeVisual(
-  measurements: ViewportMeasurement[],
-  page?: string,
-): VisualReport {
+export function gradeVisual(measurements: ViewportMeasurement[], page?: string): VisualReport {
   if (!measurements.length)
     return {
       score: 0,
@@ -499,7 +495,6 @@ export function gradeSite(
     coverage: { accessibility, performance },
   };
 }
-
 
 /**
  * The snippet a browser evaluates to produce one `ViewportMeasurement`. Kept as
@@ -807,7 +802,6 @@ export const MEASURE_SCRIPT = `(() => {
     performance: performanceMeasurement,
   };
 })()`;
-
 
 /**
  * Installed in the page as soon as it loads, before anything is measured, so

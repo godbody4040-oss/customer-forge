@@ -136,8 +136,12 @@ describe("what was never measured is never a pass", () => {
     const report = auditWebsite(goodInput(gradeVisual(bare)));
     expect(report.productionReady).toBe(false);
     // Half credit at most for a category nothing proved.
-    expect(report.categories.find((c) => c.name === "accessibility")?.earned).toBeLessThanOrEqual(5);
-    expect(report.categories.find((c) => c.name === "performance")?.earned).toBeLessThanOrEqual(2.5);
+    expect(report.categories.find((c) => c.name === "accessibility")?.earned).toBeLessThanOrEqual(
+      5,
+    );
+    expect(report.categories.find((c) => c.name === "performance")?.earned).toBeLessThanOrEqual(
+      2.5,
+    );
   });
 
   it("fails the whole site when one visible page was never opened", () => {
@@ -205,7 +209,8 @@ describe("freshVisualReport", () => {
   it("ignores missing or unreadable rows instead of guessing", () => {
     expect(freshVisualReport(null, [])).toBeNull();
     expect(freshVisualReport({ measured_at: "not-a-date", measurements: [] }, [])).toBeNull();
-    expect(freshVisualReport({ measured_at: "2026-09-06T00:00:00Z", measurements: [] }, []))
-      .toBeNull();
+    expect(
+      freshVisualReport({ measured_at: "2026-09-06T00:00:00Z", measurements: [] }, []),
+    ).toBeNull();
   });
 });

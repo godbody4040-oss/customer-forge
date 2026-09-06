@@ -110,8 +110,9 @@ export function VisualCheckPanel({
           <SectionHeading eyebrow="Real-browser check" title="See it the way visitors do" />
           <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
             Revora opens your website on this device and measures it at eleven phone and desktop
-            widths, on every page — checking for sideways scrolling, broken pictures, cut-off text and buttons that
-            are hard to tap. Publishing stays locked until this passes at 95 or better.
+            widths, on every page — checking for sideways scrolling, broken pictures, cut-off text
+            and buttons that are hard to tap. Publishing stays locked until this passes at 95 or
+            better.
           </p>
           {result ? (
             <div className="mt-3 space-y-1.5">
