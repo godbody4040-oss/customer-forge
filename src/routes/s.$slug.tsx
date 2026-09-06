@@ -13,7 +13,6 @@ import { readCopy } from "@/lib/site-engine";
 import { canonicalSiteUrl } from "@/lib/revora-address";
 import { SiteNav, SitePageView } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
-import { telHref } from "@/components/site/ContactDetails";
 import { businessFacts } from "@/lib/builder/facts";
 import { placeDisplay } from "@/lib/builder/presentation";
 import { safeLinkUrl } from "@/lib/website-content";

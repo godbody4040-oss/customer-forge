@@ -11,7 +11,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteSection, StickyCallBar } from "@/components/site/SiteSections";
-import { telHref } from "@/components/site/ContactDetails";
+import { businessFacts } from "@/lib/builder/facts";
+import { safeText } from "@/lib/builder/presentation";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
 import { siteThemeStyle } from "@/lib/site-theme";
 import { readComposition } from "@/lib/visual-composition";
@@ -104,6 +105,8 @@ export function SitePageView({
   const ctaLabel =
     copy?.primaryCta || seo.primary_cta_label || (site.quote ? "Get my price" : "Book now");
   const page = site.content!.page;
+  // Validated business details — an unusable phone number never becomes a link.
+  const facts = businessFacts(profile as Record<string, unknown> | null, org.name);
 
   useEffect(() => {
     if (preview) return;
@@ -136,15 +139,15 @@ export function SitePageView({
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5">
             <SitePageLink slug={org.slug} className="min-w-0">
               <p className="truncate font-display text-[16px] font-semibold">{org.name}</p>
-              {profile?.city ? (
-                <p className="text-[11px] text-muted-foreground">{profile.city}</p>
+              {facts.city ? (
+                <p className="text-[11px] text-muted-foreground">{facts.city}</p>
               ) : null}
             </SitePageLink>
             <div className="flex items-center gap-2">
-              {profile?.phone ? (
+              {facts.phoneHref ? (
                 <Button asChild variant="outline" size="sm">
                   <a
-                    href={telHref(profile.phone)}
+                    href={facts.phoneHref}
                     onClick={() =>
                       void track({ data: { slug: org.slug, eventType: "call_click" } }).catch(
                         () => undefined,
@@ -173,7 +176,7 @@ export function SitePageView({
         <footer className="mx-auto max-w-6xl px-4 py-10">
           <p className="text-[12px] text-muted-foreground">
             © {new Date().getFullYear()} {org.name}
-            {profile?.city ? ` · ${profile.city}` : ""}
+            {facts.city ? ` · ${facts.city}` : ""}
           </p>
         </footer>
 
