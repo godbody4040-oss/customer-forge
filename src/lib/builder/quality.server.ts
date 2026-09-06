@@ -8,7 +8,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { businessFacts } from "./facts";
 import { auditWebsite, type QualityInput, type QualityReport } from "./quality";
-import { gradeVisual, type VisualReport } from "./visual";
+import { gradeSite, gradeVisual, type VisualReport } from "./visual";
 
 type Db = SupabaseClient<never>;
 
@@ -35,6 +35,37 @@ export function freshVisualReport(
   const report = gradeVisual(measurements as never);
   return report.widths.length ? report : null;
 }
+
+/**
+ * Judges the WHOLE website from stored per-page reports. Each visible page needs
+ * its own fresh measurements: a home-page report has never been evidence that
+ * Services, Pricing or Contact render correctly, so an unmeasured or stale page
+ * fails the site.
+ */
+export function freshSiteVisualReport(
+  rows: Record<string, unknown>[],
+  visiblePages: string[],
+  contentUpdatedAt: (string | undefined)[],
+): VisualReport {
+  const newest = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    const slug = String(row["page_slug"] ?? "").trim();
+    if (!slug) continue;
+    const at = Date.parse(String(row["measured_at"] ?? ""));
+    if (!Number.isFinite(at)) continue;
+    const current = newest.get(slug);
+    const currentAt = current ? Date.parse(String(current["measured_at"] ?? "")) : -1;
+    if (at > currentAt) newest.set(slug, row);
+  }
+
+  const reports: { page: string; report: VisualReport }[] = [];
+  for (const page of visiblePages) {
+    const report = freshVisualReport(newest.get(page) ?? null, contentUpdatedAt);
+    if (report) reports.push({ page, report: { ...report, pages: [page] } });
+  }
+  return gradeSite(visiblePages, reports);
+}
+
 
 /** Audits one workspace's website. Every count comes from a real table. */
 export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<QualityReport> {
