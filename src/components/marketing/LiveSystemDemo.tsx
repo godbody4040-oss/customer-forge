@@ -36,7 +36,7 @@ function Row({
     tone === "gold" ? "text-primary" : tone === "success" ? "text-success" : "text-foreground";
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border/70 py-2 last:border-b-0">
-      <span className="text-[12px] text-muted-foreground">{label}</span>
+      <span className="text-[13px] text-muted-foreground">{label}</span>
       <span className={`tnum text-[12.5px] font-medium ${toneClass}`}>{value}</span>
     </div>
   );
@@ -117,7 +117,7 @@ const STAGES: Stage[] = [
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="font-display text-[15px] font-semibold">Dana Reyes</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">Interior + exterior detail</p>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">Interior + exterior detail</p>
           </div>
           <Pill tone="attention">New</Pill>
         </div>
@@ -225,7 +225,7 @@ const STAGES: Stage[] = [
           {[0, 1, 2, 3, 4].map((i) => (
             <Star key={i} className="size-4 fill-primary text-primary" aria-hidden="true" />
           ))}
-          <span className="ml-1 text-[12px] text-muted-foreground">new public review</span>
+          <span className="ml-1 text-[13px] text-muted-foreground">new public review</span>
         </div>
         <div className="mt-3">
           <Row label="Requests sent this month" value="18" />
@@ -249,7 +249,7 @@ const STAGES: Stage[] = [
           <Row label="Next win-back campaign" value="In 60 days" />
           <Row label="Referrals" value="1" tone="success" />
         </div>
-        <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
+        <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
           The same loop restarts — without you chasing it.
         </p>
       </ScreenShell>
@@ -315,7 +315,7 @@ export function LiveSystemDemo() {
                     setAuto(false);
                     setActive(i);
                   }}
-                  className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
                     isActive
                       ? "border-primary/50 bg-primary/12 text-primary"
                       : "border-border text-muted-foreground hover:text-foreground"
@@ -364,7 +364,7 @@ export function LiveSystemDemo() {
               </Link>
             </Button>
           </div>
-          <p className="mt-3 text-[12px] text-muted-foreground">
+          <p className="mt-3 text-[13px] text-muted-foreground">
             The demo is a real Revora workspace. Every quote and booking you submit creates real
             records inside it.
           </p>

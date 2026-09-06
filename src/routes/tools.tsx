@@ -86,7 +86,7 @@ function NumberField({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/60 bg-card/40 p-4">
-      <div className="text-[12px] text-muted-foreground">{label}</div>
+      <div className="text-[13px] text-muted-foreground">{label}</div>
       <div className="mt-1 font-display text-[20px] font-semibold text-primary">{value}</div>
     </div>
   );

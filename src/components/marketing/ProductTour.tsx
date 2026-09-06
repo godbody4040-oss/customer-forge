@@ -33,7 +33,7 @@ const Row = ({
 }) => (
   <div className="flex items-center justify-between gap-3 border-b border-border/70 py-2.5 last:border-0">
     <span className="min-w-0 flex-1 text-[12.5px] text-foreground">{left}</span>
-    <span className="hidden min-w-0 flex-1 text-[12px] text-muted-foreground sm:block">{mid}</span>
+    <span className="hidden min-w-0 flex-1 text-[13px] text-muted-foreground sm:block">{mid}</span>
     <span
       className={`tnum shrink-0 rounded-full border px-2 py-0.5 text-[11px] ${
         tone === "gold"
@@ -69,7 +69,7 @@ function Screen({ view }: { view: ScreenKey }) {
     return (
       <div>
         <div className="flex items-center justify-between rounded-md border border-border bg-background/60 px-3 py-2">
-          <span className="font-display text-[12px] font-semibold">Northside Plumbing</span>
+          <span className="font-display text-[13px] font-semibold">Northside Plumbing</span>
           <span className="flex gap-1.5">
             <span className="rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
               Call
@@ -83,7 +83,7 @@ function Screen({ view }: { view: ScreenKey }) {
           <p className="font-display text-[15px] leading-tight font-semibold">
             Emergency plumbing in Raleigh — answered in minutes
           </p>
-          <p className="mt-2 text-[12px] text-muted-foreground">
+          <p className="mt-2 text-[13px] text-muted-foreground">
             Licensed, insured, upfront pricing. Book online 24/7.
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -150,7 +150,7 @@ function Screen({ view }: { view: ScreenKey }) {
           ].map(([k, v]) => (
             <div
               key={k}
-              className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-[12px]"
+              className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-[13px]"
             >
               <span className="text-muted-foreground">{k}</span>
               <span>{v}</span>
@@ -192,7 +192,7 @@ function Screen({ view }: { view: ScreenKey }) {
             </div>
           ))}
         </div>
-        <p className="mt-3 rounded-md border border-primary/25 bg-primary/5 px-3 py-2 text-[12px]">
+        <p className="mt-3 rounded-md border border-primary/25 bg-primary/5 px-3 py-2 text-[13px]">
           Priya booked Thu 11:30 — confirmation and reminder sent automatically.
         </p>
       </div>

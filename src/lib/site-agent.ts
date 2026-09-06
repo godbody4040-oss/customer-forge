@@ -90,7 +90,19 @@ export type AgentAction =
       link_label?: string | undefined;
     }
   | { type: "delete_component"; componentId: string }
-  | { type: "add_page"; kind: string; title: string; slug: string }
+  | {
+      type: "add_page";
+      kind: string;
+      title: string;
+      slug: string;
+      /**
+       * Optional temporary name (e.g. "temp_page_1") that later actions in the
+       * same plan may use as their `pageId`. The executor swaps it for the real
+       * database id the moment the page is created, so one run can build a page
+       * AND everything on it.
+       */
+      ref?: string | undefined;
+    }
   | { type: "set_page"; pageId: string; patch: PageSeoPatch }
   | { type: "delete_page"; pageId: string }
   | { type: "set_theme"; patch: ThemePatch }
@@ -131,6 +143,8 @@ export type AgentTurn = { role: "user" | "assistant"; content: string };
 /* ------------------------------- validation ------------------------------- */
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** A page that does not exist yet, named so later steps in the same plan can use it. */
+export const TEMP_REF = /^temp_[a-z0-9_]{1,30}$/i;
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 const text = (value: unknown, max: number) => {
@@ -163,6 +177,9 @@ export function readActions(
 ): AgentAction[] {
   if (!Array.isArray(value)) return [];
   const out: AgentAction[] = [];
+  /** Temporary page names declared by an earlier add_page in this same plan. */
+  const refs = new Set<string>();
+  const knownPage = (id: string) => known.pageIds.has(id) || refs.has(id);
 
   for (const raw of value.slice(0, MAX_ACTIONS * 2)) {
     if (!raw || typeof raw !== "object") continue;
@@ -194,7 +211,7 @@ export function readActions(
       }
       case "add_section": {
         const kind = text(row["kind"], 40).toLowerCase();
-        if (!known.pageIds.has(pageId) || !KIND.test(kind)) break;
+        if (!knownPage(pageId) || !KIND.test(kind)) break;
         const position = Number(row["position"]);
         out.push({
           type,
@@ -218,7 +235,7 @@ export function readActions(
               .map((id) => text(id, 40))
               .filter((id) => known.sectionIds.has(id))
           : [];
-        if (!known.pageIds.has(pageId) || ids.length < 2) break;
+        if (!knownPage(pageId) || ids.length < 2) break;
         out.push({ type, pageId, sectionIds: [...new Set(ids)] });
         break;
       }
@@ -262,7 +279,10 @@ export function readActions(
         const title = text(row["title"], 120);
         const slug = slugifyPath(text(row["slug"], 80) || title);
         if (!KIND.test(kind) || !title || !slug) break;
-        out.push({ type, kind, title, slug });
+        const ref = text(row["ref"], 40);
+        const usable = TEMP_REF.test(ref) && !refs.has(ref) ? ref : "";
+        if (usable) refs.add(usable);
+        out.push({ type, kind, title, slug, ref: usable || undefined });
         break;
       }
       case "set_page": {
@@ -283,12 +303,12 @@ export function readActions(
           patch.og_title = text(patchRaw["og_title"], 90);
         if (typeof patchRaw["og_description"] === "string")
           patch.og_description = text(patchRaw["og_description"], 200);
-        if (!known.pageIds.has(pageId) || Object.keys(patch).length === 0) break;
+        if (!knownPage(pageId) || Object.keys(patch).length === 0) break;
         out.push({ type, pageId, patch });
         break;
       }
       case "delete_page": {
-        if (!known.pageIds.has(pageId)) break;
+        if (!knownPage(pageId)) break;
         out.push({ type, pageId });
         break;
       }

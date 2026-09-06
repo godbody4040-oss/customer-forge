@@ -146,7 +146,7 @@ function LocationPage() {
       <SiteHeader />
       <main>
         <section className="mx-auto max-w-6xl px-4 pt-14 pb-10 sm:px-6 sm:pt-20">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-primary">
+          <p className="text-[13px] font-semibold uppercase tracking-wide text-primary">
             {location.county}, North Carolina
           </p>
           <h1 className="mt-3 max-w-3xl font-display text-[clamp(1.7rem,4vw,2.6rem)] leading-tight font-semibold">

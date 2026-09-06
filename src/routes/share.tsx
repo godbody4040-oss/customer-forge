@@ -102,7 +102,7 @@ function SharePage() {
                 placeholder="jordan"
                 className="mt-2"
               />
-              <p className="mt-2 text-[12px] text-muted-foreground">
+              <p className="mt-2 text-[13px] text-muted-foreground">
                 Tags your links so you can see what your sharing brought in.
               </p>
             </div>
@@ -115,7 +115,7 @@ function SharePage() {
                 placeholder="HVAC companies in Charlotte"
                 className="mt-2"
               />
-              <p className="mt-2 text-[12px] text-muted-foreground">
+              <p className="mt-2 text-[13px] text-muted-foreground">
                 The copy below rewrites itself for that audience.
               </p>
             </div>
@@ -123,7 +123,7 @@ function SharePage() {
 
           <div className="mt-6 rounded-lg border border-border bg-muted/30 p-4">
             <p className="eyebrow">Your tracked link</p>
-            <p className="mt-2 break-all font-mono text-[12px] text-foreground">{mainLink}</p>
+            <p className="mt-2 break-all font-mono text-[13px] text-foreground">{mainLink}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" onClick={nativeShare}>
                 <Share2 className="mr-2 size-4" aria-hidden="true" /> Share
@@ -167,7 +167,7 @@ function SharePage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">{asset.label}</h2>
-                  <p className="mt-1 text-[12px] text-muted-foreground">{asset.why}</p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">{asset.why}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -198,7 +198,7 @@ function SharePage() {
                   ) : null}
                 </div>
               </div>
-              <pre className="mt-4 max-w-full overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 text-[12px] leading-relaxed whitespace-pre-wrap text-foreground">
+              <pre className="mt-4 max-w-full overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 text-[13px] leading-relaxed whitespace-pre-wrap text-foreground">
                 {asset.message}
               </pre>
               <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">{asset.note}</p>

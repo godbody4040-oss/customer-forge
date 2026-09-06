@@ -157,7 +157,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
             {items.map((item) => (
               <span
                 key={item.id}
-                className="flex items-center gap-2 text-[12px] text-muted-foreground"
+                className="flex items-center gap-2 text-[13px] text-muted-foreground"
               >
                 <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
                 {item.label}
@@ -210,7 +210,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                   <SitePageLink
                     slug={org.slug}
                     page={item.href.slice(1)}
-                    className="mt-3 text-[12px] text-primary underline"
+                    className="mt-3 text-[13px] text-primary underline"
                   >
                     See details
                   </SitePageLink>
@@ -411,12 +411,12 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
                   <SitePageLink
                     slug={org.slug}
                     page={safeLinkUrl(link.link_url)!.slice(1)}
-                    className="rounded-full border border-border px-3 py-1.5 text-[12px] hover:border-primary"
+                    className="rounded-full border border-border px-3 py-1.5 text-[13px] hover:border-primary"
                   >
                     {link.label}
                   </SitePageLink>
                 ) : (
-                  <span className="rounded-full border border-border px-3 py-1.5 text-[12px]">
+                  <span className="rounded-full border border-border px-3 py-1.5 text-[13px]">
                     {link.label}
                   </span>
                 )}

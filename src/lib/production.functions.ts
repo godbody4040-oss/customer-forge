@@ -229,10 +229,12 @@ async function gatherReadiness(
       key: "quality",
       label: "Website quality check",
       ok: quality.ready,
-      detail: quality.ready
-        ? `Quality score ${quality.score}/100.`
-        : (quality.blockers[0]?.detail ??
-          `Quality score ${quality.score}/100 — a few pages still need work.`),
+      detail: !quality.ready
+        ? (quality.blockers[0]?.detail ??
+          `Quality score ${quality.score}/100 — a few pages still need work.`)
+        : quality.measured
+          ? `Quality score ${quality.score}/100, checked on real phone and desktop screens.`
+          : `Content score ${quality.score}/100. The look of the pages hasn't been measured on real screens yet, so this isn't a full 100.`,
     },
     {
       key: "suspension",

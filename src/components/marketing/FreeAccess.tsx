@@ -65,7 +65,7 @@ export function FreeAccessBanner({ className = "" }: { className?: string }) {
           </span>{" "}
           If it doesn't pay for itself, walk away — no card, no charge, no hard feelings.
         </p>
-        <p className="mt-1 text-[12px] text-muted-foreground">
+        <p className="mt-1 text-[13px] text-muted-foreground">
           After your free days:{" "}
           <span className="gold-hl">{usd(GROWTH_SYSTEM.setupPrice)} one-time setup</span>, then your{" "}
           <span className="gold-hl">first month is free</span> before{" "}
@@ -120,7 +120,7 @@ export function FreeAccessSection() {
             <Link to="/demo/dashboard">SEE THE DEMO DASHBOARD</Link>
           </Button>
         </div>
-        <p className="mt-3 text-[12px] text-muted-foreground">
+        <p className="mt-3 text-[13px] text-muted-foreground">
           Already started?{" "}
           <Link to="/auth" className="gold-hl hover:underline">
             Sign in
@@ -146,7 +146,7 @@ export function FreeAccessSection() {
           </li>
         ))}
       </ol>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border bg-background/40 px-5 py-4 text-[12px] text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border bg-background/40 px-5 py-4 text-[13px] text-muted-foreground">
         {["No card needed to explore", "Cancel anytime", "Your progress is saved"].map((item) => (
           <span key={item} className="inline-flex items-center gap-1.5">
             <CheckCircle2 className="size-3.5 text-primary" aria-hidden="true" />

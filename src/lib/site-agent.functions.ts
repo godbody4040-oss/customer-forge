@@ -29,6 +29,9 @@ import type { VerificationReport } from "@/lib/agent/verify";
 import { safeLinkUrl } from "@/lib/website-content";
 import { captureUndo, rollback, type JournalClient, type UndoStep } from "@/lib/site-agent.atomic";
 
+/** A real database id, as opposed to a plan's temporary page name. */
+const UUID_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const orgIdOf = (input: { organizationId?: unknown }) => {
   const organizationId = String(input?.organizationId ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(organizationId)) throw new Error("Invalid workspace");
@@ -611,8 +614,27 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
       }
     };
 
-    for (const action of actions as AgentAction[]) {
+    // A plan may create a page and then fill it in the same run. The new page's
+    // temporary name is swapped for its real id as soon as the row exists, so
+    // later steps land on it instead of being dropped.
+    const newPages = new Map<string, string>();
+    const nextSort = new Map<string, number>();
+    for (const section of site.sections)
+      nextSort.set(section.page_id, (nextSort.get(section.page_id) ?? 0) + 1);
+
+    for (const rawAction of actions as AgentAction[]) {
       if (fatal) break;
+      const action = (
+        "pageId" in rawAction && newPages.has(rawAction.pageId)
+          ? { ...rawAction, pageId: newPages.get(rawAction.pageId) }
+          : rawAction
+      ) as AgentAction;
+      // A step that still points at a page which was never created is skipped
+      // rather than written against a made-up id.
+      if ("pageId" in action && !UUID_ID.test(action.pageId)) {
+        failed.push(`${action.type}:unresolved_page`);
+        continue;
+      }
       try {
         undoSteps.push(...(await captureUndo(supabase as unknown as JournalClient, orgId, action)));
       } catch (error) {
@@ -649,19 +671,41 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           );
           break;
         case "add_section": {
-          const siblings = site.sections.filter((section) => section.page_id === action.pageId);
-          const position = action.position ?? siblings.length;
-          await run(action.type, () =>
-            supabase.from("website_sections").insert({
-              organization_id: orgId,
-              page_id: action.pageId,
-              kind: action.kind,
-              heading: action.heading ?? null,
-              subheading: action.subheading ?? null,
-              body: action.body ?? null,
-              sort_order: position,
-            }),
-          );
+          // Several sections added to the same page in one run must not all
+          // claim the same slot, so the running count is used, not the snapshot.
+          const used = nextSort.get(action.pageId) ?? 0;
+          const position = action.position ?? used;
+          nextSort.set(action.pageId, Math.max(used, position) + 1);
+          await run(action.type, async () => {
+            const { data: created, error } = await supabase
+              .from("website_sections")
+              .insert({
+                organization_id: orgId,
+                page_id: action.pageId,
+                kind: action.kind,
+                heading: action.heading ?? null,
+                subheading: action.subheading ?? null,
+                body: action.body ?? null,
+                sort_order: position,
+              })
+              .select("id")
+              .maybeSingle();
+            if (error) return { error };
+            if (created?.id) {
+              const id = String(created.id);
+              undoSteps.push({
+                label: "add_section:remove",
+                run: async () => {
+                  await supabase
+                    .from("website_sections")
+                    .delete()
+                    .eq("id", id)
+                    .eq("organization_id", orgId);
+                },
+              });
+            }
+            return null;
+          });
           break;
         }
         case "delete_section":
@@ -723,15 +767,35 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
           );
           break;
         case "add_page":
-          await run(action.type, () =>
-            supabase.from("website_pages").insert({
-              organization_id: orgId,
-              kind: action.kind,
-              title: action.title,
-              slug: action.slug,
-              sort_order: site.pages.length,
-            }),
-          );
+          await run(action.type, async () => {
+            const { data: created, error } = await supabase
+              .from("website_pages")
+              .insert({
+                organization_id: orgId,
+                kind: action.kind,
+                title: action.title,
+                slug: action.slug,
+                sort_order: site.pages.length + newPages.size,
+              })
+              .select("id")
+              .maybeSingle();
+            if (error) return { error };
+            if (created?.id) {
+              const id = String(created.id);
+              if (action.ref) newPages.set(action.ref, id);
+              undoSteps.push({
+                label: "add_page:remove",
+                run: async () => {
+                  await supabase
+                    .from("website_pages")
+                    .delete()
+                    .eq("id", id)
+                    .eq("organization_id", orgId);
+                },
+              });
+            }
+            return null;
+          });
           break;
         case "set_page":
           await run(action.type, () =>

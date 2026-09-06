@@ -212,11 +212,13 @@ describe("quality gate", () => {
     ...overrides,
   });
 
-  it("passes a clean site", () => {
+  it("passes a clean site on content, but is not production-ready until it is measured", () => {
     const report = auditWebsite(base());
     expect(report.blockers).toHaveLength(0);
-    expect(report.score).toBe(100);
+    expect(report.score).toBe(70);
     expect(report.ready).toBe(true);
+    expect(report.measured).toBe(false);
+    expect(report.productionReady).toBe(false);
   });
 
   it("blocks publishing on raw object text", () => {

@@ -291,7 +291,7 @@ function Landing() {
         {/* HERO */}
         <section className="hero-aura border-b border-border">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-start lg:gap-10 lg:py-20">
-            <div className="reveal lg:pt-4">
+            <div className="reveal min-w-0 lg:pt-4">
               <Pill tone="signal">
                 <Sparkles className="size-3.5" aria-hidden="true" /> REVORA™ — AI growth system for
                 local businesses
@@ -328,7 +328,7 @@ function Landing() {
                     <dt className="tnum gold-hl font-display text-[19px] leading-tight font-semibold">
                       {value}
                     </dt>
-                    <dd className="mt-1 text-[12px] leading-snug text-muted-foreground">{label}</dd>
+                    <dd className="mt-1 text-[13px] leading-snug text-muted-foreground">{label}</dd>
                   </div>
                 ))}
               </dl>
@@ -357,7 +357,7 @@ function Landing() {
                     {p.title}
                   </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{p.body}</p>
-                  <p className="mt-3 text-[12px] leading-relaxed font-medium text-destructive">
+                  <p className="mt-3 text-[13px] leading-relaxed font-medium text-destructive">
                     {p.cost}
                   </p>
                   <div className="mt-4 border-t border-primary/25 pt-3">
@@ -500,7 +500,7 @@ function Landing() {
                       {usd(GROWTH_SYSTEM.setupPrice)}
                     </p>
                     <p className="mt-1.5 text-[13px] font-medium">Setup — paid today</p>
-                    <p className="text-[12px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
+                    <p className="text-[13px] text-muted-foreground">{GROWTH_SYSTEM.setupLabel}</p>
                   </div>
                   <div>
                     <p className="tnum font-display text-[34px] leading-none font-semibold">
@@ -508,7 +508,7 @@ function Landing() {
                       <span className="text-[13px] font-normal text-muted-foreground">/month</span>
                     </p>
                     <p className="mt-1.5 text-[13px] font-medium text-primary">First month free</p>
-                    <p className="max-w-xs text-[12px] text-muted-foreground">
+                    <p className="max-w-xs text-[13px] text-muted-foreground">
                       {GROWTH_SYSTEM.monthlyLabel}
                     </p>
                   </div>
@@ -521,7 +521,7 @@ function Landing() {
                 >
                   <Link to="/get-started">{GROWTH_SYSTEM.ctaShort}</Link>
                 </Button>
-                <p className="mt-2.5 text-[12px] text-muted-foreground">
+                <p className="mt-2.5 text-[13px] text-muted-foreground">
                   {GROWTH_SYSTEM.explainer}
                 </p>
               </div>
@@ -539,7 +539,7 @@ function Landing() {
                 </ul>
                 <Link
                   to="/pricing"
-                  className="mt-5 inline-block text-[13px] text-primary hover:underline"
+                  className="mt-5 inline-flex min-h-11 items-center text-[13px] text-primary hover:underline"
                 >
                   Full pricing details
                 </Link>
@@ -603,7 +603,7 @@ function Landing() {
                 </li>
               ))}
             </ul>
-            <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-muted-foreground">
+            <p className="mt-6 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
               <span className="text-foreground">Also built for:</span>{" "}
               {TRUST_INDUSTRIES.join(" · ")}.
             </p>

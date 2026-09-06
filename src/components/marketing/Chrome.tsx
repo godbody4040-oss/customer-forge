@@ -107,7 +107,7 @@ export function SiteHeader() {
                 to={item.to}
                 {...("hash" in item ? { hash: item.hash } : {})}
                 onClick={() => setOpen(false)}
-                className="py-2.5 text-sm text-muted-foreground"
+                className="flex min-h-11 items-center py-2.5 text-sm text-muted-foreground"
                 activeProps={{ className: "text-foreground" }}
               >
                 {item.label}
@@ -202,13 +202,13 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
             <Logo tagline />
-            <p className="mt-4 max-w-sm text-[12px] leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-sm text-[13px] leading-relaxed text-muted-foreground">
               One system to get discovered, capture opportunities, convert leads, book customers and
               measure growth.
             </p>
             <div className="mt-6">
               <p className="eyebrow">Contact</p>
-              <ul className="mt-1 text-[12px] sm:mt-2.5 sm:space-y-2">
+              <ul className="mt-1 text-[13px] sm:mt-2.5 sm:space-y-2">
                 <li className="flex items-center gap-2">
                   <Mail className="size-3.5 text-primary" aria-hidden="true" />
                   <a

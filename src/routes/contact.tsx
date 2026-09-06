@@ -124,7 +124,7 @@ function Contact() {
           <div className="panel p-6 lg:sticky lg:top-24">
             <div className="mb-5 border-b border-border pb-4">
               <h2 className="font-display text-[17px] font-semibold">Send a message</h2>
-              <p className="mt-1.5 text-[12px] text-muted-foreground">
+              <p className="mt-1.5 text-[13px] text-muted-foreground">
                 Tell us about your business and what you want the system to do. Replies come from{" "}
                 {REVORA.email}.
               </p>

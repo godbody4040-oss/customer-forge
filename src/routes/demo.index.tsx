@@ -126,7 +126,7 @@ function DemoPage() {
             <ol className="mt-10 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {FLOW.map((step, index) => (
                 <li key={step} className="panel flex gap-3 p-4">
-                  <span className="tnum font-display text-[12px] font-semibold text-primary">
+                  <span className="tnum font-display text-[13px] font-semibold text-primary">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <span className="text-[13px] leading-relaxed text-muted-foreground">{step}</span>

@@ -95,7 +95,7 @@ export function FounderNote() {
       </div>
       <div className="mt-8 flex flex-col items-center gap-4">
         <div className="inline-flex items-center gap-3 rounded-full border border-primary/30 bg-card px-4 py-2">
-          <span className="grid size-7 place-items-center rounded-full bg-primary/15 font-display text-[12px] font-semibold text-primary">
+          <span className="grid size-7 place-items-center rounded-full bg-primary/15 font-display text-[13px] font-semibold text-primary">
             A
           </span>
           <span className="text-left">
@@ -124,21 +124,26 @@ export function FounderNote() {
 /** Sticky mobile action bar for Revora marketing pages only (never client sites). */
 export function RevoraMobileBar() {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
-      <div className="grid grid-cols-4 gap-2">
-        <Button asChild variant="outline" size="sm">
-          <a href={revoraTel}>Call</a>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <a href={revoraMailto(MAIL_SUBJECTS.inquiry)}>Email</a>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/pricing">Quote</Link>
-        </Button>
-        <Button asChild variant="signal" size="sm">
-          <Link to="/demo">Book</Link>
-        </Button>
+    <>
+      {/* Keeps the bar from covering whatever sits at the bottom of the page,
+          such as the send button on the contact form. */}
+      <div className="h-24 md:hidden" aria-hidden="true" />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
+        <div className="grid grid-cols-4 gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={revoraTel}>Call</a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={revoraMailto(MAIL_SUBJECTS.inquiry)}>Email</a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/pricing">Quote</Link>
+          </Button>
+          <Button asChild variant="signal" size="sm">
+            <Link to="/demo">Book</Link>
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

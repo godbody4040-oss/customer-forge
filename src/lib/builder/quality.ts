@@ -8,6 +8,7 @@
  */
 import { hasTemplateLeak, isUsableEmail, isUsablePhone, safeText } from "./presentation";
 import type { BusinessFacts } from "./facts";
+import type { VisualReport } from "./visual";
 
 export type QualitySeverity = "blocker" | "advice";
 
@@ -40,11 +41,33 @@ export type QualityInput = {
   showsGallery: boolean;
   /** Page titles and descriptions, for duplicate metadata detection. */
   metadata: { title: unknown; description: unknown }[];
+  /** Layer 2: what a real browser measured, when a rendered check has run. */
+  visual?: VisualReport | null;
 };
+
+export type QualityCategory =
+  | "data"
+  | "content"
+  | "visual"
+  | "responsive"
+  | "conversion"
+  | "accessibility"
+  | "seo"
+  | "performance"
+  | "navigation"
+  | "technical";
 
 export type QualityReport = {
   score: number;
+  /** Content is clean enough to publish. */
   ready: boolean;
+  /** Both layers clean, browser-measured and 95+. */
+  productionReady: boolean;
+  /** The score across only the parts provable from the content itself, 0-100. */
+  contentScore: number;
+  /** Whether a real browser check backs the visual and responsive scores. */
+  measured: boolean;
+  categories: { name: QualityCategory; weight: number; earned: number }[];
   issues: QualityIssue[];
   blockers: QualityIssue[];
 };
@@ -251,7 +274,62 @@ function structureIssues(input: QualityInput): QualityIssue[] {
   return found;
 }
 
-/** Full audit. Blockers stop publishing; the score reflects everything found. */
+/**
+ * Which part of the site each finding belongs to, so the score says WHERE the
+ * website is weak instead of just how weak it is.
+ */
+const CATEGORY_OF: Record<string, QualityCategory> = {
+  raw_object_text: "data",
+  template_leak: "content",
+  invalid_phone: "data",
+  invalid_email: "data",
+  unreadable_hours: "data",
+  no_contact_route: "conversion",
+  reviews_without_reviews: "content",
+  gallery_without_photos: "content",
+  nav_label_missing: "navigation",
+  nav_duplicate: "navigation",
+  nav_too_long: "navigation",
+  empty_page: "technical",
+  no_conversion: "conversion",
+  duplicate_metadata: "seo",
+  missing_description: "seo",
+};
+
+/** The weight of each part of the score. They add up to 100. */
+export const CATEGORY_WEIGHTS: Record<QualityCategory, number> = {
+  data: 15,
+  content: 10,
+  visual: 15,
+  responsive: 15,
+  conversion: 10,
+  accessibility: 10,
+  seo: 10,
+  performance: 5,
+  navigation: 5,
+  technical: 5,
+};
+
+/** Findings from the rendered browser check, when one has been run. */
+const VISUAL_CATEGORY: Record<string, QualityCategory> = {
+  horizontal_overflow: "responsive",
+  element_overflow: "responsive",
+  clipped_text: "responsive",
+  small_tap_target: "accessibility",
+  tiny_text: "accessibility",
+  broken_image: "visual",
+  menu_unusable: "navigation",
+  no_visible_cta: "conversion",
+  unreachable_control: "accessibility",
+  not_measured: "visual",
+};
+
+/**
+ * Full audit. Layer 1 reads the stored content; Layer 2 (`visual`) reports what
+ * a real browser measured. A website is only production-ready when BOTH layers
+ * are clean and the weighted score is 95 or better — a score alone never proves
+ * the pages look right, so an unmeasured site is never called ready.
+ */
 export function auditWebsite(input: QualityInput): QualityReport {
   const issues = [
     ...textIssues(input.texts),
@@ -260,7 +338,48 @@ export function auditWebsite(input: QualityInput): QualityReport {
     ...structureIssues(input),
   ];
   const blockers = issues.filter((item) => item.severity === "blocker");
-  const advice = issues.filter((item) => item.severity === "advice");
-  const score = Math.max(0, Math.min(100, 100 - blockers.length * 18 - advice.length * 4));
-  return { score, ready: blockers.length === 0 && score >= 95, issues, blockers };
+
+  // Each category starts whole; a blocker inside it wipes it out, advice dents it.
+  const damage: Record<string, number> = {};
+  for (const item of issues) {
+    const category = CATEGORY_OF[item.key] ?? "technical";
+    damage[category] = (damage[category] ?? 0) + (item.severity === "blocker" ? 1 : 0.25);
+  }
+  for (const finding of input.visual?.findings ?? []) {
+    const category = VISUAL_CATEGORY[finding.key] ?? "visual";
+    damage[category] = (damage[category] ?? 0) + (finding.severity === "p0" ? 1 : 0.25);
+  }
+
+  const measured = !!input.visual && input.visual.widths.length > 0;
+  const categories = (Object.keys(CATEGORY_WEIGHTS) as QualityCategory[]).map((name) => {
+    const weight = CATEGORY_WEIGHTS[name];
+    // Visual, responsive and performance can only be earned by measurement.
+    const unproven = !measured && (name === "visual" || name === "responsive");
+    const share = unproven ? 0 : Math.max(0, 1 - (damage[name] ?? 0));
+    return { name, weight, earned: Math.round(weight * share * 10) / 10 };
+  });
+
+  const score = Math.round(categories.reduce((total, item) => total + item.earned, 0));
+  // Publishing is judged on the parts that can be judged from the content alone,
+  // so a site is never held back for a browser check that hasn't run yet.
+  const provable = categories.filter(
+    (item) => item.name !== "visual" && item.name !== "responsive",
+  );
+  const provableWeight = provable.reduce((total, item) => total + item.weight, 0);
+  const contentScore = Math.round(
+    (provable.reduce((total, item) => total + item.earned, 0) / provableWeight) * 100,
+  );
+  const contentReady = blockers.length === 0;
+  return {
+    score,
+    /** Content is sound enough to publish. */
+    ready: contentReady && contentScore >= 90,
+    /** Proven end-to-end: content clean, browser-measured, and 95+. */
+    productionReady: contentReady && measured && !!input.visual?.passed && score >= 95,
+    contentScore,
+    measured,
+    categories,
+    issues,
+    blockers,
+  };
 }

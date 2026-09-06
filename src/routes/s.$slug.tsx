@@ -164,9 +164,7 @@ function TemplateSiteView({
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null;
   const headline =
-    copy?.heroHeadline ??
-    seo.headline ??
-    `${org.name}${facts.city ? ` in ${facts.city}` : ""}`;
+    copy?.heroHeadline ?? seo.headline ?? `${org.name}${facts.city ? ` in ${facts.city}` : ""}`;
   const sub =
     copy?.heroSubheadline ||
     seo.subheadline ||
@@ -191,9 +189,7 @@ function TemplateSiteView({
     telephone: facts.phone ?? undefined,
     email: facts.email ?? undefined,
     areaServed: facts.serviceArea ?? facts.city ?? undefined,
-    address: facts.city
-      ? { "@type": "PostalAddress", addressLocality: facts.city }
-      : undefined,
+    address: facts.city ? { "@type": "PostalAddress", addressLocality: facts.city } : undefined,
     aggregateRating:
       rating && reviews.length
         ? {
@@ -219,7 +215,7 @@ function TemplateSiteView({
       />
       <div className="relative z-[1]">
         {preview ? (
-          <div className="bg-accent/12 px-4 py-2 text-center text-[12px] text-accent">
+          <div className="bg-accent/12 px-4 py-2 text-center text-[13px] text-accent">
             Draft preview — this version is not live yet.
           </div>
         ) : null}
@@ -323,7 +319,7 @@ function TemplateSiteView({
                     <dd className="mt-1 text-[13px]">{facts.email}</dd>
                   </div>
                 ) : null}
-                {facts.serviceArea ?? facts.city ? (
+                {(facts.serviceArea ?? facts.city) ? (
                   <div>
                     <dt className="eyebrow flex items-center gap-1.5">
                       <MapPin className="size-3.5" aria-hidden="true" /> Area
@@ -378,7 +374,7 @@ function TemplateSiteView({
                         ? `${service.starting_price ? "From " : ""}${currency(Number(service.starting_price ?? service.price))}`
                         : "Price on request"}
                       {service.duration_minutes ? (
-                        <span className="ml-2 text-[12px] font-normal text-muted-foreground">
+                        <span className="ml-2 text-[13px] font-normal text-muted-foreground">
                           {service.duration_minutes} min
                         </span>
                       ) : null}
@@ -539,7 +535,7 @@ function TemplateSiteView({
         </section>
 
         <footer className="mx-auto max-w-6xl px-4 py-10">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[12px] text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[13px] text-muted-foreground">
             <p>
               © {new Date().getFullYear()} {org.name}
               {facts.city ? ` · ${facts.city}` : ""}

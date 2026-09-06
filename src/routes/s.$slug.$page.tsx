@@ -174,7 +174,7 @@ export function SitePageView({
         ))}
 
         <footer className="mx-auto max-w-6xl px-4 py-10">
-          <p className="text-[12px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             © {new Date().getFullYear()} {org.name}
             {facts.city ? ` · ${facts.city}` : ""}
           </p>
@@ -231,7 +231,7 @@ export function SiteNav({ site, current }: { site: NonNullable<PublicSite>; curr
         </button>
         <ul
           id="site-nav-pages"
-          className={`${open ? "block" : "hidden"} pb-2 text-[13px] md:flex md:max-w-full md:flex-wrap md:gap-4 md:py-2.5 md:pb-2.5 md:text-[12px]`}
+          className={`${open ? "block" : "hidden"} pb-2 text-[13px] md:flex md:max-w-full md:flex-wrap md:gap-4 md:py-2.5 md:pb-2.5 md:text-[13px]`}
         >
           <li>
             <SitePageLink slug={site.org.slug} className={itemClass(!current)}>

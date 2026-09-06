@@ -107,7 +107,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
             <fieldset key={question.id}>
               <legend className="text-[14px] font-medium">{question.label}</legend>
               {question.helper_text ? (
-                <p className="mt-1 text-[12px] text-muted-foreground">{question.helper_text}</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">{question.helper_text}</p>
               ) : null}
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {question.options.map((option) => {
@@ -166,7 +166,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
                         <span className="tnum text-primary">+{currency(Number(addon.price))}</span>
                       </span>
                       {addon.description ? (
-                        <span className="mt-1 block text-[12px] text-muted-foreground">
+                        <span className="mt-1 block text-[13px] text-muted-foreground">
                           {addon.description}
                         </span>
                       ) : null}

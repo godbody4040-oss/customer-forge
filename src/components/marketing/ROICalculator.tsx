@@ -67,7 +67,7 @@ export function ROICalculator() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-      <Panel className="p-5 sm:p-6">
+      <Panel className="min-w-0 p-5 sm:p-6">
         <p className="eyebrow">Your numbers</p>
         <div className="mt-5 space-y-6">
           {FIELDS.map((f) => {
@@ -99,7 +99,7 @@ export function ROICalculator() {
                   }}
                   className="mt-3 h-11 w-full cursor-pointer accent-[var(--primary)]"
                 />
-                <p id={`${id}-hint`} className="text-[12px] leading-snug text-muted-foreground">
+                <p id={`${id}-hint`} className="text-[13px] leading-snug text-muted-foreground">
                   {f.hint}
                 </p>
               </div>
@@ -108,8 +108,8 @@ export function ROICalculator() {
         </div>
       </Panel>
 
-      <Panel className="flex flex-col p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-2">
+      <Panel className="flex min-w-0 flex-col p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="eyebrow">Your estimate</p>
           <Pill tone="attention">Estimate — not a guarantee</Pill>
         </div>
@@ -138,13 +138,13 @@ export function ROICalculator() {
           <p className="tnum mt-1.5 font-display text-[clamp(1.6rem,4vw,2.2rem)] leading-none font-semibold text-primary">
             {currency(result.upside)}
           </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
             {state.lift} additional customers × {currency(state.value)} average value. That's{" "}
             {currency(result.annual)} across a year, before comparing it to a Revora subscription.
           </p>
         </div>
 
-        <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">
+        <p className="mt-4 text-[13px] leading-relaxed text-muted-foreground">
           Illustrative estimate only. Results vary by business, market, offer and execution. Revora
           does not guarantee specific results. These figures come only from the numbers you entered.
         </p>
