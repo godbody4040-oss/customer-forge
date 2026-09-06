@@ -586,12 +586,207 @@ export const MEASURE_SCRIPT = `(() => {
     })
     .slice(0, 10)
     .map(label);
-  const ctaWords = /call|book|quote|contact|get started|enquir|inquir|estimate|schedule/i;
-  const ctas = controls.filter((el) => ctaWords.test((el.textContent || '') + ' ' + (el.getAttribute('aria-label') || ''))).length;
+  // A call to action is judged by what it DOES, not by the words on it: where it
+  // leads, whether it is a real control, and whether a visitor can see it.
+  const actionWords = /call|book|quote|contact|get started|start now|enquir|inquir|estimate|schedule|request|availab|see services|message|email|apply|hire|order/i;
+  const ctaControls = controls.filter((el) => {
+    const href = (el.getAttribute('href') || '').trim();
+    const text = ((el.textContent || '') + ' ' + (el.getAttribute('aria-label') || '')).trim();
+    const box = el.getBoundingClientRect();
+    if (box.height < 24) return false;
+    const conversionTarget = /^(tel:|mailto:|sms:)/i.test(href) || /book|quote|contact|schedul|estimate|appoint|start/i.test(href);
+    return conversionTarget || (actionWords.test(text) && (href.length > 1 || el.tagName === 'BUTTON' || el.getAttribute('role') === 'button'));
+  });
+  const ctas = ctaControls.length;
+  // A control that leads nowhere is worse than a missing one: it looks like the
+  // next step and does nothing.
+  const deadControls = controls
+    .filter((el) => {
+      if (el.tagName !== 'A') return false;
+      const href = (el.getAttribute('href') || '').trim();
+      return href === '' || href === '#' || /^javascript:/i.test(href);
+    })
+    .slice(0, 10)
+    .map(label);
+  const distortedImages = [...document.images]
+    .filter(visible)
+    .filter((img) => {
+      if (!img.naturalWidth || !img.naturalHeight) return false;
+      const box = img.getBoundingClientRect();
+      if (box.width < 40 || box.height < 40) return false;
+      if (getComputedStyle(img).objectFit !== 'fill') return false;
+      const natural = img.naturalWidth / img.naturalHeight;
+      const shown = box.width / box.height;
+      return Math.abs(natural - shown) / natural > 0.15;
+    })
+    .slice(0, 10)
+    .map((img) => (img.currentSrc || img.src || label(img)).slice(0, 120));
+  // Two blocks of readable text occupying the same pixels is a broken layout,
+  // not a design choice.
+  const textBlocks = all
+    .filter((el) => el.childElementCount === 0 && (el.textContent || '').trim().length > 24)
+    .filter((el) => getComputedStyle(el).position === 'static')
+    .slice(0, 120);
+  const overlapping = [];
+  for (let i = 0; i < textBlocks.length && overlapping.length < 5; i += 1) {
+    for (let j = i + 1; j < textBlocks.length; j += 1) {
+      const a = textBlocks[i].getBoundingClientRect();
+      const b = textBlocks[j].getBoundingClientRect();
+      if (textBlocks[i].contains(textBlocks[j]) || textBlocks[j].contains(textBlocks[i])) continue;
+      const overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (overlapX > 12 && overlapY > 12) {
+        overlapping.push((label(textBlocks[i]) + ' / ' + label(textBlocks[j])).slice(0, 120));
+        break;
+      }
+    }
+  }
+  const narrowColumns = all
+    .filter((el) => el.childElementCount === 0 && (el.textContent || '').trim().length > 80)
+    .filter((el) => {
+      const box = el.getBoundingClientRect();
+      const size = parseFloat(getComputedStyle(el).fontSize) || 16;
+      return box.width > 0 && box.width < Math.min(180, size * 12) && width >= 360;
+    })
+    .slice(0, 5)
+    .map(label);
+  const fixedBars = all.filter((el) => {
+    const pos = getComputedStyle(el).position;
+    if (pos !== 'fixed') return false;
+    const box = el.getBoundingClientRect();
+    return box.height > 0 && box.bottom > window.innerHeight - 8 && box.width > width * 0.5;
+  });
+  const stickyFooterHeight = fixedBars.reduce((tallest, el) => Math.max(tallest, el.getBoundingClientRect().height), 0);
+
   const menuButton = [...document.querySelectorAll('button, [role="button"]')].some(
     (el) => visible(el) && /menu|navigation/i.test((el.getAttribute('aria-label') || '') + ' ' + (el.textContent || '')),
   );
   const inlineNav = [...document.querySelectorAll('nav a[href]')].filter(visible).length >= 2;
+
+  /* ---------------------------- accessibility ---------------------------- */
+  const named = (el) => ((el.textContent || '').trim() + (el.getAttribute('aria-label') || '') + (el.getAttribute('title') || '')).trim().length > 0
+    || !!el.querySelector('img[alt]:not([alt=""])')
+    || !!(el.getAttribute('aria-labelledby') && document.getElementById(el.getAttribute('aria-labelledby')));
+  const imagesMissingAlt = [...document.images]
+    .filter(visible)
+    .filter((img) => img.getAttribute('alt') === null && img.getAttribute('role') !== 'presentation' && !img.getAttribute('aria-hidden'))
+    .slice(0, 10)
+    .map((img) => (img.currentSrc || img.src || label(img)).slice(0, 120));
+  const unlabeledControls = controls.filter((el) => !named(el)).slice(0, 10).map(label);
+  const fields = [...document.querySelectorAll('input:not([type="hidden"]), select, textarea')].filter(visible);
+  const unlabeledInputs = fields
+    .filter((el) => {
+      if (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.getAttribute('title')) return false;
+      if (el.id && document.querySelector('label[for="' + el.id.replace(/"/g, '') + '"]')) return false;
+      return !el.closest('label');
+    })
+    .slice(0, 10)
+    .map(label);
+  const headings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter(visible);
+  const headingOrderProblems = [];
+  let previousLevel = 0;
+  for (const heading of headings) {
+    const level = Number(heading.tagName.slice(1));
+    if (previousLevel && level > previousLevel + 1) headingOrderProblems.push((heading.textContent || label(heading)).trim().slice(0, 60));
+    previousLevel = level;
+  }
+  const focusable = controls.filter((el) => {
+    const index = el.getAttribute('tabindex');
+    if (index !== null && Number(index) < 0) return false;
+    if (el.hasAttribute('disabled')) return false;
+    if (el.tagName === 'A') return !!(el.getAttribute('href') || '').trim();
+    if (el.tagName === 'BUTTON') return true;
+    return index !== null && Number(index) >= 0;
+  }).length;
+  const toRgb = (value) => {
+    const match = /rgba?\\(([^)]+)\\)/.exec(value || '');
+    if (!match) return null;
+    const parts = match[1].split(',').map((part) => parseFloat(part));
+    if (parts.length >= 4 && parts[3] === 0) return null;
+    return parts.slice(0, 3);
+  };
+  const luminance = (rgb) => {
+    const channels = rgb.map((value) => {
+      const v = value / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  };
+  const backgroundOf = (el) => {
+    let node = el;
+    while (node && node !== document.documentElement) {
+      const rgb = toRgb(getComputedStyle(node).backgroundColor);
+      if (rgb) return rgb;
+      node = node.parentElement;
+    }
+    return [255, 255, 255];
+  };
+  const lowContrast = all
+    .filter((el) => el.childElementCount === 0 && (el.textContent || '').trim().length > 12)
+    .slice(0, 80)
+    .map((el) => {
+      const style = getComputedStyle(el);
+      const fg = toRgb(style.color);
+      if (!fg) return null;
+      const bg = backgroundOf(el);
+      const l1 = luminance(fg);
+      const l2 = luminance(bg);
+      const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+      const size = parseFloat(style.fontSize) || 16;
+      const bold = Number(style.fontWeight) >= 700;
+      const large = size >= 24 || (bold && size >= 18.66);
+      return ratio < (large ? 3 : 4.5) ? { selector: label(el), ratio: Math.round(ratio * 100) / 100 } : null;
+    })
+    .filter(Boolean)
+    .slice(0, 10);
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const viewportContent = viewportMeta ? (viewportMeta.getAttribute('content') || '') : '';
+  const accessibility = {
+    imagesMissingAlt,
+    unlabeledControls,
+    unlabeledInputs,
+    headingOrderProblems: headingOrderProblems.slice(0, 5),
+    h1Count: [...document.querySelectorAll('h1')].filter(visible).length,
+    hasMain: !!document.querySelector('main, [role="main"]'),
+    hasNav: !!document.querySelector('nav, [role="navigation"]'),
+    controls: controls.length,
+    keyboardReachable: focusable,
+    lowContrast,
+    zoomBlocked: /user-scalable\\s*=\\s*no/i.test(viewportContent) || /maximum-scale\\s*=\\s*1(\\.0)?\\b/i.test(viewportContent),
+  };
+
+  /* ----------------------------- performance ----------------------------- */
+  const entry = (type) => { try { return performance.getEntriesByType(type); } catch (e) { return []; } };
+  const nav = entry('navigation')[0] || null;
+  const paint = entry('paint').find((p) => p.name === 'first-contentful-paint') || null;
+  const lcpEntries = entry('largest-contentful-paint');
+  const resources = entry('resource');
+  const bytes = (filter) => resources.filter(filter).reduce((total, r) => total + (r.transferSize || r.encodedBodySize || 0), 0);
+  const shift = (window.__revoraCls === undefined ? null : window.__revoraCls);
+  const oversizedImages = [...document.images]
+    .filter((img) => img.naturalWidth > 0)
+    .filter((img) => {
+      const box = img.getBoundingClientRect();
+      return box.width > 0 && img.naturalWidth > box.width * window.devicePixelRatio * 2.2;
+    })
+    .slice(0, 5)
+    .map((img) => (img.currentSrc || img.src || label(img)).slice(0, 120));
+  const performanceMeasurement = {
+    ttfb: nav ? Math.round(nav.responseStart) : null,
+    fcp: paint ? Math.round(paint.startTime) : null,
+    lcp: lcpEntries.length ? Math.round(lcpEntries[lcpEntries.length - 1].startTime) : null,
+    cls: typeof shift === 'number' ? Math.round(shift * 1000) / 1000 : null,
+    inp: null,
+    longTasks: entry('longtask').length || null,
+    resources: resources.length,
+    scriptBytes: bytes((r) => r.initiatorType === 'script' || /\\.js(\\?|$)/i.test(r.name)),
+    imageBytes: bytes((r) => r.initiatorType === 'img' || /\\.(png|jpe?g|webp|avif|gif|svg)(\\?|$)/i.test(r.name)),
+    fontBytes: bytes((r) => /\\.(woff2?|ttf|otf)(\\?|$)/i.test(r.name)),
+    failedRequests: resources.filter((r) => (r.responseStatus || 0) >= 400).length,
+    oversizedImages,
+    renderBlocking: resources.filter((r) => r.renderBlockingStatus === 'blocking').length,
+  };
+
   return {
     width,
     scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
@@ -603,5 +798,13 @@ export const MEASURE_SCRIPT = `(() => {
     unreachable,
     navigable: width > 500 ? inlineNav : menuButton || inlineNav,
     ctas,
+    deadControls,
+    distortedImages,
+    overlapping,
+    narrowColumns,
+    stickyFooterHeight,
+    accessibility,
+    performance: performanceMeasurement,
   };
 })()`;
+
