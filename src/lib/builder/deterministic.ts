@@ -28,6 +28,31 @@ import { ctaTarget, faqQuestions, pageSeo, place, sectionCopy, type CopyFacts } 
 /** Hero layout names the renderer actually supports, by how roomy they are. */
 const HERO_LAYOUT = { full: "banner", standard: "split", compact: "stacked" } as const;
 
+/**
+ * What each kind of page needs to be a finished page rather than an empty
+ * shell. Anything the workspace does not allow is dropped later.
+ */
+function pageSectionPlan(kind: string): string[] {
+  switch (kind) {
+    case "services":
+      return ["services", "benefits", "faq", "cta"];
+    case "pricing":
+      return ["pricing", "faq", "cta"];
+    case "about":
+      return ["intro", "benefits", "area", "cta"];
+    case "contact":
+      return ["contact", "area", "cta"];
+    case "book":
+      return ["booking", "cta"];
+    case "gallery":
+      return ["gallery", "cta"];
+    case "reviews":
+      return ["reviews", "cta"];
+    default:
+      return ["intro", "services", "cta"];
+  }
+}
+
 /** A single tweak stays small; a whole-site build is allowed to be big. */
 const MAX_ACTIONS = 40;
 const MAX_ACTIONS_WHOLE_SITE = 160;
@@ -208,12 +233,7 @@ export function buildDeterministicPlan(
             position: position++,
           });
         }
-        const title = `${wanted.title} — ${facts.businessName}`.slice(0, 70);
-        push({
-          type: "set_page",
-          pageId: ref,
-          patch: { seo_title: title, seo_description: wanted.why.slice(0, 165) },
-        });
+        push({ type: "set_page", pageId: ref, patch: pageSeo(wanted.title, facts, playbook) });
         created = true;
       }
       if (created) {
