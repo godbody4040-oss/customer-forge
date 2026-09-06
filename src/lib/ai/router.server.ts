@@ -29,8 +29,9 @@ import {
   type ModelRole,
   type ProviderConfig,
   type ProviderName,
+  zeroAiCostMode,
 } from "@/lib/ai/config";
-import { RevoraAiError, providerUnavailable } from "@/lib/ai/errors";
+import { RevoraAiError, providerUnavailable, zeroCostBlocked } from "@/lib/ai/errors";
 import { googleAdapter } from "@/lib/ai/providers/google";
 import { openAiAdapter } from "@/lib/ai/providers/openai";
 import { base64ByteLength } from "@/lib/ai/providers/shared";
@@ -172,6 +173,10 @@ async function run<T>(
   inputTokens: number | null;
   outputTokens: number | null;
 }> {
+  // ZERO-COST GATE. Checked on the server before anything else happens, so no
+  // key, adapter, URL or retry path can be reached while it is on.
+  if (zeroAiCostMode()) throw zeroCostBlocked();
+
   const limits = aiLimits();
   const requestId = caller.requestId ?? newRequestId();
   const chain = requireProviderChain();

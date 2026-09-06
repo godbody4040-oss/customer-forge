@@ -343,9 +343,39 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     // Revora's native engine is the primary brain: whenever it produced real,
     // validated website work it is used as-is. Only a request with nothing
     // recognisable in it — or an upload that has to be read — is escalated.
+    // ZERO-COST MODE is Revora's default architecture, enforced on the server:
+    // while it is on, no external model is contacted for a customer request —
+    // not for attachments, not on an error, not on a retry. The native engine
+    // answers, and a request it cannot place comes back as a plain question
+    // rather than anything about providers, keys or credits.
+    const { zeroAiCostMode } = await import("@/lib/ai/config");
+    const zeroCost = zeroAiCostMode();
+
     if (deterministic.actions.length && !deterministic.requiresExternalReasoning) {
       // Handled entirely by Revora's own rules: no provider call is made at all.
       raw = deterministicRaw()!;
+    } else if (zeroCost) {
+      if (deterministic.actions.length) {
+        raw = deterministicRaw()!;
+        trace = [
+          ...deterministic.trace,
+          "Built with Revora's own engine — no outside AI involved.",
+        ];
+      } else {
+        return {
+          reply:
+            "I want to get this right rather than guess. Tell me which part of your website you'd like changed — for example the top of the home page, your services, your prices, or how it looks — and I'll do it.",
+          summary: "",
+          steps: [] as AgentStep[],
+          questions: deterministic.questions.length
+            ? deterministic.questions
+            : ["Which part of your website should I change?"],
+          notes: deterministic.notes,
+          requirements: [] as { label: string; covered: boolean }[],
+          trace: [...deterministic.trace, "Nothing changed — waiting on one detail."],
+          unavailable: null,
+        };
+      }
     } else {
       let attempt = 0;
       for (;;) {
