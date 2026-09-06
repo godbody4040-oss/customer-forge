@@ -259,3 +259,70 @@ describe("copy engine", () => {
     expect(seo.seo_description.length).toBeLessThanOrEqual(160);
   });
 });
+
+describe("everyday language, no AI provider", () => {
+  const ctx = context();
+
+  it("understands typos, slang and idioms", () => {
+    const plan = buildDeterministicPlan(
+      ctx,
+      "can you make the top part hit harder and look expensive on my webiste",
+    );
+    expect(plan.actions.length).toBeGreaterThan(0);
+    expect(plan.requiresExternalReasoning).toBe(false);
+    expect(plan.intent.moods).toContain("premium");
+  });
+
+  it("resolves 'make it darker' against the previous message", () => {
+    const plan = buildDeterministicPlan(ctx, "now make it darker", {
+      history: ["change the hero"],
+    });
+    expect(plan.intent.carried).toContain("hero");
+    expect(plan.actions.length).toBeGreaterThan(0);
+  });
+
+  it("builds a complete roofing website in one request", () => {
+    const plan = buildDeterministicPlan(ctx, "build me a full website for my roofing company");
+    expect(plan.tasks.length).toBeGreaterThan(2);
+    expect(plan.actions.some((a) => a.type === "add_section")).toBe(true);
+    expect(plan.actions.some((a) => a.type === "set_theme")).toBe(true);
+    expect(plan.actions.some((a) => a.type === "set_page")).toBe(true);
+    expect(plan.requiresExternalReasoning).toBe(false);
+  });
+
+  it("puts the deciding information first when asked about hierarchy", () => {
+    const plan = buildDeterministicPlan(ctx, "make the important stuff easier to find");
+    expect(plan.intent.verbs).toContain("hierarchy");
+  });
+
+  it("does not need a provider just because a file is attached", () => {
+    const plan = buildDeterministicPlan(ctx, "add a gallery section", {
+      attachments: [{ kind: "image", name: "job.jpg" }],
+    });
+    expect(plan.actions.length).toBeGreaterThan(0);
+    expect(plan.requiresExternalReasoning).toBe(false);
+  });
+
+  it("escalates only when nothing about the website was recognised", () => {
+    const plan = buildDeterministicPlan(ctx, "write a poem about my grandad");
+    expect(plan.actions).toHaveLength(0);
+    expect(plan.requiresExternalReasoning).toBe(true);
+    expect(plan.externalReason).toBeTruthy();
+  });
+
+  it("emits only actions the security validator accepts", () => {
+    const plan = buildDeterministicPlan(ctx, "redesign my whole website to look premium");
+    const known = {
+      pageIds: new Set([HOME_ID]),
+      sectionIds: new Set([HERO_ID, SERVICES_ID]),
+      componentIds: new Set([BUTTON_ID]),
+    };
+    expect(readActions(plan.actions, known).length).toBeGreaterThan(0);
+  });
+
+  it("never invents reviews, awards or prices", () => {
+    const plan = buildDeterministicPlan(ctx, "build me a full website");
+    const text = JSON.stringify(plan.actions).toLowerCase();
+    expect(text).not.toMatch(/award|5[- ]star|certified|licensed|guaranteed results|\$\d/);
+  });
+});
