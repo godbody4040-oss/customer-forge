@@ -124,7 +124,11 @@ export function FounderNote() {
 /** Sticky mobile action bar for Revora marketing pages only (never client sites). */
 export function RevoraMobileBar() {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
+    <>
+      {/* Keeps the bar from covering whatever sits at the bottom of the page,
+          such as the send button on the contact form. */}
+      <div className="h-16 md:hidden" aria-hidden="true" />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-2 py-2 backdrop-blur md:hidden">
       <div className="grid grid-cols-4 gap-2">
         <Button asChild variant="outline" size="sm">
           <a href={revoraTel}>Call</a>
