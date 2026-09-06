@@ -149,7 +149,6 @@ export function BuilderShell({
             {actions}
           </div>
         </div>
-
       </div>
 
       <div className="flex gap-6">
