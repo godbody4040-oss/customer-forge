@@ -315,10 +315,11 @@ function WebsitePage() {
     {
       key: "build",
       label: "Build",
-      hint: "Your website, pages and content",
+      hint: "Ask, preview, edit anything",
       node: (
         <div className="space-y-5">
           <EnvironmentBanner status={production} />
+          <AiRequestPanel canManage={manage} onOpenAi={() => goTo("ai")} />
           {requiredCount > 0 && manage ? (
             <section className="panel border-accent/40 bg-accent/5 p-4">
               <p className="text-[13px] font-medium">
@@ -333,27 +334,35 @@ function WebsitePage() {
               </Button>
             </section>
           ) : null}
-          <ClientOnboardingFlow
-            organizationId={orgId}
-            canManage={manage}
-            contactPhone={(profile?.["phone"] as string | null) ?? null}
-            contactEmail={(profile?.["email"] as string | null) ?? null}
-            setupPaid={!!org?.setup_paid_at}
-            publishState={settings?.publish_state ?? "draft"}
-            buildReady={requiredCount === 0 && visibleSections > 0}
-            requiredAnswers={requiredCount}
-            isPublishing={launchFlow.isLaunching || saveSettings.isPending}
-            onPublish={() => {
-              trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
-              launchFlow.launch();
-            }}
-            onGoTo={goTo}
-          />
-          <BuilderCanvas organizationId={orgId} pages={pages ?? []} canManage={manage} />
-          <Disclosure label="Pages & content" hint="Add pages, sections, copy and lead capture">
-            <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
-            <WebsiteStructure organizationId={orgId} canManage={manage} />
-            <LeadEngine organizationId={orgId} canManage={manage} />
+          {(pages ?? []).length === 0 ? (
+            <EmptyHint
+              title="Your website needs a page."
+              hint="Add your first page, or ask Revora to build a complete website for you."
+              actionLabel="Open pages"
+              onAction={() => goTo("pages")}
+            />
+          ) : (
+            <BuilderCanvas organizationId={orgId} pages={pages ?? []} canManage={manage} />
+          )}
+          <Disclosure label="Next steps" hint="Setup, payment and going live">
+            <ClientOnboardingFlow
+              organizationId={orgId}
+              canManage={manage}
+              contactPhone={(profile?.["phone"] as string | null) ?? null}
+              contactEmail={(profile?.["email"] as string | null) ?? null}
+              setupPaid={!!org?.setup_paid_at}
+              publishState={settings?.publish_state ?? "draft"}
+              buildReady={requiredCount === 0 && visibleSections > 0}
+              requiredAnswers={requiredCount}
+              isPublishing={launchFlow.isLaunching || saveSettings.isPending}
+              onPublish={() => {
+                trackConversion("site_published", { metadata: { organization_id: orgId ?? "" } });
+                launchFlow.launch();
+              }}
+              onGoTo={goTo}
+            />
+          </Disclosure>
+          <Disclosure label="Advanced" hint="Wording, project details and your Revora score">
             <AiCopyAssistant
               organizationId={orgId}
               fields={copyFields}
@@ -365,8 +374,6 @@ function WebsitePage() {
               }
             />
             <BusinessBriefPanel brief={brief} />
-          </Disclosure>
-          <Disclosure label="Advanced" hint="Project details and your Revora score">
             <WebsiteProject
               organizationId={orgId}
               businessName={org?.name ?? null}
@@ -397,66 +404,201 @@ function WebsitePage() {
     {
       key: "design",
       label: "Design",
-      hint: "Colours, style and images",
+      hint: "Brand, layout and style",
+      node: (
+        <GroupTabs
+          label="Design groups"
+          groups={[
+            {
+              key: "brand",
+              label: "Brand",
+              node: (
+                <DesignIdentity
+                  organizationId={orgId ?? ""}
+                  facts={{
+                    businessName: org?.name ?? null,
+                    industry:
+                      (org?.industry as string | undefined) ??
+                      (profile?.["industry"] as string) ??
+                      null,
+                    city: (profile?.["city"] as string) ?? null,
+                    serviceArea: (profile?.["service_area"] as string) ?? null,
+                    services: (services ?? []).map((service) => String(service.name ?? "")),
+                    certifications: (profile?.["certifications"] as string) ?? null,
+                    awards: (profile?.["awards"] as string) ?? null,
+                    phone: (profile?.["phone"] as string) ?? null,
+                    email: (profile?.["email"] as string) ?? null,
+                    hasHours: Boolean(profile?.["hours"]),
+                  }}
+                  onRestyle={(instruction: string) => {
+                    goTo("ai");
+                    askAssistant(instruction);
+                  }}
+                />
+              ),
+            },
+            {
+              key: "layout",
+              label: "Layout",
+              node: (
+                <>
+                  <section className="panel p-4">
+                    <p className="text-[13px] font-medium">Layout, spacing and hierarchy</p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Pick any section on the canvas to change its layout, width, spacing and
+                      background — or describe the change and Revora applies it across the site.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => goTo("build")}>
+                        Open canvas
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="signal"
+                        disabled={!manage}
+                        onClick={() => {
+                          goTo("ai");
+                          askAssistant(
+                            "Improve the layout of my whole website: consistent content width, calmer section spacing, a clear hero, a tidy menu and footer, and a balanced grid for services and photos.",
+                          );
+                        }}
+                      >
+                        Improve my layout
+                      </Button>
+                    </div>
+                  </section>
+                  <ConversionOptimizer organizationId={orgId} canManage={manage} />
+                </>
+              ),
+            },
+            {
+              key: "visual",
+              label: "Visual",
+              node: (
+                <EffectStudio
+                  organizationId={orgId}
+                  canManage={manage}
+                  backdrop={readBackdrop(generation ?? null)}
+                  onBackdrop={(backdrop) =>
+                    saveSettings.mutate({ generation: writeBackdrop(generation ?? null, backdrop) })
+                  }
+                />
+              ),
+            },
+            {
+              key: "images",
+              label: "Images",
+              node: (
+                <ImageStudio
+                  organizationId={orgId}
+                  canManage={manage}
+                  businessName={org?.name ?? null}
+                  industry={(profile?.["industry"] as string) ?? null}
+                  city={(profile?.["city"] as string) ?? null}
+                  primaryColor={(profile?.["primary_color"] as string) ?? null}
+                  accentColor={(profile?.["accent_color"] as string) ?? null}
+                  services={(services ?? []).map((service) => ({
+                    name: String(service.name ?? ""),
+                  }))}
+                  mediaCount={facts.data?.mediaCount ?? 0}
+                  hasHeroImage={!!(profile?.["hero_image_url"] as string)}
+                  onSetHero={(path) => saveProfile.mutate({ hero_image_url: path })}
+                />
+              ),
+            },
+            {
+              key: "responsive",
+              label: "Responsive",
+              node: (
+                <>
+                  <section className="panel p-4">
+                    <p className="text-[13px] font-medium">Phone, tablet and desktop</p>
+                    <p className="mt-1 text-[12px] text-muted-foreground">
+                      Switch device on the canvas to see the real phone and tablet layouts, then let
+                      Revora check every screen size and repair anything cut off or overlapping.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => goTo("build")}>
+                        Open canvas
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => goTo("launch")}>
+                        Run screen checks
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="signal"
+                        disabled={!manage}
+                        onClick={() => {
+                          goTo("ai");
+                          askAssistant(
+                            "Fix how my website looks on a phone: nothing cut off or overlapping, readable text sizes, tappable buttons, a working menu and comfortable spacing between sections.",
+                          );
+                        }}
+                      >
+                        Fix mobile
+                      </Button>
+                    </div>
+                  </section>
+                  <InteractionHealth pages={pages ?? []} onFix={() => goTo("build")} />
+                </>
+              ),
+            },
+            {
+              key: "advanced",
+              label: "Advanced",
+              node: (
+                <>
+                  <section className="panel p-4">
+                    <p className="text-[13px] font-medium">Not sure what looks best?</p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground">
+                      Revora can pick a cohesive look for your industry and apply it for you.
+                    </p>
+                    <Button
+                      className="mt-3"
+                      size="sm"
+                      variant="signal"
+                      onClick={() => goTo("ai")}
+                    >
+                      Let Revora choose
+                    </Button>
+                  </section>
+                  <Disclosure label="Every design control" hint="Backdrops, effects and imagery">
+                    <EffectStudio
+                      organizationId={orgId}
+                      canManage={manage}
+                      backdrop={readBackdrop(generation ?? null)}
+                      onBackdrop={(backdrop) =>
+                        saveSettings.mutate({
+                          generation: writeBackdrop(generation ?? null, backdrop),
+                        })
+                      }
+                    />
+                  </Disclosure>
+                </>
+              ),
+            },
+          ]}
+        />
+      ),
+    },
+    {
+      key: "pages",
+      label: "Pages",
+      hint: "Pages and sections",
       node: (
         <div className="space-y-5">
-          <DesignIdentity
-            organizationId={orgId ?? ""}
-            facts={{
-              businessName: org?.name ?? null,
-              industry:
-                (org?.industry as string | undefined) ?? (profile?.["industry"] as string) ?? null,
-              city: (profile?.["city"] as string) ?? null,
-              serviceArea: (profile?.["service_area"] as string) ?? null,
-              services: (services ?? []).map((service) => String(service.name ?? "")),
-              certifications: (profile?.["certifications"] as string) ?? null,
-              awards: (profile?.["awards"] as string) ?? null,
-              phone: (profile?.["phone"] as string) ?? null,
-              email: (profile?.["email"] as string) ?? null,
-              hasHours: Boolean(profile?.["hours"]),
-            }}
-            onRestyle={(instruction: string) => {
-              goTo("ai");
-              askAssistant(instruction);
-            }}
-          />
-          <EffectStudio
-            organizationId={orgId}
-            canManage={manage}
-            backdrop={readBackdrop(generation ?? null)}
-            onBackdrop={(backdrop) =>
-              saveSettings.mutate({ generation: writeBackdrop(generation ?? null, backdrop) })
-            }
-          />
-          <ImageStudio
-            organizationId={orgId}
-            canManage={manage}
-            businessName={org?.name ?? null}
-            industry={(profile?.["industry"] as string) ?? null}
-            city={(profile?.["city"] as string) ?? null}
-            primaryColor={(profile?.["primary_color"] as string) ?? null}
-            accentColor={(profile?.["accent_color"] as string) ?? null}
-            services={(services ?? []).map((service) => ({ name: String(service.name ?? "") }))}
-            mediaCount={facts.data?.mediaCount ?? 0}
-            hasHeroImage={!!(profile?.["hero_image_url"] as string)}
-            onSetHero={(path) => saveProfile.mutate({ hero_image_url: path })}
-          />
-          <section className="panel p-4">
-            <p className="text-[13px] font-medium">Not sure what looks best?</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">
-              Revora can pick a cohesive look for your industry and apply it for you.
-            </p>
-            <Button className="mt-3" size="sm" variant="signal" onClick={() => goTo("ai")}>
-              Let Revora choose
-            </Button>
-          </section>
+          <SiteEnginePanel organizationId={orgId} canManage={manage} hasCopy={!!copy} />
+          <WebsiteStructure organizationId={orgId} canManage={manage} />
+          <Disclosure label="Lead capture" hint="Forms, booking and enquiry buttons">
+            <LeadEngine organizationId={orgId} canManage={manage} />
+          </Disclosure>
         </div>
       ),
     },
     {
       key: "ai",
       label: "AI",
-      hint: "Ask Revora, improve, grow",
+      hint: "Requests, photos, voice",
       node: (
         <div className="space-y-5">
           <SiteChatbot
@@ -502,97 +644,130 @@ function WebsitePage() {
     {
       key: "launch",
       label: "Launch",
-      hint: "Check, preview, go live",
+      hint: "Checks and going live",
       node: (
-        <div className="space-y-5">
-          <PreFlightPanel
-            result={preflightResult}
-            isChecking={preflightFacts.isLoading}
-            canPublish={manage && production?.unlocked !== false}
-            isPublishing={launchFlow.isLaunching}
-            onPublish={() => launchFlow.launch()}
-            {...(manage ? { onSelfHeal: () => selfHeal.mutate() } : {})}
-            isHealing={selfHeal.isPending}
-            healSummary={selfHeal.data?.summary ?? null}
-            regressions={regressions}
-          />
-          <ProductionReadinessPanel
-            readiness={productionReadiness}
-            status={production}
-            onLaunch={launchFlow.launch}
-            isLaunching={launchFlow.isLaunching}
-            canManage={manage}
-            result={launchFlow.result}
-          />
-          <VisualCheckPanel
-            organizationId={orgId}
-            slug={org?.slug}
-            publishState={settings?.publish_state ?? "draft"}
-            canManage={manage}
-          />
-          <LaunchChecks
-            checks={qa.checks}
-            blockers={qa.blockers}
-            passed={qa.passed}
-            publishState={settings?.publish_state ?? "draft"}
-            lastPublishedAt={settings?.last_published_at ?? null}
-            slug={org?.slug}
-            canManage={manage}
-            isPublishing={launchFlow.isLaunching || saveSettings.isPending}
-            onPublish={() => launchFlow.launch()}
-            onUnpublish={() =>
-              saveSettings.mutate({ publish_state: "unpublished", published: false })
-            }
-          />
-          <PreviewLinks organizationId={orgId} canManage={manage} />
-          <Disclosure
-            label="Client portal access"
-            hint="Let your client log in and see their own dashboard, pages and live site"
-          >
-            <PortalAccess organizationId={orgId} canManage={manage} />
-          </Disclosure>
-
-          <Disclosure label="Advanced" hint="Buttons, forms, links, reports and platform checks">
-            <InteractionHealth pages={pages ?? []} onFix={() => goTo("build")} />
-          </Disclosure>
-          <Disclosure
-            label="Advanced reports & checks"
-            hint="Review, build report and platform checks"
-          >
-            <WebsiteReview
-              organizationId={orgId}
-              slug={org?.slug}
-              settings={settings}
-              canManage={manage}
-            />
-            <BuildReportPanel report={buildReport} />
-            <EngineSelfTestPanel organizationId={orgId} />
-            <PlatformEngine
-              businessName={org?.name ?? null}
-              slug={org?.slug ?? null}
-              profile={profile}
-              services={(services ?? []).map((s) => ({
-                name: s.name,
-                description: s.description,
-                price: s.starting_price,
-                bookable: s.bookable,
-              }))}
-              seo={{
-                title: seo.headline ?? null,
-                description: seo.meta_description ?? null,
-                headline: seo.headline ?? copy?.heroHeadline ?? null,
-              }}
-              pages={pages ?? []}
-              publishState={settings?.publish_state ?? "draft"}
-              canManage={manage}
-              isPublishing={launchFlow.isLaunching || saveSettings.isPending}
-              onPublish={() => launchFlow.launch()}
-            />
-          </Disclosure>
-        </div>
+        <GroupTabs
+          label="Launch groups"
+          groups={[
+            {
+              key: "health",
+              label: "Health",
+              node: (
+                <>
+                  <PreFlightPanel
+                    result={preflightResult}
+                    isChecking={preflightFacts.isLoading}
+                    canPublish={manage && production?.unlocked !== false}
+                    isPublishing={launchFlow.isLaunching}
+                    onPublish={() => launchFlow.launch()}
+                    {...(manage ? { onSelfHeal: () => selfHeal.mutate() } : {})}
+                    isHealing={selfHeal.isPending}
+                    healSummary={selfHeal.data?.summary ?? null}
+                    regressions={regressions}
+                  />
+                  <VisualCheckPanel
+                    organizationId={orgId}
+                    slug={org?.slug}
+                    publishState={settings?.publish_state ?? "draft"}
+                    canManage={manage}
+                  />
+                </>
+              ),
+            },
+            {
+              key: "publish",
+              label: "Publish",
+              node: (
+                <>
+                  <ProductionReadinessPanel
+                    readiness={productionReadiness}
+                    status={production}
+                    onLaunch={launchFlow.launch}
+                    isLaunching={launchFlow.isLaunching}
+                    canManage={manage}
+                    result={launchFlow.result}
+                  />
+                  <LaunchChecks
+                    checks={qa.checks}
+                    blockers={qa.blockers}
+                    passed={qa.passed}
+                    publishState={settings?.publish_state ?? "draft"}
+                    lastPublishedAt={settings?.last_published_at ?? null}
+                    slug={org?.slug}
+                    canManage={manage}
+                    isPublishing={launchFlow.isLaunching || saveSettings.isPending}
+                    onPublish={() => launchFlow.launch()}
+                    onUnpublish={() =>
+                      saveSettings.mutate({ publish_state: "unpublished", published: false })
+                    }
+                  />
+                </>
+              ),
+            },
+            {
+              key: "previews",
+              label: "Previews",
+              node: (
+                <>
+                  <PreviewLinks organizationId={orgId} canManage={manage} />
+                  <Disclosure
+                    label="Client portal access"
+                    hint="Let your client log in and see their own dashboard, pages and live site"
+                  >
+                    <PortalAccess organizationId={orgId} canManage={manage} />
+                  </Disclosure>
+                </>
+              ),
+            },
+            {
+              key: "reports",
+              label: "Reports",
+              node: (
+                <>
+                  <InteractionHealth pages={pages ?? []} onFix={() => goTo("build")} />
+                  <Disclosure
+                    label="Advanced reports & checks"
+                    hint="Review, build report and platform checks"
+                  >
+                    <WebsiteReview
+                      organizationId={orgId}
+                      slug={org?.slug}
+                      settings={settings}
+                      canManage={manage}
+                    />
+                    <BuildReportPanel report={buildReport} />
+                    <EngineSelfTestPanel organizationId={orgId} />
+                    <PlatformEngine
+                      businessName={org?.name ?? null}
+                      slug={org?.slug ?? null}
+                      profile={profile}
+                      services={(services ?? []).map((s) => ({
+                        name: s.name,
+                        description: s.description,
+                        price: s.starting_price,
+                        bookable: s.bookable,
+                      }))}
+                      seo={{
+                        title: seo.headline ?? null,
+                        description: seo.meta_description ?? null,
+                        headline: seo.headline ?? copy?.heroHeadline ?? null,
+                      }}
+                      pages={pages ?? []}
+                      publishState={settings?.publish_state ?? "draft"}
+                      canManage={manage}
+                      isPublishing={launchFlow.isLaunching || saveSettings.isPending}
+                      onPublish={() => launchFlow.launch()}
+                    />
+                  </Disclosure>
+                </>
+              ),
+            },
+          ]}
+        />
       ),
     },
   ];
+
 
   const publishState = settings?.publish_state ?? "draft";
 
