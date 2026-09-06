@@ -276,9 +276,19 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     // rules cannot supply, and if no provider is available the deterministic
     // plan is still returned, so the builder is never unusable.
     const { buildDeterministicPlan } = await import("@/lib/builder/deterministic");
-    const deterministic = data.attachments.length
-      ? null
-      : buildDeterministicPlan(agentContext, instruction);
+    // Uploads no longer sideline Revora's own builder: the structural work is
+    // planned natively, and an outside model is only consulted when the upload's
+    // contents genuinely have to be read before anything can change.
+    const deterministic = buildDeterministicPlan(agentContext, instruction, {
+      history: data.history
+        .filter((turn) => turn.role === "user")
+        .map((turn) => turn.content)
+        .slice(-6),
+      attachments: data.attachments.map((attachment) => ({
+        kind: attachment.mimeType?.split("/")[0] ?? "file",
+        name: attachment.name ?? "upload",
+      })),
+    });
 
     let raw: Record<string, unknown>;
     let requirements: { label: string; covered: boolean }[] = [];
@@ -330,7 +340,10 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
       } | null,
     });
 
-    if (deterministic && deterministic.coverage === "full") {
+    // Revora's native engine is the primary brain: whenever it produced real,
+    // validated website work it is used as-is. Only a request with nothing
+    // recognisable in it — or an upload that has to be read — is escalated.
+    if (deterministic.actions.length && !deterministic.requiresExternalReasoning) {
       // Handled entirely by Revora's own rules: no provider call is made at all.
       raw = deterministicRaw()!;
     } else {
