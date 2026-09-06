@@ -137,8 +137,8 @@ export function gradeViewport(measurement: ViewportMeasurement): VisualFinding[]
       add(
         "small_tap_target",
         "advice",
-        `“${target.selector}” is ${Math.round(target.width)}×${Math.round(target.height)}px — smaller than a comfortable tap.`,
-        "Make buttons at least 44×44px on phones.",
+        `“${target.selector}” is ${Math.round(target.width)}×${Math.round(target.height)}px — shorter than a comfortable tap.`,
+        "Give buttons and links at least 44px of tappable height on phones.",
       );
     }
   }
@@ -241,7 +241,9 @@ export const MEASURE_SCRIPT = `(() => {
     // set by the text around it and is not a fault.
     .filter((el) => getComputedStyle(el).display !== 'inline')
     .map((el) => ({ el, box: el.getBoundingClientRect() }))
-    .filter(({ box }) => box.width < 44 || box.height < 44)
+    // Only the tappable height is judged: a short, narrow button is fine as long
+    // as a fingertip can land on it.
+    .filter(({ box }) => box.height < 40)
     .slice(0, 10)
     .map(({ el, box }) => ({ selector: label(el), width: box.width, height: box.height }));
   const tinyText = all
