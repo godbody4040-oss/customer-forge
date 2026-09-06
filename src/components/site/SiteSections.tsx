@@ -529,21 +529,29 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
   }
 }
 
-/** Always-visible call and quote buttons — most local traffic is on a phone. */
+/**
+ * Always-visible call and action buttons — most local traffic is on a phone.
+ * "Call" only appears when the saved number is actually callable, and the safe
+ * area inset keeps the bar clear of the iPhone home indicator.
+ */
 export function StickyCallBar({ site, label }: { site: Site; label: string }) {
-  const phone = site.profile?.phone;
+  const phoneHref = phoneLink(site.profile?.phone);
+  const phone = phoneDisplay(site.profile?.phone);
   const target = site.quote ? "#quote" : "#book";
   return (
-    <div className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+    <div
+      className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden"
+      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <div className="flex gap-2">
-        {phone ? (
-          <Button asChild variant="outline" className="flex-1">
-            <a href={telHref(phone)}>
-              <Phone className="size-4" /> Call
+        {phoneHref ? (
+          <Button asChild variant="outline" className="min-h-11 flex-1">
+            <a href={phoneHref} aria-label={`Call ${site.org.name}${phone ? ` at ${phone}` : ""}`}>
+              <Phone className="size-4" aria-hidden="true" /> Call
             </a>
           </Button>
         ) : null}
-        <Button asChild variant="signal" className="flex-1">
+        <Button asChild variant="signal" className="min-h-11 flex-1">
           <a href={target}>{label}</a>
         </Button>
       </div>
