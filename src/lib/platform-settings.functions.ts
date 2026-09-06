@@ -34,6 +34,24 @@ export const getPlatformSettings = createServerFn({ method: "GET" })
     };
   });
 
+/**
+ * The ONLY public read of platform_settings: the GA measurement ID, which is
+ * public by nature (it loads in the visitor's browser). The table itself is
+ * not readable by visitors; everything else in it stays server-side.
+ */
+export const getPublicGaMeasurementId = createServerFn({ method: "GET" }).handler(
+  async (): Promise<string | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("platform_settings")
+      .select("ga_measurement_id")
+      .eq("id", "default")
+      .maybeSingle();
+    const id = data?.ga_measurement_id;
+    return typeof id === "string" && GA_PATTERN.test(id) ? id : null;
+  },
+);
+
 export const setGaMeasurementId = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { measurementId: string }) => {
