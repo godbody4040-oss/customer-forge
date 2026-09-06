@@ -13,10 +13,14 @@ import { Loader2, MonitorCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Panel, Pill, SectionHeading } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { measureWebsiteAtAllWidths } from "@/lib/builder/visual-measure";
+import { measureSitePages } from "@/lib/builder/visual-measure";
 import type { VisualReport } from "@/lib/builder/visual";
 import { recordVisualCheck } from "@/lib/visual-check.functions";
-import { useCreatePreviewLink, usePreviewLinks } from "@/lib/website-content.hooks";
+import {
+  useCreatePreviewLink,
+  usePreviewLinks,
+  useWebsiteContent,
+} from "@/lib/website-content.hooks";
 import { friendlyError } from "@/lib/user-error";
 
 export function VisualCheckPanel({
@@ -32,32 +36,55 @@ export function VisualCheckPanel({
 }) {
   const queryClient = useQueryClient();
   const { data: links } = usePreviewLinks(organizationId);
+  const { data: content } = useWebsiteContent(organizationId);
   const createLink = useCreatePreviewLink(organizationId);
   const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [progress, setProgress] = useState<{ label: string; done: number; total: number } | null>(
+    null,
+  );
   const [result, setResult] = useState<VisualReport | null>(null);
 
   const run = async () => {
     if (!organizationId || !slug || running) return;
+    const visible = (content ?? []).filter((page) => page.is_visible);
+    if (!visible.length) {
+      toast.error("Add a page first — there is nothing to check yet.");
+      return;
+    }
     setRunning(true);
     setResult(null);
     try {
       // Published sites are measured at their public address; drafts through a
       // private preview link, reusing an active one when it exists.
-      let path = `/s/${slug}`;
+      let base = `/s/${slug}`;
       if (publishState !== "published") {
         const active = (links ?? []).find(
           (link) => !link.revoked && new Date(link.expires_at).getTime() > Date.now(),
         );
         const token =
           active?.token ?? (await createLink.mutateAsync({ label: "Visual check", hours: 24 }));
-        path = `/p/${token}`;
+        base = `/p/${token}`;
       }
-      const measurements = await measureWebsiteAtAllWidths(path, (done, total) =>
-        setProgress({ done, total }),
+      // EVERY visitor-visible page is measured, not just the home page.
+      const targets = visible.map((page) => {
+        const clean = page.slug.replace(/^\//, "");
+        const home = !clean || clean === "home" || page.kind === "home";
+        return { page: clean || "home", url: home ? base : `${base}/${clean}`, title: page.title };
+      });
+      const measured = await measureSitePages(
+        targets.map(({ page, url }) => ({ page, url })),
+        (label, done, total) => setProgress({ label, done, total }),
       );
       const saved = await recordVisualCheck({
-        data: { organizationId, pageUrl: path, measurements },
+        data: {
+          organizationId,
+          expectedPages: targets.map((target) => target.page),
+          pages: measured.map((entry) => ({
+            pageSlug: entry.page,
+            pageUrl: targets.find((target) => target.page === entry.page)?.url ?? base,
+            measurements: entry.measurements,
+          })),
+        },
       });
       setResult(saved.report);
       if (saved.report.passed) {
@@ -83,16 +110,18 @@ export function VisualCheckPanel({
           <SectionHeading eyebrow="Real-browser check" title="See it the way visitors do" />
           <p className="mt-2 max-w-xl text-[13px] text-muted-foreground">
             Revora opens your website on this device and measures it at eleven phone and desktop
-            widths — checking for sideways scrolling, broken pictures, cut-off text and buttons that
-            are hard to tap. Publishing stays locked until this passes at 95 or better.
+            widths, on every page — checking for sideways scrolling, broken pictures, cut-off text
+            and buttons that are hard to tap. Publishing stays locked until this passes at 95 or
+            better.
           </p>
           {result ? (
             <div className="mt-3 space-y-1.5">
               <Pill tone={result.passed ? "signal" : "attention"}>
                 Score {result.score}/100 — {result.passed ? "passed" : "needs fixes"}
               </Pill>
-              {result.findings.slice(0, 4).map((finding, index) => (
+              {result.findings.slice(0, 5).map((finding, index) => (
                 <p key={index} className="text-[12px] text-muted-foreground">
+                  {finding.page ? <span className="font-medium">{finding.page}: </span> : null}
                   {finding.detail} {finding.fix}
                 </p>
               ))}
@@ -100,7 +129,7 @@ export function VisualCheckPanel({
           ) : null}
           {progress ? (
             <p className="mt-2 text-[12px] text-muted-foreground" role="status">
-              Measuring size {progress.done} of {progress.total}…
+              Measuring {progress.label} — step {progress.done} of {progress.total}…
             </p>
           ) : null}
         </div>

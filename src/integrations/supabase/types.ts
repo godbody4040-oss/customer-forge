@@ -3498,6 +3498,7 @@ export type Database = {
           measured_at: string
           measurements: Json
           organization_id: string
+          page_slug: string | null
           page_url: string
           report: Json
         }
@@ -3506,6 +3507,7 @@ export type Database = {
           measured_at?: string
           measurements: Json
           organization_id: string
+          page_slug?: string | null
           page_url: string
           report: Json
         }
@@ -3514,6 +3516,7 @@ export type Database = {
           measured_at?: string
           measurements?: Json
           organization_id?: string
+          page_slug?: string | null
           page_url?: string
           report?: Json
         }

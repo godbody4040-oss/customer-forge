@@ -322,6 +322,29 @@ const VISUAL_CATEGORY: Record<string, QualityCategory> = {
   no_visible_cta: "conversion",
   unreachable_control: "accessibility",
   not_measured: "visual",
+  page_not_measured: "visual",
+  widths_not_measured: "responsive",
+  dead_control: "conversion",
+  distorted_image: "visual",
+  overlapping_content: "visual",
+  narrow_column: "visual",
+  zoom_blocked: "accessibility",
+  image_missing_alt: "accessibility",
+  unlabeled_control: "accessibility",
+  unlabeled_input: "accessibility",
+  heading_order: "accessibility",
+  missing_h1: "seo",
+  multiple_h1: "seo",
+  missing_main_landmark: "accessibility",
+  missing_nav_landmark: "accessibility",
+  keyboard_unreachable: "accessibility",
+  low_contrast: "accessibility",
+  slow_main_content: "performance",
+  layout_shift: "performance",
+  slow_server_response: "performance",
+  failed_requests: "performance",
+  heavy_images: "performance",
+  oversized_image: "performance",
 };
 
 /**
@@ -351,19 +374,37 @@ export function auditWebsite(input: QualityInput): QualityReport {
   }
 
   const measured = !!input.visual && input.visual.widths.length > 0;
+  const coverage = input.visual?.coverage;
   const categories = (Object.keys(CATEGORY_WEIGHTS) as QualityCategory[]).map((name) => {
     const weight = CATEGORY_WEIGHTS[name];
-    // Visual, responsive and performance can only be earned by measurement.
-    const unproven = !measured && (name === "visual" || name === "responsive");
-    const share = unproven ? 0 : Math.max(0, 1 - (damage[name] ?? 0));
-    return { name, weight, earned: Math.round(weight * share * 10) / 10 };
+    // Visual and responsive can only ever be earned by measurement.
+    if (!measured && (name === "visual" || name === "responsive"))
+      return { name, weight, earned: 0 };
+    const share = Math.max(0, 1 - (damage[name] ?? 0));
+    // Accessibility and performance are only PROVEN when the browser actually
+    // reported them. Unmeasured is provisional — half credit at most, never a
+    // clean sheet, so nothing can reach 95 on an assumption.
+    const proven =
+      name === "accessibility"
+        ? !!coverage?.accessibility
+        : name === "performance"
+          ? !!coverage?.performance
+          : true;
+    const earned = proven ? weight * share : weight * Math.min(share, 0.5);
+    return { name, weight, earned: Math.round(earned * 10) / 10 };
   });
 
   const score = Math.round(categories.reduce((total, item) => total + item.earned, 0));
   // Publishing is judged on the parts that can be judged from the content alone,
   // so a site is never held back for a browser check that hasn't run yet.
+  // Anything that needs a browser to prove it is left out of the content score,
+  // so a site is never held back for a check that hasn't run yet.
   const provable = categories.filter(
-    (item) => item.name !== "visual" && item.name !== "responsive",
+    (item) =>
+      item.name !== "visual" &&
+      item.name !== "responsive" &&
+      !(item.name === "accessibility" && !coverage?.accessibility) &&
+      !(item.name === "performance" && !coverage?.performance),
   );
   const provableWeight = provable.reduce((total, item) => total + item.weight, 0);
   const contentScore = Math.round(
@@ -375,7 +416,13 @@ export function auditWebsite(input: QualityInput): QualityReport {
     /** Content is sound enough to publish. */
     ready: contentReady && contentScore >= 90,
     /** Proven end-to-end: content clean, browser-measured, and 95+. */
-    productionReady: contentReady && measured && !!input.visual?.passed && score >= 95,
+    productionReady:
+      contentReady &&
+      measured &&
+      !!input.visual?.passed &&
+      !!coverage?.accessibility &&
+      !!coverage?.performance &&
+      score >= 95,
     contentScore,
     measured,
     categories,

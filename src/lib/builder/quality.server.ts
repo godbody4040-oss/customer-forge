@@ -8,7 +8,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { businessFacts } from "./facts";
 import { auditWebsite, type QualityInput, type QualityReport } from "./quality";
-import { gradeVisual, type VisualReport } from "./visual";
+import { gradeSite, gradeVisual, type VisualReport } from "./visual";
 
 type Db = SupabaseClient<never>;
 
@@ -36,6 +36,36 @@ export function freshVisualReport(
   return report.widths.length ? report : null;
 }
 
+/**
+ * Judges the WHOLE website from stored per-page reports. Each visible page needs
+ * its own fresh measurements: a home-page report has never been evidence that
+ * Services, Pricing or Contact render correctly, so an unmeasured or stale page
+ * fails the site.
+ */
+export function freshSiteVisualReport(
+  rows: Record<string, unknown>[],
+  visiblePages: string[],
+  contentUpdatedAt: (string | undefined)[],
+): VisualReport {
+  const newest = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    const slug = String(row["page_slug"] ?? "").trim();
+    if (!slug) continue;
+    const at = Date.parse(String(row["measured_at"] ?? ""));
+    if (!Number.isFinite(at)) continue;
+    const current = newest.get(slug);
+    const currentAt = current ? Date.parse(String(current["measured_at"] ?? "")) : -1;
+    if (at > currentAt) newest.set(slug, row);
+  }
+
+  const reports: { page: string; report: VisualReport }[] = [];
+  for (const page of visiblePages) {
+    const report = freshVisualReport(newest.get(page) ?? null, contentUpdatedAt);
+    if (report) reports.push({ page, report: { ...report, pages: [page] } });
+  }
+  return gradeSite(visiblePages, reports);
+}
+
 /** Audits one workspace's website. Every count comes from a real table. */
 export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<QualityReport> {
   const client = db as unknown as {
@@ -51,16 +81,14 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
             column: string,
             options: { ascending: boolean },
           ) => {
-            limit: (count: number) => {
-              maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
-            };
+            limit: (count: number) => Promise<{ data: Record<string, unknown>[] | null }>;
           };
         };
       };
     };
   };
 
-  const [profile, org, pages, sections, reviews, media, quoteForms, bookable, visualRow] =
+  const [profile, org, pages, sections, reviews, media, quoteForms, bookable, visualRows] =
     await Promise.all([
       client.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       client.from("organizations").select("id, name").eq("id", orgId).maybeSingle(),
@@ -76,13 +104,13 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
       client.from("media").select("id").eq("organization_id", orgId),
       client.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
       client.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
+      // Every page's most recent check, newest first.
       client
         .from("website_visual_reports")
-        .select("measurements, measured_at")
+        .select("page_slug, measurements, measured_at")
         .eq("organization_id", orgId)
         .order("measured_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .limit(200),
     ]);
 
   const profileRow = (profile.data ?? null) as Record<string, unknown> | null;
@@ -132,12 +160,16 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
       title: page["seo_title"] ?? page["title"],
       description: page["seo_description"],
     })),
-    // Layer 2 only counts when a real browser check exists and nothing on the
-    // site has changed since it ran.
-    visual: freshVisualReport(visualRow.data, [
-      ...pageRows.map((page) => page["updated_at"] as string | undefined),
-      ...sectionRows.map((section) => section["updated_at"] as string | undefined),
-    ]),
+    // Layer 2 only counts when EVERY visible page has been checked in a real
+    // browser and nothing on the site has changed since those checks ran.
+    visual: freshSiteVisualReport(
+      (visualRows.data ?? []) as Record<string, unknown>[],
+      pageRows.map((page) => String(page["slug"] ?? "")).filter(Boolean),
+      [
+        ...pageRows.map((page) => page["updated_at"] as string | undefined),
+        ...sectionRows.map((section) => section["updated_at"] as string | undefined),
+      ],
+    ),
   };
 
   return auditWebsite(input);

@@ -351,8 +351,11 @@ async function planImpl(supabase: SupabaseLike, userId: string, data: PlanInput)
     // not for attachments, not on an error, not on a retry. The native engine
     // answers, and a request it cannot place comes back as a plain question
     // rather than anything about providers, keys or credits.
-    const { zeroAiCostMode } = await import("@/lib/ai/config");
-    const zeroCost = zeroAiCostMode();
+    const { zeroAiCostMode, builderExternalAiAllowed } = await import("@/lib/ai/config");
+    // The website builder has its own switch on top of zero-cost mode, so an
+    // operator can enable outside AI elsewhere in Revora while customer website
+    // building stays free to run.
+    const zeroCost = zeroAiCostMode() || !builderExternalAiAllowed();
 
     if (deterministic.actions.length && !deterministic.requiresExternalReasoning) {
       // Handled entirely by Revora's own rules: no provider call is made at all.
@@ -618,17 +621,27 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
     // temporary name is swapped for its real id as soon as the row exists, so
     // later steps land on it instead of being dropped.
     const newPages = new Map<string, string>();
+    // Same idea for sections: a section created in this run can be filled with
+    // buttons and cards straight away.
+    const newSections = new Map<string, string>();
     const nextSort = new Map<string, number>();
     for (const section of site.sections)
       nextSort.set(section.page_id, (nextSort.get(section.page_id) ?? 0) + 1);
 
     for (const rawAction of actions as AgentAction[]) {
       if (fatal) break;
-      const action = (
-        "pageId" in rawAction && newPages.has(rawAction.pageId)
-          ? { ...rawAction, pageId: newPages.get(rawAction.pageId) }
-          : rawAction
-      ) as AgentAction;
+      let resolved: AgentAction = rawAction;
+      if ("pageId" in resolved && newPages.has(resolved.pageId))
+        resolved = { ...resolved, pageId: newPages.get(resolved.pageId)! } as AgentAction;
+      if ("sectionId" in resolved && newSections.has(resolved.sectionId))
+        resolved = { ...resolved, sectionId: newSections.get(resolved.sectionId)! } as AgentAction;
+      const action = resolved;
+      // A step that still points at a section which was never created is
+      // skipped rather than written against a made-up id.
+      if ("sectionId" in action && !UUID_ID.test(action.sectionId)) {
+        failed.push(`${action.type}:unresolved_section`);
+        continue;
+      }
       // A step that still points at a page which was never created is skipped
       // rather than written against a made-up id.
       if ("pageId" in action && !UUID_ID.test(action.pageId)) {
@@ -693,6 +706,7 @@ async function applyImpl(supabase: SupabaseLike, userId: string, data: ApplyInpu
             if (error) return { error };
             if (created?.id) {
               const id = String(created.id);
+              if (action.ref) newSections.set(action.ref, id);
               undoSteps.push({
                 label: "add_section:remove",
                 run: async () => {

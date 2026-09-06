@@ -28,6 +28,31 @@ import { ctaTarget, faqQuestions, pageSeo, place, sectionCopy, type CopyFacts } 
 /** Hero layout names the renderer actually supports, by how roomy they are. */
 const HERO_LAYOUT = { full: "banner", standard: "split", compact: "stacked" } as const;
 
+/**
+ * What each kind of page needs to be a finished page rather than an empty
+ * shell. Anything the workspace does not allow is dropped later.
+ */
+function pageSectionPlan(kind: string): string[] {
+  switch (kind) {
+    case "services":
+      return ["services", "benefits", "faq", "cta"];
+    case "pricing":
+      return ["pricing", "faq", "cta"];
+    case "about":
+      return ["intro", "benefits", "area", "cta"];
+    case "contact":
+      return ["contact", "area", "cta"];
+    case "book":
+      return ["booking", "cta"];
+    case "gallery":
+      return ["gallery", "cta"];
+    case "reviews":
+      return ["reviews", "cta"];
+    default:
+      return ["intro", "services", "cta"];
+  }
+}
+
 /** A single tweak stays small; a whole-site build is allowed to be big. */
 const MAX_ACTIONS = 40;
 const MAX_ACTIONS_WHOLE_SITE = 160;
@@ -181,21 +206,39 @@ export function buildDeterministicPlan(
 
   /* --- COMPLETE-WEBSITE MODE: pages, sections, CTA, SEO, in one request --- */
   if (wholeSite) {
-    task("Create the pages this trade needs", () => {
+    task("Create the pages this trade needs, finished in one go", () => {
       let created = false;
+      let index = 0;
       for (const wanted of playbook.pages) {
         const slug = slugify(wanted.slug || wanted.title);
         if (!slug) continue;
         if (context.pages.some((existing) => existing.slug.replace(/^\//, "") === slug)) continue;
         const kind = context.pageKinds.includes(wanted.kind) ? wanted.kind : "custom";
-        push({ type: "add_page", kind, title: wanted.title, slug });
+        // The page is given a temporary name so its own sections, copy and
+        // call to action are written in the SAME request — a new page is never
+        // left blank waiting for a second attempt.
+        const ref = `temp_page_${index++}`;
+        push({ type: "add_page", kind, title: wanted.title, slug, ref });
+        let position = 0;
+        for (const sectionKind of pageSectionPlan(kind)) {
+          if (!allowedSections.has(sectionKind)) continue;
+          const copy = sectionCopy(sectionKind, facts, playbook);
+          push({
+            type: "add_section",
+            pageId: ref,
+            kind: sectionKind,
+            heading: copy.heading,
+            subheading: copy.subheading,
+            body: copy.body,
+            position: position++,
+          });
+        }
+        push({ type: "set_page", pageId: ref, patch: pageSeo(wanted.title, facts, playbook) });
         created = true;
       }
       if (created) {
         done.push("pages");
-        notes.push(
-          "New pages are created first. Their sections are filled in on the next request, because a page has no id until it exists.",
-        );
+        trace.push("Built each new page complete with its sections, copy and search details.");
       }
       return created;
     });
