@@ -25,6 +25,9 @@ import { playbookFor, type IndustryPlaybook } from "./industry";
 import { designDecision, hierarchySort } from "./design";
 import { ctaTarget, faqQuestions, pageSeo, place, sectionCopy, type CopyFacts } from "./copy";
 
+/** Hero layout names the renderer actually supports, by how roomy they are. */
+const HERO_LAYOUT = { full: "banner", standard: "split", compact: "stacked" } as const;
+
 /** A single tweak stays small; a whole-site build is allowed to be big. */
 const MAX_ACTIONS = 40;
 const MAX_ACTIONS_WHOLE_SITE = 160;
@@ -159,8 +162,12 @@ export function buildDeterministicPlan(
       const hero = findSection(page, "hero") ?? sectionsOf(page)[0];
       if (hero) {
         push({ type: "set_section_effect", sectionId: hero.id, effect: design.heroEffect });
-        if (design.density !== "standard")
-          push({ type: "set_section_variant", sectionId: hero.id, variant: design.density });
+        if (design.density !== "standard" && hero.kind === "hero")
+          push({
+            type: "set_section_variant",
+            sectionId: hero.id,
+            variant: HERO_LAYOUT[design.density],
+          });
       }
       if (design.bodyEffect !== "none")
         for (const section of sectionsOf(page).slice(1, 5))
@@ -242,7 +249,7 @@ export function buildDeterministicPlan(
       if (!faq) return false;
       const existing = new Set(faq.components.map((component) => component.label));
       let added = false;
-      for (const question of faqQuestions(facts, playbook).slice(0, 5)) {
+      for (const question of faqQuestions(playbook).slice(0, 5)) {
         if (existing.has(question)) continue;
         push({ type: "add_component", sectionId: faq.id, kind: "faq", label: question });
         added = true;
@@ -274,11 +281,12 @@ export function buildDeterministicPlan(
     }
     if (intent.verbs.includes("resize") && existing) {
       const bigger = /\b(bigger|larger|taller|full ?screen)\b/i.test(intent.original);
-      push({
-        type: "set_section_variant",
-        sectionId: existing.id,
-        variant: bigger ? "full" : "compact",
-      });
+      if (existing.kind === "hero")
+        push({
+          type: "set_section_variant",
+          sectionId: existing.id,
+          variant: bigger ? HERO_LAYOUT.full : HERO_LAYOUT.compact,
+        });
       if (bigger) push({ type: "set_section_effect", sectionId: existing.id, effect: "rise" });
       done.push("sections");
       continue;
