@@ -8,6 +8,7 @@
  */
 import { hasTemplateLeak, isUsableEmail, isUsablePhone, safeText } from "./presentation";
 import type { BusinessFacts } from "./facts";
+import type { VisualReport } from "./visual";
 
 export type QualitySeverity = "blocker" | "advice";
 
