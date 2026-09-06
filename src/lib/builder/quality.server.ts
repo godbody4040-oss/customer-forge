@@ -82,16 +82,14 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
             column: string,
             options: { ascending: boolean },
           ) => {
-            limit: (count: number) => {
-              maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
-            };
+            limit: (count: number) => Promise<{ data: Record<string, unknown>[] | null }>;
           };
         };
       };
     };
   };
 
-  const [profile, org, pages, sections, reviews, media, quoteForms, bookable, visualRow] =
+  const [profile, org, pages, sections, reviews, media, quoteForms, bookable, visualRows] =
     await Promise.all([
       client.from("business_profiles").select("*").eq("organization_id", orgId).maybeSingle(),
       client.from("organizations").select("id, name").eq("id", orgId).maybeSingle(),
@@ -107,14 +105,15 @@ export async function auditWorkspaceWebsite(db: Db, orgId: string): Promise<Qual
       client.from("media").select("id").eq("organization_id", orgId),
       client.from("quote_forms").select("id").eq("organization_id", orgId).eq("is_active", true),
       client.from("services").select("id").eq("organization_id", orgId).eq("bookable", true),
+      // Every page's most recent check, newest first.
       client
         .from("website_visual_reports")
-        .select("measurements, measured_at")
+        .select("page_slug, measurements, measured_at")
         .eq("organization_id", orgId)
         .order("measured_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .limit(200),
     ]);
+
 
   const profileRow = (profile.data ?? null) as Record<string, unknown> | null;
   const orgRow = (org.data ?? null) as Record<string, unknown> | null;
