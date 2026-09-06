@@ -1,0 +1,119 @@
+import { describe, expect, it } from "vitest";
+import { gradeViewport, gradeVisual, VIEWPORTS, type ViewportMeasurement } from "./visual";
+import { auditWebsite, type QualityInput } from "./quality";
+import { businessFacts } from "./facts";
+
+const clean = (width: number): ViewportMeasurement => ({
+  width,
+  scrollWidth: width,
+  overflowing: [],
+  brokenImages: [],
+  clipped: [],
+  smallTargets: [],
+  tinyText: [],
+  unreachable: [],
+  navigable: true,
+  ctas: 2,
+});
+
+describe("rendered visual quality", () => {
+  it("checks every phone and desktop width", () => {
+    expect(VIEWPORTS).toContain(320);
+    expect(VIEWPORTS).toContain(430);
+    expect(VIEWPORTS).toContain(1920);
+  });
+
+  it("passes a page that fits its screen", () => {
+    const report = gradeVisual(VIEWPORTS.map((width) => clean(width)));
+    expect(report.passed).toBe(true);
+    expect(report.score).toBe(100);
+  });
+
+  it("fails sideways scrolling outright", () => {
+    const findings = gradeViewport({ ...clean(390), scrollWidth: 460 });
+    expect(findings.some((f) => f.key === "horizontal_overflow" && f.severity === "p0")).toBe(true);
+  });
+
+  it("fails broken pictures, clipped words, a dead menu and no button", () => {
+    const findings = gradeViewport({
+      ...clean(360),
+      brokenImages: ["/missing.jpg"],
+      clipped: ["Book your detail today"],
+      navigable: false,
+      ctas: 0,
+    });
+    const keys = findings.filter((f) => f.severity === "p0").map((f) => f.key);
+    expect(keys).toContain("broken_image");
+    expect(keys).toContain("clipped_text");
+    expect(keys).toContain("menu_unusable");
+    expect(keys).toContain("no_visible_cta");
+  });
+
+  it("treats small taps and tiny text as advice, not a blocker", () => {
+    const findings = gradeViewport({
+      ...clean(375),
+      smallTargets: [{ selector: "a.link", width: 30, height: 20 }],
+      tinyText: [{ selector: "p.note", fontSize: 11 }],
+    });
+    expect(findings.every((f) => f.severity === "advice")).toBe(true);
+  });
+
+  it("never calls an unmeasured site checked", () => {
+    const report = gradeVisual([]);
+    expect(report.passed).toBe(false);
+    expect(report.findings[0]?.key).toBe("not_measured");
+  });
+});
+
+const goodInput = (visual: QualityInput["visual"]): QualityInput => ({
+  facts: businessFacts(
+    { phone: "+1 415 555 0132", email: "hello@elitemobilecars.com", city: "Austin" },
+    "Elite Mobile Cars",
+  ),
+  raw: { phone: "+1 415 555 0132", email: "hello@elitemobilecars.com" },
+  pages: [
+    { slug: "", title: "Home", sections: 5 },
+    { slug: "contact", title: "Contact", sections: 2 },
+  ],
+  texts: ["Mobile detailing that comes to you", "Book a wash in Austin"],
+  navLabels: ["Home", "Contact"],
+  conversion: { hasPhone: true, hasBooking: true, hasQuote: true, hasContact: true },
+  reviewCount: 0,
+  galleryCount: 0,
+  showsReviews: false,
+  showsGallery: false,
+  metadata: [
+    { title: "Elite Mobile Cars", description: "Mobile detailing in Austin." },
+    { title: "Contact Elite Mobile Cars", description: "Book a mobile detail." },
+  ],
+  visual,
+});
+
+describe("two-layer quality score", () => {
+  it("cannot reach 95 or production-ready without a browser check", () => {
+    const report = auditWebsite(goodInput(null));
+    expect(report.measured).toBe(false);
+    expect(report.productionReady).toBe(false);
+    expect(report.score).toBeLessThan(95);
+  });
+
+  it("reaches 95+ and production-ready only when both layers are clean", () => {
+    const visual = gradeVisual(VIEWPORTS.map((width) => clean(width)));
+    const report = auditWebsite(goodInput(visual));
+    expect(report.measured).toBe(true);
+    expect(report.score).toBeGreaterThanOrEqual(95);
+    expect(report.productionReady).toBe(true);
+  });
+
+  it("loses the responsive score when the rendered check finds overflow", () => {
+    const visual = gradeVisual([{ ...clean(390), scrollWidth: 520 }]);
+    const report = auditWebsite(goodInput(visual));
+    expect(report.productionReady).toBe(false);
+    expect(report.categories.find((c) => c.name === "responsive")?.earned).toBe(0);
+  });
+
+  it("weights add up to 100", () => {
+    const report = auditWebsite(goodInput(null));
+    expect(report.categories.reduce((total, c) => total + c.weight, 0)).toBe(100);
+  });
+});
