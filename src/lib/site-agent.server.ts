@@ -129,7 +129,9 @@ ACTION SHAPES (use exactly these)
 {"type":"set_component","componentId":"<id>","patch":{"label":"...","body":"...","link_label":"...","link_url":"...","is_visible":true}}
 {"type":"add_component","sectionId":"<id>","kind":"<component kind>","label":"...","body":"...","link_label":"...","link_url":"/contact"}
 {"type":"delete_component","componentId":"<id>"}
-{"type":"add_page","kind":"<page kind>","title":"...","slug":"..."}
+{"type":"add_page","kind":"<page kind>","title":"...","slug":"...","ref":"temp_1"}
+  (give every new page a "ref" like temp_1, temp_2 — later actions in the SAME plan may use
+   that ref as their "pageId", so you can create a page and fill it with sections in one go)
 {"type":"set_page","pageId":"<id>","patch":{"title":"...","slug":"...","is_visible":true,"noindex":false,"seo_title":"...","seo_description":"...","og_title":"...","og_description":"..."}}
 {"type":"delete_page","pageId":"<id>"}
 {"type":"set_theme","patch":{"primary_color":"#RRGGBB","secondary_color":"#RRGGBB","accent_color":"#RRGGBB","font_preference":"..."}}
