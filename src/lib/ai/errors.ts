@@ -9,6 +9,7 @@
 
 export type AiErrorCategory =
   | "not_configured"
+  | "zero_cost_mode"
   | "invalid_request"
   | "unauthorized"
   | "rate_limited"
@@ -72,6 +73,23 @@ export const AI_NOT_CONFIGURED_MESSAGE =
 
 export function notConfigured() {
   return new RevoraAiError(503, AI_NOT_CONFIGURED_MESSAGE, { category: "not_configured" });
+}
+
+/**
+ * Zero-cost mode is Revora's default architecture: the native engine builds
+ * websites, and no external model is ever called on a customer's behalf. This
+ * error exists so an optional enhancement path fails closed, loudly, on the
+ * server — it is never shown to a customer, because the native engine answers
+ * the request instead.
+ */
+export const AI_ZERO_COST_MESSAGE =
+  "External AI is disabled (ZERO_AI_COST_MODE). Revora's native engine handles this request.";
+
+export function zeroCostBlocked(provider?: string) {
+  return new RevoraAiError(503, AI_ZERO_COST_MESSAGE, {
+    category: "zero_cost_mode",
+    provider: provider ?? null,
+  });
 }
 
 /** Truthful message for a provider that is configured but not answering. */
