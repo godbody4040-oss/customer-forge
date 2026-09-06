@@ -323,7 +323,7 @@ function WebsitePage() {
       node: (
         <div className="space-y-5">
           <EnvironmentBanner status={production} />
-          <AiRequestPanel canManage={manage} onOpenAi={() => goTo("ai")} />
+          <AiRequestPanel organizationId={orgId} canManage={manage} onOpenAi={() => goTo("ai")} />
           {requiredCount > 0 && manage ? (
             <section className="panel border-accent/40 bg-accent/5 p-4">
               <p className="text-[13px] font-medium">

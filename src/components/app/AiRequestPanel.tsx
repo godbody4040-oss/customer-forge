@@ -18,7 +18,7 @@ import { askAssistant } from "@/lib/assistant-bridge";
 import { BUILDER_QUICK_ACTIONS } from "@/lib/builder-modes";
 import { applyWebsiteChanges, planWebsiteChanges } from "@/lib/site-agent.functions";
 import type { AgentStep } from "@/lib/site-agent";
-import { friendlyError } from "@/lib/errors";
+import { friendlyError } from "@/lib/user-error";
 import { cn } from "@/lib/utils";
 
 const INSTRUCTION_LIMIT = 1200;
