@@ -71,6 +71,8 @@ export type AgentAction =
   | {
       type: "add_section";
       pageId: string;
+      /** Temporary name (`temp_*`) so later actions can target this new section. */
+      ref?: string | undefined;
       kind: string;
       heading?: string | undefined;
       subheading?: string | undefined;
@@ -180,6 +182,7 @@ export function readActions(
   /** Temporary page names declared by an earlier add_page in this same plan. */
   const refs = new Set<string>();
   const knownPage = (id: string) => known.pageIds.has(id) || refs.has(id);
+  const knownSection = (id: string) => known.sectionIds.has(id) || refs.has(id);
 
   for (const raw of value.slice(0, MAX_ACTIONS * 2)) {
     if (!raw || typeof raw !== "object") continue;
@@ -213,9 +216,13 @@ export function readActions(
         const kind = text(row["kind"], 40).toLowerCase();
         if (!knownPage(pageId) || !KIND.test(kind)) break;
         const position = Number(row["position"]);
+        const sectionRef = text(row["ref"], 40);
+        const usableRef = TEMP_REF.test(sectionRef) && !refs.has(sectionRef) ? sectionRef : "";
+        if (usableRef) refs.add(usableRef);
         out.push({
           type,
           pageId,
+          ref: usableRef || undefined,
           kind,
           heading: text(row["heading"], 200) || undefined,
           subheading: text(row["subheading"], 400) || undefined,
@@ -257,7 +264,7 @@ export function readActions(
       }
       case "add_component": {
         const kind = text(row["kind"], 40).toLowerCase();
-        if (!known.sectionIds.has(sectionId) || !KIND.test(kind)) break;
+        if (!knownSection(sectionId) || !KIND.test(kind)) break;
         out.push({
           type,
           sectionId,
