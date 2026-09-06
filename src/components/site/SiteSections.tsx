@@ -17,6 +17,8 @@ import type { PublicSite } from "@/lib/public-site.functions";
 import { currency, dateShort } from "@/lib/format";
 import { safeLinkUrl } from "@/lib/website-content";
 import { readSectionEffect, sectionEffectClass } from "@/lib/site-effects";
+import { businessFacts, factsAddressLine } from "@/lib/builder/facts";
+import { phoneDisplay, phoneLink, safeParagraph, safeText } from "@/lib/builder/presentation";
 
 type Site = NonNullable<PublicSite>;
 type Section = NonNullable<Site["content"]>["sections"][number];
@@ -36,21 +38,28 @@ const Shell = ({
   </section>
 );
 
-const Heading = ({ section }: { section: Section }) => (
-  <>
-    {section.heading ? (
-      <h2 className="font-display text-[28px] leading-tight font-semibold">{section.heading}</h2>
-    ) : null}
-    {section.subheading ? (
-      <p className="mt-2 text-[15px] text-muted-foreground">{section.subheading}</p>
-    ) : null}
-    {section.body ? (
-      <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
-        {section.body}
-      </p>
-    ) : null}
-  </>
-);
+/**
+ * Section copy, render-safe. Anything unfinished — stored data instead of
+ * words, a template instruction, an empty value — is dropped rather than shown.
+ */
+const Heading = ({ section }: { section: Section }) => {
+  const heading = safeText(section.heading);
+  const subheading = safeText(section.subheading);
+  const body = safeParagraph(section.body);
+  return (
+    <>
+      {heading ? (
+        <h2 className="font-display text-[28px] leading-tight font-semibold">{heading}</h2>
+      ) : null}
+      {subheading ? <p className="mt-2 text-[15px] text-muted-foreground">{subheading}</p> : null}
+      {body ? (
+        <p className="mt-5 text-[15px] leading-relaxed whitespace-pre-line text-muted-foreground">
+          {body}
+        </p>
+      ) : null}
+    </>
+  );
+};
 
 /** Buttons stored on a section. Internal links use the router, links out don't. */
 function SectionButtons({ site, components }: { site: Site; components: Component[] }) {
@@ -439,59 +448,60 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
         </Shell>
       );
 
-    case "contact":
+    case "contact": {
+      // Every value here is validated first: an unusable phone number, a broken
+      // email address or unreadable hours are hidden rather than rendered.
+      const facts = businessFacts(profile as Record<string, unknown> | null, site.org.name);
+      const addressLine = factsAddressLine(facts);
+      const area = facts.serviceArea ?? facts.city;
       return (
         <Shell id="contact">
           <Heading section={section} />
           <dl className="mt-7 grid gap-4 sm:grid-cols-3">
-            {profile?.phone ? (
+            {facts.phone && facts.phoneHref ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <Phone className="size-3.5" aria-hidden="true" /> Phone
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={telHref(profile.phone)} className="text-primary underline">
-                    {profile.phone}
+                  <a href={facts.phoneHref} className="text-primary underline">
+                    {facts.phone}
                   </a>
                 </dd>
               </div>
             ) : null}
-            {profile?.email ? (
+            {facts.email && facts.emailHref ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <Mail className="size-3.5" aria-hidden="true" /> Email
                 </dt>
                 <dd className="mt-1 text-[13px]">
-                  <a href={mailHref(profile.email)} className="text-primary underline">
-                    {profile.email}
+                  <a href={facts.emailHref} className="text-primary underline">
+                    {facts.email}
                   </a>
                 </dd>
               </div>
             ) : null}
-            {profile?.city || profile?.service_area ? (
+            {area ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <MapPin className="size-3.5" aria-hidden="true" /> Area
                 </dt>
-                <dd className="mt-1 text-[13px]">{profile.service_area ?? profile.city}</dd>
+                <dd className="mt-1 text-[13px]">{area}</dd>
               </div>
             ) : null}
-            {profile?.address ? (
+            {addressLine ? (
               <div>
                 <dt className="eyebrow flex items-center gap-1.5">
                   <MapPin className="size-3.5" aria-hidden="true" /> Address
                 </dt>
-                <dd className="mt-1 text-[13px]">
-                  {[profile.address, profile.city, profile.state, profile.zip]
-                    .filter(Boolean)
-                    .join(", ")}
-                </dd>
+                <dd className="mt-1 text-[13px]">{addressLine}</dd>
               </div>
             ) : null}
-            {profile?.hours ? (
+            {facts.hours ? (
               <div>
                 <dt className="eyebrow">Hours</dt>
-                <dd className="mt-1 whitespace-pre-line text-[13px]">{String(profile.hours)}</dd>
+                <dd className="mt-1 whitespace-pre-line text-[13px]">{facts.hours}</dd>
               </div>
             ) : null}
           </dl>
@@ -504,6 +514,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
           </div>
         </Shell>
       );
+    }
 
     case "sticky_cta":
       return null; // rendered once, fixed to the viewport
@@ -515,7 +526,7 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
     case "policy":
     case "lead_magnet":
     default:
-      if (!section.heading && !section.body) return null;
+      if (!safeText(section.heading) && !safeParagraph(section.body)) return null;
       return (
         <Shell>
           <Heading section={section} />
@@ -525,21 +536,29 @@ function SiteSectionBody({ site, section }: { site: Site; section: Section }) {
   }
 }
 
-/** Always-visible call and quote buttons — most local traffic is on a phone. */
+/**
+ * Always-visible call and action buttons — most local traffic is on a phone.
+ * "Call" only appears when the saved number is actually callable, and the safe
+ * area inset keeps the bar clear of the iPhone home indicator.
+ */
 export function StickyCallBar({ site, label }: { site: Site; label: string }) {
-  const phone = site.profile?.phone;
+  const phoneHref = phoneLink(site.profile?.phone);
+  const phone = phoneDisplay(site.profile?.phone);
   const target = site.quote ? "#quote" : "#book";
   return (
-    <div className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+    <div
+      className="sticky bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden"
+      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       <div className="flex gap-2">
-        {phone ? (
-          <Button asChild variant="outline" className="flex-1">
-            <a href={telHref(phone)}>
-              <Phone className="size-4" /> Call
+        {phoneHref ? (
+          <Button asChild variant="outline" className="min-h-11 flex-1">
+            <a href={phoneHref} aria-label={`Call ${site.org.name}${phone ? ` at ${phone}` : ""}`}>
+              <Phone className="size-4" aria-hidden="true" /> Call
             </a>
           </Button>
         ) : null}
-        <Button asChild variant="signal" className="flex-1">
+        <Button asChild variant="signal" className="min-h-11 flex-1">
           <a href={target}>{label}</a>
         </Button>
       </div>

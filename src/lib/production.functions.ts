@@ -163,6 +163,11 @@ async function gatherReadiness(
   const paid = !!org.data?.setup_paid_at || org.data?.setup_payment_status === "paid";
   const unlocked = !org.data?.is_suspended && (paid || !!org.data?.is_demo);
 
+  // Real audit of the rendered website: broken contact details, unfinished copy
+  // or unsupported claims stop a publish instead of reaching customers.
+  const { auditWorkspaceWebsite } = await import("@/lib/builder/quality.server");
+  const quality = await auditWorkspaceWebsite(supabase as never, organizationId);
+
   const checks: ReadinessCheck[] = [
     {
       key: "ownership",
@@ -219,6 +224,15 @@ async function gatherReadiness(
       label: "Search settings filled in",
       ok: !!(seo["headline"] && seo["meta_description"]),
       detail: "Headline and meta description are used by Google and social previews.",
+    },
+    {
+      key: "quality",
+      label: "Website quality check",
+      ok: quality.ready,
+      detail: quality.ready
+        ? `Quality score ${quality.score}/100.`
+        : (quality.blockers[0]?.detail ??
+          `Quality score ${quality.score}/100 — a few pages still need work.`),
     },
     {
       key: "suspension",

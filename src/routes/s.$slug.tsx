@@ -13,7 +13,8 @@ import { readCopy } from "@/lib/site-engine";
 import { canonicalSiteUrl } from "@/lib/revora-address";
 import { SiteNav, SitePageView } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
-import { telHref } from "@/components/site/ContactDetails";
+import { businessFacts } from "@/lib/builder/facts";
+import { placeDisplay } from "@/lib/builder/presentation";
 import { safeLinkUrl } from "@/lib/website-content";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
 import { siteThemeStyle } from "@/lib/site-theme";
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/s/$slug")({
       };
     }
     const name = loaderData.org.name;
-    const city = loaderData.profile?.city;
+    const city = placeDisplay(loaderData.profile?.city);
     const page = loaderData.content?.page ?? null;
     const generated = readCopy(
       (loaderData.settings?.generation as { copy?: unknown } | null)?.copy,
@@ -156,13 +157,16 @@ function TemplateSiteView({
     }).catch(() => undefined);
   }, [org.slug, track, preview]);
 
+  // Validated, display-ready business details. A `null` field means the value
+  // is missing or unusable, and the block that would show it is omitted.
+  const facts = businessFacts(profile as Record<string, unknown> | null, org.name);
   const rating = reviews.length
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null;
   const headline =
     copy?.heroHeadline ??
     seo.headline ??
-    `${org.name}${profile?.city ? ` in ${profile.city}` : ""}`;
+    `${org.name}${facts.city ? ` in ${facts.city}` : ""}`;
   const sub =
     copy?.heroSubheadline ||
     seo.subheadline ||
@@ -184,11 +188,11 @@ function TemplateSiteView({
     "@type": "LocalBusiness",
     name: org.name,
     description: profile?.description ?? sub,
-    telephone: profile?.phone ?? undefined,
-    email: profile?.email ?? undefined,
-    areaServed: profile?.service_area ?? profile?.city ?? undefined,
-    address: profile?.city
-      ? { "@type": "PostalAddress", addressLocality: profile.city }
+    telephone: facts.phone ?? undefined,
+    email: facts.email ?? undefined,
+    areaServed: facts.serviceArea ?? facts.city ?? undefined,
+    address: facts.city
+      ? { "@type": "PostalAddress", addressLocality: facts.city }
       : undefined,
     aggregateRating:
       rating && reviews.length
@@ -234,15 +238,15 @@ function TemplateSiteView({
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5">
             <div className="min-w-0">
               <p className="truncate font-display text-[16px] font-semibold">{org.name}</p>
-              {profile?.city ? (
-                <p className="text-[11px] text-muted-foreground">{profile.city}</p>
+              {facts.city ? (
+                <p className="text-[11px] text-muted-foreground">{facts.city}</p>
               ) : null}
             </div>
             <div className="flex items-center gap-2">
-              {profile?.phone ? (
+              {facts.phoneHref ? (
                 <Button asChild variant="outline" size="sm">
                   <a
-                    href={telHref(profile.phone)}
+                    href={facts.phoneHref}
                     onClick={() =>
                       void track({ data: { slug: org.slug, eventType: "call_click" } }).catch(
                         () => undefined,
@@ -303,28 +307,28 @@ function TemplateSiteView({
                 </ul>
               ) : null}
               <dl className="mt-9 grid gap-4 sm:grid-cols-3">
-                {profile?.phone ? (
+                {facts.phone ? (
                   <div>
                     <dt className="eyebrow flex items-center gap-1.5">
                       <Phone className="size-3.5" aria-hidden="true" /> Phone
                     </dt>
-                    <dd className="mt-1 text-[13px]">{profile.phone}</dd>
+                    <dd className="mt-1 text-[13px]">{facts.phone}</dd>
                   </div>
                 ) : null}
-                {profile?.email ? (
+                {facts.email ? (
                   <div>
                     <dt className="eyebrow flex items-center gap-1.5">
                       <Mail className="size-3.5" aria-hidden="true" /> Email
                     </dt>
-                    <dd className="mt-1 text-[13px]">{profile.email}</dd>
+                    <dd className="mt-1 text-[13px]">{facts.email}</dd>
                   </div>
                 ) : null}
-                {profile?.city ? (
+                {facts.serviceArea ?? facts.city ? (
                   <div>
                     <dt className="eyebrow flex items-center gap-1.5">
                       <MapPin className="size-3.5" aria-hidden="true" /> Area
                     </dt>
-                    <dd className="mt-1 text-[13px]">{profile.service_area ?? profile.city}</dd>
+                    <dd className="mt-1 text-[13px]">{facts.serviceArea ?? facts.city}</dd>
                   </div>
                 ) : null}
               </dl>
@@ -521,11 +525,11 @@ function TemplateSiteView({
                 Pick a service and a time that suits you. We'll confirm quickly — no phone tag, no
                 waiting on a callback.
               </p>
-              {profile?.phone ? (
+              {facts.phoneHref && facts.phone ? (
                 <p className="mt-6 text-[13px] text-muted-foreground">
                   Prefer to talk?{" "}
-                  <a href={telHref(profile.phone)} className="text-primary underline">
-                    {profile.phone}
+                  <a href={facts.phoneHref} className="text-primary underline">
+                    {facts.phone}
                   </a>
                 </p>
               ) : null}
@@ -538,7 +542,7 @@ function TemplateSiteView({
           <div className="flex flex-wrap items-center justify-between gap-3 text-[12px] text-muted-foreground">
             <p>
               © {new Date().getFullYear()} {org.name}
-              {profile?.city ? ` · ${profile.city}` : ""}
+              {facts.city ? ` · ${facts.city}` : ""}
             </p>
             <div className="flex gap-4">
               {social?.google_business ? (

@@ -257,9 +257,9 @@ export function scanForUpgrades(pages: ContentPage[], facts: StudioFacts): Elite
           pageId: home.id,
           kind: "guarantee",
           heading: "Our promise to you",
-          subheading:
-            facts.guarantee?.trim() ||
-            `Fixed price before we start, tidy work, and we don't leave until you're happy with it.`,
+          // Only the owner's own words — Revora never writes a promise on their
+          // behalf. Without one, the block asks them to add it and stays hidden.
+          subheading: facts.guarantee?.trim() || undefined,
         },
       ],
     });

@@ -7,7 +7,12 @@
  */
 import { Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { telHref as intlTelHref } from "@/lib/locale";
+import {
+  emailDisplay,
+  emailLink,
+  phoneDisplay,
+  phoneLink,
+} from "@/lib/builder/presentation";
 
 export type ContactInfo = {
   phone?: string | null;
@@ -15,20 +20,16 @@ export type ContactInfo = {
 };
 
 /**
- * Digits only — `tel:` links break on spaces and formatting characters. Numbers
- * from anywhere in the world are accepted (international `+` prefix kept); a
- * value that isn't a usable phone number never becomes a dead `tel:` link.
+ * `tel:` target for a validated number. A value that isn't a usable phone
+ * number returns `#`, and callers hide the button instead of showing it.
  */
-export const telHref = (phone: string) => intlTelHref(phone) ?? "#";
+export const telHref = (phone: string) => phoneLink(phone) ?? "#";
 
 /**
- * Only a plain address ever reaches a `mailto:` href, so a saved business
+ * Only a real address ever reaches a `mailto:` href, so a saved business
  * "email" can never smuggle another scheme or markup into a public page.
  */
-export const mailHref = (email: string) => {
-  const clean = email.trim().replace(/[\s<>"'`]/g, "");
-  return /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(clean) ? `mailto:${clean}` : "#";
-};
+export const mailHref = (email: string) => emailLink(email) ?? "#";
 
 /** Short "prefer to talk?" strip used above forms. */
 export function DirectContact({
@@ -40,24 +41,28 @@ export function DirectContact({
   businessName: string;
   label?: string;
 }) {
-  const phone = profile?.phone?.trim() || null;
-  const email = profile?.email?.trim() || null;
-  if (!phone && !email) return null;
+  // Validated, formatted values only — an unusable number or a broken address
+  // is treated as missing so a visitor never taps a dead link.
+  const phone = phoneDisplay(profile?.phone);
+  const phoneHref = phoneLink(profile?.phone);
+  const email = emailDisplay(profile?.email);
+  const emailHref = emailLink(profile?.email);
+  if (!phoneHref && !emailHref) return null;
 
   return (
     <div className="rounded-lg border border-border bg-elevated/60 p-3">
       <p className="text-[12px] text-muted-foreground">{label}</p>
       <div className="mt-2 flex flex-wrap gap-2">
-        {phone ? (
+        {phone && phoneHref ? (
           <Button asChild size="sm" variant="outline">
-            <a href={telHref(phone)} aria-label={`Call ${businessName} at ${phone}`}>
+            <a href={phoneHref} aria-label={`Call ${businessName} at ${phone}`}>
               <Phone className="size-3.5" aria-hidden="true" /> {phone}
             </a>
           </Button>
         ) : null}
-        {email ? (
+        {email && emailHref ? (
           <Button asChild size="sm" variant="outline">
-            <a href={mailHref(email)} aria-label={`Email ${businessName} at ${email}`}>
+            <a href={emailHref} aria-label={`Email ${businessName} at ${email}`}>
               <Mail className="size-3.5" aria-hidden="true" /> {email}
             </a>
           </Button>
