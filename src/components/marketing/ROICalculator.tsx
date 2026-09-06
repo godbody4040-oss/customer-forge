@@ -109,7 +109,7 @@ export function ROICalculator() {
       </Panel>
 
       <Panel className="flex min-w-0 flex-col p-5 sm:p-6">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="eyebrow">Your estimate</p>
           <Pill tone="attention">Estimate — not a guarantee</Pill>
         </div>
