@@ -36,6 +36,7 @@ export function PreviewSiteButton({
 }) {
   const { data: links } = usePreviewLinks(organizationId);
   const create = useCreatePreviewLink(organizationId);
+  const [readyToken, setReadyToken] = useState<string | null>(null);
 
   if (publishState === "published") {
     return (
