@@ -17,12 +17,9 @@ import { useEffect, useRef } from "react";
 
 import { trackConversion } from "@/lib/conversion";
 import { isValidMeasurementId, loadGa4 } from "@/lib/ga4";
+import { isPublicMarketingPath } from "@/lib/marketing-paths";
 import { getPublicGaMeasurementId } from "@/lib/platform-settings.functions";
 
-const PRIVATE_PREFIXES = ["/app", "/admin", "/api", "/s/", "/p/", "/auth"];
-
-const isPublicMarketingPath = (path: string) =>
-  !PRIVATE_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix));
 
 export function PlatformAnalytics() {
   const path = useRouterState({ select: (state) => state.location.pathname });
