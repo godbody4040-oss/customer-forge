@@ -284,8 +284,8 @@ export function seoInventory(): SeoPage[] {
       page(
         `/industries/${slug}`,
         `${name} lead generation software`,
-        `Websites & lead generation for ${name} — Revora`,
-        `Revora builds ${name} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up.`,
+        `Websites & lead generation for ${industry.name} — Revora`,
+        `Revora builds ${industry.name} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up.`,
         620,
       ),
     );
