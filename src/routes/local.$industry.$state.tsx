@@ -24,6 +24,10 @@ export const Route = createFileRoute("/local/$industry/$state")({
         meta: [{ title: "Page not found — Revora" }, { name: "robots", content: "noindex" }],
       };
     }
+    // This page is one of 743 trade x state variants generated from a single
+    // template, so search engines are told the trade hub is the canonical
+    // version. The page stays live and useful for visitors and paid traffic.
+    const hub = localPath(content.industry.slug);
     return {
       meta: [
         { title: content.title },
@@ -32,9 +36,10 @@ export const Route = createFileRoute("/local/$industry/$state")({
         { property: "og:description", content: content.description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
-        ogUrl(content.path),
+        ogUrl(hub),
       ],
-      links: [canonicalLink(content.path)],
+      links: [canonicalLink(hub)],
+
       scripts: [
         {
           type: "application/ld+json",
