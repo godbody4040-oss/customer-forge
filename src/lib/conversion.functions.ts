@@ -391,7 +391,6 @@ export const getTrafficReport = createServerFn({ method: "GET" })
       sources.set(source, bucket);
     }
 
-
     const topPages: TrafficPage[] = [...pages.entries()]
       .map(([path, value]) => ({ path, views: value.views, sessions: value.sessions.size }))
       .sort((a, b) => b.views - a.views)

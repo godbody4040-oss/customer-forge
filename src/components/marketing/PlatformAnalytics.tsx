@@ -20,7 +20,6 @@ import { isValidMeasurementId, loadGa4 } from "@/lib/ga4";
 import { isPublicMarketingPath } from "@/lib/marketing-paths";
 import { getPublicGaMeasurementId } from "@/lib/platform-settings.functions";
 
-
 export function PlatformAnalytics() {
   const path = useRouterState({ select: (state) => state.location.pathname });
   const lastTracked = useRef<string | null>(null);
