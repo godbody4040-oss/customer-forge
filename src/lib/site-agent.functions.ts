@@ -1195,3 +1195,24 @@ export const runWebsiteTask = createServerFn({ method: "POST" })
       approvalSteps: outcome.needsApproval,
     };
   });
+
+/**
+ * What the media buttons can honestly do right now.
+ *
+ * Reading a photo, a clip or a voice note needs a listening/vision model, which
+ * Revora's own free engine does not include. This tells the browser the truth so
+ * the buttons say what will happen instead of failing after the recording.
+ */
+export const builderMediaCapabilities = createServerFn({ method: "GET" }).handler(async () => {
+  const { zeroAiCostMode, builderExternalAiAllowed, providerChain } = await import(
+    "@/lib/ai/config"
+  );
+  const blocked = zeroAiCostMode() || !builderExternalAiAllowed() || providerChain().length === 0;
+  return {
+    voice: !blocked,
+    vision: !blocked,
+    note: blocked
+      ? "Revora's own engine writes and builds your website for free, but it can't listen to a recording or read a photo. Type what you want instead — attached photos are kept with your request for you to place yourself."
+      : "",
+  };
+});
