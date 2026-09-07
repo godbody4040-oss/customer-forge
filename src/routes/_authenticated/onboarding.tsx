@@ -204,7 +204,10 @@ function Onboarding() {
         return {
           ...prev,
           businessName: keep(prev.businessName, text(org?.name)),
-          industry: prev.industry === INDUSTRIES[0]!.name && knownIndustry ? knownIndustry.name : prev.industry,
+          industry:
+            prev.industry === INDUSTRIES[0]!.name && knownIndustry
+              ? knownIndustry.name
+              : prev.industry,
           city: keep(prev.city, text(profile?.["city"])),
           state: keep(prev.state, text(profile?.["state"])),
           serviceArea: keep(prev.serviceArea, text(profile?.["service_area"])),
