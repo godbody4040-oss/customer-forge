@@ -101,11 +101,11 @@ async function writeProposal(
       seo: { ...currentSeo, primary_cta_label: proposal.changes[0]?.after ?? null },
     });
   } else if (proposal.kind === "publish_site") {
-    await saveSettings({
-      publish_state: "published",
-      published: true,
-      last_published_at: new Date().toISOString(),
-    });
+    // Going live always runs through the gated server path: role check, setup
+    // payment verification, readiness checks and a production version snapshot.
+    const { activateProduction } = await import("@/lib/production.functions");
+    const result = await activateProduction({ data: { organizationId: orgId } });
+    if (!result.activated) throw new Error(result.reason);
   } else if (proposal.kind === "page_seo" || proposal.kind === "page_index") {
     const { error } = await supabase
       .from("website_pages")
