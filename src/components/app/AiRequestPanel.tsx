@@ -342,7 +342,7 @@ export function AiRequestPanel({
                     size="sm"
                     variant="outline"
                     disabled={busy}
-                    onClick={() => patch(task.id, { state: "queued", error: undefined })}
+                    onClick={() => patch(task.id, { state: "queued", error: "" })}
                   >
                     Try again
                   </Button>
