@@ -496,12 +496,15 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const now = Date.now();
 
     // Group traffic by UTC day: page views, distinct sessions, distinct visitors.
+    const { eventPath, isPublicMarketingPath } = await import("@/lib/marketing-paths");
     const byDay = new Map<
       string,
       { views: number; sessions: Set<string>; visitors: Set<string> }
     >();
     for (const row of trafficRes.rows) {
+      if (!isPublicMarketingPath(eventPath(row))) continue;
       const day = row.created_at.slice(0, 10);
+
       const bucket = byDay.get(day) ?? {
         views: 0,
         sessions: new Set<string>(),
