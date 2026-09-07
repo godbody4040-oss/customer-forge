@@ -37,7 +37,6 @@ describe("resolveAccess", () => {
     expect(result.allowed).toBe(true);
   });
 
-
   it("treats an active subscription as active access", () => {
     const result = resolveAccess({ created_at: iso(-60 * DAY), subscription_status: "active" });
     expect(result.state).toBe("ACTIVE_SUBSCRIPTION");
