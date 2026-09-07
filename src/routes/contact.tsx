@@ -1,5 +1,8 @@
 import { loadTenantPage, tenantPageHead, TenantOrMarketing } from "@/lib/tenant-page";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { submitContactRequest } from "@/lib/contact.functions";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { Mail, Phone } from "lucide-react";
@@ -63,7 +66,9 @@ function ContactRoute() {
 
 function Contact() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [interest, setInterest] = useState<string>("Complete Revora System");
+  const send = useServerFn(submitContactRequest);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -140,10 +145,37 @@ function Contact() {
             ) : (
               <form
                 className="space-y-4"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  setSent(true);
-                  toast.success("Message received — the Revora team will be in touch.");
+                  if (sending) return;
+                  const form = e.currentTarget;
+                  const values = new FormData(form);
+                  setSending(true);
+                  try {
+                    await send({
+                      data: {
+                        name: String(values.get("name") ?? ""),
+                        email: String(values.get("email") ?? ""),
+                        business: String(values.get("business") ?? ""),
+                        phone: String(values.get("phone") ?? ""),
+                        businessType: String(values.get("businessType") ?? ""),
+                        interest,
+                        message: String(values.get("message") ?? ""),
+                        landingPath:
+                          typeof window === "undefined" ? null : window.location.pathname,
+                      },
+                    });
+                    setSent(true);
+                    toast.success("Message sent — the Revora team will be in touch.");
+                  } catch (err) {
+                    toast.error(
+                      err instanceof Error && err.message
+                        ? err.message
+                        : "We could not send that. Please email us directly.",
+                    );
+                  } finally {
+                    setSending(false);
+                  }
                 }}
               >
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -188,9 +220,10 @@ function Contact() {
                   <Label htmlFor="c-message">Message</Label>
                   <Textarea id="c-message" name="message" rows={5} required />
                 </div>
-                <Button type="submit" variant="signal" className="w-full">
-                  Send message
+                <Button type="submit" variant="signal" className="w-full" disabled={sending}>
+                  {sending ? "Sending…" : "Send message"}
                 </Button>
+
                 <p className="text-[11px] leading-relaxed text-muted-foreground">
                   Prefer to talk it through? Call {REVORA.phoneDisplay} — no automated queue.
                 </p>

@@ -42,6 +42,9 @@ export const Route = createFileRoute("/portal")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      // Private client entry point: useful to share directly, never a search result.
+      { name: "robots", content: "noindex, follow" },
+
       ogUrl("/portal"),
     ],
     links: [canonicalLink("/portal")],

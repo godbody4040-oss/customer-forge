@@ -6,13 +6,13 @@ built and improved through a natural-language AI builder.
 
 ## Stack
 
-| Layer     | Technology                                                      |
-| --------- | --------------------------------------------------------------- |
-| Framework | TanStack Start v1 (React 19, Vite 7, SSR on Cloudflare Workers) |
-| Styling   | Tailwind CSS v4 (`src/styles.css`, CSS-first config)            |
-| Backend   | Supabase (Postgres, Auth, Storage, RLS)                         |
-| Payments  | Stripe (setup fee + monthly subscription, live/sandbox split)   |
-| AI        | Lovable AI Gateway                                              |
+| Layer     | Technology                                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Framework | TanStack Start v1 (React 19, Vite 7, SSR on Cloudflare Workers)                                                               |
+| Styling   | Tailwind CSS v4 (`src/styles.css`, CSS-first config)                                                                          |
+| Backend   | Supabase (Postgres, Auth, Storage, RLS)                                                                                       |
+| Payments  | Stripe (setup fee + monthly subscription, live/sandbox split)                                                                 |
+| AI        | Revora's own deterministic builder engine (zero external inference cost; external providers gated off by `ZERO_AI_COST_MODE`) |
 
 ## Getting started
 

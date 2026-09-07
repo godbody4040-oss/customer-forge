@@ -242,13 +242,16 @@ export function seoInventory(): SeoPage[] {
       "Talk to Revora about your business.",
       220,
     ),
+    // Private client entry point: shareable, but never a search result.
     page(
       "/portal",
       "revora client portal",
       "Client portal — Revora",
       "Sign in to your Revora workspace and client portal.",
       160,
+      false,
     ),
+
     page(
       "/privacy",
       "revora privacy policy",
