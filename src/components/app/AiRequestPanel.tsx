@@ -56,7 +56,7 @@ export function AiRequestPanel({
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
-    void queryClient.invalidateQueries({ queryKey: ["website-versions", organizationId] });
+    void queryClient.invalidateQueries({ queryKey: ["website_versions", organizationId] });
     void queryClient.invalidateQueries({ queryKey: ["business-profile", organizationId] });
     void queryClient.invalidateQueries({ queryKey: ["build_readiness"] });
   };
