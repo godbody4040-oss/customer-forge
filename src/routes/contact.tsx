@@ -1,5 +1,8 @@
 import { loadTenantPage, tenantPageHead, TenantOrMarketing } from "@/lib/tenant-page";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { submitContactRequest } from "@/lib/contact.functions";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { Mail, Phone } from "lucide-react";
@@ -63,7 +66,10 @@ function ContactRoute() {
 
 function Contact() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [interest, setInterest] = useState<string>("Complete Revora System");
+  const send = useServerFn(submitContactRequest);
+
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
