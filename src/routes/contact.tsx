@@ -221,9 +221,10 @@ function Contact() {
                   <Label htmlFor="c-message">Message</Label>
                   <Textarea id="c-message" name="message" rows={5} required />
                 </div>
-                <Button type="submit" variant="signal" className="w-full">
-                  Send message
+                <Button type="submit" variant="signal" className="w-full" disabled={sending}>
+                  {sending ? "Sending…" : "Send message"}
                 </Button>
+
                 <p className="text-[11px] leading-relaxed text-muted-foreground">
                   Prefer to talk it through? Call {REVORA.phoneDisplay} — no automated queue.
                 </p>
