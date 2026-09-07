@@ -546,6 +546,137 @@ export function BuilderCanvas({
               </p>
             ) : null}
 
+            {/* Floating toolbar: the actions for whatever is selected, always in reach. */}
+            {canManage && selectedSection ? (
+              <div
+                className="sticky top-0 z-20 -mx-1 mb-1 flex flex-wrap items-center gap-1.5 rounded-full border border-border bg-card/95 px-2.5 py-1.5 shadow-lg backdrop-blur"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <span className="max-w-[40%] truncate pr-1 text-[11px] tracking-wide text-muted-foreground uppercase">
+                  {selectedComponent
+                    ? elementLabel(selectedComponent)
+                    : sectionLabel(selectedSection.kind)}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  aria-label="Move selection up"
+                  title="Move up"
+                  disabled={sections.findIndex((s) => s.id === selectedSection.id) === 0}
+                  onClick={() =>
+                    move(
+                      sections.findIndex((s) => s.id === selectedSection.id),
+                      -1,
+                    )
+                  }
+                >
+                  <ArrowUp className="size-3.5" aria-hidden />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  aria-label="Move selection down"
+                  title="Move down"
+                  disabled={
+                    sections.findIndex((s) => s.id === selectedSection.id) === sections.length - 1
+                  }
+                  onClick={() =>
+                    move(
+                      sections.findIndex((s) => s.id === selectedSection.id),
+                      1,
+                    )
+                  }
+                >
+                  <ArrowDown className="size-3.5" aria-hidden />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  aria-label={
+                    selectedComponent ? "Duplicate this element" : "Duplicate this section"
+                  }
+                  title="Duplicate"
+                  onClick={() =>
+                    selectedComponent
+                      ? duplicateComponent.mutate(selectedComponent)
+                      : duplicateSection.mutate(selectedSection)
+                  }
+                >
+                  <Copy className="size-3.5" aria-hidden />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  aria-label={
+                    (selectedComponent ?? selectedSection).is_visible
+                      ? "Hide this from the page"
+                      : "Show this on the page"
+                  }
+                  title={
+                    (selectedComponent ?? selectedSection).is_visible
+                      ? "Hide from the page"
+                      : "Show on the page"
+                  }
+                  onClick={() =>
+                    selectedComponent
+                      ? saveComponent.mutate({
+                          id: selectedComponent.id,
+                          patch: { is_visible: !selectedComponent.is_visible },
+                        })
+                      : saveSection.mutate({
+                          id: selectedSection.id,
+                          patch: { is_visible: !selectedSection.is_visible },
+                        })
+                  }
+                >
+                  {(selectedComponent ?? selectedSection).is_visible ? (
+                    <EyeOff className="size-3.5" aria-hidden />
+                  ) : (
+                    <Eye className="size-3.5" aria-hidden />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  aria-label={selectedComponent ? "Delete this element" : "Delete this section"}
+                  title="Delete"
+                  onClick={() => {
+                    if (selectedComponent) {
+                      setUndoable({ kind: "component", row: selectedComponent });
+                      deleteComponent.mutate(selectedComponent.id);
+                      setSelection({
+                        type: "section",
+                        pageId: page.id,
+                        sectionId: selectedSection.id,
+                      });
+                    } else {
+                      setUndoable({ kind: "section", row: selectedSection });
+                      deleteSection.mutate(selectedSection.id);
+                      setSelection(null);
+                    }
+                  }}
+                >
+                  <Trash2 className="size-3.5" aria-hidden />
+                </Button>
+                {undoable ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Undo the delete"
+                    onClick={() => {
+                      if (undoable.kind === "section") restoreSection.mutate(undoable.row);
+                      else restoreComponent.mutate(undoable.row);
+                      setUndoable(null);
+                    }}
+                  >
+                    Undo
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+
+
+
             {sections.map((section, index) => {
               const isSelected = selectedSectionId === section.id;
               const sectionHint = hint?.id === section.id ? hint.position : null;
