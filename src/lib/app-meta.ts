@@ -124,5 +124,5 @@ export const REVIEWS_META = buildPrivateMeta({
   path: "/app/reviews",
   title: "Reviews & Reputation — Revora",
   description:
-    "Collect 5-star reviews automatically after every completed job, reply fast, and publish the best testimonials straight to your website.",
+    "Collect customer reviews automatically after every completed job, reply fast, and publish the best testimonials straight to your website.",
 });

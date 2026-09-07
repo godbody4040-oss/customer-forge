@@ -53,6 +53,27 @@ function pageSectionPlan(kind: string): string[] {
   }
 }
 
+/**
+ * Works out what kind of page the owner meant from the words they used, so a
+ * "pricing page" gets pricing sections rather than a generic shell.
+ */
+function pageKindFromLabel(label: string, slug: string): string {
+  const text = `${label} ${slug}`.toLowerCase();
+  const map: [RegExp, string][] = [
+    [/price|pricing|cost|rate|package/, "pricing"],
+    [/book|schedul|appoint|calendar/, "book"],
+    [/quote|estimate/, "contact"],
+    [/contact|get in touch|reach/, "contact"],
+    [/about|story|team|who we are/, "about"],
+    [/review|testimonial|feedback/, "reviews"],
+    [/gallery|portfolio|work|photo|project/, "gallery"],
+    [/service|what we do|offer/, "services"],
+    [/faq|question/, "services"],
+  ];
+  for (const [pattern, kind] of map) if (pattern.test(text)) return kind;
+  return "custom";
+}
+
 /** A single tweak stays small; a whole-site build is allowed to be big. */
 const MAX_ACTIONS = 40;
 const MAX_ACTIONS_WHOLE_SITE = 160;
@@ -411,7 +432,8 @@ export function buildDeterministicPlan(
     });
   }
 
-  /* --- new pages named by the owner --- */
+  /* --- new pages named by the owner: created AND filled in the same request --- */
+  let namedPageIndex = 0;
   for (const label of intent.newPages) {
     const slug = slugify(label);
     if (!slug) continue;
@@ -419,11 +441,35 @@ export function buildDeterministicPlan(
       notes.push(`There is already a page at /${slug}, so it was left alone.`);
       continue;
     }
-    const kind = context.pageKinds.includes("services")
-      ? "services"
-      : (context.pageKinds[0] ?? "custom");
-    push({ type: "add_page", kind, title: titleCase(label), slug });
-    notes.push(`Created the /${slug} page — its sections are filled in on the next request.`);
+    const guess = pageKindFromLabel(label, slug);
+    const kind = context.pageKinds.includes(guess)
+      ? guess
+      : context.pageKinds.includes("custom")
+        ? "custom"
+        : (context.pageKinds[0] ?? "custom");
+    const title = titleCase(label);
+    // Temporary name so this page's own sections, copy and next step are written
+    // in the SAME request — a page the owner asked for is never left blank.
+    const ref = `temp_named_page_${namedPageIndex++}`;
+    push({ type: "add_page", kind, title, slug, ref });
+    let position = 0;
+    for (const sectionKind of pageSectionPlan(guess)) {
+      if (!allowedSections.has(sectionKind)) continue;
+      const copy = sectionCopy(sectionKind, facts, playbook);
+      push({
+        type: "add_section",
+        pageId: ref,
+        kind: sectionKind,
+        heading: copy.heading,
+        subheading: copy.subheading,
+        body: copy.body,
+        position: position++,
+      });
+    }
+    push({ type: "set_page", pageId: ref, patch: pageSeo(title, facts, playbook) });
+    notes.push(
+      `Created the /${slug} page with its sections, wording and next step already in place.`,
+    );
     done.push("pages");
   }
 
