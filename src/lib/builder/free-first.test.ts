@@ -326,3 +326,30 @@ describe("everyday language, no AI provider", () => {
     expect(text).not.toMatch(/award|5[- ]star|certified|licensed|guaranteed results|\$\d/);
   });
 });
+
+describe("named page requests are finished, never blank", () => {
+  it("creates the page and fills its sections, wording and next step in one request", () => {
+    const plan = buildDeterministicPlan(context(), "add a pricing page");
+    const page = plan.actions.find((action) => action.type === "add_page");
+    expect(page).toBeTruthy();
+    const ref = (page as { ref?: string }).ref;
+    expect(ref).toBeTruthy();
+    const sections = plan.actions.filter(
+      (action) => action.type === "add_section" && (action as { pageId?: string }).pageId === ref,
+    );
+    expect(sections.length).toBeGreaterThan(0);
+    // Search wording is written for the new page in the same run.
+    expect(
+      plan.actions.some(
+        (action) => action.type === "set_page" && (action as { pageId?: string }).pageId === ref,
+      ),
+    ).toBe(true);
+    // Everything still passes the shared validator.
+    expect(readActions(plan.actions, known).length).toBe(plan.actions.length);
+  });
+
+  it("tells the owner the page is already finished rather than promising a second pass", () => {
+    const plan = buildDeterministicPlan(context(), "add a booking page");
+    expect(plan.notes.join(" ")).not.toMatch(/next request/i);
+  });
+});

@@ -21,7 +21,7 @@ describe("/app/reviews search & social metadata", () => {
   it("keeps the exact approved title and description", () => {
     expect(resolved.title).toBe("Reviews & Reputation — Revora");
     expect(resolved.description).toBe(
-      "Collect 5-star reviews automatically after every completed job, reply fast, and publish the best testimonials straight to your website.",
+      "Collect customer reviews automatically after every completed job, reply fast, and publish the best testimonials straight to your website.",
     );
     expect(meta[0]).toEqual({ title: resolved.title });
     expect(resolved.description.length).toBeLessThan(200);

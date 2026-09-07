@@ -12,6 +12,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  attachmentNotice,
+  detectCapabilities,
+  type BuilderCapabilities,
+} from "@/lib/builder/capabilities";
+import {
   ArrowDown,
   ArrowUp,
   ChevronDown,
@@ -62,7 +67,22 @@ export function AiRequestPanel({
   const [value, setValue] = useState("");
   const [howOpen, setHowOpen] = useState(false);
   const [tasks, setTasks] = useState<QueueTask[]>([]);
+  const [capabilities, setCapabilities] = useState<BuilderCapabilities | null>(null);
   const queryClient = useQueryClient();
+
+  // Honest report of what this device can do. Building never depends on it.
+  useEffect(() => {
+    let live = true;
+    detectCapabilities().then(
+      (result) => {
+        if (live) setCapabilities(result);
+      },
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const planFn = useServerFn(planWebsiteChanges);
   const applyFn = useServerFn(applyWebsiteChanges);
@@ -183,6 +203,9 @@ export function AiRequestPanel({
         Describe the result in your own words. Add as many requests as you like — Revora works
         through them one at a time, and you can change any plan before it runs.
       </p>
+      {capabilities ? (
+        <p className="mt-1 text-[12px] text-muted-foreground">{capabilities.summary}</p>
+      ) : null}
 
       <Textarea
         className="mt-3 min-h-24 text-[13px]"
@@ -211,9 +234,16 @@ export function AiRequestPanel({
           )}
           {tasks.length ? "Add to the list" : "Ask Revora"}
         </Button>
-        <Button size="sm" variant="outline" onClick={onOpenAi} disabled={!ready}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onOpenAi}
+          disabled={!ready}
+          title={capabilities ? (attachmentNotice(capabilities, "image") ?? undefined) : undefined}
+        >
           <ImageIcon className="mr-1.5 size-4" aria-hidden /> Add photo or video
         </Button>
+
         <Button size="sm" variant="outline" onClick={onOpenAi} disabled={!ready}>
           <Mic className="mr-1.5 size-4" aria-hidden /> Speak
         </Button>
