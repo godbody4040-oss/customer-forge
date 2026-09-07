@@ -121,12 +121,16 @@ export async function understandRequest(
   if (!trimmed) return understandWithoutModel(trimmed);
 
   try {
-    const raw = await callJson(UNDERSTAND_ROLE, [
-      { role: "system", content: SYSTEM },
-      { role: "user", content: `THE WORKSPACE, IN BRIEF:\n${workspaceSummary}` },
-      ...history.slice(-4).map((turn) => ({ role: turn.role, content: turn.content })),
-      { role: "user", content: `THE OWNER'S REQUEST:\n${trimmed}` },
-    ], { task: "agent.understand" });
+    const raw = await callJson(
+      UNDERSTAND_ROLE,
+      [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: `THE WORKSPACE, IN BRIEF:\n${workspaceSummary}` },
+        ...history.slice(-4).map((turn) => ({ role: turn.role, content: turn.content })),
+        { role: "user", content: `THE OWNER'S REQUEST:\n${trimmed}` },
+      ],
+      { task: "agent.understand" },
+    );
 
     const capabilities = [
       ...new Set(

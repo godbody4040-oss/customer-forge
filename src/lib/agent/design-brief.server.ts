@@ -203,14 +203,18 @@ export async function designDirection(
   industry?: string | null,
 ): Promise<DesignDirection> {
   try {
-    const raw = await callJson(DESIGN_ROLE, [
-      { role: "system", content: SYSTEM },
-      { role: "user", content: `THE BUSINESS AND ITS CURRENT SITE:\n${workspaceSummary}` },
-      {
-        role: "user",
-        content: `THE OWNER ASKED:\n${instruction}\n\nWHAT THEY WANT, IN ONE LINE:\n${goal}`,
-      },
-    ], { task: "agent.design" });
+    const raw = await callJson(
+      DESIGN_ROLE,
+      [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: `THE BUSINESS AND ITS CURRENT SITE:\n${workspaceSummary}` },
+        {
+          role: "user",
+          content: `THE OWNER ASKED:\n${instruction}\n\nWHAT THEY WANT, IN ONE LINE:\n${goal}`,
+        },
+      ],
+      { task: "agent.design" },
+    );
     const story = list(raw["story"], 160, 8);
     const avoid = list(raw["avoid"], 120, 6);
     const fallback = designWithoutModel(industry);
