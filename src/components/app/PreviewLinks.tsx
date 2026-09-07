@@ -206,6 +206,13 @@ export function PreviewLinks({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {status === "active" ? (
+                    <Button asChild variant="outline" size="sm">
+                      <a href={`/p/${link.token}`} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="size-4" /> Open
+                      </a>
+                    </Button>
+                  ) : null}
                   <Button variant="outline" size="sm" onClick={() => void copy(link.token)}>
                     <Copy className="size-4" /> Copy
                   </Button>
