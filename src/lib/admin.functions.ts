@@ -746,3 +746,131 @@ export const getOfferConfig = createServerFn({ method: "GET" })
       environments,
     };
   });
+
+/**
+ * Live platform activity: what actually happened across every client business
+ * in the last few days. Every row comes from a stored record — nothing here is
+ * estimated, and Revora's own internal pages never appear.
+ */
+export const getPlatformActivity = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { limit?: number } | undefined) => ({
+    limit: Math.min(60, Math.max(5, Number(input?.limit ?? 30) || 30)),
+  }))
+  .handler(async ({ data, context }) => {
+    const { assertSuperAdmin } = await import("@/lib/admin.server");
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+    const cap = data.limit;
+
+    const [orgs, leads, appts, payments, versions] = await Promise.all([
+      supabaseAdmin
+        .from("organizations")
+        .select("id, name, created_at, is_demo")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(cap),
+      supabaseAdmin
+        .from("leads")
+        .select("id, organization_id, name, created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(cap),
+      supabaseAdmin
+        .from("appointments")
+        .select("id, organization_id, name, starts_at, created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(cap),
+      supabaseAdmin
+        .from("payments")
+        .select("id, organization_id, amount, status, environment, created_at")
+        .eq("status", "completed")
+        .eq("environment", "live")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(cap),
+      supabaseAdmin
+        .from("website_versions")
+        .select("id, organization_id, label, created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(cap),
+    ]);
+
+    const orgRows = orgs.data ?? [];
+    const demoIds = new Set(orgRows.filter((o) => o.is_demo).map((o) => o.id));
+    const names = new Map(orgRows.map((o) => [o.id, o.name]));
+
+    type Item = {
+      id: string;
+      kind: "signup" | "lead" | "booking" | "payment" | "website";
+      at: string;
+      title: string;
+      business: string | null;
+    };
+
+    const items: Item[] = [
+      ...orgRows
+        .filter((o) => !o.is_demo)
+        .map<Item>((o) => ({
+          id: `org-${o.id}`,
+          kind: "signup",
+          at: o.created_at,
+          title: "New business joined",
+          business: o.name,
+        })),
+      ...(leads.data ?? [])
+        .filter((l) => !demoIds.has(l.organization_id))
+        .map<Item>((l) => ({
+          id: `lead-${l.id}`,
+          kind: "lead",
+          at: l.created_at,
+          title: l.name ? `New enquiry from ${l.name}` : "New enquiry",
+          business: names.get(l.organization_id) ?? null,
+        })),
+      ...(appts.data ?? [])
+        .filter((a) => !demoIds.has(a.organization_id))
+        .map<Item>((a) => ({
+          id: `appt-${a.id}`,
+          kind: "booking",
+          at: a.created_at,
+          title: a.name ? `${a.name} booked a time` : "New booking",
+          business: names.get(a.organization_id) ?? null,
+        })),
+      ...(payments.data ?? [])
+        .filter((p) => !demoIds.has(p.organization_id))
+        .map<Item>((p) => ({
+          id: `pay-${p.id}`,
+          kind: "payment",
+          at: p.created_at,
+          title: `Payment received: $${Number(p.amount ?? 0).toFixed(2)}`,
+          business: names.get(p.organization_id) ?? null,
+        })),
+      ...(versions.data ?? [])
+        .filter((v) => !demoIds.has(v.organization_id))
+        .map<Item>((v) => ({
+          id: `ver-${v.id}`,
+          kind: "website",
+          at: v.created_at,
+          title: v.label ? `Website updated: ${v.label}` : "Website updated",
+          business: names.get(v.organization_id) ?? null,
+        })),
+    ]
+      .filter((item) => Boolean(item.at))
+      .sort((a, b) => (a.at < b.at ? 1 : -1))
+      .slice(0, cap);
+
+    return {
+      items,
+      windowDays: 14,
+      counts: {
+        signups: items.filter((i) => i.kind === "signup").length,
+        leads: items.filter((i) => i.kind === "lead").length,
+        bookings: items.filter((i) => i.kind === "booking").length,
+        payments: items.filter((i) => i.kind === "payment").length,
+        websiteChanges: items.filter((i) => i.kind === "website").length,
+      },
+    };
+  });
