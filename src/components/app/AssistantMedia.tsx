@@ -250,8 +250,9 @@ export function AssistantMedia({
             type="button"
             variant="outline"
             size="sm"
-            disabled={busy || voice.isPending}
+            disabled={busy || voice.isPending || !canHear}
             onClick={() => void startRecording()}
+            title={canHear ? undefined : mediaNote || undefined}
           >
             {voice.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -266,6 +267,8 @@ export function AssistantMedia({
             ? `Recording — say what you want changed, then press stop. ${seconds}s of ${RECORD_LIMIT_SECONDS}s.`
             : voice.isPending
               ? "Transcribing your voice request…"
+              : mediaNote
+                ? mediaNote
               : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
                   ATTACHMENT_LIMITS.video / MB,
                 )} MB, up to ${MAX_ATTACHMENTS} per message.`}
