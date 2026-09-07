@@ -415,8 +415,11 @@ export const getTrafficReport = createServerFn({ method: "GET" })
     return {
       days: data.days,
       views,
+      /** Revora's own admin/workspace and tenant-preview rows, excluded above. */
+      internalExcluded,
       /** Distinct browser sessions in the window — NOT verified unique people. */
       sessions,
+
       portalSessions: portalSessions.size,
       signupStarts,
       checkoutReturns,
