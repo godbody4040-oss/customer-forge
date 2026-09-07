@@ -307,8 +307,9 @@ function AdminAnalytics() {
       <SectionHeading
         eyebrow="Marketing traffic"
         title="Who reaches revoragrowthsystems.com"
-        description="Browser-recorded page views. A unique session is one browsing visit; a unique visitor is one browser counted once however often it returns. Neither ever decides who counts as a customer."
+        description="Public page views only. Your own admin and workspace screens, plus customer website previews, are never counted here — so these numbers are visitors, not you working. A unique session is one browsing visit."
       />
+
 
       {traffic.isLoading ? (
         <LoadingRows rows={3} />
