@@ -59,8 +59,8 @@ export const Route = createFileRoute("/industries/$slug")({
       };
     }
     const name = industry.name;
-    const title = `Websites & lead generation for ${name.toLowerCase()} — Revora`;
-    const description = `Revora builds ${name.toLowerCase()} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up. ${usdExact(GROWTH_SYSTEM.setupPrice)} setup, then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.`;
+    const title = `Websites & lead generation for ${name} — Revora`;
+    const description = `Revora builds ${name} businesses a website that captures leads, sends instant quotes, books jobs online and automates follow-up. ${usdExact(GROWTH_SYSTEM.setupPrice)} setup, then ${usdExact(GROWTH_SYSTEM.monthlyPrice)}/month.`;
     return {
       meta: [
         { title },
