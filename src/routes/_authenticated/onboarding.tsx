@@ -145,6 +145,98 @@ function Onboarding() {
         setStep(Math.min(Math.max(row.step ?? 0, 0), STEPS.length - 1));
         setSavedAt(row.updated_at ?? null);
       }
+
+      // Anything already answered at signup is on the account, so never ask for
+      // it a second time: fill every blank box from the saved business details.
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("organization_id")
+        .eq("user_id", user.id)
+        .order("created_at")
+        .limit(1)
+        .maybeSingle();
+      const orgId = membership?.organization_id ?? null;
+      if (cancelled || !orgId) {
+        if (!cancelled) setRestored(true);
+        return;
+      }
+      const [orgRes, profileRes, servicesRes, socialRes] = await Promise.all([
+        supabase.from("organizations").select("name, industry").eq("id", orgId).maybeSingle(),
+        supabase
+          .from("business_profiles")
+          .select(
+            "phone, email, address, city, state, service_area, description, hours, website, logo_url, hero_image_url, primary_color, accent_color, years_in_business, certifications, awards",
+          )
+          .eq("organization_id", orgId)
+          .maybeSingle(),
+        supabase
+          .from("services")
+          .select("name, description, price, sort_order")
+          .eq("organization_id", orgId)
+          .order("sort_order"),
+        supabase
+          .from("social_profiles")
+          .select("instagram, facebook, google_business")
+          .eq("organization_id", orgId)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      const org = orgRes.data;
+      const profile = profileRes.data as Record<string, unknown> | null;
+      const social = socialRes.data;
+      const savedServices = (servicesRes.data ?? []).filter((s) => s.name?.trim());
+      const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+      const hoursText = (() => {
+        const hours = profile?.["hours"];
+        if (typeof hours === "string") return hours;
+        if (hours && typeof hours === "object") {
+          const summary = (hours as Record<string, unknown>)["summary"];
+          if (typeof summary === "string") return summary;
+        }
+        return "";
+      })();
+      const knownIndustry = INDUSTRIES.find(
+        (i) => i.name.toLowerCase() === text(org?.industry).toLowerCase(),
+      );
+
+      setDraft((prev) => {
+        const keep = (current: string, saved: string) => (current.trim() ? current : saved);
+        return {
+          ...prev,
+          businessName: keep(prev.businessName, text(org?.name)),
+          industry: prev.industry === INDUSTRIES[0]!.name && knownIndustry ? knownIndustry.name : prev.industry,
+          city: keep(prev.city, text(profile?.["city"])),
+          state: keep(prev.state, text(profile?.["state"])),
+          serviceArea: keep(prev.serviceArea, text(profile?.["service_area"])),
+          about: keep(prev.about, text(profile?.["description"])),
+          phone: keep(prev.phone, text(profile?.["phone"])),
+          email: keep(prev.email, text(profile?.["email"])),
+          address: keep(prev.address, text(profile?.["address"])),
+          hours: keep(prev.hours, hoursText),
+          website: keep(prev.website, text(profile?.["website"])),
+          logoUrl: keep(prev.logoUrl, text(profile?.["logo_url"])),
+          heroImageUrl: keep(prev.heroImageUrl, text(profile?.["hero_image_url"])),
+          primaryColor: text(profile?.["primary_color"]) || prev.primaryColor,
+          accentColor: text(profile?.["accent_color"]) || prev.accentColor,
+          yearsInBusiness: keep(
+            prev.yearsInBusiness,
+            profile?.["years_in_business"] == null ? "" : String(profile["years_in_business"]),
+          ),
+          certifications: keep(prev.certifications, text(profile?.["certifications"])),
+          awards: keep(prev.awards, text(profile?.["awards"])),
+          instagram: keep(prev.instagram, text(social?.instagram)),
+          facebook: keep(prev.facebook, text(social?.facebook)),
+          google: keep(prev.google, text(social?.google_business)),
+          services:
+            prev.services.some((s) => s.name.trim()) || !savedServices.length
+              ? prev.services
+              : savedServices.map((s) => ({
+                  name: s.name ?? "",
+                  description: s.description ?? "",
+                  price: s.price == null ? "" : String(s.price),
+                })),
+        };
+      });
       setRestored(true);
     })();
     return () => {
