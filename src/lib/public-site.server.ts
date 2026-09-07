@@ -181,7 +181,9 @@ export async function loadSite(
       .select("id, name, base_price, min_price, max_price")
       .eq("organization_id", orgId)
       .eq("is_active", true)
-      .order("created_at")
+      // Ordered by id: anonymous visitors have no column privilege on
+      // created_at, and ordering by it raises a permission error.
+      .order("id")
       .limit(1)
       .maybeSingle(),
   ]);
