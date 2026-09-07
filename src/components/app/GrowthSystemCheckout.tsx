@@ -75,27 +75,12 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
           <X className="size-4" />
         </Button>
       </div>
-      <dl className="mt-4 divide-y divide-border rounded-md border border-border bg-elevated text-[13px]">
-        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
-          <dt>Setup — one time</dt>
-          <dd className="tnum font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
-          <dt>Platform — first {GROWTH_SYSTEM.trialDays} days</dt>
-          <dd className="tnum font-semibold text-primary">{usdExact(0)}</dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
-          <dt>Then, monthly</dt>
-          <dd className="tnum font-semibold">{usdExact(GROWTH_SYSTEM.monthlyPrice)}/month</dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-3 px-3 py-2.5">
-          <dt className="font-medium">Charged today</dt>
-          <dd className="tnum text-[15px] font-semibold">{usdExact(GROWTH_SYSTEM.setupPrice)}</dd>
-        </div>
-      </dl>
-      <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
-        {GROWTH_SYSTEM.explainer}
+      <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
+        {usdExact(GROWTH_SYSTEM.setupPrice)} charged today. Then{" "}
+        {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month after your first {GROWTH_SYSTEM.trialDays}{" "}
+        days.
       </p>
+
       {error ? (
         <div
           role="alert"
