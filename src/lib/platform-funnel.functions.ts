@@ -194,29 +194,37 @@ export const getPlatformFunnel = createServerFn({ method: "GET" })
     let visitors: number | null = null;
     let views: number | null = null;
     {
+      const { eventPath, isPublicMarketingPath } = await import("@/lib/marketing-paths");
       const seenSessions = new Set<string>();
       const seenVisitors = new Set<string>();
       let sessionsWithoutVisitor = new Set<string>();
       let count = 0;
       // Every page view in the window is counted — no page ceiling.
-      const paged = await fetchAllRows<{ session_id: string | null; visitor_id: string | null }>(
-        (from, to) =>
-          supabaseAdmin
-            .from("marketing_conversions")
-            .select("session_id, visitor_id")
-            .eq("event_name", "page_view")
-            .gte("created_at", since)
-            .order("created_at", { ascending: false })
-            .range(from, to),
+      const paged = await fetchAllRows<{
+        session_id: string | null;
+        visitor_id: string | null;
+        landing_path: string | null;
+        metadata: unknown;
+      }>((from, to) =>
+        supabaseAdmin
+          .from("marketing_conversions")
+          .select("session_id, visitor_id, landing_path, metadata")
+          .eq("event_name", "page_view")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, to),
       );
       const failed = Boolean(paged.error);
       if (failed) errors.push("sessions");
       for (const row of paged.rows) {
+        // Revora's own admin/workspace screens are staff tools, not visits.
+        if (!isPublicMarketingPath(eventPath(row))) continue;
         count += 1;
         if (row.session_id) seenSessions.add(row.session_id);
         if (row.visitor_id) seenVisitors.add(row.visitor_id);
         else if (row.session_id) sessionsWithoutVisitor.add(row.session_id);
       }
+
       if (!failed) {
         sessions = seenSessions.size;
         // Sessions that carry a visitor id must not be double counted.
@@ -430,16 +438,22 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     // Every drill-down list is read to exhaustion: a fixed ceiling would quietly
     // hide real accounts, trials or traffic from the report.
     const [trafficRes, accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
-      fetchAllRows<{ created_at: string; session_id: string | null; visitor_id: string | null }>(
-        (from, to) =>
-          supabaseAdmin
-            .from("marketing_conversions")
-            .select("created_at, session_id, visitor_id")
-            .eq("event_name", "page_view")
-            .gte("created_at", since)
-            .order("created_at", { ascending: false })
-            .range(from, to),
+      fetchAllRows<{
+        created_at: string;
+        session_id: string | null;
+        visitor_id: string | null;
+        landing_path: string | null;
+        metadata: unknown;
+      }>((from, to) =>
+        supabaseAdmin
+          .from("marketing_conversions")
+          .select("created_at, session_id, visitor_id, landing_path, metadata")
+          .eq("event_name", "page_view")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, to),
       ),
+
       fetchAllRows<{ user_id: string; created_at: string }>((from, to) =>
         supabaseAdmin
           .from("platform_accounts")
@@ -482,12 +496,15 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     const now = Date.now();
 
     // Group traffic by UTC day: page views, distinct sessions, distinct visitors.
+    const { eventPath, isPublicMarketingPath } = await import("@/lib/marketing-paths");
     const byDay = new Map<
       string,
       { views: number; sessions: Set<string>; visitors: Set<string> }
     >();
     for (const row of trafficRes.rows) {
+      if (!isPublicMarketingPath(eventPath(row))) continue;
       const day = row.created_at.slice(0, 10);
+
       const bucket = byDay.get(day) ?? {
         views: 0,
         sessions: new Set<string>(),

@@ -303,18 +303,21 @@ export const getTrafficReport = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const since = new Date(Date.now() - data.days * 86_400_000).toISOString();
 
+    const { eventPath, isPublicMarketingPath } = await import("@/lib/marketing-paths");
+
     const rows: {
       event_name: string;
       landing_path: string | null;
       session_id: string | null;
       referrer: string | null;
       utm_source: string | null;
+      metadata: unknown;
       created_at: string;
     }[] = [];
     for (let page = 0; page < 200; page += 1) {
       const { data: batch, error } = await supabaseAdmin
         .from("marketing_conversions")
-        .select("event_name, landing_path, session_id, referrer, utm_source, created_at")
+        .select("event_name, landing_path, session_id, referrer, utm_source, metadata, created_at")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .range(page * 1000, page * 1000 + 999);
@@ -334,14 +337,21 @@ export const getTrafficReport = createServerFn({ method: "GET" })
     let views = 0;
     let signupStarts = 0;
     let checkoutReturns = 0;
+    /** Revora's own admin/workspace activity, kept out of the marketing numbers. */
+    let internalExcluded = 0;
 
     for (const row of rows) {
+      // Revora's own staff screens and tenant previews are not marketing traffic.
+      if (!isPublicMarketingPath(eventPath(row))) {
+        internalExcluded += 1;
+        continue;
+      }
       const session = row.session_id ?? "";
       if (session) allSessions.add(session);
 
       if (row.event_name === "page_view") {
         views += 1;
-        const path = (row.landing_path ?? "/").slice(0, 120);
+        const path = (eventPath(row) ?? "/").slice(0, 120);
         const page = pages.get(path) ?? { views: 0, sessions: new Set<string>() };
         page.views += 1;
         if (session) page.sessions.add(session);
@@ -404,8 +414,11 @@ export const getTrafficReport = createServerFn({ method: "GET" })
     return {
       days: data.days,
       views,
+      /** Revora's own admin/workspace and tenant-preview rows, excluded above. */
+      internalExcluded,
       /** Distinct browser sessions in the window — NOT verified unique people. */
       sessions,
+
       portalSessions: portalSessions.size,
       signupStarts,
       checkoutReturns,

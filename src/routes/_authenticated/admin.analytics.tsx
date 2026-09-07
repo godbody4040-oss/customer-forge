@@ -307,7 +307,7 @@ function AdminAnalytics() {
       <SectionHeading
         eyebrow="Marketing traffic"
         title="Who reaches revoragrowthsystems.com"
-        description="Browser-recorded page views. A unique session is one browsing visit; a unique visitor is one browser counted once however often it returns. Neither ever decides who counts as a customer."
+        description="Public page views only. Your own admin and workspace screens, plus customer website previews, are never counted here — so these numbers are visitors, not you working. A unique session is one browsing visit."
       />
 
       {traffic.isLoading ? (
@@ -340,15 +340,57 @@ function AdminAnalytics() {
             <MetricCard label="Session → signup start" value={`${report.signupStartRate}%`} />
           </div>
 
+          {report.internalExcluded > 0 ? (
+            <p className="text-[12px] text-muted-foreground">
+              {number(report.internalExcluded)} recorded{" "}
+              {report.internalExcluded === 1 ? "event was" : "events were"} left out because they
+              happened on your own admin or workspace screens, or on a customer website preview.
+            </p>
+          ) : null}
+
+          {report.daily.length > 1 ? (
+            <Panel className="space-y-3">
+              <p className="font-display text-[15px] font-semibold">Sessions per day</p>
+              <div className="flex h-28 items-end gap-1">
+                {report.daily.map((day) => {
+                  const peak = Math.max(...report.daily.map((d) => d.sessions), 1);
+                  return (
+                    <div
+                      key={day.day}
+                      title={`${day.day} — ${day.sessions} sessions`}
+                      className="min-w-[3px] flex-1 rounded-t bg-primary/70"
+                      style={{ height: `${Math.max(3, (day.sessions / peak) * 100)}%` }}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>{report.daily[0]?.day}</span>
+                <span>{report.daily[report.daily.length - 1]?.day}</span>
+              </div>
+            </Panel>
+          ) : null}
+
           <Panel className="space-y-3">
             <p className="font-display text-[15px] font-semibold">Most visited pages</p>
             <ul className="divide-y divide-border text-[12px]">
               {report.topPages.map((page) => (
-                <li key={page.path} className="flex items-center justify-between gap-3 py-2">
-                  <span className="truncate font-mono text-[11px]">{page.path}</span>
-                  <span className="shrink-0 text-muted-foreground">
-                    {number(page.views)} views · {number(page.sessions)} sessions
-                  </span>
+                <li key={page.path} className="space-y-1 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="truncate font-mono text-[11px]">{page.path}</span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {number(page.views)} views · {number(page.sessions)} sessions ·{" "}
+                      {report.views > 0 ? Math.round((page.views / report.views) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary/70"
+                      style={{
+                        width: `${report.views > 0 ? Math.max(2, (page.views / report.views) * 100) : 0}%`,
+                      }}
+                    />
+                  </div>
                 </li>
               ))}
             </ul>
