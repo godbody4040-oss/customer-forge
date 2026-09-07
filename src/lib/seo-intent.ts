@@ -348,7 +348,6 @@ export function seoInventory(): SeoPage[] {
         ),
       );
     }
-
   }
 
   for (const guide of GUIDES) {
