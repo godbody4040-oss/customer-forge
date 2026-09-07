@@ -17,6 +17,27 @@ describe("resolveAccess", () => {
     expect(result.allowed).toBe(true);
   });
 
+  it("locks a signup-stamped trialing workspace once the 3 free days end", () => {
+    const result = resolveAccess({
+      created_at: iso(-10 * DAY),
+      trial_ends_at: iso(-7 * DAY),
+      subscription_status: "trialing",
+    });
+    expect(result.state).toBe("EXPIRED");
+    expect(result.allowed).toBe(false);
+  });
+
+  it("keeps a paid workspace open during Stripe's free first month", () => {
+    const result = resolveAccess({
+      created_at: iso(-10 * DAY),
+      trial_ends_at: iso(-7 * DAY),
+      subscription_status: "trialing",
+      setup_payment_status: "paid",
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+
   it("treats an active subscription as active access", () => {
     const result = resolveAccess({ created_at: iso(-60 * DAY), subscription_status: "active" });
     expect(result.state).toBe("ACTIVE_SUBSCRIPTION");
