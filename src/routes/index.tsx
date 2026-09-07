@@ -172,7 +172,7 @@ const PROBLEMS = [
     title: "Missed calls",
     body: "Customers ring while you're on a job — 8 in 10 never call back, they call the next name on the list.",
     cost: "Every missed call is a job someone else invoices.",
-    fix: "Revora answers instantly on your site, texts the lead back and books them in — while your hands are full.",
+    fix: "Revora answers instantly on your site, emails the lead back and books them in — while your hands are full.",
   },
   {
     title: "Slow follow-up",
