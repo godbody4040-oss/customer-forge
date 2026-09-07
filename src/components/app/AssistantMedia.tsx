@@ -1,12 +1,16 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { friendlyError } from "@/lib/user-error";
 import { Film, ImagePlus, Loader2, Mic, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { summarizeClipChapters, transcribeVoiceCommand } from "@/lib/site-agent.functions";
+import {
+  builderMediaCapabilities,
+  summarizeClipChapters,
+  transcribeVoiceCommand,
+} from "@/lib/site-agent.functions";
 import {
   ATTACHMENT_ACCEPT,
   ATTACHMENT_LIMITS,
@@ -65,6 +69,17 @@ export function AssistantMedia({
   const [seconds, setSeconds] = useState(0);
   const [indexing, setIndexing] = useState<string[]>([]);
 
+  const mediaFn = useServerFn(builderMediaCapabilities);
+  // Honest, server-owned answer: can a recording or photo actually be read?
+  const media = useQuery({
+    queryKey: ["builder-media-capabilities"],
+    queryFn: () => mediaFn(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const canHear = media.data?.voice ?? false;
+  const canSee = media.data?.vision ?? false;
+  const mediaNote = media.data?.note ?? "";
+
   const transcribe = useServerFn(transcribeVoiceCommand);
   const chapterFn = useServerFn(summarizeClipChapters);
 
@@ -91,7 +106,7 @@ export function AssistantMedia({
 
   /** Indexes a clip in the background; a failure just means no chapters. */
   const indexClip = async (attachment: AgentAttachment) => {
-    if (!organizationId) return;
+    if (!organizationId || !canSee) return;
     setIndexing((prior) => [...prior, attachment.name]);
     try {
       const result = await chapterFn({ data: { organizationId, video: attachment } });
@@ -145,6 +160,13 @@ export function AssistantMedia({
   };
 
   const startRecording = async () => {
+    if (!canHear) {
+      toast.error(
+        mediaNote ||
+          "Voice notes can't be listened to right now. Type your request and Revora will build it.",
+      );
+      return;
+    }
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       toast.error("This browser can't record audio. Type your request instead.");
       return;
@@ -228,15 +250,20 @@ export function AssistantMedia({
             type="button"
             variant="outline"
             size="sm"
-            disabled={busy || voice.isPending}
+            disabled={busy || voice.isPending || !canHear}
             onClick={() => void startRecording()}
+            title={canHear ? undefined : mediaNote || undefined}
           >
             {voice.isPending ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : (
               <Mic className="size-4" aria-hidden="true" />
             )}
-            {voice.isPending ? "Writing down what you said…" : "Speak your request"}
+            {voice.isPending
+              ? "Writing down what you said…"
+              : canHear
+                ? "Speak your request"
+                : "Voice not available"}
           </Button>
         )}
         <span className="text-[11px] text-muted-foreground" aria-live="polite">
@@ -244,9 +271,11 @@ export function AssistantMedia({
             ? `Recording — say what you want changed, then press stop. ${seconds}s of ${RECORD_LIMIT_SECONDS}s.`
             : voice.isPending
               ? "Transcribing your voice request…"
-              : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
-                  ATTACHMENT_LIMITS.video / MB,
-                )} MB, up to ${MAX_ATTACHMENTS} per message.`}
+              : mediaNote
+                ? mediaNote
+                : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
+                    ATTACHMENT_LIMITS.video / MB,
+                  )} MB, up to ${MAX_ATTACHMENTS} per message.`}
         </span>
       </div>
 
