@@ -595,6 +595,8 @@ function GetStarted() {
                   </Button>
                 ) : null}
               </div>
+              )}
+
 
               {payNow && signedIn && cardsReady && !alreadySubscribed && organizationId ? (
                 <GrowthSystemCheckout
