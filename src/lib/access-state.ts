@@ -96,7 +96,11 @@ export function resolveAccess(org: AccessOrgFields | null | undefined): AccessDe
       trialEndsAt,
     };
   }
-  if (status === "active" || status === "trialing") {
+  // "trialing" only means paid access when the setup fee cleared (Stripe's
+  // first free month) or the free window is still open. Otherwise a brand-new
+  // workspace stamped "trialing" at signup would keep access forever, which
+  // would mean the free days never actually end.
+  if (status === "active" || (status === "trialing" && (setupPaid || isTrialActive(org)))) {
     return {
       state: "ACTIVE_SUBSCRIPTION",
       allowed: true,
