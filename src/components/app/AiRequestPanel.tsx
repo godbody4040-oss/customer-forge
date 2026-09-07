@@ -1,35 +1,51 @@
 /**
  * The builder's front door: one premium request box that actually builds.
  *
- * Typing a request here plans the change with Revora's engine (native rules
- * first, a real AI model when one is configured for this server), then applies
- * it to the draft as soon as the plan is safe — nothing removed, nothing
- * missing. Anything risky waits for one explicit "Build it" press, and a
- * version is always saved first so it can be rolled back.
+ * Requests are queued, so several changes can be lined up and Revora works
+ * through them one at a time — two builds can never touch the draft at once.
+ * Each request produces a plan the owner can edit: keep, skip, reorder or
+ * remove any step before it runs. Safe plans (nothing removed, nothing to ask)
+ * are applied straight away; anything else waits for one explicit press. A
+ * version is always saved first so any change can be rolled back.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, Mic, Image as ImageIcon, Loader2, Wand2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  Loader2,
+  Mic,
+  Image as ImageIcon,
+  Trash2,
+  Wand2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { askAssistant } from "@/lib/assistant-bridge";
 import { BUILDER_QUICK_ACTIONS } from "@/lib/builder-modes";
+import {
+  approvedSteps,
+  canAutoApply,
+  moveStep,
+  newTask,
+  nextRunnable,
+  QUEUE_LABELS,
+  queueSummary,
+  removeStep,
+  toPlanSteps,
+  toggleStep,
+  updateTask,
+  type QueueTask,
+} from "@/lib/builder-queue";
 import { applyWebsiteChanges, planWebsiteChanges } from "@/lib/site-agent.functions";
 import type { AgentStep } from "@/lib/site-agent";
 import { friendlyError } from "@/lib/user-error";
 import { cn } from "@/lib/utils";
 
 const INSTRUCTION_LIMIT = 1200;
-
-type PanelPlan = {
-  reply: string;
-  summary: string;
-  steps: AgentStep[];
-  questions: string[];
-  retryable: boolean;
-};
 
 export function AiRequestPanel({
   organizationId,
@@ -45,14 +61,16 @@ export function AiRequestPanel({
 }) {
   const [value, setValue] = useState("");
   const [howOpen, setHowOpen] = useState(false);
-  const [plan, setPlan] = useState<PanelPlan | null>(null);
-  const [lastRequest, setLastRequest] = useState("");
+  const [tasks, setTasks] = useState<QueueTask[]>([]);
   const queryClient = useQueryClient();
 
   const planFn = useServerFn(planWebsiteChanges);
   const applyFn = useServerFn(applyWebsiteChanges);
 
   const ready = canManage && Boolean(organizationId);
+  /** Full plan actions kept out of React state: only the labels are editable. */
+  const actionsRef = useRef(new Map<string, AgentStep>());
+  const runningRef = useRef(false);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["website_content", organizationId] });
@@ -61,72 +79,109 @@ export function AiRequestPanel({
     void queryClient.invalidateQueries({ queryKey: ["build_readiness"] });
   };
 
-  const build = useMutation({
-    mutationFn: (steps: AgentStep[]) =>
-      applyFn({
+  const patch = (id: string, next: Partial<QueueTask>) =>
+    setTasks((current) => updateTask(current, id, next));
+
+  const runBuild = async (task: QueueTask) => {
+    const steps = approvedSteps(task);
+    if (steps.length === 0) {
+      patch(task.id, { state: "skipped" });
+      return;
+    }
+    patch(task.id, { state: "building" });
+    try {
+      const result = await applyFn({
         data: {
           organizationId: organizationId!,
-          actions: steps.map((step) => step.action),
-          label: (plan?.summary || lastRequest).slice(0, 110) || "Before Revora changes",
+          actions: steps
+            .map((step) => actionsRef.current.get(step.key)?.action)
+            .filter((action): action is AgentStep["action"] => Boolean(action)),
+          label: (task.summary || task.instruction).slice(0, 110) || "Before Revora changes",
         },
-      }),
-    onSuccess: (result) => {
+      });
+      patch(task.id, {
+        state: "complete",
+        applied: result.applied,
+        failedCount: result.failed,
+      });
       toast.success(
         `${result.applied} change${result.applied === 1 ? "" : "s"} applied to your draft.` +
           (result.failed ? ` ${result.failed} couldn't be applied.` : ""),
       );
-      setPlan(null);
       refresh();
-    },
-    onError: (error: Error) => toast.error(friendlyError(error, "Couldn't apply those changes.")),
-  });
+    } catch (error) {
+      const message = friendlyError(error as Error, "Couldn't apply those changes.");
+      patch(task.id, { state: "failed", error: message });
+      toast.error(message);
+    }
+  };
 
-  const ask = useMutation({
-    mutationFn: (instruction: string) => {
-      setLastRequest(instruction);
-      return planFn({
-        data: { organizationId: organizationId!, instruction, history: [], attachments: [] },
+  const runPlan = async (task: QueueTask) => {
+    patch(task.id, { state: "planning" });
+    try {
+      const result = await planFn({
+        data: {
+          organizationId: organizationId!,
+          instruction: task.instruction,
+          history: [],
+          attachments: [],
+        },
       });
-    },
-    onSuccess: (result) => {
       const steps = result.steps as AgentStep[];
-      const next: PanelPlan = {
+      for (const step of steps) actionsRef.current.set(step.key, step);
+      const planned: QueueTask = {
+        ...task,
+        state: "waiting_for_approval",
+        steps: toPlanSteps(steps),
         reply: result.reply,
         summary: result.summary,
-        steps,
         questions: result.questions ?? [],
         retryable: Boolean(result.unavailable?.retryable),
       };
-      setPlan(next);
-      setValue("");
-      const safe =
-        steps.length > 0 && !steps.some((step) => step.destructive) && !next.questions.length;
-      if (safe && !result.unavailable) build.mutate(steps);
-    },
-    onError: (error: Error) =>
-      toast.error(friendlyError(error, "Revora couldn't read that request yet.")),
-  });
-
-  const busy = ask.isPending || build.isPending;
-
-  const send = (instruction: string) => {
-    const text = instruction.trim().slice(0, INSTRUCTION_LIMIT);
-    if (!text || !ready || busy) return;
-    ask.mutate(text);
+      setTasks((current) => updateTask(current, task.id, planned));
+      if (!result.unavailable && canAutoApply(planned)) await runBuild(planned);
+    } catch (error) {
+      patch(task.id, {
+        state: "failed",
+        error: friendlyError(error as Error, "Revora couldn't read that request yet."),
+      });
+    }
   };
 
-  const status = useMemo(() => {
-    if (ask.isPending) return "Working out exactly what to change…";
-    if (build.isPending) return "Building it on your draft…";
-    return null;
-  }, [ask.isPending, build.isPending]);
+  // Work the queue: one request at a time, in the order they were added.
+  useEffect(() => {
+    if (!ready || runningRef.current) return;
+    const next = nextRunnable(tasks);
+    if (!next) return;
+    runningRef.current = true;
+    void runPlan(next).finally(() => {
+      runningRef.current = false;
+      setTasks((current) => [...current]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, ready]);
+
+  const build = useMutation({
+    mutationFn: (task: QueueTask) => runBuild(task),
+  });
+
+  const busy = tasks.some((task) => task.state === "planning" || task.state === "building");
+
+  const queue = (instruction: string) => {
+    const text = instruction.trim().slice(0, INSTRUCTION_LIMIT);
+    if (!text || !ready) return;
+    setTasks((current) => [...current, newTask(text)]);
+    setValue("");
+  };
+
+  const summary = useMemo(() => queueSummary(tasks), [tasks]);
 
   return (
     <section className="panel p-4 sm:p-5">
       <h2 className="text-[15px] font-medium">Tell Revora what you want.</h2>
       <p className="mt-1 text-[12.5px] text-muted-foreground">
-        Describe the result in your own words. Revora plans the changes, builds them on your draft,
-        and saves a version first so you can undo anything.
+        Describe the result in your own words. Add as many requests as you like — Revora works
+        through them one at a time, and you can change any plan before it runs.
       </p>
 
       <Textarea
@@ -135,26 +190,21 @@ export function AiRequestPanel({
         aria-label="Describe what you want to change"
         value={value}
         maxLength={INSTRUCTION_LIMIT}
-        disabled={!ready || busy}
+        disabled={!ready}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) send(value);
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) queue(value);
         }}
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          variant="signal"
-          disabled={!ready || busy || !value.trim()}
-          onClick={() => send(value)}
-        >
+        <Button size="sm" variant="signal" disabled={!ready || !value.trim()} onClick={() => queue(value)}>
           {busy ? (
             <Loader2 className="mr-1.5 size-4 animate-spin" aria-hidden />
           ) : (
             <Wand2 className="mr-1.5 size-4" aria-hidden />
           )}
-          {busy ? "Working…" : "Ask Revora"}
+          {tasks.length ? "Add to the list" : "Ask Revora"}
         </Button>
         <Button size="sm" variant="outline" onClick={onOpenAi} disabled={!ready}>
           <ImageIcon className="mr-1.5 size-4" aria-hidden /> Add photo or video
@@ -162,57 +212,157 @@ export function AiRequestPanel({
         <Button size="sm" variant="outline" onClick={onOpenAi} disabled={!ready}>
           <Mic className="mr-1.5 size-4" aria-hidden /> Speak
         </Button>
+        {summary ? (
+          <span className="text-[12px] text-muted-foreground" role="status">
+            {summary}
+          </span>
+        ) : null}
       </div>
 
-      {status ? (
-        <p className="mt-3 text-[12px] text-muted-foreground" role="status">
-          {status}
-        </p>
-      ) : null}
+      {tasks.length ? (
+        <ol className="mt-4 space-y-3">
+          {tasks.map((task) => (
+            <li key={task.id} className="rounded-lg border border-border bg-elevated/40 p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <p className="text-[13px] font-medium">{task.instruction}</p>
+                <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                  {QUEUE_LABELS[task.state]}
+                </span>
+              </div>
 
-      {plan ? (
-        <div className="mt-4 rounded-lg border border-border bg-elevated/40 p-3">
-          <p className="text-[13px]">{plan.reply}</p>
-          {plan.steps.length ? (
-            <ul className="mt-2 space-y-1 text-[12px] text-muted-foreground">
-              {plan.steps.slice(0, 8).map((step) => (
-                <li key={step.key}>
-                  • {step.title} <span className="opacity-70">({step.where})</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {plan.questions.length ? (
-            <ul className="mt-2 space-y-1 text-[12px]">
-              {plan.questions.map((question) => (
-                <li key={question}>{question}</li>
-              ))}
-            </ul>
-          ) : null}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {plan.steps.length ? (
-              <Button
-                size="sm"
-                variant="signal"
-                disabled={busy}
-                onClick={() => build.mutate(plan.steps)}
-              >
-                Build it
-              </Button>
-            ) : null}
-            {plan.retryable ? (
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => send(lastRequest)}>
-                Retry
-              </Button>
-            ) : null}
-            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setPlan(null)}>
-              Dismiss
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onOpenAi}>
-              Continue in chat
-            </Button>
-          </div>
-        </div>
+              {task.reply ? (
+                <p className="mt-1.5 text-[12.5px] text-muted-foreground">{task.reply}</p>
+              ) : null}
+              {task.error ? <p className="mt-1.5 text-[12.5px]">{task.error}</p> : null}
+              {task.state === "complete" ? (
+                <p className="mt-1.5 text-[12px] text-muted-foreground">
+                  {task.applied ?? 0} change{(task.applied ?? 0) === 1 ? "" : "s"} applied
+                  {task.failedCount ? `, ${task.failedCount} couldn't be applied` : ""}.
+                </p>
+              ) : null}
+
+              {task.questions.length ? (
+                <ul className="mt-2 space-y-1 text-[12px]">
+                  {task.questions.map((question) => (
+                    <li key={question}>{question}</li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {task.steps.length ? (
+                <ul className="mt-2 space-y-1">
+                  {task.steps.map((step, index) => (
+                    <li key={step.key} className="flex items-center gap-2 text-[12px]">
+                      <input
+                        type="checkbox"
+                        checked={step.included}
+                        disabled={task.state !== "waiting_for_approval"}
+                        aria-label={`Include: ${step.title}`}
+                        onChange={() =>
+                          setTasks((current) =>
+                            current.map((t) => (t.id === task.id ? toggleStep(t, step.key) : t)),
+                          )
+                        }
+                        className="size-4 shrink-0 accent-current"
+                      />
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 truncate",
+                          !step.included && "text-muted-foreground line-through",
+                        )}
+                      >
+                        {step.title} <span className="opacity-70">({step.where})</span>
+                        {step.destructive ? (
+                          <span className="ml-1 opacity-80">— removes content</span>
+                        ) : null}
+                      </span>
+                      {task.state === "waiting_for_approval" ? (
+                        <span className="flex shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label={`Move up: ${step.title}`}
+                            disabled={index === 0}
+                            onClick={() =>
+                              setTasks((current) =>
+                                current.map((t) =>
+                                  t.id === task.id ? moveStep(t, step.key, -1) : t,
+                                ),
+                              )
+                            }
+                            className="cursor-pointer rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-40"
+                          >
+                            <ArrowUp className="size-3.5" aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Move down: ${step.title}`}
+                            disabled={index === task.steps.length - 1}
+                            onClick={() =>
+                              setTasks((current) =>
+                                current.map((t) => (t.id === task.id ? moveStep(t, step.key, 1) : t)),
+                              )
+                            }
+                            className="cursor-pointer rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-40"
+                          >
+                            <ArrowDown className="size-3.5" aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Remove: ${step.title}`}
+                            onClick={() =>
+                              setTasks((current) =>
+                                current.map((t) => (t.id === task.id ? removeStep(t, step.key) : t)),
+                              )
+                            }
+                            className="cursor-pointer rounded p-1 text-muted-foreground hover:text-foreground"
+                          >
+                            <Trash2 className="size-3.5" aria-hidden />
+                          </button>
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {task.state === "waiting_for_approval" && task.steps.length ? (
+                  <Button
+                    size="sm"
+                    variant="signal"
+                    disabled={busy || approvedSteps(task).length === 0}
+                    onClick={() => build.mutate(task)}
+                  >
+                    Build {approvedSteps(task).length} step
+                    {approvedSteps(task).length === 1 ? "" : "s"}
+                  </Button>
+                ) : null}
+                {task.state === "failed" || task.retryable ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => patch(task.id, { state: "queued", error: undefined })}
+                  >
+                    Try again
+                  </Button>
+                ) : null}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setTasks((current) => current.filter((t) => t.id !== task.id))}
+                >
+                  Remove from list
+                </Button>
+                {task.state === "waiting_for_approval" ? (
+                  <Button size="sm" variant="ghost" onClick={onOpenAi}>
+                    Continue in chat
+                  </Button>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
       ) : null}
 
       {compact ? null : (
@@ -223,8 +373,8 @@ export function AiRequestPanel({
               <button
                 key={action.label}
                 type="button"
-                disabled={!ready || busy}
-                onClick={() => send(action.instruction)}
+                disabled={!ready}
+                onClick={() => queue(action.instruction)}
                 className={cn(
                   "min-h-9 cursor-pointer rounded-full border border-border px-3 py-1.5 text-[12px] text-muted-foreground transition-colors",
                   "hover:bg-elevated hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50",
@@ -251,7 +401,8 @@ export function AiRequestPanel({
           type="button"
           onClick={() => {
             onOpenAi();
-            if (lastRequest) askAssistant(lastRequest);
+            const last = tasks[tasks.length - 1];
+            if (last) askAssistant(last.instruction);
           }}
           className="cursor-pointer text-[12px] text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
@@ -260,11 +411,11 @@ export function AiRequestPanel({
       </div>
       {howOpen ? (
         <ol className="mt-2 space-y-1 text-[12px] text-muted-foreground">
-          <li>1. Revora reads your request and your real business details.</li>
-          <li>2. It works out the exact changes and applies safe ones straight away.</li>
-          <li>3. Anything that removes content waits for you to press Build it.</li>
-          <li>4. Every change lands on your draft, never on your live site.</li>
-          <li>5. A version is saved first, so you can undo or roll back any time.</li>
+          <li>1. Add as many requests as you like — they run in order, one at a time.</li>
+          <li>2. Revora works out the exact steps and applies safe ones straight away.</li>
+          <li>3. You can untick, reorder or delete any step before it runs.</li>
+          <li>4. Anything that removes content waits for you to press Build.</li>
+          <li>5. Every change lands on your draft, with a version saved first.</li>
         </ol>
       ) : null}
     </section>
