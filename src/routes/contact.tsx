@@ -70,7 +70,6 @@ function Contact() {
   const [interest, setInterest] = useState<string>("Complete Revora System");
   const send = useServerFn(submitContactRequest);
 
-
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <SiteHeader />
@@ -162,7 +161,8 @@ function Contact() {
                         businessType: String(values.get("businessType") ?? ""),
                         interest,
                         message: String(values.get("message") ?? ""),
-                        landingPath: typeof window === "undefined" ? null : window.location.pathname,
+                        landingPath:
+                          typeof window === "undefined" ? null : window.location.pathname,
                       },
                     });
                     setSent(true);
@@ -178,7 +178,6 @@ function Contact() {
                   }
                 }}
               >
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="c-name">Name</Label>
