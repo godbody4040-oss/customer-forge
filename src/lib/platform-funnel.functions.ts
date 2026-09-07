@@ -438,16 +438,22 @@ export const getFunnelDetails = createServerFn({ method: "GET" })
     // Every drill-down list is read to exhaustion: a fixed ceiling would quietly
     // hide real accounts, trials or traffic from the report.
     const [trafficRes, accountsRes, trialsRes, orgsRes, subsRes] = await Promise.all([
-      fetchAllRows<{ created_at: string; session_id: string | null; visitor_id: string | null }>(
-        (from, to) =>
-          supabaseAdmin
-            .from("marketing_conversions")
-            .select("created_at, session_id, visitor_id")
-            .eq("event_name", "page_view")
-            .gte("created_at", since)
-            .order("created_at", { ascending: false })
-            .range(from, to),
+      fetchAllRows<{
+        created_at: string;
+        session_id: string | null;
+        visitor_id: string | null;
+        landing_path: string | null;
+        metadata: unknown;
+      }>((from, to) =>
+        supabaseAdmin
+          .from("marketing_conversions")
+          .select("created_at, session_id, visitor_id, landing_path, metadata")
+          .eq("event_name", "page_view")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .range(from, to),
       ),
+
       fetchAllRows<{ user_id: string; created_at: string }>((from, to) =>
         supabaseAdmin
           .from("platform_accounts")
