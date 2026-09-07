@@ -479,7 +479,9 @@ function GetStarted() {
 
           {step === 2 ? (
             <section className="mt-6 space-y-4">
+              {payNow ? null : (
               <div className="panel p-5">
+
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="size-4 text-primary" />
                   <h2 className="font-display text-[17px] font-semibold">Payment</h2>
