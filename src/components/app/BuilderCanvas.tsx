@@ -643,7 +643,7 @@ export function BuilderCanvas({
                   onClick={() => {
                     if (selectedComponent) {
                       setUndoable({ kind: "component", row: selectedComponent });
-                      deleteComponent.mutate(selectedComponent.id);
+                      deleteComponent.mutate(selectedComponent);
                       setSelection({
                         type: "section",
                         pageId: page.id,
