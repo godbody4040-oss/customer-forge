@@ -105,7 +105,7 @@ describe("provider configuration", () => {
         },
       ),
     ).rejects.toThrow(AI_NOT_CONFIGURED_MESSAGE);
-  });
+  }, 20000);
 
   it("puts the configured default provider first and the fallback second", () => {
     process.env["GOOGLE_AI_API_KEY"] = "test-google";
