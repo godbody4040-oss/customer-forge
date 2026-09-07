@@ -42,10 +42,7 @@ function AdminSeo() {
 
   return (
     <div className="space-y-6">
-      <SectionHeading
-        eyebrow="Search"
-        title="What to work on next to win more search traffic"
-      />
+      <SectionHeading eyebrow="Search" title="What to work on next to win more search traffic" />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Pages checked" value={number(audit.checkedPages)} tone="info" />
@@ -115,7 +112,12 @@ function AdminSeo() {
             onChange={(event) => setRaw(event.target.value)}
           />
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="signal" disabled={!raw.trim()} onClick={() => setSubmitted(raw)}>
+            <Button
+              size="sm"
+              variant="signal"
+              disabled={!raw.trim()}
+              onClick={() => setSubmitted(raw)}
+            >
               <Search className="mr-1.5 size-4" aria-hidden /> Find my opportunities
             </Button>
             {submitted ? (

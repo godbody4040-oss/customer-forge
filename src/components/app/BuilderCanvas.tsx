@@ -675,8 +675,6 @@ export function BuilderCanvas({
               </div>
             ) : null}
 
-
-
             {sections.map((section, index) => {
               const isSelected = selectedSectionId === section.id;
               const sectionHint = hint?.id === section.id ? hint.position : null;

@@ -12,6 +12,7 @@ import {
   Megaphone,
   LifeBuoy,
   Receipt,
+  Search,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -45,6 +46,7 @@ const NAV = [
   { to: "/admin/plans", label: "Plans", icon: Receipt, exact: false },
   { to: "/admin/payments", label: "Payments", icon: CreditCard, exact: false },
   { to: "/admin/backups", label: "Backups", icon: DatabaseBackup, exact: false },
+  { to: "/admin/seo", label: "Search growth", icon: Search, exact: false },
   { to: "/admin/ai", label: "AI health", icon: Sparkles, exact: false },
   { to: "/admin/monitoring", label: "Monitoring", icon: Activity, exact: false },
 ] as const;
