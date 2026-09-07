@@ -47,29 +47,45 @@ export function PreviewSiteButton({
     );
   }
 
-  const openDraftPreview = async () => {
-    const active = (links ?? []).find(
-      (link) => !link.revoked && new Date(link.expires_at).getTime() > Date.now(),
+  const activeToken = (links ?? []).find(
+    (link) => !link.revoked && new Date(link.expires_at).getTime() > Date.now(),
+  )?.token;
+  const token = activeToken ?? readyToken;
+
+  // A ready link is a real anchor, so phones (and the editor preview frame)
+  // open it on the tap itself. Opening a window after an await is blocked by
+  // Safari's popup and cross-origin-opener rules, which showed clients an
+  // error page instead of their website.
+  if (token) {
+    return (
+      <Button asChild variant="outline">
+        <a href={`/p/${token}`} target="_blank" rel="noopener noreferrer">
+          Preview site (draft) <ExternalLink className="size-4" />
+        </a>
+      </Button>
     );
-    let token = active?.token;
-    if (!token) {
-      token = await create.mutateAsync({ label: "Builder preview", hours: 168 });
-    }
-    window.open(`/p/${token}`, "_blank", "noopener");
-  };
+  }
 
   return (
     <Button
       variant="outline"
       disabled={create.isPending}
-      onClick={() => void openDraftPreview().catch(() => undefined)}
+      onClick={() => {
+        create
+          .mutateAsync({ label: "Builder preview", hours: 168 })
+          .then((created) => {
+            setReadyToken(created);
+            toast.success("Preview ready — tap “Preview site (draft)” to open it.");
+          })
+          .catch(() => undefined);
+      }}
     >
       {create.isPending ? (
         <Loader2 className="size-4 animate-spin" />
       ) : (
         <ExternalLink className="size-4" />
       )}
-      Preview site (draft)
+      {create.isPending ? "Preparing preview" : "Get preview link"}
     </Button>
   );
 }
