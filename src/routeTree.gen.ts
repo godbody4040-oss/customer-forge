@@ -65,6 +65,7 @@ import { Route as AuthenticatedAdminMonthlyRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminOutreachRouteImport } from './routes/_authenticated/admin.outreach'
 import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
 import { Route as AuthenticatedAdminPlansRouteImport } from './routes/_authenticated/admin.plans'
+import { Route as AuthenticatedAdminSeoRouteImport } from './routes/_authenticated/admin.seo'
 import { Route as AuthenticatedAdminWebsitesRouteImport } from './routes/_authenticated/admin.websites'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppAnalyticsRouteImport } from './routes/_authenticated/app.analytics'
@@ -385,6 +386,11 @@ const AuthenticatedAdminPlansRoute = AuthenticatedAdminPlansRouteImport.update({
   path: '/plans',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminSeoRoute = AuthenticatedAdminSeoRouteImport.update({
+  id: '/seo',
+  path: '/seo',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminWebsitesRoute =
   AuthenticatedAdminWebsitesRouteImport.update({
     id: '/websites',
@@ -612,6 +618,7 @@ export interface FileRoutesByFullPath {
   '/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
@@ -696,6 +703,7 @@ export interface FileRoutesByTo {
   '/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/app/automations': typeof AuthenticatedAppAutomationsRoute
@@ -787,6 +795,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/outreach': typeof AuthenticatedAdminOutreachRoute
   '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/_authenticated/admin/plans': typeof AuthenticatedAdminPlansRoute
+  '/_authenticated/admin/seo': typeof AuthenticatedAdminSeoRoute
   '/_authenticated/admin/websites': typeof AuthenticatedAdminWebsitesRoute
   '/_authenticated/app/analytics': typeof AuthenticatedAppAnalyticsRoute
   '/_authenticated/app/automations': typeof AuthenticatedAppAutomationsRoute
@@ -878,6 +887,7 @@ export interface FileRouteTypes {
     | '/admin/outreach'
     | '/admin/payments'
     | '/admin/plans'
+    | '/admin/seo'
     | '/admin/websites'
     | '/app/analytics'
     | '/app/automations'
@@ -962,6 +972,7 @@ export interface FileRouteTypes {
     | '/admin/outreach'
     | '/admin/payments'
     | '/admin/plans'
+    | '/admin/seo'
     | '/admin/websites'
     | '/app/analytics'
     | '/app/automations'
@@ -1052,6 +1063,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/outreach'
     | '/_authenticated/admin/payments'
     | '/_authenticated/admin/plans'
+    | '/_authenticated/admin/seo'
     | '/_authenticated/admin/websites'
     | '/_authenticated/app/analytics'
     | '/_authenticated/app/automations'
@@ -1530,6 +1542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPlansRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/seo': {
+      id: '/_authenticated/admin/seo'
+      path: '/seo'
+      fullPath: '/admin/seo'
+      preLoaderRoute: typeof AuthenticatedAdminSeoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/websites': {
       id: '/_authenticated/admin/websites'
       path: '/websites'
@@ -1782,6 +1801,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminOutreachRoute: typeof AuthenticatedAdminOutreachRoute
   AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
   AuthenticatedAdminPlansRoute: typeof AuthenticatedAdminPlansRoute
+  AuthenticatedAdminSeoRoute: typeof AuthenticatedAdminSeoRoute
   AuthenticatedAdminWebsitesRoute: typeof AuthenticatedAdminWebsitesRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -1797,6 +1817,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminOutreachRoute: AuthenticatedAdminOutreachRoute,
   AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
   AuthenticatedAdminPlansRoute: AuthenticatedAdminPlansRoute,
+  AuthenticatedAdminSeoRoute: AuthenticatedAdminSeoRoute,
   AuthenticatedAdminWebsitesRoute: AuthenticatedAdminWebsitesRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }

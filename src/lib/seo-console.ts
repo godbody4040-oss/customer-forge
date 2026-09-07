@@ -131,3 +131,107 @@ function pathOf(page: string) {
     return page.startsWith("/") ? page : `/${page}`;
   }
 }
+
+/**
+ * Reads a Search Console performance export (CSV or TSV, or a copied table)
+ * into rows this engine can score. Only rows with a usable page/query and
+ * numbers are kept — a malformed line is skipped, never guessed at.
+ *
+ * Accepted headers (case-insensitive, any order): page/landing page/url,
+ * query/queries/top queries, clicks, impressions, position/average position,
+ * plus optional previous clicks / previous impressions for comparisons.
+ */
+export function parseConsoleRows(input: string, limit = 5000): ConsoleRow[] {
+  const lines = input
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length < 2) return [];
+
+  const split = (line: string) =>
+    (line.includes("\t") ? line.split("\t") : splitCsv(line)).map((cell) =>
+      cell.trim().replace(/^"|"$/g, ""),
+    );
+
+  const header = split(lines[0]!).map((cell) => cell.toLowerCase());
+  const find = (...names: string[]) =>
+    header.findIndex((cell) => names.some((name) => cell === name || cell.includes(name)));
+
+  const pageAt = find("landing page", "page", "url", "address");
+  const queryAt = find("query", "queries", "search term", "keyword");
+  const clicksAt = find("clicks");
+  const imprAt = find("impressions", "impr");
+  const posAt = find("position");
+  const prevClicksAt = find("previous clicks", "clicks (previous");
+  const prevImprAt = find("previous impressions", "impressions (previous");
+
+  if (pageAt < 0 && queryAt < 0) return [];
+  if (clicksAt < 0 || imprAt < 0) return [];
+
+  const rows: ConsoleRow[] = [];
+  for (const line of lines.slice(1, limit + 1)) {
+    const cells = split(line);
+    const page = pageAt >= 0 ? (cells[pageAt] ?? "") : "/";
+    const clicks = num(cells[clicksAt]);
+    const impressions = num(cells[imprAt]);
+    if (!page || clicks === null || impressions === null || impressions <= 0) continue;
+
+    const previousClicks = prevClicksAt >= 0 ? num(cells[prevClicksAt]) : null;
+    const previousImpressions = prevImprAt >= 0 ? num(cells[prevImprAt]) : null;
+
+    rows.push({
+      page,
+      ...(queryAt >= 0 && cells[queryAt] ? { query: cells[queryAt] } : {}),
+      clicks,
+      impressions,
+      position: posAt >= 0 ? (num(cells[posAt]) ?? 0) : 0,
+      ...(previousClicks !== null || previousImpressions !== null
+        ? {
+            previous: {
+              clicks: previousClicks ?? 0,
+              impressions: previousImpressions ?? 0,
+            },
+          }
+        : {}),
+    });
+  }
+  return rows;
+}
+
+/** One honest line about what the data covers. */
+export function consoleCoverage(rows: ConsoleRow[]) {
+  const pages = new Set(rows.map((row) => pathOf(row.page)));
+  const clicks = rows.reduce((sum, row) => sum + row.clicks, 0);
+  const impressions = rows.reduce((sum, row) => sum + row.impressions, 0);
+  return {
+    rows: rows.length,
+    pages: pages.size,
+    clicks,
+    impressions,
+    ctr: impressions > 0 ? clicks / impressions : 0,
+    comparable: rows.filter((row) => row.previous).length,
+  };
+}
+
+function num(value: string | undefined): number | null {
+  if (value === undefined) return null;
+  const cleaned = value.replace(/[,%\s]/g, "");
+  if (!cleaned) return null;
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function splitCsv(line: string): string[] {
+  const cells: string[] = [];
+  let current = "";
+  let quoted = false;
+  for (const char of line) {
+    if (char === '"') quoted = !quoted;
+    else if (char === "," && !quoted) {
+      cells.push(current);
+      current = "";
+    } else current += char;
+  }
+  cells.push(current);
+  return cells;
+}
