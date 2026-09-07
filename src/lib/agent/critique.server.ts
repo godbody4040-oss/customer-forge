@@ -83,23 +83,27 @@ export async function critiquePlan(options: {
   requirements: string[];
 }): Promise<Critique> {
   try {
-    const raw = await callJson(CRITIQUE_ROLE, [
-      { role: "system", content: SYSTEM },
-      {
-        role: "user",
-        content: [
-          `THE OWNER'S GOAL: ${options.goal}`,
-          "",
-          options.designBrief,
-          "",
-          "REQUIREMENTS THIS PLAN MUST MEET:",
-          ...options.requirements.map((item, index) => `${index + 1}. ${item}`),
-          "",
-          "THE PLANNED CHANGES:",
-          JSON.stringify(options.actions).slice(0, 14_000),
-        ].join("\n"),
-      },
-    ], { task: "agent.critique" });
+    const raw = await callJson(
+      CRITIQUE_ROLE,
+      [
+        { role: "system", content: SYSTEM },
+        {
+          role: "user",
+          content: [
+            `THE OWNER'S GOAL: ${options.goal}`,
+            "",
+            options.designBrief,
+            "",
+            "REQUIREMENTS THIS PLAN MUST MEET:",
+            ...options.requirements.map((item, index) => `${index + 1}. ${item}`),
+            "",
+            "THE PLANNED CHANGES:",
+            JSON.stringify(options.actions).slice(0, 14_000),
+          ].join("\n"),
+        },
+      ],
+      { task: "agent.critique" },
+    );
 
     const rawScores = (raw["scores"] ?? {}) as Record<string, unknown>;
     const scores = Object.fromEntries(
