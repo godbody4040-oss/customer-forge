@@ -31,110 +31,116 @@ export interface Guide {
 
 export const GUIDES: readonly Guide[] = [
   {
-    "slug": "boost-local-service-business-with-online-reviews",
-    "title": "Boost Your Local Service Business with Online Reviews",
-    "metaTitle": "Harness Online Reviews for Local Service Business Success",
-    "description": "Learn how to leverage online reviews to grow your local service business effectively.",
-    "intro": "Online reviews are essential for local service businesses aiming to build trust and attract more customers. Learn how to effectively manage and utilize reviews to your advantage.",
-    "readMinutes": 6,
-    "steps": [
+    slug: "boost-local-service-business-with-online-reviews",
+    title: "Boost Your Local Service Business with Online Reviews",
+    metaTitle: "Harness Online Reviews for Local Service Business Success",
+    description:
+      "Learn how to leverage online reviews to grow your local service business effectively.",
+    intro:
+      "Online reviews are essential for local service businesses aiming to build trust and attract more customers. Learn how to effectively manage and utilize reviews to your advantage.",
+    readMinutes: 6,
+    steps: [
       {
-        "title": "Understand the Importance of Reviews",
-        "body": "Online reviews significantly influence consumer decisions. Customers often trust reviews as much as personal recommendations. Understanding this can help businesses prioritize review management as a crucial part of their marketing strategy."
+        title: "Understand the Importance of Reviews",
+        body: "Online reviews significantly influence consumer decisions. Customers often trust reviews as much as personal recommendations. Understanding this can help businesses prioritize review management as a crucial part of their marketing strategy.",
       },
       {
-        "title": "Claim and Optimize Your Listings",
-        "body": "Ensure your business is listed on major review platforms like Google My Business, Yelp, and Facebook. Fill out profiles completely, and use high-quality images to make your business stand out. Respond to both positive and negative reviews to show engagement and build trust."
+        title: "Claim and Optimize Your Listings",
+        body: "Ensure your business is listed on major review platforms like Google My Business, Yelp, and Facebook. Fill out profiles completely, and use high-quality images to make your business stand out. Respond to both positive and negative reviews to show engagement and build trust.",
       },
       {
-        "title": "Encourage More Customer Reviews",
-        "body": "Actively request reviews by asking satisfied customers to leave feedback. You can do this through follow-up emails, thank-you cards, or even in-person requests after a successful service. Make it easy by providing direct links to your review profiles."
+        title: "Encourage More Customer Reviews",
+        body: "Actively request reviews by asking satisfied customers to leave feedback. You can do this through follow-up emails, thank-you cards, or even in-person requests after a successful service. Make it easy by providing direct links to your review profiles.",
       },
       {
-        "title": "Respond to Reviews Effectively",
-        "body": "Respond to all reviews promptly and professionally. Thank customers for positive feedback and address any issues raised in negative reviews with solutions. This shows your commitment to customer satisfaction and can improve your reputation."
+        title: "Respond to Reviews Effectively",
+        body: "Respond to all reviews promptly and professionally. Thank customers for positive feedback and address any issues raised in negative reviews with solutions. This shows your commitment to customer satisfaction and can improve your reputation.",
       },
       {
-        "title": "Leverage Reviews in Marketing",
-        "body": "Feature positive reviews on your website and social media profiles. Highlight customer testimonials in marketing materials like brochures or ads. This not only builds credibility but also assures potential customers of your quality."
+        title: "Leverage Reviews in Marketing",
+        body: "Feature positive reviews on your website and social media profiles. Highlight customer testimonials in marketing materials like brochures or ads. This not only builds credibility but also assures potential customers of your quality.",
       },
       {
-        "title": "Integrate Reviews in Local SEO Strategy",
-        "body": "Online reviews can improve your search engine rankings. Encourage customers to leave reviews that mention specific services you offer, as this can increase your visibility for relevant searches. Keep your information up-to-date and consistent across all platforms."
+        title: "Integrate Reviews in Local SEO Strategy",
+        body: "Online reviews can improve your search engine rankings. Encourage customers to leave reviews that mention specific services you offer, as this can increase your visibility for relevant searches. Keep your information up-to-date and consistent across all platforms.",
       },
       {
-        "title": "Use Feedback to Improve Services",
-        "body": "Analyze your reviews to identify patterns in customer feedback. Use this information to improve your services, address recurring issues, and enhance customer satisfaction. Continuous improvement based on actual customer feedback can set your business apart from the competition."
-      }
+        title: "Use Feedback to Improve Services",
+        body: "Analyze your reviews to identify patterns in customer feedback. Use this information to improve your services, address recurring issues, and enhance customer satisfaction. Continuous improvement based on actual customer feedback can set your business apart from the competition.",
+      },
     ],
-    "takeaway": "Managing online reviews effectively can significantly boost your local service business. By encouraging, responding to, and integrating reviews into your marketing strategy, you can enhance customer trust and visibility, driving growth and success.",
-    "faqs": [
+    takeaway:
+      "Managing online reviews effectively can significantly boost your local service business. By encouraging, responding to, and integrating reviews into your marketing strategy, you can enhance customer trust and visibility, driving growth and success.",
+    faqs: [
       {
-        "q": "How do I get more customer reviews?",
-        "a": "Encourage satisfied customers to leave reviews through follow-up emails, thank-you notes, and easy-to-access links on your website."
+        q: "How do I get more customer reviews?",
+        a: "Encourage satisfied customers to leave reviews through follow-up emails, thank-you notes, and easy-to-access links on your website.",
       },
       {
-        "q": "What if I receive a negative review?",
-        "a": "Respond promptly and professionally, addressing the issue and offering a solution. This shows potential customers you value feedback and customer satisfaction."
+        q: "What if I receive a negative review?",
+        a: "Respond promptly and professionally, addressing the issue and offering a solution. This shows potential customers you value feedback and customer satisfaction.",
       },
       {
-        "q": "Can reviews impact my search engine ranking?",
-        "a": "Yes, reviews can improve local SEO by increasing your business's visibility in search results, particularly if they mention specific services you offer."
-      }
-    ]
+        q: "Can reviews impact my search engine ranking?",
+        a: "Yes, reviews can improve local SEO by increasing your business's visibility in search results, particularly if they mention specific services you offer.",
+      },
+    ],
   },
   {
-    "slug": "optimize-local-service-sales-process",
-    "title": "Optimizing Your Local Service Business Sales Process",
-    "metaTitle": "Optimize Local Service Sales for More Bookings",
-    "description": "Learn how to optimize your local service business sales process, from lead follow-up to booking.",
-    "intro": "Local service businesses thrive on effective sales processes. By optimizing marketing, managing reviews, and streamlining quotes, you can improve your bookings.",
-    "readMinutes": 6,
-    "steps": [
+    slug: "optimize-local-service-sales-process",
+    title: "Optimizing Your Local Service Business Sales Process",
+    metaTitle: "Optimize Local Service Sales for More Bookings",
+    description:
+      "Learn how to optimize your local service business sales process, from lead follow-up to booking.",
+    intro:
+      "Local service businesses thrive on effective sales processes. By optimizing marketing, managing reviews, and streamlining quotes, you can improve your bookings.",
+    readMinutes: 6,
+    steps: [
       {
-        "title": "Understand Your Local SEO",
-        "body": "Local SEO is crucial for reaching your community. Enhance your business listings on Google My Business, use local keywords, and ensure your website is mobile-friendly. Regularly update your business information and encourage customers to leave online reviews. These actions help potential customers find you more easily."
+        title: "Understand Your Local SEO",
+        body: "Local SEO is crucial for reaching your community. Enhance your business listings on Google My Business, use local keywords, and ensure your website is mobile-friendly. Regularly update your business information and encourage customers to leave online reviews. These actions help potential customers find you more easily.",
       },
       {
-        "title": "Manage and Respond to Online Reviews",
-        "body": "Customer reviews play a critical part in building trust. Actively encourage satisfied clients to leave positive reviews. Respond to reviews promptly, addressing any concerns and thanking customers for their feedback. A professional and caring response boosts your reputation and shows your commitment to customer satisfaction."
+        title: "Manage and Respond to Online Reviews",
+        body: "Customer reviews play a critical part in building trust. Actively encourage satisfied clients to leave positive reviews. Respond to reviews promptly, addressing any concerns and thanking customers for their feedback. A professional and caring response boosts your reputation and shows your commitment to customer satisfaction.",
       },
       {
-        "title": "Create Practical Marketing Strategies",
-        "body": "Focus on marketing strategies that resonate with your local audience. Use social media to showcase your work, customer testimonials, and behind-the-scenes content. Collaborate with other local businesses for cross-promotions. Develop email marketing campaigns tailored to specific customer needs and preferences."
+        title: "Create Practical Marketing Strategies",
+        body: "Focus on marketing strategies that resonate with your local audience. Use social media to showcase your work, customer testimonials, and behind-the-scenes content. Collaborate with other local businesses for cross-promotions. Develop email marketing campaigns tailored to specific customer needs and preferences.",
       },
       {
-        "title": "Streamline Lead Follow-Up",
-        "body": "Timely follow-up with leads is essential to convert interest into sales. Use CRM systems to keep track of customer interactions and set reminders for follow-up actions. Personalize your communication to make customers feel valued and more likely to book your services."
+        title: "Streamline Lead Follow-Up",
+        body: "Timely follow-up with leads is essential to convert interest into sales. Use CRM systems to keep track of customer interactions and set reminders for follow-up actions. Personalize your communication to make customers feel valued and more likely to book your services.",
       },
       {
-        "title": "Optimize Quoting Processes",
-        "body": "Develop a transparent and efficient quoting process. Provide detailed quotes with breakdowns to help clients understand the value you offer. Consider online quoting tools to make the process quicker and more accessible. Clear quotes reduce confusion and encourage quicker decisions from potential customers."
+        title: "Optimize Quoting Processes",
+        body: "Develop a transparent and efficient quoting process. Provide detailed quotes with breakdowns to help clients understand the value you offer. Consider online quoting tools to make the process quicker and more accessible. Clear quotes reduce confusion and encourage quicker decisions from potential customers.",
       },
       {
-        "title": "Simplify Booking Systems",
-        "body": "Utilize online booking systems to make it easy for customers to schedule appointments. Clearly display your availability and offer flexible booking options. Allow adjustments and cancellations to be handled with minimal hassle. This convenience increases the likelihood of securing bookings."
+        title: "Simplify Booking Systems",
+        body: "Utilize online booking systems to make it easy for customers to schedule appointments. Clearly display your availability and offer flexible booking options. Allow adjustments and cancellations to be handled with minimal hassle. This convenience increases the likelihood of securing bookings.",
       },
       {
-        "title": "Leverage Customer Feedback for Improvement",
-        "body": "Regularly gather feedback from your clients to understand their needs and preferences. Use surveys or suggestion boxes to gain insights. Make improvements based on this feedback to enhance your services. Showing customers that you value their opinion fosters loyalty and repeat business."
-      }
+        title: "Leverage Customer Feedback for Improvement",
+        body: "Regularly gather feedback from your clients to understand their needs and preferences. Use surveys or suggestion boxes to gain insights. Make improvements based on this feedback to enhance your services. Showing customers that you value their opinion fosters loyalty and repeat business.",
+      },
     ],
-    "takeaway": "Optimizing your sales process involves a blend of effective marketing, reputation management, and streamlined operations. By focusing on customer expectations and using tools to enhance your processes, you can significantly boost your bookings and customer satisfaction.",
-    "faqs": [
+    takeaway:
+      "Optimizing your sales process involves a blend of effective marketing, reputation management, and streamlined operations. By focusing on customer expectations and using tools to enhance your processes, you can significantly boost your bookings and customer satisfaction.",
+    faqs: [
       {
-        "q": "How important are online reviews for my local service business?",
-        "a": "Online reviews are very important as they influence potential customers' perceptions and decision-making. Positive reviews build trust and attract more clients."
+        q: "How important are online reviews for my local service business?",
+        a: "Online reviews are very important as they influence potential customers' perceptions and decision-making. Positive reviews build trust and attract more clients.",
       },
       {
-        "q": "What tools can help with lead follow-up?",
-        "a": "CRM systems are effective for managing lead follow-up by organizing customer interactions and setting reminders for timely follow-up communication."
+        q: "What tools can help with lead follow-up?",
+        a: "CRM systems are effective for managing lead follow-up by organizing customer interactions and setting reminders for timely follow-up communication.",
       },
       {
-        "q": "Why should I use an online booking system?",
-        "a": "Online booking systems provide convenience for customers, allowing them to easily view availability and schedule services, which can lead to more bookings."
-      }
-    ]
+        q: "Why should I use an online booking system?",
+        a: "Online booking systems provide convenience for customers, allowing them to easily view availability and schedule services, which can lead to more bookings.",
+      },
+    ],
   },
   {
     slug: "get-more-google-reviews",
