@@ -198,7 +198,12 @@ export function AiRequestPanel({
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button size="sm" variant="signal" disabled={!ready || !value.trim()} onClick={() => queue(value)}>
+        <Button
+          size="sm"
+          variant="signal"
+          disabled={!ready || !value.trim()}
+          onClick={() => queue(value)}
+        >
           {busy ? (
             <Loader2 className="mr-1.5 size-4 animate-spin" aria-hidden />
           ) : (
@@ -299,7 +304,9 @@ export function AiRequestPanel({
                             disabled={index === task.steps.length - 1}
                             onClick={() =>
                               setTasks((current) =>
-                                current.map((t) => (t.id === task.id ? moveStep(t, step.key, 1) : t)),
+                                current.map((t) =>
+                                  t.id === task.id ? moveStep(t, step.key, 1) : t,
+                                ),
                               )
                             }
                             className="cursor-pointer rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-40"
@@ -311,7 +318,9 @@ export function AiRequestPanel({
                             aria-label={`Remove: ${step.title}`}
                             onClick={() =>
                               setTasks((current) =>
-                                current.map((t) => (t.id === task.id ? removeStep(t, step.key) : t)),
+                                current.map((t) =>
+                                  t.id === task.id ? removeStep(t, step.key) : t,
+                                ),
                               )
                             }
                             className="cursor-pointer rounded p-1 text-muted-foreground hover:text-foreground"

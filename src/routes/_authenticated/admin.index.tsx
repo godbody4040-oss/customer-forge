@@ -11,11 +11,19 @@ import {
   SectionHeading,
 } from "@/components/app/Bits";
 import { Button } from "@/components/ui/button";
-import { getPlatformMetrics, listClients } from "@/lib/admin.functions";
+import { getPlatformActivity, getPlatformMetrics, listClients } from "@/lib/admin.functions";
 import { getConversionReport } from "@/lib/conversion.functions";
 import { DOMAIN_STATES, PUBLISH_STATES } from "@/lib/readiness";
 import { currency, dateShort, number } from "@/lib/format";
 import { REVORA } from "@/lib/brand";
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  signup: "New business",
+  lead: "Enquiry",
+  booking: "Booking",
+  payment: "Payment",
+  website: "Website",
+};
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -30,6 +38,12 @@ function AdminOverview() {
   const clientsFn = useServerFn(listClients);
   const metrics = useQuery({ queryKey: ["admin", "metrics"], queryFn: () => metricsFn({}) });
   const clients = useQuery({ queryKey: ["admin", "clients"], queryFn: () => clientsFn({}) });
+  const activityFn = useServerFn(getPlatformActivity);
+  const activity = useQuery({
+    queryKey: ["admin", "activity"],
+    queryFn: () => activityFn({ data: { limit: 30 } }),
+    refetchInterval: 60_000,
+  });
   const conversions = useQuery({
     queryKey: ["admin", "conversions", 30],
     queryFn: () => conversionsFn({ data: { days: 30 } }),
@@ -124,7 +138,6 @@ function AdminOverview() {
       </Panel>
 
       <Panel className="p-0">
-
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <p className="eyebrow">Newest clients</p>
           <Link to="/admin/clients" className="text-[12px] text-primary hover:underline">

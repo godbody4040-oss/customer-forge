@@ -11,13 +11,7 @@
  */
 
 export type QueueState =
-  | "queued"
-  | "planning"
-  | "waiting_for_approval"
-  | "building"
-  | "complete"
-  | "failed"
-  | "skipped";
+  "queued" | "planning" | "waiting_for_approval" | "building" | "complete" | "failed" | "skipped";
 
 export type PlanStep = {
   key: string;
@@ -71,18 +65,12 @@ export function newTask(instruction: string): QueueTask {
 
 /** The next request to work on — one at a time, so builds can't collide. */
 export function nextRunnable(tasks: QueueTask[]): QueueTask | null {
-  const active = tasks.find(
-    (task) => task.state === "planning" || task.state === "building",
-  );
+  const active = tasks.find((task) => task.state === "planning" || task.state === "building");
   if (active) return null;
   return tasks.find((task) => task.state === "queued") ?? null;
 }
 
-export function updateTask(
-  tasks: QueueTask[],
-  id: string,
-  patch: Partial<QueueTask>,
-): QueueTask[] {
+export function updateTask(tasks: QueueTask[], id: string, patch: Partial<QueueTask>): QueueTask[] {
   return tasks.map((task) => (task.id === id ? { ...task, ...patch } : task));
 }
 
