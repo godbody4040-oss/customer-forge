@@ -259,7 +259,11 @@ export function AssistantMedia({
             ) : (
               <Mic className="size-4" aria-hidden="true" />
             )}
-            {voice.isPending ? "Writing down what you said…" : "Speak your request"}
+            {voice.isPending
+              ? "Writing down what you said…"
+              : canHear
+                ? "Speak your request"
+                : "Voice not available"}
           </Button>
         )}
         <span className="text-[11px] text-muted-foreground" aria-live="polite">
@@ -269,9 +273,9 @@ export function AssistantMedia({
               ? "Transcribing your voice request…"
               : mediaNote
                 ? mediaNote
-              : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
-                  ATTACHMENT_LIMITS.video / MB,
-                )} MB, up to ${MAX_ATTACHMENTS} per message.`}
+                : `Photos to ${Math.round(ATTACHMENT_LIMITS.image / MB)} MB, clips to ${Math.round(
+                    ATTACHMENT_LIMITS.video / MB,
+                  )} MB, up to ${MAX_ATTACHMENTS} per message.`}
         </span>
       </div>
 

@@ -1204,9 +1204,8 @@ export const runWebsiteTask = createServerFn({ method: "POST" })
  * the buttons say what will happen instead of failing after the recording.
  */
 export const builderMediaCapabilities = createServerFn({ method: "GET" }).handler(async () => {
-  const { zeroAiCostMode, builderExternalAiAllowed, providerChain } = await import(
-    "@/lib/ai/config"
-  );
+  const { zeroAiCostMode, builderExternalAiAllowed, providerChain } =
+    await import("@/lib/ai/config");
   const blocked = zeroAiCostMode() || !builderExternalAiAllowed() || providerChain().length === 0;
   return {
     voice: !blocked,
