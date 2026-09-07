@@ -77,7 +77,8 @@ export function GrowthSystemCheckout({ organizationId, intake, returnUrl, onClos
       </div>
       <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">
         {usdExact(GROWTH_SYSTEM.setupPrice)} charged today. Then{" "}
-        {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month after your first {GROWTH_SYSTEM.trialDays} days.
+        {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month after your first {GROWTH_SYSTEM.trialDays}{" "}
+        days.
       </p>
 
       {error ? (

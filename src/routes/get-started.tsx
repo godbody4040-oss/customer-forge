@@ -480,123 +480,121 @@ function GetStarted() {
           {step === 2 ? (
             <section className="mt-6 space-y-4">
               {payNow ? null : (
-              <div className="panel p-5">
+                <div className="panel p-5">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="size-4 text-primary" />
+                    <h2 className="font-display text-[17px] font-semibold">Payment</h2>
+                  </div>
+                  <p className="mt-2 text-[13px] text-muted-foreground">
+                    {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup charged today. Your{" "}
+                    {GROWTH_SYSTEM.trialDays}-day platform trial is free, then{" "}
+                    {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month automatically unless canceled.
+                    Payments are processed securely by our payment provider — Revora never sees your
+                    card details.
+                  </p>
 
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-primary" />
-                  <h2 className="font-display text-[17px] font-semibold">Payment</h2>
-                </div>
-                <p className="mt-2 text-[13px] text-muted-foreground">
-                  {usdExact(GROWTH_SYSTEM.setupPrice)} one-time setup charged today. Your{" "}
-                  {GROWTH_SYSTEM.trialDays}-day platform trial is free, then{" "}
-                  {usdExact(GROWTH_SYSTEM.monthlyPrice)}/month automatically unless canceled.
-                  Payments are processed securely by our payment provider — Revora never sees your
-                  card details.
-                </p>
-
-                {session.isLoading ? (
-                  <p className="mt-4 text-[13px] text-muted-foreground">Checking your account…</p>
-                ) : !signedIn ? (
-                  <div className="mt-4 rounded-md border border-border bg-muted/30 p-4">
-                    <p className="text-[13px] font-medium">Create your Revora account to pay</p>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
-                      Your details are saved on this device, so nothing is re-entered. After
-                      creating your account you'll come straight back here to complete payment.
-                    </p>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <Button asChild variant="signal" size="lg">
-                        <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
-                          Create account
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" size="lg">
-                        <Link to="/auth" search={{ mode: "signin", redirect: "/get-started" }}>
-                          I already have an account
-                        </Link>
-                      </Button>
+                  {session.isLoading ? (
+                    <p className="mt-4 text-[13px] text-muted-foreground">Checking your account…</p>
+                  ) : !signedIn ? (
+                    <div className="mt-4 rounded-md border border-border bg-muted/30 p-4">
+                      <p className="text-[13px] font-medium">Create your Revora account to pay</p>
+                      <p className="mt-1 text-[13px] text-muted-foreground">
+                        Your details are saved on this device, so nothing is re-entered. After
+                        creating your account you'll come straight back here to complete payment.
+                      </p>
+                      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                        <Button asChild variant="signal" size="lg">
+                          <Link to="/auth" search={{ mode: "signup", redirect: "/get-started" }}>
+                            Create account
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="lg">
+                          <Link to="/auth" search={{ mode: "signin", redirect: "/get-started" }}>
+                            I already have an account
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ) : alreadySubscribed ? (
-                  <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
-                    <p className="text-[13px] font-medium">
-                      Your workspace already has an active Revora subscription.
-                    </p>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
-                      There's nothing else to pay here. Manage your plan, payment method or invoices
-                      from billing.
-                    </p>
-                    <Button asChild variant="signal" size="lg" className="mt-3">
-                      <Link to="/app/billing">Manage subscription</Link>
-                    </Button>
-                  </div>
-                ) : !cardsReady ? (
-                  <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
-                    Card checkout is not configured for this build yet, so no payment can be taken.
-                    Contact{" "}
-                    <a className="underline" href={revoraMailto("Revora checkout")}>
-                      {REVORA.email}
-                    </a>
-                    .
-                  </p>
-                ) : payNow ? null : (
-                  <Button
-                    variant="signal"
-                    size="lg"
-                    className="mt-4 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
-                    disabled={provisioning}
-                    onClick={startPayment}
-                  >
-                    <Lock className="size-4" />{" "}
-                    {provisioning
-                      ? "Preparing your workspace…"
-                      : `Pay ${usdExact(GROWTH_SYSTEM.setupPrice)} today`}
-                  </Button>
-                )}
-
-                {step === 2 && error ? (
-                  <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
-                    {error}
-                  </p>
-                ) : null}
-
-                {!payNow && !alreadySubscribed ? (
-                  <>
+                  ) : alreadySubscribed ? (
                     <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
-                      <p className="text-[13px] font-semibold">
-                        <span className="gold-text">Not paying yet?</span> Start your{" "}
-                        {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+                      <p className="text-[13px] font-medium">
+                        Your workspace already has an active Revora subscription.
                       </p>
                       <p className="mt-1 text-[13px] text-muted-foreground">
-                        Your business info is saved and your workspace opens instantly — website
-                        builder, leads, quotes, bookings, automations and analytics, all unlocked
-                        for {GROWTH_SYSTEM.fullAccessTrialDays} days. No card required.
+                        There's nothing else to pay here. Manage your plan, payment method or
+                        invoices from billing.
                       </p>
-                      <Button
-                        variant="signal"
-                        size="lg"
-                        className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
-                        disabled={startingTrial}
-                        onClick={startFreeAccess}
-                      >
-                        <Sparkles className="size-4" aria-hidden="true" />{" "}
-                        {startingTrial
-                          ? "Opening your workspace…"
-                          : signedIn
-                            ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
-                            : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+                      <Button asChild variant="signal" size="lg" className="mt-3">
+                        <Link to="/app/billing">Manage subscription</Link>
                       </Button>
                     </div>
-                  </>
-                ) : null}
+                  ) : !cardsReady ? (
+                    <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                      Card checkout is not configured for this build yet, so no payment can be
+                      taken. Contact{" "}
+                      <a className="underline" href={revoraMailto("Revora checkout")}>
+                        {REVORA.email}
+                      </a>
+                      .
+                    </p>
+                  ) : payNow ? null : (
+                    <Button
+                      variant="signal"
+                      size="lg"
+                      className="mt-4 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                      disabled={provisioning}
+                      onClick={startPayment}
+                    >
+                      <Lock className="size-4" />{" "}
+                      {provisioning
+                        ? "Preparing your workspace…"
+                        : `Pay ${usdExact(GROWTH_SYSTEM.setupPrice)} today`}
+                    </Button>
+                  )}
 
-                {!payNow ? (
-                  <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
-                    <ArrowLeft className="size-4" /> Back to summary
-                  </Button>
-                ) : null}
-              </div>
+                  {step === 2 && error ? (
+                    <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                      {error}
+                    </p>
+                  ) : null}
+
+                  {!payNow && !alreadySubscribed ? (
+                    <>
+                      <div className="mt-4 rounded-md border border-primary/40 bg-primary/5 p-4">
+                        <p className="text-[13px] font-semibold">
+                          <span className="gold-text">Not paying yet?</span> Start your{" "}
+                          {GROWTH_SYSTEM.fullAccessTrialDays} days of free full access
+                        </p>
+                        <p className="mt-1 text-[13px] text-muted-foreground">
+                          Your business info is saved and your workspace opens instantly — website
+                          builder, leads, quotes, bookings, automations and analytics, all unlocked
+                          for {GROWTH_SYSTEM.fullAccessTrialDays} days. No card required.
+                        </p>
+                        <Button
+                          variant="signal"
+                          size="lg"
+                          className="mt-3 h-auto w-full py-3 leading-snug whitespace-normal sm:w-auto"
+                          disabled={startingTrial}
+                          onClick={startFreeAccess}
+                        >
+                          <Sparkles className="size-4" aria-hidden="true" />{" "}
+                          {startingTrial
+                            ? "Opening your workspace…"
+                            : signedIn
+                              ? `Start ${GROWTH_SYSTEM.fullAccessTrialDays} days free — no card`
+                              : `Create account — ${GROWTH_SYSTEM.fullAccessTrialDays} days free`}
+                        </Button>
+                      </div>
+                    </>
+                  ) : null}
+
+                  {!payNow ? (
+                    <Button variant="ghost" size="sm" className="mt-3" onClick={() => setStep(1)}>
+                      <ArrowLeft className="size-4" /> Back to summary
+                    </Button>
+                  ) : null}
+                </div>
               )}
-
 
               {payNow && signedIn && cardsReady && !alreadySubscribed && organizationId ? (
                 <GrowthSystemCheckout
