@@ -333,14 +333,6 @@ export function seoInventory(): SeoPage[] {
         countWords(content.metroLine) +
         content.sections.reduce((sum, s) => sum + countWords(s.title) + countWords(s.body), 0) +
         content.faqs.reduce((sum, f) => sum + countWords(f.q) + countWords(f.a), 0);
-      const indexable = hasIndexableValue({
-        words,
-        sections: content.sections.length,
-        faqs: content.faqs.length,
-        // Every local page links to its trade hub, the state page, pricing and
-        // get-started, plus the contextual cluster.
-        internalLinks: 4,
-      });
       pages.push(
         page(
           content.path,
@@ -348,10 +340,15 @@ export function seoInventory(): SeoPage[] {
           content.title,
           content.description,
           words,
-          indexable,
+          // Trade x state combinations are generated from one template, so they
+          // are near-duplicates of each other and of the trade hub. They stay
+          // live for visitors but are canonicalised to the trade hub and kept
+          // out of the sitemap, so crawl budget goes to pages with unique value.
+          false,
         ),
       );
     }
+
   }
 
   for (const guide of GUIDES) {
