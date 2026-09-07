@@ -73,6 +73,58 @@ function AdminOverview() {
       </div>
 
       <Panel className="p-0">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+          <div>
+            <p className="eyebrow">Live activity</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Real recorded events from client businesses over the last{" "}
+              {activity.data?.windowDays ?? 14} days. Revora's own internal pages are never
+              included.
+            </p>
+          </div>
+          <Link to="/admin/analytics" className="text-[12px] text-primary hover:underline">
+            Public traffic
+          </Link>
+        </div>
+        {activity.isLoading ? (
+          <div className="p-4">
+            <LoadingRows rows={4} />
+          </div>
+        ) : (activity.data?.items.length ?? 0) === 0 ? (
+          <div className="p-4">
+            <EmptyState
+              title="Nothing has happened yet"
+              description="New businesses, enquiries, bookings, payments and website changes appear here the moment they are recorded."
+            />
+          </div>
+        ) : (
+          <>
+            <p className="px-4 pt-3 text-[11px] text-muted-foreground">
+              {number(activity.data?.counts.signups ?? 0)} new businesses ·{" "}
+              {number(activity.data?.counts.leads ?? 0)} enquiries ·{" "}
+              {number(activity.data?.counts.bookings ?? 0)} bookings ·{" "}
+              {number(activity.data?.counts.payments ?? 0)} payments ·{" "}
+              {number(activity.data?.counts.websiteChanges ?? 0)} website changes
+            </p>
+            <ul className="mt-2 divide-y divide-border">
+              {(activity.data?.items ?? []).map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px]">{item.title}</p>
+                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {item.business ?? "Unknown business"} · {dateShort(item.at)}
+                    </p>
+                  </div>
+                  <Pill tone="neutral">{ACTIVITY_LABELS[item.kind]}</Pill>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Panel>
+
+      <Panel className="p-0">
+
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <p className="eyebrow">Newest clients</p>
           <Link to="/admin/clients" className="text-[12px] text-primary hover:underline">
