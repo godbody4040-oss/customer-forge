@@ -128,7 +128,7 @@ export function verifyGrowthCatalog(input: {
   for (const { label, entry, price, product } of pairs) {
     if (price?.id !== entry.stripePriceId)
       return { ok: false, reason: `${label} price does not match the Revora price on file.` };
-    if ((price?.lookup_key ?? null) !== entry.priceLookupKey)
+    if ((price?.lookup_key ?? "").trim() !== entry.priceLookupKey)
       return { ok: false, reason: `${label} price has the wrong lookup key.` };
     const linkedProduct = productIdOf(price);
     if (linkedProduct && linkedProduct !== entry.stripeProductId)
