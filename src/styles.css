@@ -777,14 +777,21 @@ a[href*="lovable.app"][target="_blank"][class*="fixed"],
   display: block;
   opacity: calc(var(--fxc-op, 0.5) * var(--fxc-intensity));
   will-change: transform, opacity;
-  transform: translate3d(
-    calc((var(--fxc-mx) - 0.5) * var(--fxc-par, 0) * 60px),
-    calc(
-      ((var(--fxc-my) - 0.5) * var(--fxc-par, 0) * 40px) +
-        (var(--fxc-scroll) * var(--fxc-par, 0) * -120px)
-    ),
-    0
-  );
+  /* Real 3D depth: perspective + rotateX/Y driven by cursor/scroll, layered
+     with the existing X/Y drift and a Z-pop scaled by how strong this layer's
+     parallax is. Still one GPU transform, no canvas, no WebGL — a layer with
+     parallax 0 (or reduced motion) resolves to the original flat transform. */
+  transform: perspective(1400px)
+    rotateX(calc((0.5 - var(--fxc-my)) * var(--fxc-par, 0) * 10deg))
+    rotateY(calc((var(--fxc-mx) - 0.5) * var(--fxc-par, 0) * 10deg))
+    translate3d(
+      calc((var(--fxc-mx) - 0.5) * var(--fxc-par, 0) * 60px),
+      calc(
+        ((var(--fxc-my) - 0.5) * var(--fxc-par, 0) * 40px) +
+          (var(--fxc-scroll) * var(--fxc-par, 0) * -120px)
+      ),
+      calc(var(--fxc-par, 0) * var(--fxc-size, 1) * 40px)
+    );
 }
 
 /* palettes ---------------------------------------------------------------- */
