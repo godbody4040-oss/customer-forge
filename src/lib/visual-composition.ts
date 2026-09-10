@@ -321,10 +321,18 @@ const RECIPES: Recipe[] = [
   {
     match: /cinemat|film|movie|dramatic|hollywood/,
     name: "Cinematic",
-    summary: "Directional light, controlled shadow and a focused centre — a film-set feel.",
+    summary:
+      "Directional light with real depth — the beam tilts toward the visitor's cursor and scroll, a film-set feel.",
     layers: [
-      layer("rays", { opacity: 45, speed: 20, motion: "sweep", palette: "warm" }),
-      layer("fog", { density: 40, speed: 14, opacity: 35 }),
+      layer("rays", {
+        opacity: 45,
+        speed: 20,
+        motion: "sweep",
+        palette: "warm",
+        parallax: 65,
+        interaction: "both",
+      }),
+      layer("fog", { density: 40, speed: 14, opacity: 35, parallax: 35, interaction: "scroll" }),
       layer("vignette", { opacity: 55, motion: "still" }),
     ],
   },
