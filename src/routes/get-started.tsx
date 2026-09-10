@@ -104,6 +104,28 @@ function GetStarted() {
     },
   });
 
+  // The org may already have everything Revora needs (from a prior session, a
+  // different device, or the dashboard's own business-info panel) — reuse it
+  // instead of asking the client to retype their business details.
+  const profileQuery = useQuery({
+    queryKey: ["get-started", "profile", session.data?.organizationId],
+    enabled: Boolean(session.data?.organizationId),
+    queryFn: async () => {
+      const orgId = session.data!.organizationId!;
+      const [{ data: org }, { data: profile }] = await Promise.all([
+        supabase.from("organizations").select("name, industry").eq("id", orgId).maybeSingle(),
+        supabase
+          .from("business_profiles")
+          .select("owner_name, owner_email, email, phone, website, city, state, description")
+          .eq("organization_id", orgId)
+          .maybeSingle(),
+      ]);
+      return { org, profile };
+    },
+  });
+
+
+
   // Restore anything typed before signing in, so nothing is re-entered.
   useEffect(() => {
     trackConversion("signup_started");
