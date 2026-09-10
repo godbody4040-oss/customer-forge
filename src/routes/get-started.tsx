@@ -155,6 +155,27 @@ function GetStarted() {
     if (session.data?.organizationId) setOrganizationId(session.data.organizationId);
   }, [session.data?.organizationId]);
 
+  // Fill in anything the org already has on file — never overwrite something
+  // the client already typed (or restored from a saved draft) this session.
+  useEffect(() => {
+    if (!profileQuery.data) return;
+    const { org, profile } = profileQuery.data;
+    setIntake((prev) => ({
+      ...prev,
+      fullName: prev.fullName || profile?.owner_name || "",
+      businessName: prev.businessName || org?.name || "",
+      email: prev.email || profile?.owner_email || profile?.email || "",
+      phone: prev.phone || profile?.phone || "",
+      website: prev.website || profile?.website || "",
+      businessType: prev.businessType || org?.industry || "",
+      city: prev.city || profile?.city || "",
+      state: prev.state || profile?.state || "",
+      services: prev.services || profile?.description || "",
+    }));
+  }, [profileQuery.data]);
+
+
+
   useEffect(() => {
     if (session.data?.email && !intake.email) {
       setIntake((prev) => ({ ...prev, email: session.data!.email! }));
