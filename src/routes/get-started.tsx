@@ -124,8 +124,6 @@ function GetStarted() {
     },
   });
 
-
-
   // Restore anything typed before signing in, so nothing is re-entered.
   useEffect(() => {
     trackConversion("signup_started");
@@ -174,8 +172,6 @@ function GetStarted() {
     }));
   }, [profileQuery.data]);
 
-
-
   useEffect(() => {
     if (session.data?.email && !intake.email) {
       setIntake((prev) => ({ ...prev, email: session.data!.email! }));
@@ -204,8 +200,6 @@ function GetStarted() {
     if (step !== 0 || !profileQuery.data || missing.length) return;
     setStep(2);
   }, [step, profileQuery.data, missing]);
-
-
 
   const goToSummary = () => {
     if (missing.length) {
