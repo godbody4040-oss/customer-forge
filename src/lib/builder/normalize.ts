@@ -117,6 +117,15 @@ const IDIOMS: [RegExp, string][] = [
   [/\bstart over\b/g, "build a website"],
   [/\bredesign (?:the |my )?(?:whole |entire )?(?:site|website)\b/g, "build a website restyle"],
   [/\bkeep my business (?:information|details|info)\b/g, "keep business facts"],
+  [/\blooks? (?:old fashioned|outdated|dated|old school)\b/g, "premium modern"],
+  [/\blooks? cluttered\b/g, "minimal"],
+  [/\btoo busy\b/g, "minimal"],
+  [/\bfinancing options?\b/g, "financing"],
+  [/\bpayment options?\b/g, "financing"],
+  [/\bget more calls?\b/g, "more leads bolder call to action"],
+  [/\bshow up (?:higher )?(?:in|on) google\b/g, "seo"],
+  [/\brank (?:higher|better)\b/g, "seo"],
+  [/\bfound (?:locally|online|on google)\b/g, "seo"],
 ];
 
 /** Words that only make sense against something mentioned earlier. */

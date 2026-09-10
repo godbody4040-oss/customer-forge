@@ -53,26 +53,91 @@ export type BuilderIntent = {
   keepFacts: boolean;
   /** Subject carried over from an earlier message, when "it" was used. */
   carried: string | null;
+  /** A place name mentioned for local SEO / service-area copy, e.g. "Chapel Hill". */
+  locationHint: string | null;
   /** Things this interpreter could not place. */
   unrecognised: string[];
 };
 
 const SECTION_WORDS: Record<string, string[]> = {
   hero: ["hero", "banner", "top of the page", "header image", "headline area", "first screen"],
-  trust_bar: ["trust bar", "trust strip", "badges", "credentials strip", "logos"],
-  intro: ["intro", "introduction", "about us section", "who we are", "welcome"],
+  trust_bar: [
+    "trust bar",
+    "trust strip",
+    "badges",
+    "credentials strip",
+    "logos",
+    "emergency",
+    "24/7",
+    "24 7",
+    "247",
+    "24 hour",
+    "licensed and insured",
+    "certifications",
+    "years in business",
+    "award",
+  ],
+  intro: [
+    "intro",
+    "introduction",
+    "about us section",
+    "who we are",
+    "welcome",
+    "meet the team",
+    "meet the owner",
+    "our team",
+    "our story",
+    "staff bios",
+    "company history",
+  ],
   services: ["services", "service list", "what we do", "offerings", "treatments", "menu"],
-  pricing: ["pricing", "prices", "price list", "packages", "rates", "cost"],
+  pricing: [
+    "pricing",
+    "prices",
+    "price list",
+    "packages",
+    "rates",
+    "cost",
+    "financing",
+    "payment plans",
+    "0% financing",
+    "buy now pay later",
+    "monthly payments",
+    "afterpay",
+    "in house financing",
+  ],
   quote: ["quote form", "quote request", "estimate form", "request a quote"],
   booking: ["booking", "book online", "appointment", "calendar", "scheduler"],
-  reviews: ["reviews", "testimonials", "ratings", "feedback", "what customers say"],
+  reviews: [
+    "reviews",
+    "testimonials",
+    "ratings",
+    "feedback",
+    "what customers say",
+    "star rating",
+    "social proof",
+    "5 star",
+    "five star",
+  ],
   gallery: ["gallery", "photos", "portfolio", "our work", "before and after", "images"],
   faq: ["faq", "faqs", "questions", "common questions", "q and a"],
   guarantee: ["guarantee", "warranty", "promise"],
   offer: ["offer", "promotion", "deal", "discount", "special"],
   cta: ["cta", "call to action", "closing section", "final push"],
   sticky_cta: ["sticky", "floating button", "sticky bar", "always visible button"],
-  area: ["areas", "area served", "service area", "locations", "coverage", "where we work"],
+  area: [
+    "areas",
+    "area served",
+    "service area",
+    "locations",
+    "coverage",
+    "where we work",
+    "service area map",
+    "map of areas",
+    "directions",
+    "neighborhoods we serve",
+    "towns we serve",
+  ],
   contact: ["contact", "contact details", "get in touch", "phone number section", "address"],
   process: ["process", "how it works", "steps", "what happens next"],
   benefits: ["benefits", "why choose us", "why us", "reasons"],
@@ -80,14 +145,45 @@ const SECTION_WORDS: Record<string, string[]> = {
 };
 
 const MOOD_WORDS: Record<StyleMood, string[]> = {
-  professional: ["professional", "credible", "trustworthy", "serious", "corporate", "legit"],
-  premium: ["premium", "high end", "high-end", "luxury", "luxurious", "upmarket", "expensive"],
-  minimal: ["minimal", "clean", "simple", "uncluttered", "less busy", "tidy"],
-  bold: ["bold", "punchy", "loud", "striking", "aggressive", "stand out", "wow"],
-  friendly: ["friendly", "warm", "welcoming", "approachable", "human"],
-  modern: ["modern", "fresh", "up to date", "current", "sleek", "contemporary"],
+  professional: [
+    "professional",
+    "credible",
+    "trustworthy",
+    "serious",
+    "corporate",
+    "legit",
+    "polished",
+    "established",
+  ],
+  premium: [
+    "premium",
+    "high end",
+    "high-end",
+    "luxury",
+    "luxurious",
+    "upmarket",
+    "expensive",
+    "elegant",
+    "sophisticated",
+    "classy",
+    "upscale",
+    "refined",
+  ],
+  minimal: ["minimal", "clean", "simple", "uncluttered", "less busy", "tidy", "understated"],
+  bold: ["bold", "punchy", "loud", "striking", "aggressive", "stand out", "wow", "eye catching"],
+  friendly: [
+    "friendly",
+    "warm",
+    "welcoming",
+    "approachable",
+    "human",
+    "playful",
+    "fun",
+    "down to earth",
+  ],
+  modern: ["modern", "fresh", "up to date", "current", "sleek", "contemporary", "cutting edge"],
   dark: ["dark", "dark mode", "black", "night"],
-  bright: ["bright", "light", "airy", "white", "colourful", "colorful"],
+  bright: ["bright", "light", "airy", "white", "colourful", "colorful", "vibrant"],
 };
 
 const VERB_WORDS: Record<BuilderVerb, string[]> = {
@@ -200,6 +296,38 @@ const PAGE_WORDS = [
 const clean = (value: string) => value.replace(/\s+/g, " ").trim();
 const lower = (value: string) => clean(value).toLowerCase();
 
+/** Common words that look capitalized-place-like but are not place names. */
+const LOCATION_STOPWORDS = new Set([
+  "I",
+  "SEO",
+  "CTA",
+  "FAQ",
+  "Home",
+  "Homepage",
+  "Google",
+  "Booking",
+  "Hero",
+]);
+
+/**
+ * Detects a place name mentioned for local SEO / service-area work, e.g.
+ * "add local SEO for Chapel Hill" or "target customers in Round Rock, TX".
+ * Reads the owner's original (case-preserved) words, since place names are
+ * capitalized and the rest of the pipeline works in lower case. Conservative
+ * on purpose: only a capitalized phrase right after a place preposition
+ * counts, so it never mistakes an ordinary sentence for a location.
+ */
+function readLocationHint(original: string): string | null {
+  const pattern =
+    /\b(?:in|for|near|around|serving)\s+([A-Z][a-zA-Z'-]*(?:\s+[A-Z][a-zA-Z'-]*){0,2}(?:,\s*[A-Z]{2})?)\b/g;
+  for (const match of original.matchAll(pattern)) {
+    const candidate = clean(match[1] ?? "");
+    const firstWord = candidate.split(/\s|,/)[0] ?? "";
+    if (candidate.length > 1 && !LOCATION_STOPWORDS.has(firstWord)) return candidate;
+  }
+  return null;
+}
+
 /** Detects "add a plumbing services page", "make a page for gutter cleaning". */
 function readNewPages(text: string): string[] {
   const out: string[] = [];
@@ -243,6 +371,7 @@ export function interpret(instruction: string, history: string[] = []): BuilderI
   const newPages = readNewPages(text);
   const matchedIndustry = playbookFor(original);
   const industry = matchedIndustry.slug === "local_business" ? null : matchedIndustry;
+  const locationHint = readLocationHint(original);
 
   const wholeSite =
     verbs.includes("build") ||
@@ -252,7 +381,13 @@ export function interpret(instruction: string, history: string[] = []): BuilderI
   const keepFacts = /\bkeep business facts\b/.test(text);
 
   const unrecognised: string[] = [];
-  if (!verbs.length && !sectionKinds.length && !moods.length && !newPages.length)
+  if (
+    !verbs.length &&
+    !sectionKinds.length &&
+    !moods.length &&
+    !newPages.length &&
+    !locationHint
+  )
     unrecognised.push(original);
 
   return {
@@ -267,6 +402,7 @@ export function interpret(instruction: string, history: string[] = []): BuilderI
     everyPage,
     keepFacts,
     carried: normalised.carried,
+    locationHint,
     unrecognised,
   };
 }
