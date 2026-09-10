@@ -60,7 +60,19 @@ export type BuilderIntent = {
 };
 
 const SECTION_WORDS: Record<string, string[]> = {
-  hero: ["hero", "banner", "top of the page", "header image", "headline area", "first screen"],
+  hero: [
+    "hero",
+    "banner",
+    "top of the page",
+    "header image",
+    "headline area",
+    "headline",
+    "head line",
+    "main heading",
+    "hero title",
+    "main title",
+    "first screen",
+  ],
   trust_bar: [
     "trust bar",
     "trust strip",
