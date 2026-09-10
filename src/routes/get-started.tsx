@@ -198,6 +198,15 @@ function GetStarted() {
     return problems;
   }, [intake]);
 
+  // Everything required is already on file — skip straight to payment instead
+  // of re-asking for it. Still editable: "Edit information" goes back.
+  useEffect(() => {
+    if (step !== 0 || !profileQuery.data || missing.length) return;
+    setStep(2);
+  }, [step, profileQuery.data, missing]);
+
+
+
   const goToSummary = () => {
     if (missing.length) {
       setError(`Add: ${missing.join(", ")}`);
