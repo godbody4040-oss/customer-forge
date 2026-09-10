@@ -181,11 +181,18 @@ function TemplateSiteView({
     (hasQuote ? "Get my instant quote" : "Book an appointment");
   const secondaryCta = copy?.secondaryCta || "Book an appointment";
 
+  // Same canonical resolution as the page's <link rel="canonical">, so search
+  // engines see one consistent identity for this business online.
+  const siteUrl = canonicalSiteUrl(settings, org.slug) ?? undefined;
+  const shareImage = profile?.hero_image_url || gallery[0]?.url || undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: org.name,
     description: profile?.description ?? sub,
+    url: siteUrl,
+    image: shareImage,
     telephone: facts.phone ?? undefined,
     email: facts.email ?? undefined,
     areaServed: facts.serviceArea ?? facts.city ?? undefined,
