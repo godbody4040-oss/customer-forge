@@ -565,8 +565,22 @@ export function buildDeterministicPlan(
   }
 
   /* --- missing facts we must not invent --- */
-  if (!place(facts) && (wholeSite || intent.verbs.includes("seo")))
+  const currentPlace = place(facts);
+  if (intent.locationHint) {
+    // A place mentioned in chat is a claim to confirm, not a fact to write:
+    // copy.ts's whole guarantee is that nothing here invents a business fact.
+    const hintTown = intent.locationHint.split(",")[0]!.trim().toLowerCase();
+    const alreadyStored = currentPlace?.toLowerCase().includes(hintTown) ?? false;
+    if (!alreadyStored) {
+      questions.unshift(
+        currentPlace
+          ? `You mentioned "${intent.locationHint}" — want me to update your service area from "${currentPlace}" to this, or was that just for this one page?`
+          : `You mentioned "${intent.locationHint}" — should I set this as your service area so it shows across your site and SEO pages?`,
+      );
+    }
+  } else if (!currentPlace && (wholeSite || intent.verbs.includes("seo"))) {
     questions.push("Which town or area should your website say you cover?");
+  }
 
   const recognised =
     intent.verbs.length > 0 ||
