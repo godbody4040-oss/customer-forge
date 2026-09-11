@@ -427,12 +427,27 @@ export function BookingForm({ site }: { site: Site }) {
               <Input id={fid("date")} name="date" type="date" min={today} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor={fid("time")}>Preferred time</Label>
+              <Label htmlFor={fid("time")}>Preferred time (your local time)</Label>
               <Input id={fid("time")} name="time" type="time" defaultValue="09:00" required />
             </div>
           </>
         ) : null}
       </div>
+      {bookable.length ? (
+        <p className="text-[11px] text-muted-foreground">
+          {/* Real limitation, not just copy: nothing in this codebase stores the
+              business's own timezone, so a time typed here is captured in the
+              visitor's own device timezone. If a customer books while set to a
+              different timezone than the business operates in, the saved
+              appointment time will be genuinely off — not a display glitch, the
+              stored time itself. This line makes that visible instead of silent,
+              and the business gets a chance to catch and correct it before it's
+              confirmed. The real fix needs a stored business timezone (a schema
+              column + settings field), which isn't something to guess at. */}
+          Times are shown in your device's local time — we'll confirm your exact appointment time
+          before it's booked.
+        </p>
+      ) : null}
 
       <div className="space-y-1.5">
         <Label htmlFor={fid("message")}>Details</Label>
