@@ -1,56 +1,35 @@
 /**
  * REVORA INDUSTRY INTELLIGENCE ENGINE
- * MASTER 10/10 EDITION
+ * MASTER / BUILD-SAFE EDITION
  *
- * Purpose
+ * PURPOSE
  * -------
- * Gives the free-first Revora builder a deterministic industry brain.
+ * Deterministic industry strategy for the free-first Revora builder.
  *
- * This module:
- * - detects industries from natural-language requests
- * - selects industry-specific site architecture
- * - selects conversion strategy
- * - provides SEO/search-intent guidance
- * - provides visual direction
- * - provides terminology and content angles
- * - provides FAQ seeds
- * - provides service-page suggestions
- * - provides buyer-objection guidance
- * - provides schema.org type guidance
- * - supports confidence/ranking
- * - validates its own playbook database
+ * GUARANTEES
+ * ----------
+ * - No imports
+ * - No network
+ * - No AI provider
+ * - No browser APIs
+ * - No Cloudflare APIs
+ * - No dynamic code
+ * - No external dependencies
+ * - No fabricated business facts
+ * - Safe for server and client execution
+ * - Stable contracts for downstream builder modules
  *
  * IMPORTANT
  * ---------
- * This module contains STRATEGY, not verified business facts.
- *
- * Never fabricate:
- * - reviews
- * - ratings
- * - awards
- * - licenses
- * - certifications
- * - guarantees
- * - prices
- * - years in business
- * - locations
- * - opening hours
- * - customer results
- * - staff credentials
- *
- * Those must come from actual business data.
- *
- * Runtime requirements
- * --------------------
- * - deterministic
- * - dependency-free
- * - no network
- * - no AI provider
- * - safe for the free-first builder
+ * This file provides STRATEGY ONLY.
+ * It must never invent:
+ * reviews, ratings, awards, licenses, certifications,
+ * prices, guarantees, locations, hours, results,
+ * years in business, staff credentials, or customer claims.
  */
 
 /* -------------------------------------------------------------------------- */
-/* Primitive types                                                            */
+/* Core types                                                                  */
 /* -------------------------------------------------------------------------- */
 
 export type PrimaryAction =
@@ -95,10 +74,6 @@ export type PageKind =
   | "visit"
   | "custom";
 
-/* -------------------------------------------------------------------------- */
-/* Page strategy                                                              */
-/* -------------------------------------------------------------------------- */
-
 export type IndustryPage = {
   kind: string;
   title: string;
@@ -107,54 +82,34 @@ export type IndustryPage = {
   priority?: number;
 };
 
-/* -------------------------------------------------------------------------- */
-/* Visual strategy                                                            */
-/* -------------------------------------------------------------------------- */
-
 export type IndustryVisual = {
   primary: string;
   secondary: string;
   accent: string;
   font: string;
   backdrop: string;
-
   style?: VisualStyle;
-
   density?: "airy" | "balanced" | "dense";
-
   radius?: "sharp" | "soft" | "rounded";
-
   imageTreatment?:
     | "natural"
     | "editorial"
     | "cinematic"
     | "bright"
     | "technical";
-
   motion?: "subtle" | "moderate" | "energetic";
 };
-
-/* -------------------------------------------------------------------------- */
-/* SEO strategy                                                               */
-/* -------------------------------------------------------------------------- */
 
 export type IndustrySEO = {
   qualifier: string;
   intent: string;
-
   patterns?: string[];
-
   localIntent?: boolean;
-
   servicePageStrategy?:
     | "strong"
     | "moderate"
     | "limited";
 };
-
-/* -------------------------------------------------------------------------- */
-/* Conversion strategy                                                        */
-/* -------------------------------------------------------------------------- */
 
 export type ConversionPlacement =
   | "hero"
@@ -170,81 +125,78 @@ export type ConversionPlacement =
 
 export type IndustryConversion = {
   intensity: ConversionIntensity;
-
   primaryAction: PrimaryAction;
-
   secondaryActions: PrimaryAction[];
-
   placement: ConversionPlacement[];
-
   stickyMobile: boolean;
-
   leadForm: boolean;
 };
 
-/* -------------------------------------------------------------------------- */
-/* Main playbook contract                                                     */
-/* -------------------------------------------------------------------------- */
-
 export type IndustryPlaybook = {
   slug: string;
-
   label: string;
-
   aliases: string[];
-
   pages: IndustryPage[];
-
   homeSections: string[];
-
   servicePageSections: string[];
-
   action: PrimaryAction;
-
   ctaLabels: {
     primary: string;
     secondary: string;
   };
-
   terminology: string[];
-
   trust: string[];
-
   seo: IndustrySEO;
-
   visual: IndustryVisual;
-
   faqSeeds: string[];
-
   conversion: IndustryConversion;
-
   schemaType: string;
-
   servicePageExamples: string[];
-
   objections: string[];
-
   contentAngles: string[];
-
   visualProof: "low" | "medium" | "high";
-
   urgency: "none" | "situational" | "high";
 
-  /**
-   * Optional future-facing metadata.
-   *
-   * Keeping this index signature makes the playbook extensible without
-   * forcing every downstream consumer to change whenever new strategy
-   * metadata is introduced.
-   */
   readonly [key: string]: unknown;
 };
 
 /* -------------------------------------------------------------------------- */
-/* Shared architecture                                                        */
+/* Shared page architecture                                                   */
 /* -------------------------------------------------------------------------- */
 
-const URGENT_TRADE_HOME = [
+const HOME_PAGE: IndustryPage = {
+  kind: "home",
+  title: "Home",
+  slug: "",
+  why: "Primary homepage and conversion destination.",
+  priority: 100,
+};
+
+const LOCAL_PAGES: IndustryPage[] = [
+  {
+    kind: "services",
+    title: "Services",
+    slug: "services",
+    why: "Explains the business's actual services.",
+    priority: 90,
+  },
+  {
+    kind: "about",
+    title: "About",
+    slug: "about",
+    why: "Explains who the business is and how it works.",
+    priority: 70,
+  },
+  {
+    kind: "contact",
+    title: "Contact",
+    slug: "contact",
+    why: "Provides a direct conversion destination.",
+    priority: 100,
+  },
+];
+
+const TRADE_HOME = [
   "hero",
   "trust_bar",
   "services",
@@ -258,7 +210,7 @@ const URGENT_TRADE_HOME = [
   "contact",
 ];
 
-const URGENT_TRADE_SERVICE = [
+const TRADE_SERVICE = [
   "hero",
   "intro",
   "benefits",
@@ -269,26 +221,24 @@ const URGENT_TRADE_SERVICE = [
   "contact",
 ];
 
-const CONSIDERED_HOME = [
+const VISUAL_HOME = [
   "hero",
   "intro",
   "services",
-  "benefits",
-  "process",
   "gallery",
+  "benefits",
   "reviews",
   "faq",
   "cta",
   "contact",
 ];
 
-const CONSIDERED_SERVICE = [
+const VISUAL_SERVICE = [
   "hero",
   "intro",
   "services",
-  "benefits",
   "gallery",
-  "process",
+  "benefits",
   "faq",
   "cta",
 ];
@@ -316,196 +266,197 @@ const PROFESSIONAL_SERVICE = [
   "cta",
 ];
 
-const VISUAL_HOME = [
-  "hero",
-  "intro",
-  "services",
-  "gallery",
-  "benefits",
-  "reviews",
-  "faq",
-  "cta",
-  "contact",
-];
-
-const VISUAL_SERVICE = [
-  "hero",
-  "intro",
-  "services",
-  "gallery",
-  "benefits",
-  "faq",
-  "cta",
-];
-
-/* -------------------------------------------------------------------------- */
-/* Shared pages                                                                */
-/* -------------------------------------------------------------------------- */
-
-const HOME_PAGE: IndustryPage = {
-  kind: "home",
-  title: "Home",
-  slug: "",
-  why: "Primary homepage and conversion destination.",
-  priority: 100,
-};
-
-const LOCAL_PAGE_SET: IndustryPage[] = [
-  {
-    kind: "services",
-    title: "Services",
-    slug: "services",
-    why: "Creates a clear overview of the business's main work.",
-    priority: 90,
-  },
-  {
-    kind: "about",
-    title: "About",
-    slug: "about",
-    why: "Explains who the business is and how it works.",
-    priority: 70,
-  },
-  {
-    kind: "contact",
-    title: "Contact",
-    slug: "contact",
-    why: "Provides a direct conversion destination.",
-    priority: 100,
-  },
-];
-
 /* -------------------------------------------------------------------------- */
 /* Shared conversion profiles                                                  */
 /* -------------------------------------------------------------------------- */
 
-const URGENT_CONVERSION: IndustryConversion = {
-  intensity: "urgent",
-  primaryAction: "call",
-  secondaryActions: ["quote", "lead"],
-  placement: [
-    "hero",
-    "after_services",
-    "after_process",
-    "faq",
-    "sticky",
-    "footer",
-  ],
-  stickyMobile: true,
-  leadForm: true,
-};
+const CONVERSIONS: Record<
+  PrimaryAction,
+  IndustryConversion
+> = {
+  call: {
+    intensity: "urgent",
+    primaryAction: "call",
+    secondaryActions: ["quote", "lead"],
+    placement: [
+      "hero",
+      "after_services",
+      "after_process",
+      "faq",
+      "sticky",
+      "footer",
+    ],
+    stickyMobile: true,
+    leadForm: true,
+  },
 
-const QUOTE_CONVERSION: IndustryConversion = {
-  intensity: "direct",
-  primaryAction: "quote",
-  secondaryActions: ["call", "lead"],
-  placement: [
-    "hero",
-    "after_services",
-    "after_gallery",
-    "faq",
-    "sticky",
-    "footer",
-  ],
-  stickyMobile: true,
-  leadForm: true,
-};
+  quote: {
+    intensity: "direct",
+    primaryAction: "quote",
+    secondaryActions: ["call", "lead"],
+    placement: [
+      "hero",
+      "after_services",
+      "after_gallery",
+      "faq",
+      "sticky",
+      "footer",
+    ],
+    stickyMobile: true,
+    leadForm: true,
+  },
 
-const BOOKING_CONVERSION: IndustryConversion = {
-  intensity: "direct",
-  primaryAction: "book",
-  secondaryActions: ["call", "lead"],
-  placement: [
-    "hero",
-    "after_services",
-    "after_process",
-    "faq",
-    "sticky",
-    "footer",
-  ],
-  stickyMobile: true,
-  leadForm: true,
-};
+  book: {
+    intensity: "direct",
+    primaryAction: "book",
+    secondaryActions: ["call", "lead"],
+    placement: [
+      "hero",
+      "after_services",
+      "after_process",
+      "faq",
+      "sticky",
+      "footer",
+    ],
+    stickyMobile: true,
+    leadForm: true,
+  },
 
-const CONSULTATION_CONVERSION: IndustryConversion = {
-  intensity: "considered",
-  primaryAction: "consult",
-  secondaryActions: ["lead", "call"],
-  placement: [
-    "hero",
-    "after_benefits",
-    "after_process",
-    "faq",
-    "footer",
-  ],
-  stickyMobile: false,
-  leadForm: true,
-};
+  consult: {
+    intensity: "considered",
+    primaryAction: "consult",
+    secondaryActions: ["lead", "call"],
+    placement: [
+      "hero",
+      "after_benefits",
+      "after_process",
+      "faq",
+      "footer",
+    ],
+    stickyMobile: false,
+    leadForm: true,
+  },
 
-const VISIT_CONVERSION: IndustryConversion = {
-  intensity: "direct",
-  primaryAction: "visit",
-  secondaryActions: ["book", "call"],
-  placement: [
-    "hero",
-    "after_gallery",
-    "faq",
-    "footer",
-  ],
-  stickyMobile: true,
-  leadForm: false,
-};
+  visit: {
+    intensity: "direct",
+    primaryAction: "visit",
+    secondaryActions: ["book", "call"],
+    placement: [
+      "hero",
+      "after_gallery",
+      "faq",
+      "footer",
+    ],
+    stickyMobile: true,
+    leadForm: false,
+  },
 
-const LEAD_CONVERSION: IndustryConversion = {
-  intensity: "relationship",
-  primaryAction: "lead",
-  secondaryActions: ["call", "consult"],
-  placement: [
-    "hero",
-    "after_services",
-    "after_benefits",
-    "faq",
-    "footer",
-  ],
-  stickyMobile: true,
-  leadForm: true,
+  lead: {
+    intensity: "relationship",
+    primaryAction: "lead",
+    secondaryActions: ["call", "consult"],
+    placement: [
+      "hero",
+      "after_services",
+      "after_benefits",
+      "faq",
+      "footer",
+    ],
+    stickyMobile: true,
+    leadForm: true,
+  },
 };
 
 function conversionFor(
   action: PrimaryAction,
 ): IndustryConversion {
-  switch (action) {
-    case "call":
-      return URGENT_CONVERSION;
+  const source = CONVERSIONS[action];
 
-    case "quote":
-      return QUOTE_CONVERSION;
+  return {
+    intensity: source.intensity,
+    primaryAction: source.primaryAction,
+    secondaryActions: [
+      ...source.secondaryActions,
+    ],
+    placement: [
+      ...source.placement,
+    ],
+    stickyMobile: source.stickyMobile,
+    leadForm: source.leadForm,
+  };
+}
 
-    case "book":
-      return BOOKING_CONVERSION;
+/* -------------------------------------------------------------------------- */
+/* Page factories                                                              */
+/* -------------------------------------------------------------------------- */
 
-    case "consult":
-      return CONSULTATION_CONVERSION;
+function pages(
+  extras: IndustryPage[] = [],
+): IndustryPage[] {
+  return [
+    HOME_PAGE,
+    ...LOCAL_PAGES,
+    ...extras,
+  ];
+}
 
-    case "visit":
-      return VISIT_CONVERSION;
-
-    case "lead":
-    default:
-      return LEAD_CONVERSION;
-  }
+function page(
+  kind: string,
+  title: string,
+  slug: string,
+  why: string,
+  priority = 60,
+): IndustryPage {
+  return {
+    kind,
+    title,
+    slug,
+    why,
+    priority,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
 /* Playbook factory                                                            */
 /* -------------------------------------------------------------------------- */
 
+type PlaybookInput = Omit<
+  IndustryPlaybook,
+  "conversion"
+> & {
+  conversion?: IndustryConversion;
+};
+
 function playbook(
-  input: Omit<IndustryPlaybook, "conversion"> & {
-    conversion?: IndustryConversion;
-  },
+  input: PlaybookInput,
 ): IndustryPlaybook {
   return {
     ...input,
+    aliases: uniqueStrings(input.aliases),
+    homeSections: uniqueStrings(
+      input.homeSections,
+    ),
+    servicePageSections: uniqueStrings(
+      input.servicePageSections,
+    ),
+    terminology: uniqueStrings(
+      input.terminology,
+    ),
+    trust: uniqueStrings(
+      input.trust,
+    ),
+    faqSeeds: uniqueStrings(
+      input.faqSeeds,
+    ),
+    servicePageExamples: uniqueStrings(
+      input.servicePageExamples,
+    ),
+    objections: uniqueStrings(
+      input.objections,
+    ),
+    contentAngles: uniqueStrings(
+      input.contentAngles,
+    ),
     conversion:
       input.conversion ??
       conversionFor(input.action),
@@ -513,14 +464,10 @@ function playbook(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Industry database                                                           */
+/* Industry definitions                                                        */
 /* -------------------------------------------------------------------------- */
 
-export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
-  /* ======================================================================== */
-  /* PLUMBING                                                                 */
-  /* ======================================================================== */
-
+const RAW_PLAYBOOKS: IndustryPlaybook[] = [
   playbook({
     slug: "plumbing",
     label: "Plumbing",
@@ -545,30 +492,29 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "faucet",
       "toilet repair",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "service",
-        title: "Emergency Plumbing",
-        slug: "emergency-plumbing",
-        why: "Captures urgent plumbing intent when the business actually offers that service.",
-        priority: 100,
-      },
-    ],
-    homeSections: URGENT_TRADE_HOME,
-    servicePageSections: URGENT_TRADE_SERVICE,
+    pages: pages([
+      page(
+        "service",
+        "Emergency Plumbing",
+        "emergency-plumbing",
+        "Captures urgent plumbing intent when actually offered.",
+        100,
+      ),
+    ]),
+    homeSections: TRADE_HOME,
+    servicePageSections: TRADE_SERVICE,
     action: "call",
     ctaLabels: {
       primary: "Call now",
       secondary: "Get a quote",
     },
     terminology: [
-      "repairs",
+      "plumbing repairs",
       "installations",
-      "emergency service",
       "drain clearing",
       "leak detection",
       "water heaters",
+      "emergency service",
     ],
     trust: [
       "Licensing",
@@ -630,10 +576,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "high",
   }),
 
-  /* ======================================================================== */
-  /* HVAC                                                                     */
-  /* ======================================================================== */
-
   playbook({
     slug: "hvac",
     label: "Heating & Air Conditioning",
@@ -654,9 +596,9 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "duct cleaning",
       "ventilation",
     ],
-    pages: LOCAL_PAGE_SET,
-    homeSections: URGENT_TRADE_HOME,
-    servicePageSections: URGENT_TRADE_SERVICE,
+    pages: LOCAL_PAGES,
+    homeSections: TRADE_HOME,
+    servicePageSections: TRADE_SERVICE,
     action: "book",
     ctaLabels: {
       primary: "Book a visit",
@@ -731,10 +673,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "high",
   }),
 
-  /* ======================================================================== */
-  /* ROOFING                                                                  */
-  /* ======================================================================== */
-
   playbook({
     slug: "roofing",
     label: "Roofing",
@@ -754,18 +692,17 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "gutter",
       "gutters",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "projects",
-        title: "Projects",
-        slug: "projects",
-        why: "Roofing decisions benefit from visible examples of completed work.",
-        priority: 80,
-      },
-    ],
-    homeSections: URGENT_TRADE_HOME,
-    servicePageSections: URGENT_TRADE_SERVICE,
+    pages: pages([
+      page(
+        "projects",
+        "Projects",
+        "projects",
+        "Provides a visual project destination when genuine project material exists.",
+        80,
+      ),
+    ]),
+    homeSections: TRADE_HOME,
+    servicePageSections: TRADE_SERVICE,
     action: "quote",
     ctaLabels: {
       primary: "Get a quote",
@@ -839,10 +776,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* ELECTRICAL                                                               */
-  /* ======================================================================== */
-
   playbook({
     slug: "electrical",
     label: "Electrical",
@@ -864,18 +797,17 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "ev charging",
       "electrical contractor",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "service",
-        title: "Electrical Services",
-        slug: "electrical-services",
-        why: "Groups electrical work into a strong search and conversion destination.",
-        priority: 95,
-      },
-    ],
-    homeSections: URGENT_TRADE_HOME,
-    servicePageSections: URGENT_TRADE_SERVICE,
+    pages: pages([
+      page(
+        "service",
+        "Electrical Services",
+        "electrical-services",
+        "Groups electrical work into a clear service destination.",
+        95,
+      ),
+    ]),
+    homeSections: TRADE_HOME,
+    servicePageSections: TRADE_SERVICE,
     action: "call",
     ctaLabels: {
       primary: "Call an electrician",
@@ -949,10 +881,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* LANDSCAPING                                                              */
-  /* ======================================================================== */
-
   playbook({
     slug: "landscaping",
     label: "Landscaping",
@@ -973,18 +901,17 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "mulch",
       "irrigation",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "gallery",
-        title: "Our Work",
-        slug: "our-work",
-        why: "Outdoor transformations are highly visual and benefit from project imagery.",
-        priority: 90,
-      },
-    ],
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
+    pages: pages([
+      page(
+        "gallery",
+        "Our Work",
+        "our-work",
+        "Provides a visual project destination when genuine imagery exists.",
+        90,
+      ),
+    ]),
+    homeSections: VISUAL_HOME,
+    servicePageSections: VISUAL_SERVICE,
     action: "quote",
     ctaLabels: {
       primary: "Get a quote",
@@ -1000,7 +927,7 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "irrigation",
     ],
     trust: [
-      "Insured crews",
+      "Insurance",
       "Project planning",
       "Maintenance plans",
       "Local service",
@@ -1053,15 +980,11 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     contentAngles: [
       "Planning a landscape project",
       "Choosing between lawn and landscape services",
-      "How to prepare an outdoor space for a project",
+      "Preparing an outdoor space for a project",
     ],
     visualProof: "high",
     urgency: "none",
   }),
-
-  /* ======================================================================== */
-  /* CLEANING                                                                 */
-  /* ======================================================================== */
 
   playbook({
     slug: "cleaning",
@@ -1082,9 +1005,9 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "move out cleaning",
       "move-out cleaning",
     ],
-    pages: LOCAL_PAGE_SET,
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
+    pages: LOCAL_PAGES,
+    homeSections: VISUAL_HOME,
+    servicePageSections: VISUAL_SERVICE,
     action: "book",
     ctaLabels: {
       primary: "Book a clean",
@@ -1157,10 +1080,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* CONSTRUCTION                                                             */
-  /* ======================================================================== */
-
   playbook({
     slug: "construction",
     label: "Construction",
@@ -1177,18 +1096,17 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "residential construction",
       "construction company",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "projects",
-        title: "Projects",
-        slug: "projects",
-        why: "Project-based work benefits from visual proof and case-study structure.",
-        priority: 100,
-      },
-    ],
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
+    pages: pages([
+      page(
+        "projects",
+        "Projects",
+        "projects",
+        "Provides project proof when genuine project material exists.",
+        100,
+      ),
+    ]),
+    homeSections: PROFESSIONAL_HOME,
+    servicePageSections: PROFESSIONAL_SERVICE,
     action: "consult",
     ctaLabels: {
       primary: "Request a consultation",
@@ -1262,10 +1180,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* REMODELING                                                               */
-  /* ======================================================================== */
-
   playbook({
     slug: "remodeling",
     label: "Remodeling",
@@ -1282,18 +1196,17 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "bathroom remodel",
       "home improvement",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "projects",
-        title: "Projects",
-        slug: "projects",
-        why: "Before/after and completed-project visuals support remodeling decisions.",
-        priority: 100,
-      },
-    ],
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
+    pages: pages([
+      page(
+        "projects",
+        "Projects",
+        "projects",
+        "Provides visual proof when genuine project imagery exists.",
+        100,
+      ),
+    ]),
+    homeSections: VISUAL_HOME,
+    servicePageSections: VISUAL_SERVICE,
     action: "consult",
     ctaLabels: {
       primary: "Book a design call",
@@ -1366,10 +1279,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* PAINTING                                                                 */
-  /* ======================================================================== */
-
   playbook({
     slug: "painting",
     label: "Painting & Decorating",
@@ -1387,16 +1296,15 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "wallpaper",
       "wallpapering",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "gallery",
-        title: "Our Work",
-        slug: "our-work",
-        why: "Painting quality is easy to communicate visually.",
-        priority: 90,
-      },
-    ],
+    pages: pages([
+      page(
+        "gallery",
+        "Our Work",
+        "our-work",
+        "Provides visual proof when genuine imagery exists.",
+        90,
+      ),
+    ]),
     homeSections: VISUAL_HOME,
     servicePageSections: VISUAL_SERVICE,
     action: "quote",
@@ -1465,15 +1373,11 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     contentAngles: [
       "How professional painting is prepared",
       "Choosing interior versus exterior finishes",
-      "How to prepare a property for painters",
+      "Preparing a property for painters",
     ],
     visualProof: "high",
     urgency: "none",
   }),
-
-  /* ======================================================================== */
-  /* AUTOMOTIVE                                                               */
-  /* ======================================================================== */
 
   playbook({
     slug: "automotive",
@@ -1496,18 +1400,17 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "diagnostics",
       "vehicle service",
     ],
-    pages: [
-      ...LOCAL_PAGE_SET,
-      {
-        kind: "service",
-        title: "Auto Services",
-        slug: "auto-services",
-        why: "Groups high-intent vehicle services into a searchable destination.",
-        priority: 95,
-      },
-    ],
-    homeSections: URGENT_TRADE_HOME,
-    servicePageSections: URGENT_TRADE_SERVICE,
+    pages: pages([
+      page(
+        "service",
+        "Auto Services",
+        "auto-services",
+        "Groups high-intent vehicle services.",
+        95,
+      ),
+    ]),
+    homeSections: TRADE_HOME,
+    servicePageSections: TRADE_SERVICE,
     action: "book",
     ctaLabels: {
       primary: "Book my car in",
@@ -1582,10 +1485,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* REAL ESTATE                                                              */
-  /* ======================================================================== */
-
   playbook({
     slug: "real_estate",
     label: "Real Estate",
@@ -1604,34 +1503,34 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Services",
-        slug: "services",
-        why: "Explains buying, selling, valuation or management services actually offered.",
-        priority: 90,
-      },
-      {
-        kind: "portfolio",
-        title: "Properties",
-        slug: "properties",
-        why: "Provides a dedicated property destination when property data is supplied.",
-        priority: 95,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Builds context around the business and its approach.",
-        priority: 70,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Creates a direct inquiry destination.",
-        priority: 100,
-      },
+      page(
+        "services",
+        "Services",
+        "services",
+        "Explains the actual services offered.",
+        90,
+      ),
+      page(
+        "portfolio",
+        "Properties",
+        "properties",
+        "Provides a property destination when actual property data exists.",
+        95,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Explains the business and its approach.",
+        70,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides an inquiry destination.",
+        100,
+      ),
     ],
     homeSections: PROFESSIONAL_HOME,
     servicePageSections: PROFESSIONAL_SERVICE,
@@ -1708,10 +1607,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* LEGAL                                                                    */
-  /* ======================================================================== */
-
   playbook({
     slug: "legal",
     label: "Legal",
@@ -1731,34 +1626,34 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Practice Areas",
-        slug: "practice-areas",
-        why: "Visitors need to quickly determine whether the firm handles their matter.",
-        priority: 100,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Provides practice and team information supplied by the business.",
-        priority: 80,
-      },
-      {
-        kind: "faq",
-        title: "FAQ",
-        slug: "faq",
-        why: "Addresses common process questions without providing individualized legal advice.",
-        priority: 60,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Provides a clear consultation route.",
-        priority: 100,
-      },
+      page(
+        "services",
+        "Practice Areas",
+        "practice-areas",
+        "Helps visitors identify relevant legal services.",
+        100,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Provides verified practice information.",
+        80,
+      ),
+      page(
+        "faq",
+        "FAQ",
+        "faq",
+        "Answers general process questions.",
+        60,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides a consultation route.",
+        100,
+      ),
     ],
     homeSections: PROFESSIONAL_HOME,
     servicePageSections: PROFESSIONAL_SERVICE,
@@ -1833,10 +1728,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* MEDICAL                                                                  */
-  /* ======================================================================== */
-
   playbook({
     slug: "medical",
     label: "Medical",
@@ -1855,34 +1746,34 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Services",
-        slug: "services",
-        why: "Explains the treatments or services actually supplied by the clinic.",
-        priority: 100,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Provides clinician and clinic information from verified business data.",
-        priority: 75,
-      },
-      {
-        kind: "faq",
-        title: "FAQ",
-        slug: "faq",
-        why: "Answers administrative questions without inventing medical claims.",
-        priority: 65,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Provides appointment and contact information.",
-        priority: 100,
-      },
+      page(
+        "services",
+        "Services",
+        "services",
+        "Explains the actual services supplied.",
+        100,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Provides verified clinic information.",
+        75,
+      ),
+      page(
+        "faq",
+        "FAQ",
+        "faq",
+        "Answers administrative questions.",
+        65,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides appointment access.",
+        100,
+      ),
     ],
     homeSections: PROFESSIONAL_HOME,
     servicePageSections: PROFESSIONAL_SERVICE,
@@ -1958,10 +1849,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* DENTAL                                                                   */
-  /* ======================================================================== */
-
   playbook({
     slug: "dental",
     label: "Dental",
@@ -1980,34 +1867,34 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Dental Services",
-        slug: "services",
-        why: "Lets visitors quickly identify relevant treatments.",
-        priority: 100,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Provides verified practice and team information.",
-        priority: 70,
-      },
-      {
-        kind: "faq",
-        title: "FAQ",
-        slug: "faq",
-        why: "Answers common administrative questions.",
-        priority: 60,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Provides appointment access.",
-        priority: 100,
-      },
+      page(
+        "services",
+        "Dental Services",
+        "services",
+        "Lets visitors identify relevant treatments.",
+        100,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Provides verified practice information.",
+        70,
+      ),
+      page(
+        "faq",
+        "FAQ",
+        "faq",
+        "Answers general administrative questions.",
+        60,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides appointment access.",
+        100,
+      ),
     ],
     homeSections: PROFESSIONAL_HOME,
     servicePageSections: PROFESSIONAL_SERVICE,
@@ -2084,10 +1971,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* RESTAURANT                                                               */
-  /* ======================================================================== */
-
   playbook({
     slug: "restaurant",
     label: "Restaurant & Food",
@@ -2110,34 +1993,34 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "menu",
-        title: "Menu",
-        slug: "menu",
-        why: "Visitors commonly need the menu before deciding to visit.",
-        priority: 100,
-      },
-      {
-        kind: "visit",
-        title: "Visit Us",
-        slug: "visit",
-        why: "Combines location, hours and visit information.",
-        priority: 90,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Adds personality and context.",
-        priority: 65,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Provides a direct route for inquiries.",
-        priority: 70,
-      },
+      page(
+        "menu",
+        "Menu",
+        "menu",
+        "Provides menu information.",
+        100,
+      ),
+      page(
+        "visit",
+        "Visit Us",
+        "visit",
+        "Combines visit information.",
+        90,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Adds business personality and context.",
+        65,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides inquiry information.",
+        70,
+      ),
     ],
     homeSections: VISUAL_HOME,
     servicePageSections: VISUAL_SERVICE,
@@ -2213,10 +2096,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* BEAUTY                                                                   */
-  /* ======================================================================== */
-
   playbook({
     slug: "beauty",
     label: "Beauty & Salon",
@@ -2238,27 +2117,27 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Treatments",
-        slug: "treatments",
-        why: "Visitors need to compare available treatments.",
-        priority: 100,
-      },
-      {
-        kind: "gallery",
-        title: "Our Work",
-        slug: "our-work",
-        why: "Visual proof is highly valuable for appearance-based services.",
-        priority: 90,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Provides booking and contact information.",
-        priority: 90,
-      },
+      page(
+        "services",
+        "Treatments",
+        "treatments",
+        "Explains available treatments.",
+        100,
+      ),
+      page(
+        "gallery",
+        "Our Work",
+        "our-work",
+        "Provides visual proof when genuine imagery exists.",
+        90,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides booking information.",
+        90,
+      ),
     ],
     homeSections: VISUAL_HOME,
     servicePageSections: VISUAL_SERVICE,
@@ -2335,10 +2214,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* FITNESS                                                                  */
-  /* ======================================================================== */
-
   playbook({
     slug: "fitness",
     label: "Fitness",
@@ -2358,37 +2233,37 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Programs",
-        slug: "programs",
-        why: "Explains memberships, classes or training options.",
-        priority: 100,
-      },
-      {
-        kind: "schedule",
-        title: "Schedule",
-        slug: "schedule",
-        why: "Useful when class or appointment schedules are supplied.",
-        priority: 80,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Explains the training philosophy.",
-        priority: 65,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Creates a direct inquiry route.",
-        priority: 80,
-      },
+      page(
+        "services",
+        "Programs",
+        "programs",
+        "Explains memberships, classes and training options.",
+        100,
+      ),
+      page(
+        "schedule",
+        "Schedule",
+        "schedule",
+        "Useful when actual schedules are supplied.",
+        80,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Explains the training approach.",
+        65,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides an inquiry route.",
+        80,
+      ),
     ],
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
+    homeSections: VISUAL_HOME,
+    servicePageSections: VISUAL_SERVICE,
     action: "lead",
     ctaLabels: {
       primary: "Get started",
@@ -2461,10 +2336,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* PROFESSIONAL SERVICES                                                    */
-  /* ======================================================================== */
-
   playbook({
     slug: "professional_services",
     label: "Professional Services",
@@ -2486,34 +2357,34 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      {
-        kind: "services",
-        title: "Services",
-        slug: "services",
-        why: "Makes service scope immediately understandable.",
-        priority: 100,
-      },
-      {
-        kind: "about",
-        title: "About",
-        slug: "about",
-        why: "Adds team, process and business context.",
-        priority: 80,
-      },
-      {
-        kind: "faq",
-        title: "FAQ",
-        slug: "faq",
-        why: "Reduces uncertainty around process and engagement.",
-        priority: 60,
-      },
-      {
-        kind: "contact",
-        title: "Contact",
-        slug: "contact",
-        why: "Creates a direct consultation or inquiry route.",
-        priority: 100,
-      },
+      page(
+        "services",
+        "Services",
+        "services",
+        "Makes the actual service scope understandable.",
+        100,
+      ),
+      page(
+        "about",
+        "About",
+        "about",
+        "Adds business and process context.",
+        80,
+      ),
+      page(
+        "faq",
+        "FAQ",
+        "faq",
+        "Reduces uncertainty around engagement.",
+        60,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Creates a consultation route.",
+        100,
+      ),
     ],
     homeSections: PROFESSIONAL_HOME,
     servicePageSections: PROFESSIONAL_SERVICE,
@@ -2590,10 +2461,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "none",
   }),
 
-  /* ======================================================================== */
-  /* HOME SERVICES                                                            */
-  /* ======================================================================== */
-
   playbook({
     slug: "home_services",
     label: "Home Services",
@@ -2618,9 +2485,9 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
       "movers",
       "removals",
     ],
-    pages: LOCAL_PAGE_SET,
-    homeSections: URGENT_TRADE_HOME,
-    servicePageSections: URGENT_TRADE_SERVICE,
+    pages: LOCAL_PAGES,
+    homeSections: TRADE_HOME,
+    servicePageSections: TRADE_SERVICE,
     action: "quote",
     ctaLabels: {
       primary: "Get a quote",
@@ -2693,10 +2560,6 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     urgency: "situational",
   }),
 
-  /* ======================================================================== */
-  /* GENERIC LOCAL BUSINESS                                                   */
-  /* ======================================================================== */
-
   playbook({
     slug: "local_business",
     label: "Local Business",
@@ -2718,26 +2581,37 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
     ],
     pages: [
       HOME_PAGE,
-      ...LOCAL_PAGE_SET.filter(
-        (page) => page.kind !== "services",
+      page(
+        "services",
+        "Services",
+        "services",
+        "Explains the actual services or products.",
+        90,
       ),
-      {
-        kind: "services",
-        title: "Services",
-        slug: "services",
-        why: "Explains the business's actual services or products.",
-        priority: 90,
-      },
-      {
-        kind: "gallery",
-        title: "Gallery",
-        slug: "gallery",
-        why: "Provides a visual destination when genuine imagery exists.",
-        priority: 60,
-      },
+      page(
+        "about",
+        "About",
+        "about",
+        "Explains the business.",
+        70,
+      ),
+      page(
+        "contact",
+        "Contact",
+        "contact",
+        "Provides a direct contact route.",
+        100,
+      ),
+      page(
+        "gallery",
+        "Gallery",
+        "gallery",
+        "Provides a visual destination when genuine imagery exists.",
+        60,
+      ),
     ],
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
+    homeSections: VISUAL_HOME,
+    servicePageSections: VISUAL_SERVICE,
     action: "lead",
     ctaLabels: {
       primary: "Get in touch",
@@ -2809,83 +2683,59 @@ export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/* Generic fallback                                                            */
+/* Immutable-ish exported library                                              */
 /* -------------------------------------------------------------------------- */
+
+export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] =
+  RAW_PLAYBOOKS.map((item) => ({
+    ...item,
+    aliases: [...item.aliases],
+    pages: item.pages.map((p) => ({ ...p })),
+    homeSections: [...item.homeSections],
+    servicePageSections: [
+      ...item.servicePageSections,
+    ],
+    terminology: [...item.terminology],
+    trust: [...item.trust],
+    faqSeeds: [...item.faqSeeds],
+    servicePageExamples: [
+      ...item.servicePageExamples,
+    ],
+    objections: [...item.objections],
+    contentAngles: [...item.contentAngles],
+    seo: {
+      ...item.seo,
+      patterns: item.seo.patterns
+        ? [...item.seo.patterns]
+        : [],
+    },
+    visual: { ...item.visual },
+    conversion: {
+      ...item.conversion,
+      secondaryActions: [
+        ...item.conversion.secondaryActions,
+      ],
+      placement: [
+        ...item.conversion.placement,
+      ],
+    },
+  }));
 
 export const GENERIC_PLAYBOOK: IndustryPlaybook =
   INDUSTRY_PLAYBOOKS.find(
-    (entry) => entry.slug === "local_business",
-  ) ??
-  playbook({
-    slug: "generic",
-    label: "Local Business",
-    aliases: ["business"],
-    pages: [HOME_PAGE, ...LOCAL_PAGE_SET],
-    homeSections: CONSIDERED_HOME,
-    servicePageSections: CONSIDERED_SERVICE,
-    action: "lead",
-    ctaLabels: {
-      primary: "Get in touch",
-      secondary: "Learn more",
-    },
-    terminology: [
-      "services",
-      "contact",
-      "about",
-    ],
-    trust: [
-      "Business information",
-      "Clear communication",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "local business",
-      localIntent: true,
-      servicePageStrategy: "moderate",
-    },
-    visual: {
-      primary: "#4f46e5",
-      secondary: "#0f172a",
-      accent: "#f59e0b",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "balanced",
-      radius: "rounded",
-      imageTreatment: "natural",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "What services do you offer?",
-      "Where are you located?",
-      "How do I get started?",
-    ],
-    schemaType: "LocalBusiness",
-    servicePageExamples: [
-      "Services",
-      "About",
-      "Contact",
-    ],
-    objections: [
-      "What does the business offer?",
-      "How do I contact the business?",
-    ],
-    contentAngles: [
-      "What the business does",
-      "How to get started",
-    ],
-    visualProof: "medium",
-    urgency: "none",
-  });
+    (item) => item.slug === "local_business",
+  ) ?? INDUSTRY_PLAYBOOKS[0]!;
 
 /* -------------------------------------------------------------------------- */
-/* Normalization                                                               */
+/* Safe normalization                                                          */
 /* -------------------------------------------------------------------------- */
 
 function normalizeText(
   value: string | null | undefined,
 ): string {
-  if (!value) return "";
+  if (typeof value !== "string") {
+    return "";
+  }
 
   return value
     .normalize("NFKD")
@@ -2899,7 +2749,13 @@ function normalizeText(
 function tokenize(
   value: string,
 ): string[] {
-  return normalizeText(value)
+  const normalized = normalizeText(value);
+
+  if (!normalized) {
+    return [];
+  }
+
+  return normalized
     .split(" ")
     .filter(Boolean);
 }
@@ -2907,17 +2763,25 @@ function tokenize(
 function uniqueStrings(
   values: string[],
 ): string[] {
-  const seen = new Set<string>();
   const result: string[] = [];
+  const seen = new Set<string>();
 
   for (const value of values) {
+    if (typeof value !== "string") {
+      continue;
+    }
+
     const clean = value.trim();
 
-    if (!clean) continue;
+    if (!clean) {
+      continue;
+    }
 
     const key = normalizeText(clean);
 
-    if (seen.has(key)) continue;
+    if (!key || seen.has(key)) {
+      continue;
+    }
 
     seen.add(key);
     result.push(clean);
@@ -2926,15 +2790,13 @@ function uniqueStrings(
   return result;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Matching engine                                                             */
-/* -------------------------------------------------------------------------- */
-
 function containsPhrase(
   haystack: string,
   needle: string,
 ): boolean {
-  if (!needle) return false;
+  if (!haystack || !needle) {
+    return false;
+  }
 
   return (
     haystack === needle ||
@@ -2944,6 +2806,10 @@ function containsPhrase(
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Matching                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function scoreAlias(
   haystack: string,
   tokens: Set<string>,
@@ -2952,17 +2818,17 @@ function scoreAlias(
   const normalizedAlias =
     normalizeText(alias);
 
-  if (!normalizedAlias) return 0;
+  if (!normalizedAlias) {
+    return 0;
+  }
 
   const aliasTokens =
     tokenize(normalizedAlias);
 
-  if (!aliasTokens.length) return 0;
+  if (!aliasTokens.length) {
+    return 0;
+  }
 
-  /*
-   * Exact phrase:
-   * strongest possible natural-language signal.
-   */
   if (
     containsPhrase(
       haystack,
@@ -2978,9 +2844,6 @@ function scoreAlias(
     );
   }
 
-  /*
-   * Exact single-word match.
-   */
   if (
     aliasTokens.length === 1 &&
     tokens.has(aliasTokens[0]!)
@@ -2994,15 +2857,14 @@ function scoreAlias(
     );
   }
 
-  /*
-   * Multi-word token overlap.
-   */
   if (aliasTokens.length > 1) {
-    const overlap =
-      aliasTokens.filter(
-        (token) =>
-          tokens.has(token),
-      ).length;
+    let overlap = 0;
+
+    for (const token of aliasTokens) {
+      if (tokens.has(token)) {
+        overlap += 1;
+      }
+    }
 
     const ratio =
       overlap / aliasTokens.length;
@@ -3048,6 +2910,7 @@ function scoreCandidate(
 
   let score = 0;
   let strongestAliasLength = 0;
+  let supportingHits = 0;
 
   for (const alias of aliases) {
     const aliasScore =
@@ -3061,6 +2924,10 @@ function scoreCandidate(
       score = aliasScore;
     }
 
+    if (aliasScore >= 45) {
+      supportingHits += 1;
+    }
+
     if (aliasScore > 0) {
       strongestAliasLength =
         Math.max(
@@ -3070,35 +2937,11 @@ function scoreCandidate(
     }
   }
 
-  /*
-   * Industry labels can be more reliable when the request contains
-   * multiple supporting terms. Give the match a small bonus for each
-   * additional relevant alias hit.
-   */
-  let supportingHits = 0;
-
-  for (const alias of aliases) {
-    const aliasScore =
-      scoreAlias(
-        haystack,
-        tokens,
-        alias,
-      );
-
-    if (aliasScore >= 45) {
-      supportingHits += 1;
-    }
-  }
-
   score += Math.min(
     supportingHits * 4,
     20,
   );
 
-  /*
-   * Never let the generic fallback win over a genuine specialized
-   * match with the same score.
-   */
   if (
     candidate.slug !==
     "local_business"
@@ -3113,18 +2956,9 @@ function scoreCandidate(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Primary lookup                                                              */
+/* Primary industry detection                                                  */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Detects the strongest industry from one or more natural-language hints.
- *
- * Examples:
- *   playbookFor("electrician")
- *   playbookFor("I run a roofing company")
- *   playbookFor("we install AC systems", "HVAC")
- *   playbookFor("home repair", "handyman")
- */
 export function playbookFor(
   ...hints: (
     | string
@@ -3132,27 +2966,24 @@ export function playbookFor(
     | undefined
   )[]
 ): IndustryPlaybook {
-  const usableHints =
+  const usable =
     hints
       .filter(
         (
           hint,
         ): hint is string =>
-          typeof hint ===
-            "string" &&
-          Boolean(
-            hint.trim(),
-          ),
+          typeof hint === "string" &&
+          Boolean(hint.trim()),
       )
       .map(normalizeText)
       .filter(Boolean);
 
-  if (!usableHints.length) {
+  if (!usable.length) {
     return GENERIC_PLAYBOOK;
   }
 
   const haystack =
-    usableHints.join(" ");
+    usable.join(" ");
 
   const tokens =
     new Set(
@@ -3163,9 +2994,9 @@ export function playbookFor(
     | {
         playbook: IndustryPlaybook;
         score: number;
-        strongestAliasLength: number;
+        aliasLength: number;
       }
-    | null = null;
+    | undefined;
 
   for (
     const candidate of INDUSTRY_PLAYBOOKS
@@ -3183,19 +3014,16 @@ export function playbookFor(
 
     if (
       !best ||
-      result.score >
-        best.score ||
+      result.score > best.score ||
       (
-        result.score ===
-          best.score &&
+        result.score === best.score &&
         result.strongestAliasLength >
-          best.strongestAliasLength
+          best.aliasLength
       ) ||
       (
-        result.score ===
-          best.score &&
+        result.score === best.score &&
         result.strongestAliasLength ===
-          best.strongestAliasLength &&
+          best.aliasLength &&
         candidate.slug <
           best.playbook.slug
       )
@@ -3203,7 +3031,7 @@ export function playbookFor(
       best = {
         playbook: candidate,
         score: result.score,
-        strongestAliasLength:
+        aliasLength:
           result.strongestAliasLength,
       };
     }
@@ -3231,11 +3059,8 @@ export function industryConfidence(
       (
         hint,
       ): hint is string =>
-        typeof hint ===
-          "string" &&
-        Boolean(
-          hint.trim(),
-        ),
+        typeof hint === "string" &&
+        Boolean(hint.trim()),
     );
 
   if (!usable.length) {
@@ -3248,7 +3073,9 @@ export function industryConfidence(
       .filter(Boolean)
       .join(" ");
 
-  if (!haystack) return "low";
+  if (!haystack) {
+    return "low";
+  }
 
   const tokens =
     new Set(
@@ -3284,13 +3111,16 @@ export function industryConfidence(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Industry presence                                                           */
+/* Detection helpers                                                           */
 /* -------------------------------------------------------------------------- */
 
 export function mentionsIndustry(
   text: string,
 ): boolean {
-  if (!text?.trim()) {
+  if (
+    typeof text !== "string" ||
+    !text.trim()
+  ) {
     return false;
   }
 
@@ -3300,8 +3130,33 @@ export function mentionsIndustry(
   );
 }
 
+export function detectConfidentIndustry(
+  ...hints: (
+    | string
+    | null
+    | undefined
+  )[]
+): IndustryPlaybook {
+  const detected =
+    playbookFor(...hints);
+
+  if (
+    detected ===
+    GENERIC_PLAYBOOK
+  ) {
+    return GENERIC_PLAYBOOK;
+  }
+
+  const confidence =
+    industryConfidence(...hints);
+
+  return confidence === "low"
+    ? GENERIC_PLAYBOOK
+    : detected;
+}
+
 /* -------------------------------------------------------------------------- */
-/* Ranked matching                                                             */
+/* Ranked matches                                                              */
 /* -------------------------------------------------------------------------- */
 
 export function rankIndustryMatches(
@@ -3317,20 +3172,15 @@ export function rankIndustryMatches(
         (
           hint,
         ): hint is string =>
-          typeof hint ===
-            "string" &&
-          Boolean(
-            hint.trim(),
-          ),
+          typeof hint === "string" &&
+          Boolean(hint.trim()),
       )
       .map(normalizeText)
       .filter(Boolean)
       .join(" ");
 
   if (!haystack) {
-    return [
-      GENERIC_PLAYBOOK,
-    ];
+    return [GENERIC_PLAYBOOK];
   }
 
   const tokens =
@@ -3350,28 +3200,28 @@ export function rankIndustryMatches(
       return {
         candidate,
         score: result.score,
-        strongestAliasLength:
+        aliasLength:
           result.strongestAliasLength,
       };
     })
     .filter(
-      (entry) =>
-        entry.score > 0 ||
-        entry.candidate ===
+      (item) =>
+        item.score > 0 ||
+        item.candidate ===
           GENERIC_PLAYBOOK,
     )
     .sort(
       (a, b) =>
         b.score - a.score ||
-        b.strongestAliasLength -
-          a.strongestAliasLength ||
+        b.aliasLength -
+          a.aliasLength ||
         a.candidate.slug.localeCompare(
           b.candidate.slug,
         ),
     )
     .map(
-      (entry) =>
-        entry.candidate,
+      (item) =>
+        item.candidate,
     );
 }
 
@@ -3397,6 +3247,62 @@ export function secondaryCta(
   );
 }
 
+export function fallbackActions(
+  industry: IndustryPlaybook,
+): PrimaryAction[] {
+  return uniqueStrings([
+    industry.conversion.primaryAction,
+    ...industry.conversion.secondaryActions,
+  ]) as PrimaryAction[];
+}
+
+export function conversionPathFor(
+  industry: IndustryPlaybook,
+): PrimaryAction[] {
+  return fallbackActions(industry);
+}
+
+export function conversionPlacementFor(
+  industry: IndustryPlaybook,
+): ConversionPlacement[] {
+  return Array.from(
+    new Set(
+      industry.conversion.placement,
+    ),
+  );
+}
+
+export function shouldUseStickyMobileCta(
+  industry: IndustryPlaybook,
+): boolean {
+  return Boolean(
+    industry.conversion.stickyMobile,
+  );
+}
+
+export function shouldUseLeadForm(
+  industry: IndustryPlaybook,
+): boolean {
+  return Boolean(
+    industry.conversion.leadForm,
+  );
+}
+
+export function shouldPrioritizeVisualProof(
+  industry: IndustryPlaybook,
+): boolean {
+  return (
+    industry.visualProof === "high" ||
+    industry.visualProof === "medium"
+  );
+}
+
+export function canUseUrgencyMessaging(
+  industry: IndustryPlaybook,
+): boolean {
+  return industry.urgency !== "none";
+}
+
 /* -------------------------------------------------------------------------- */
 /* Page helpers                                                                */
 /* -------------------------------------------------------------------------- */
@@ -3405,10 +3311,7 @@ function normalizedSlug(
   value: string,
 ): string {
   return normalizeText(
-    value.replace(
-      /^\/+/,
-      "",
-    ),
+    value.replace(/^\/+/, ""),
   ).replace(
     /\s+/g,
     "-",
@@ -3418,44 +3321,38 @@ function normalizedSlug(
 export function recommendedPages(
   industry: IndustryPlaybook,
 ): IndustryPage[] {
-  const unique =
-    new Map<
-      string,
-      IndustryPage
-    >();
+  const map =
+    new Map<string, IndustryPage>();
 
-  const pages = [
-    HOME_PAGE,
-    ...industry.pages,
-  ];
-
-  for (const page of pages) {
+  for (
+    const current of [
+      HOME_PAGE,
+      ...industry.pages,
+    ]
+  ) {
     const key =
       normalizedSlug(
-        page.slug ||
-          page.title,
+        current.slug ||
+          current.title,
       ) || "home";
 
-    if (!unique.has(key)) {
-      unique.set(
+    if (!map.has(key)) {
+      map.set(
         key,
         {
-          ...page,
+          ...current,
           priority:
-            page.priority ??
-            (
-              key ===
-              "home"
-                ? 100
-                : 50
-            ),
+            current.priority ??
+            (key === "home"
+              ? 100
+              : 50),
         },
       );
     }
   }
 
   return Array.from(
-    unique.values(),
+    map.values(),
   ).sort(
     (a, b) =>
       (b.priority ?? 0) -
@@ -3471,15 +3368,12 @@ export function recommendedServiceNames(
   limit = 8,
 ): string[] {
   const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            20,
-          ),
-        )
-      : 8;
+    safeLimitNumber(
+      limit,
+      8,
+      1,
+      20,
+    );
 
   return uniqueStrings(
     industry.servicePageExamples,
@@ -3489,24 +3383,17 @@ export function recommendedServiceNames(
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* FAQ helpers                                                                 */
-/* -------------------------------------------------------------------------- */
-
 export function recommendedFaqs(
   industry: IndustryPlaybook,
   limit = 6,
 ): string[] {
   const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            20,
-          ),
-        )
-      : 6;
+    safeLimitNumber(
+      limit,
+      6,
+      1,
+      20,
+    );
 
   return uniqueStrings(
     industry.faqSeeds,
@@ -3517,62 +3404,113 @@ export function recommendedFaqs(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Conversion helpers                                                          */
+/* Strategy helpers                                                            */
 /* -------------------------------------------------------------------------- */
 
-export function shouldPrioritizeVisualProof(
+export function homeSectionStrategy(
   industry: IndustryPlaybook,
-): boolean {
-  return (
-    industry.visualProof ===
-      "high" ||
-    industry.visualProof ===
-      "medium"
+): string[] {
+  return uniqueStrings(
+    industry.homeSections,
   );
 }
 
-export function shouldUseStickyMobileCta(
+export function serviceSectionStrategy(
   industry: IndustryPlaybook,
-): boolean {
-  return Boolean(
-    industry.conversion
-      .stickyMobile,
+): string[] {
+  return uniqueStrings(
+    industry.servicePageSections,
   );
 }
 
-export function shouldUseLeadForm(
+export function terminologyFor(
   industry: IndustryPlaybook,
-): boolean {
-  return Boolean(
-    industry.conversion
-      .leadForm,
+  limit = 12,
+): string[] {
+  return uniqueStrings(
+    industry.terminology,
+  ).slice(
+    0,
+    safeLimitNumber(
+      limit,
+      12,
+      1,
+      30,
+    ),
   );
 }
 
-export function fallbackActions(
+export function trustThemesFor(
   industry: IndustryPlaybook,
-): PrimaryAction[] {
-  return Array.from(
-    new Set<PrimaryAction>([
-      industry.conversion
-        .primaryAction,
-      ...industry.conversion
-        .secondaryActions,
-    ]),
+  limit = 8,
+): string[] {
+  return uniqueStrings(
+    industry.trust,
+  ).slice(
+    0,
+    safeLimitNumber(
+      limit,
+      8,
+      1,
+      20,
+    ),
   );
 }
 
-export function canUseUrgencyMessaging(
+export function objectionsFor(
   industry: IndustryPlaybook,
-): boolean {
-  return (
-    industry.urgency !==
-    "none"
+  limit = 8,
+): string[] {
+  return uniqueStrings(
+    industry.objections,
+  ).slice(
+    0,
+    safeLimitNumber(
+      limit,
+      8,
+      1,
+      20,
+    ),
+  );
+}
+
+export function contentAnglesFor(
+  industry: IndustryPlaybook,
+  limit = 8,
+): string[] {
+  return uniqueStrings(
+    industry.contentAngles,
+  ).slice(
+    0,
+    safeLimitNumber(
+      limit,
+      8,
+      1,
+      20,
+    ),
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Schema helper                                                               */
+/* Visual helpers                                                              */
+/* -------------------------------------------------------------------------- */
+
+export function visualDirectionFor(
+  industry: IndustryPlaybook,
+): IndustryVisual {
+  return {
+    ...industry.visual,
+  };
+}
+
+export function visualProofLevelFor(
+  industry: IndustryPlaybook,
+): "low" | "medium" | "high" {
+  return industry.visualProof;
+}
+
+/* -------------------------------------------------------------------------- */
+/* SEO helpers                                                                 */
 /* -------------------------------------------------------------------------- */
 
 export function schemaTypeFor(
@@ -3580,12 +3518,40 @@ export function schemaTypeFor(
 ): string {
   const value =
     typeof industry.schemaType ===
-      "string"
+    "string"
       ? industry.schemaType.trim()
       : "";
 
-  return value ||
-    "LocalBusiness";
+  return value || "LocalBusiness";
+}
+
+export function seoStrategyFor(
+  industry: IndustryPlaybook,
+): IndustrySEO {
+  return {
+    ...industry.seo,
+    patterns:
+      industry.seo.patterns
+        ? [...industry.seo.patterns]
+        : [],
+  };
+}
+
+export function searchPatternsFor(
+  industry: IndustryPlaybook,
+  limit = 10,
+): string[] {
+  return uniqueStrings(
+    industry.seo.patterns ?? [],
+  ).slice(
+    0,
+    safeLimitNumber(
+      limit,
+      10,
+      1,
+      30,
+    ),
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3598,7 +3564,6 @@ export function strategyFor(
   return {
     industry: industry.slug,
     label: industry.label,
-
     action: industry.action,
 
     primaryCta:
@@ -3608,78 +3573,50 @@ export function strategyFor(
       secondaryCta(industry),
 
     pages:
-      recommendedPages(
-        industry,
-      ),
+      recommendedPages(industry),
 
-    homeSections: [
-      ...industry.homeSections,
-    ],
+    homeSections:
+      homeSectionStrategy(industry),
 
-    servicePageSections: [
-      ...industry.servicePageSections,
-    ],
+    servicePageSections:
+      serviceSectionStrategy(industry),
 
     serviceNames:
-      recommendedServiceNames(
-        industry,
-      ),
+      recommendedServiceNames(industry),
 
     faqs:
-      recommendedFaqs(
-        industry,
-      ),
+      recommendedFaqs(industry),
 
     terminology:
-      uniqueStrings(
-        industry.terminology,
-      ),
+      terminologyFor(industry),
 
     trustThemes:
-      uniqueStrings(
-        industry.trust,
-      ),
+      trustThemesFor(industry),
 
     objections:
-      uniqueStrings(
-        industry.objections,
-      ),
+      objectionsFor(industry),
 
     contentAngles:
-      uniqueStrings(
-        industry.contentAngles,
-      ),
+      contentAnglesFor(industry),
 
-    seo: {
-      ...industry.seo,
-      patterns:
-        industry.seo.patterns
-          ? [
-              ...industry.seo.patterns,
-            ]
-          : [],
-    },
+    seo:
+      seoStrategyFor(industry),
 
     conversion: {
       ...industry.conversion,
       secondaryActions: [
-        ...industry.conversion
-          .secondaryActions,
+        ...industry.conversion.secondaryActions,
       ],
       placement: [
-        ...industry.conversion
-          .placement,
+        ...industry.conversion.placement,
       ],
     },
 
-    visual: {
-      ...industry.visual,
-    },
+    visual:
+      visualDirectionFor(industry),
 
     schemaType:
-      schemaTypeFor(
-        industry,
-      ),
+      schemaTypeFor(industry),
 
     visualProof:
       industry.visualProof,
@@ -3690,7 +3627,7 @@ export function strategyFor(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Lookup by slug                                                              */
+/* Slug lookup                                                                 */
 /* -------------------------------------------------------------------------- */
 
 export function industryBySlug(
@@ -3699,7 +3636,10 @@ export function industryBySlug(
     | null
     | undefined,
 ): IndustryPlaybook {
-  if (!slug?.trim()) {
+  if (
+    typeof slug !== "string" ||
+    !slug.trim()
+  ) {
     return GENERIC_PLAYBOOK;
   }
 
@@ -3715,48 +3655,49 @@ export function industryBySlug(
     return GENERIC_PLAYBOOK;
   }
 
-  return (
-    INDUSTRY_PLAYBOOKS.find(
-      (industry) =>
-        normalizeText(
-          industry.slug.replace(
-            /_/g,
-            " ",
-          ),
-        ) === normalized ||
-        normalizeText(
-          industry.label,
-        ) === normalized,
-    ) ??
-    INDUSTRY_PLAYBOOKS.find(
-      (industry) =>
-        industry.aliases.some(
-          (alias) =>
-            normalizeText(
-              alias,
-            ) === normalized,
+  for (
+    const industry of INDUSTRY_PLAYBOOKS
+  ) {
+    const industrySlug =
+      normalizeText(
+        industry.slug.replace(
+          /_/g,
+          " ",
         ),
-    ) ??
-    GENERIC_PLAYBOOK
-  );
-}
+      );
 
-/* -------------------------------------------------------------------------- */
-/* Lists                                                                       */
-/* -------------------------------------------------------------------------- */
+    if (
+      industrySlug ===
+      normalized
+    ) {
+      return industry;
+    }
 
-export function allIndustrySlugs(): string[] {
-  return INDUSTRY_PLAYBOOKS.map(
-    (industry) =>
-      industry.slug,
-  );
-}
+    if (
+      normalizeText(
+        industry.label,
+      ) === normalized
+    ) {
+      return industry;
+    }
+  }
 
-export function allIndustryLabels(): string[] {
-  return INDUSTRY_PLAYBOOKS.map(
-    (industry) =>
-      industry.label,
-  );
+  for (
+    const industry of INDUSTRY_PLAYBOOKS
+  ) {
+    for (
+      const alias of industry.aliases
+    ) {
+      if (
+        normalizeText(alias) ===
+        normalized
+      ) {
+        return industry;
+      }
+    }
+  }
+
+  return GENERIC_PLAYBOOK;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3778,43 +3719,33 @@ export function strategyFromRequest(
     | "low";
 } {
   const detected =
-    playbookFor(
-      request,
-    );
+    playbookFor(request);
 
   let industry =
-    GENERIC_PLAYBOOK;
+    detected;
 
   if (
-    knownIndustry?.trim()
+    typeof knownIndustry ===
+      "string" &&
+    knownIndustry.trim()
   ) {
     const known =
       industryBySlug(
         knownIndustry,
       );
 
-    /*
-     * A known specialized industry wins, but a generic/unknown known
-     * industry does not suppress a stronger request-level detection.
-     */
     if (
       known !==
       GENERIC_PLAYBOOK
     ) {
       industry = known;
-    } else {
-      industry = detected;
     }
-  } else {
-    industry = detected;
   }
 
   return {
     industry,
     strategy:
-      strategyFor(
-        industry,
-      ),
+      strategyFor(industry),
     request,
     confidence:
       industryConfidence(
@@ -3825,307 +3756,27 @@ export function strategyFromRequest(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Industry-specific strategy selectors                                       */
+/* Lists                                                                       */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Returns the sections most appropriate for the industry homepage.
- *
- * A copy is returned so callers cannot accidentally mutate the playbook.
- */
-export function homeSectionStrategy(
-  industry: IndustryPlaybook,
-): string[] {
-  return uniqueStrings([
-    ...industry.homeSections,
-  ]);
-}
-
-/**
- * Returns the sections most appropriate for a service page.
- */
-export function serviceSectionStrategy(
-  industry: IndustryPlaybook,
-): string[] {
-  return uniqueStrings([
-    ...industry.servicePageSections,
-  ]);
-}
-
-/**
- * Returns industry terminology in priority order.
- */
-export function terminologyFor(
-  industry: IndustryPlaybook,
-  limit = 12,
-): string[] {
-  const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            30,
-          ),
-        )
-      : 12;
-
-  return uniqueStrings(
-    industry.terminology,
-  ).slice(
-    0,
-    safeLimit,
+export function allIndustrySlugs(): string[] {
+  return INDUSTRY_PLAYBOOKS.map(
+    (industry) =>
+      industry.slug,
   );
 }
 
-/**
- * Returns trust themes as strategy only.
- *
- * The builder should use these as possible content prompts and never
- * turn them into claims unless the business has supplied the fact.
- */
-export function trustThemesFor(
-  industry: IndustryPlaybook,
-  limit = 8,
-): string[] {
-  const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            20,
-          ),
-        )
-      : 8;
-
-  return uniqueStrings(
-    industry.trust,
-  ).slice(
-    0,
-    safeLimit,
+export function allIndustryLabels(): string[] {
+  return INDUSTRY_PLAYBOOKS.map(
+    (industry) =>
+      industry.label,
   );
-}
-
-/**
- * Returns buyer objections that should be answered somewhere on the site.
- */
-export function objectionsFor(
-  industry: IndustryPlaybook,
-  limit = 8,
-): string[] {
-  const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            20,
-          ),
-        )
-      : 8;
-
-  return uniqueStrings(
-    industry.objections,
-  ).slice(
-    0,
-    safeLimit,
-  );
-}
-
-/**
- * Returns safe content angles for educational/differentiation content.
- */
-export function contentAnglesFor(
-  industry: IndustryPlaybook,
-  limit = 8,
-): string[] {
-  const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            20,
-          ),
-        )
-      : 8;
-
-  return uniqueStrings(
-    industry.contentAngles,
-  ).slice(
-    0,
-    safeLimit,
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Visual strategy helpers                                                    */
-/* -------------------------------------------------------------------------- */
-
-export function visualDirectionFor(
-  industry: IndustryPlaybook,
-): IndustryVisual {
-  return {
-    ...industry.visual,
-  };
-}
-
-export function visualProofLevelFor(
-  industry: IndustryPlaybook,
-):
-  | "low"
-  | "medium"
-  | "high" {
-  return industry.visualProof;
-}
-
-/* -------------------------------------------------------------------------- */
-/* SEO helpers                                                                 */
-/* -------------------------------------------------------------------------- */
-
-export function seoStrategyFor(
-  industry: IndustryPlaybook,
-): IndustrySEO {
-  return {
-    ...industry.seo,
-    patterns:
-      industry.seo.patterns
-        ? [
-            ...industry.seo.patterns,
-          ]
-        : [],
-  };
-}
-
-/**
- * Returns search patterns without inserting a fake location.
- */
-export function searchPatternsFor(
-  industry: IndustryPlaybook,
-  limit = 10,
-): string[] {
-  const patterns =
-    industry.seo.patterns ??
-    [];
-
-  const safeLimit =
-    Number.isFinite(limit)
-      ? Math.max(
-          1,
-          Math.min(
-            Math.floor(limit),
-            30,
-          ),
-        )
-      : 10;
-
-  return uniqueStrings(
-    patterns,
-  ).slice(
-    0,
-    safeLimit,
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Action intelligence                                                         */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Returns the strongest conversion action followed by safe fallbacks.
- */
-export function conversionPathFor(
-  industry: IndustryPlaybook,
-): PrimaryAction[] {
-  return fallbackActions(
-    industry,
-  );
-}
-
-/**
- * Returns the locations where CTA emphasis should occur.
- */
-export function conversionPlacementFor(
-  industry: IndustryPlaybook,
-): ConversionPlacement[] {
-  return Array.from(
-    new Set(
-      industry.conversion
-        .placement,
-    ),
-  );
-}
-
-/**
- * Determines whether the category benefits from immediate-action messaging.
- *
- * This is only strategic guidance. It never claims that the actual business
- * offers emergency or same-day service.
- */
-export function urgencyLevelFor(
-  industry: IndustryPlaybook,
-):
-  | "none"
-  | "situational"
-  | "high" {
-  return industry.urgency;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Safe industry detection                                                     */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Detects a specialized industry only when confidence is strong enough.
- *
- * This is useful when the builder must avoid over-specializing a vague
- * request such as "make me a business website".
- */
-export function detectConfidentIndustry(
-  ...hints: (
-    | string
-    | null
-    | undefined
-  )[]
-): IndustryPlaybook {
-  const confidence =
-    industryConfidence(
-      ...hints,
-    );
-
-  const result =
-    playbookFor(
-      ...hints,
-    );
-
-  if (
-    result ===
-    GENERIC_PLAYBOOK
-  ) {
-    return GENERIC_PLAYBOOK;
-  }
-
-  if (
-    confidence ===
-    "low"
-  ) {
-    return GENERIC_PLAYBOOK;
-  }
-
-  return result;
 }
 
 /* -------------------------------------------------------------------------- */
 /* Validation                                                                  */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Validates one playbook without throwing.
- *
- * This is intentionally lightweight so it can be used by tests and
- * development diagnostics without affecting production rendering.
- */
 export function validatePlaybook(
   industry: IndustryPlaybook,
 ): string[] {
@@ -4134,17 +3785,13 @@ export function validatePlaybook(
   if (
     !industry.slug?.trim()
   ) {
-    issues.push(
-      "missing slug",
-    );
+    issues.push("missing slug");
   }
 
   if (
     !industry.label?.trim()
   ) {
-    issues.push(
-      "missing label",
-    );
+    issues.push("missing label");
   }
 
   if (
@@ -4153,9 +3800,7 @@ export function validatePlaybook(
     ) ||
     !industry.aliases.length
   ) {
-    issues.push(
-      "missing aliases",
-    );
+    issues.push("missing aliases");
   }
 
   if (
@@ -4164,9 +3809,7 @@ export function validatePlaybook(
     ) ||
     !industry.pages.length
   ) {
-    issues.push(
-      "missing pages",
-    );
+    issues.push("missing pages");
   }
 
   if (
@@ -4261,16 +3904,13 @@ export function validatePlaybook(
     );
   }
 
-  if (
-    !industry.conversion
-  ) {
+  if (!industry.conversion) {
     issues.push(
       "missing conversion strategy",
     );
   } else {
     if (
-      !industry.conversion
-        .primaryAction
+      !industry.conversion.primaryAction
     ) {
       issues.push(
         "missing conversion action",
@@ -4303,42 +3943,41 @@ export function validatePlaybook(
   return issues;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Database validation                                                         */
-/* -------------------------------------------------------------------------- */
-
 export function validateIndustryLibrary(): {
   valid: boolean;
   issues: string[];
 } {
   const issues: string[] = [];
-
   const seenSlugs =
     new Set<string>();
 
   for (
     const industry of INDUSTRY_PLAYBOOKS
   ) {
-    const slug =
-      industry.slug.trim();
-
     if (
-      seenSlugs.has(slug)
-    ) {
-      issues.push(
-        `duplicate industry slug: ${slug}`,
-      );
-    }
-
-    seenSlugs.add(slug);
-
-    for (
-      const issue of validatePlaybook(
-        industry,
+      seenSlugs.has(
+        industry.slug,
       )
     ) {
       issues.push(
-        `${slug}: ${issue}`,
+        `duplicate industry slug: ${industry.slug}`,
+      );
+    }
+
+    seenSlugs.add(
+      industry.slug,
+    );
+
+    const playbookIssues =
+      validatePlaybook(
+        industry,
+      );
+
+    for (
+      const issue of playbookIssues
+    ) {
+      issues.push(
+        `${industry.slug}: ${issue}`,
       );
     }
 
@@ -4346,19 +3985,19 @@ export function validateIndustryLibrary(): {
       new Set<string>();
 
     for (
-      const page of industry.pages
+      const current of industry.pages
     ) {
       const key =
         normalizedSlug(
-          page.slug ||
-            page.title,
+          current.slug ||
+            current.title,
         ) || "home";
 
       if (
         pageSlugs.has(key)
       ) {
         issues.push(
-          `${slug}: duplicate page slug: ${key}`,
+          `${industry.slug}: duplicate page slug: ${key}`,
         );
       }
 
@@ -4384,14 +4023,9 @@ export function validateIndustryLibrary(): {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Deterministic diagnostics                                                   */
+/* Health snapshot                                                             */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Returns a compact machine-readable health snapshot.
- *
- * Useful for builder diagnostics without throwing or logging.
- */
 export function industryEngineHealth(): {
   industryCount: number;
   hasGenericFallback: boolean;
@@ -4399,8 +4033,8 @@ export function industryEngineHealth(): {
   invalidIndustries: string[];
   valid: boolean;
 } {
-  const duplicateSlugs: string[] = [];
-  const invalidIndustries: string[] = [];
+  const duplicates: string[] = [];
+  const invalid: string[] = [];
   const seen =
     new Set<string>();
 
@@ -4410,7 +4044,7 @@ export function industryEngineHealth(): {
     if (
       seen.has(industry.slug)
     ) {
-      duplicateSlugs.push(
+      duplicates.push(
         industry.slug,
       );
     }
@@ -4422,52 +4056,67 @@ export function industryEngineHealth(): {
     if (
       validatePlaybook(
         industry,
-      ).length
+      ).length > 0
     ) {
-      invalidIndustries.push(
+      invalid.push(
         industry.slug,
       );
     }
   }
+
+  const hasFallback =
+    INDUSTRY_PLAYBOOKS.some(
+      (industry) =>
+        industry.slug ===
+        "local_business",
+    );
 
   return {
     industryCount:
       INDUSTRY_PLAYBOOKS.length,
 
     hasGenericFallback:
-      Boolean(
-        INDUSTRY_PLAYBOOKS.find(
-          (industry) =>
-            industry.slug ===
-            "local_business",
-        ),
-      ),
+      hasFallback,
 
     duplicateSlugs:
       uniqueStrings(
-        duplicateSlugs,
+        duplicates,
       ),
 
     invalidIndustries:
       uniqueStrings(
-        invalidIndustries,
+        invalid,
       ),
 
     valid:
-      duplicateSlugs.length ===
-        0 &&
-      invalidIndustries.length ===
-        0 &&
-      Boolean(
-        INDUSTRY_PLAYBOOKS.find(
-          (industry) =>
-            industry.slug ===
-            "local_business",
-        ),
-      ),
+      duplicates.length === 0 &&
+      invalid.length === 0 &&
+      hasFallback,
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* End                                                                         */
+/* Internal numeric safety                                                     */
 /* -------------------------------------------------------------------------- */
+
+function safeLimitNumber(
+  value: number,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): number {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value)
+  ) {
+    return fallback;
+  }
+
+  return Math.max(
+    minimum,
+    Math.min(
+      Math.floor(value),
+      maximum,
+    ),
+  );
+}
