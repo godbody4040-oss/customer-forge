@@ -15,6 +15,7 @@ import { SiteNav, SitePageView } from "@/routes/s.$slug.$page";
 import { StickyCallBar } from "@/components/site/SiteSections";
 import { businessFacts } from "@/lib/builder/facts";
 import { placeDisplay } from "@/lib/builder/presentation";
+import { playbookFor, schemaTypeFor } from "@/lib/builder/industry";
 import { safeLinkUrl } from "@/lib/website-content";
 import { SiteBackdrop } from "@/components/site/SiteBackdrop";
 import { siteThemeStyle } from "@/lib/site-theme";
@@ -181,22 +182,26 @@ function TemplateSiteView({
     (hasQuote ? "Get my instant quote" : "Book an appointment");
   const secondaryCta = copy?.secondaryCta || "Book an appointment";
 
-  // Same canonical resolution as the page's <link rel="canonical">, so search
-  // engines see one consistent identity for this business online.
-  const siteUrl = canonicalSiteUrl(settings, org.slug) ?? undefined;
-  const shareImage = profile?.hero_image_url || gallery[0]?.url || undefined;
-
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": schemaTypeFor(playbookFor(facts.industry, org.name)),
     name: org.name,
     description: profile?.description ?? sub,
-    url: siteUrl,
-    image: shareImage,
+    url: canonicalSiteUrl(settings, org.slug) ?? `https://revoragrowthsystems.com/s/${org.slug}`,
+    image:
+      profile?.hero_image_url && profile.hero_image_url.startsWith("https://")
+        ? profile.hero_image_url
+        : undefined,
     telephone: facts.phone ?? undefined,
     email: facts.email ?? undefined,
     areaServed: facts.serviceArea ?? facts.city ?? undefined,
-    address: facts.city ? { "@type": "PostalAddress", addressLocality: facts.city } : undefined,
+    address: facts.city
+      ? {
+          "@type": "PostalAddress",
+          addressLocality: facts.city,
+          addressRegion: facts.state ?? undefined,
+        }
+      : undefined,
     aggregateRating:
       rating && reviews.length
         ? {
