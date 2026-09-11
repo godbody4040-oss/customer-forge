@@ -32,12 +32,36 @@ export type BuilderVerb =
 export type StyleMood =
   "professional" | "premium" | "minimal" | "bold" | "friendly" | "modern" | "dark" | "bright";
 
+/**
+ * One clause of a multi-part instruction, with its verb(s), section(s) and
+ * mood(s) scoped to that clause only. "Remove the pricing table and add a
+ * booking calendar" produces two operations — remove→pricing, add→booking —
+ * instead of one global bag of verbs applied to every section mentioned
+ * anywhere in the sentence. This is what stops "add a booking calendar" from
+ * also deleting an existing booking section just because "remove" appeared
+ * elsewhere in the same message.
+ */
+export type BuilderOperation = {
+  /** The clause text this operation was read from. */
+  raw: string;
+  verbs: BuilderVerb[];
+  sectionKinds: string[];
+  moods: StyleMood[];
+};
+
 export type BuilderIntent = {
   /** The owner's words, whitespace-collapsed. Never used as a claim. */
   original: string;
   verbs: BuilderVerb[];
   /** Section kinds the request points at, in the order they were mentioned. */
   sectionKinds: string[];
+  /**
+   * Per-clause breakdown of the instruction. Prefer this over the flat
+   * `verbs` / `sectionKinds` above whenever a request could name more than
+   * one action — it keeps "remove X" from bleeding onto "add Y" in the same
+   * sentence. Empty only when no clause matched anything at all.
+   */
+  operations: BuilderOperation[];
   /** Pages the request points at, by slug-ish word ("home", "services"...). */
   pageHints: string[];
   /** New pages the owner asked for, as free text ("plumbing services"). */
@@ -308,6 +332,39 @@ const PAGE_WORDS = [
 const clean = (value: string) => value.replace(/\s+/g, " ").trim();
 const lower = (value: string) => clean(value).toLowerCase();
 
+/** Matches a normalised clause against a word map, returning every key hit. */
+function matchWords<T extends string>(text: string, map: Record<T, string[]>): T[] {
+  const hits: T[] = [];
+  for (const [key, words] of Object.entries(map) as [T, string[]][])
+    if (words.some((word) => text.includes(word))) hits.push(key);
+  return hits;
+}
+
+/**
+ * Phrases that contain a bare "and" but must never be split on it, because
+ * the phrase itself is the thing being matched (e.g. the gallery synonym
+ * "before and after"). Protected before splitting, restored after.
+ */
+const AND_PHRASES: [RegExp, string][] = [[/\bbefore and after\b/g, "before\u2043and\u2043after"]];
+
+/**
+ * Splits one instruction into clauses at top-level connectors ("and", "then",
+ * commas, semicolons) so each part can be read as its own small request.
+ * "Make it bolder and add a call button" becomes two clauses; a plain
+ * one-idea instruction stays a single clause, unchanged from today.
+ */
+function splitClauses(text: string): string[] {
+  let protectedText = text;
+  for (const [pattern, token] of AND_PHRASES) protectedText = protectedText.replace(pattern, token);
+
+  const parts = protectedText
+    .split(/\s+and then\s+|\s+and also\s+|\s*,\s*and\s+|\s*,\s*then\s+|\s*,\s*also\s+|\s+then\s+|\s+also\s+|;\s*|\s*,\s*|\s+and\s+/)
+    .map((part) => part.replace(/\u2043/g, " ").trim())
+    .filter(Boolean);
+
+  return parts.length ? parts : [text];
+}
+
 /** Common words that look capitalized-place-like but are not place names. */
 const LOCATION_STOPWORDS = new Set([
   "I",
@@ -367,17 +424,18 @@ export function interpret(instruction: string, history: string[] = []): BuilderI
   const original = normalised.original;
   const text = normalised.text;
 
-  const verbs: BuilderVerb[] = [];
-  for (const [verb, words] of Object.entries(VERB_WORDS) as [BuilderVerb, string[]][])
-    if (words.some((word) => text.includes(word))) verbs.push(verb);
+  const verbs = matchWords(text, VERB_WORDS);
+  const sectionKinds = matchWords(text, SECTION_WORDS);
+  const moods = matchWords(text, MOOD_WORDS);
 
-  const sectionKinds: string[] = [];
-  for (const [kind, words] of Object.entries(SECTION_WORDS))
-    if (words.some((word) => text.includes(word))) sectionKinds.push(kind);
-
-  const moods: StyleMood[] = [];
-  for (const [mood, words] of Object.entries(MOOD_WORDS) as [StyleMood, string[]][])
-    if (words.some((word) => text.includes(word))) moods.push(mood);
+  const operations: BuilderOperation[] = splitClauses(text)
+    .map((clause) => ({
+      raw: clause,
+      verbs: matchWords(clause, VERB_WORDS),
+      sectionKinds: matchWords(clause, SECTION_WORDS),
+      moods: matchWords(clause, MOOD_WORDS),
+    }))
+    .filter((op) => op.verbs.length || op.sectionKinds.length || op.moods.length);
 
   const pageHints = PAGE_WORDS.filter((page) => new RegExp(`\\b${page}\\b`).test(text));
   const newPages = readNewPages(text);
@@ -406,6 +464,7 @@ export function interpret(instruction: string, history: string[] = []): BuilderI
     original,
     verbs,
     sectionKinds,
+    operations,
     pageHints,
     newPages,
     moods,
