@@ -1,48 +1,162 @@
 /**
- * REVORA WEBSITE QUALITY SCORE — the gate a site must pass before publishing.
+ * REVORA WEBSITE QUALITY ENGINE
  *
- * Every check reads real generated content. A P0 issue (an object printed as
- * text, a fake-looking phone number, template scaffolding, a fabricated claim,
- * a page with no way to convert) blocks publishing outright; advisory issues
- * lower the score without stopping a launch.
+ * Code #6 — Production Quality Gate
+ *
+ * This is the deterministic quality gate for generated websites.
+ *
+ * It evaluates:
+ * - business data integrity
+ * - content safety
+ * - generic/template copy
+ * - page completeness
+ * - navigation
+ * - conversion paths
+ * - SEO metadata
+ * - accessibility evidence
+ * - responsive evidence
+ * - visual evidence
+ * - performance evidence
+ * - technical completeness
+ *
+ * IMPORTANT:
+ * A high score never overrides a blocker.
+ *
+ * The builder must:
+ *
+ * GENERATE
+ *   ↓
+ * AUDIT
+ *   ↓
+ * DETECT WEAKNESSES
+ *   ↓
+ * FIX
+ *   ↓
+ * RE-AUDIT
+ *   ↓
+ * PUBLISH
+ *
+ * No external AI provider is required.
+ * No paid AI credits are required.
+ *
+ * This module is intentionally pure.
+ * It does not write to the database.
+ * It does not call APIs.
+ * It does not expose secrets.
  */
-import { hasTemplateLeak, isUsableEmail, isUsablePhone, safeText } from "./presentation";
+
+import {
+  hasTemplateLeak,
+  isUsableEmail,
+  isUsablePhone,
+  safeText,
+} from "./presentation";
+
 import { genericityIssues } from "./genericity";
+
 import type { BusinessFacts } from "./facts";
 import type { VisualReport } from "./visual";
+
+/* -------------------------------------------------------------------------- */
+/* TYPES                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export type QualitySeverity = "blocker" | "advice";
 
 export type QualityIssue = {
+  /**
+   * Stable machine-readable issue key.
+   *
+   * Keep keys stable because callers, tests, analytics and future
+   * auto-fix routines may depend on them.
+   */
   key: string;
+
   severity: QualitySeverity;
-  /** Plain-language description for the owner. */
+
+  /** Plain-language explanation suitable for the owner/admin. */
   detail: string;
-  /** The concrete next step. */
+
+  /** Concrete recommended next action. */
   fix: string;
 };
 
 export type QualityInput = {
+  /**
+   * Normalized business facts.
+   *
+   * These are already validated by facts.ts.
+   */
   facts: BusinessFacts;
-  /** Raw stored values, so invalid ones can be reported instead of hidden. */
-  raw: { phone?: unknown; email?: unknown; hours?: unknown };
-  /** Every visitor-visible page. */
-  pages: { slug: string; title: unknown; sections: number }[];
-  /** Every visitor-visible text value across the site. */
+
+  /**
+   * Raw values are deliberately retained so malformed values can be detected
+   * instead of silently disappearing.
+   */
+  raw: {
+    phone?: unknown;
+    email?: unknown;
+    hours?: unknown;
+  };
+
+  /**
+   * Every visitor-visible page.
+   */
+  pages: {
+    slug: string;
+    title: unknown;
+    sections: number;
+  }[];
+
+  /**
+   * Every visitor-visible text value across the site.
+   *
+   * Objects are deliberately accepted here because the quality gate needs to
+   * detect when an object accidentally reaches a text renderer.
+   */
   texts: unknown[];
-  /** Navigation labels, in order. */
+
+  /**
+   * Navigation labels in display order.
+   */
   navLabels: unknown[];
-  /** Whether a visitor can convert: call, book or request a quote. */
-  conversion: { hasPhone: boolean; hasBooking: boolean; hasQuote: boolean; hasContact: boolean };
-  /** Reviews / gallery items the business actually supplied. */
+
+  /**
+   * Available conversion routes.
+   */
+  conversion: {
+    hasPhone: boolean;
+    hasBooking: boolean;
+    hasQuote: boolean;
+    hasContact: boolean;
+  };
+
+  /**
+   * Real business-supplied social proof / portfolio counts.
+   */
   reviewCount: number;
   galleryCount: number;
-  /** Sections that claim social proof or portfolio work. */
+
+  /**
+   * Whether the generated site is actually showing these sections.
+   */
   showsReviews: boolean;
   showsGallery: boolean;
-  /** Page titles and descriptions, for duplicate metadata detection. */
-  metadata: { title: unknown; description: unknown }[];
-  /** Layer 2: what a real browser measured, when a rendered check has run. */
+
+  /**
+   * SEO metadata for each visitor-visible page.
+   */
+  metadata: {
+    title: unknown;
+    description: unknown;
+  }[];
+
+  /**
+   * Optional Layer 2 browser-measured report.
+   *
+   * Layer 1 = stored content.
+   * Layer 2 = actual rendered website.
+   */
   visual?: VisualReport | null;
 };
 
@@ -58,249 +172,68 @@ export type QualityCategory =
   | "navigation"
   | "technical";
 
+export type QualityCategoryScore = {
+  name: QualityCategory;
+  weight: number;
+  earned: number;
+};
+
 export type QualityReport = {
+  /**
+   * Overall score, 0–100.
+   *
+   * This includes browser-measured categories when available.
+   */
   score: number;
-  /** Content is clean enough to publish. */
+
+  /**
+   * Content-only publish readiness.
+   *
+   * A website can be content-ready before browser measurement has run.
+   */
   ready: boolean;
-  /** Both layers clean, browser-measured and 95+. */
+
+  /**
+   * Full production readiness.
+   *
+   * Requires:
+   * - no blockers
+   * - browser measurement
+   * - accessibility evidence
+   * - performance evidence
+   * - visual pass
+   * - score >= 95
+   */
   productionReady: boolean;
-  /** The score across only the parts provable from the content itself, 0-100. */
+
+  /**
+   * Score across categories that can be proven from stored content.
+   */
   contentScore: number;
-  /** Whether a real browser check backs the visual and responsive scores. */
+
+  /**
+   * Whether browser measurement has been performed.
+   */
   measured: boolean;
-  categories: { name: QualityCategory; weight: number; earned: number }[];
+
+  categories: QualityCategoryScore[];
+
   issues: QualityIssue[];
+
   blockers: QualityIssue[];
 };
 
-const issue = (
-  key: string,
-  severity: QualitySeverity,
-  detail: string,
-  fix: string,
-): QualityIssue => ({ key, severity, detail, fix });
-
-/** Text that must never be visible on a published page. */
-function textIssues(texts: unknown[]): QualityIssue[] {
-  const found: QualityIssue[] = [];
-  let objects = 0;
-  let leaks = 0;
-  for (const value of texts) {
-    if (value && typeof value === "object") {
-      objects += 1;
-      continue;
-    }
-    if (typeof value === "string" && hasTemplateLeak(value)) leaks += 1;
-  }
-  if (objects) {
-    found.push(
-      issue(
-        "raw_object_text",
-        "blocker",
-        `${objects} block${objects === 1 ? "" : "s"} would print stored data instead of words.`,
-        "Revora rewrites these from your business details — rebuild the page to clear them.",
-      ),
-    );
-  }
-  if (leaks) {
-    found.push(
-      issue(
-        "template_leak",
-        "blocker",
-        `${leaks} block${leaks === 1 ? " contains" : "s contain"} unfinished template text.`,
-        "Replace the unfinished text with your own wording, or remove the block.",
-      ),
-    );
-  }
-  return found;
-}
-
-/** Contact details that are stored but unusable, so they can be corrected. */
-function contactIssues(input: QualityInput): QualityIssue[] {
-  const found: QualityIssue[] = [];
-  const rawPhone = safeText(input.raw.phone);
-  const rawEmail = safeText(input.raw.email);
-  if (rawPhone && !isUsablePhone(input.raw.phone)) {
-    found.push(
-      issue(
-        "invalid_phone",
-        "blocker",
-        `“${rawPhone}” isn't a phone number a customer can call, so it's hidden.`,
-        "Add your full phone number, including area code.",
-      ),
-    );
-  }
-  if (rawEmail && !isUsableEmail(input.raw.email)) {
-    found.push(
-      issue(
-        "invalid_email",
-        "blocker",
-        `“${rawEmail}” isn't a working email address, so it's hidden.`,
-        "Add the email address where you want enquiries to arrive.",
-      ),
-    );
-  }
-  if (input.raw.hours && !input.facts.hours) {
-    found.push(
-      issue(
-        "unreadable_hours",
-        "advice",
-        "Your opening hours aren't readable, so the hours block is hidden.",
-        "Enter your hours as text, for example “Mon–Sat 8am–6pm”.",
-      ),
-    );
-  }
-  if (!input.facts.phone && !input.facts.email && !input.conversion.hasBooking) {
-    found.push(
-      issue(
-        "no_contact_route",
-        "blocker",
-        "There is no valid way for a visitor to reach you.",
-        "Add a phone number, an email address, or turn on online booking.",
-      ),
-    );
-  }
-  return found;
-}
-
-/** Social proof and portfolio must be real, never generated. */
-function honestyIssues(input: QualityInput): QualityIssue[] {
-  const found: QualityIssue[] = [];
-  if (input.showsReviews && input.reviewCount === 0) {
-    found.push(
-      issue(
-        "reviews_without_reviews",
-        "blocker",
-        "A reviews block is showing but you have no real reviews yet.",
-        "Collect a review first — Revora hides the block until then.",
-      ),
-    );
-  }
-  if (input.showsGallery && input.galleryCount === 0) {
-    found.push(
-      issue(
-        "gallery_without_photos",
-        "blocker",
-        "A work gallery is showing but no real photos were uploaded.",
-        "Upload photos of your own work, or leave the gallery off.",
-      ),
-    );
-  }
-  return found;
-}
-
-/** Navigation, pages and conversion routes. */
-function structureIssues(input: QualityInput): QualityIssue[] {
-  const found: QualityIssue[] = [];
-  const labels = input.navLabels.map((label) => safeText(label)).filter((v): v is string => !!v);
-  if (labels.length !== input.navLabels.length) {
-    found.push(
-      issue(
-        "nav_label_missing",
-        "blocker",
-        "A menu item has no readable name.",
-        "Rename the page so the menu reads clearly.",
-      ),
-    );
-  }
-  const seen = new Set<string>();
-  if (
-    labels.some((label) =>
-      seen.has(label.toLowerCase()) ? true : (seen.add(label.toLowerCase()), false),
-    )
-  ) {
-    found.push(
-      issue(
-        "nav_duplicate",
-        "advice",
-        "The menu repeats the same link.",
-        "Remove the duplicate page.",
-      ),
-    );
-  }
-  if (labels.length > 7) {
-    found.push(
-      issue(
-        "nav_too_long",
-        "advice",
-        `${labels.length} menu items is more than most visitors scan.`,
-        "Keep the menu to the pages that win work; the rest can live in the footer.",
-      ),
-    );
-  }
-  const empty = input.pages.filter((page) => page.sections === 0);
-  if (empty.length) {
-    found.push(
-      issue(
-        "empty_page",
-        "blocker",
-        `${empty.length} page${empty.length === 1 ? "" : "s"} would open blank.`,
-        "Add content to the page, or remove it from the site.",
-      ),
-    );
-  }
-  const { hasPhone, hasBooking, hasQuote, hasContact } = input.conversion;
-  if (!hasPhone && !hasBooking && !hasQuote && !hasContact) {
-    found.push(
-      issue(
-        "no_conversion",
-        "blocker",
-        "No page gives a visitor an action to take.",
-        "Turn on booking or quotes, or add your phone number.",
-      ),
-    );
-  }
-  const titles = input.metadata.map((meta) => safeText(meta.title)?.toLowerCase()).filter(Boolean);
-  if (new Set(titles).size !== titles.length) {
-    found.push(
-      issue(
-        "duplicate_metadata",
-        "advice",
-        "Two pages share the same search-result title.",
-        "Give each page its own title so Google can tell them apart.",
-      ),
-    );
-  }
-  const missingDescription = input.metadata.filter((meta) => !safeText(meta.description)).length;
-  if (missingDescription) {
-    found.push(
-      issue(
-        "missing_description",
-        "advice",
-        `${missingDescription} page${missingDescription === 1 ? "" : "s"} have no search description.`,
-        "Add a short description so search results read well.",
-      ),
-    );
-  }
-  return found;
-}
+/* -------------------------------------------------------------------------- */
+/* CONSTANTS                                                                  */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Which part of the site each finding belongs to, so the score says WHERE the
- * website is weak instead of just how weak it is.
+ * Category weights add up to exactly 100.
  */
-const CATEGORY_OF: Record<string, QualityCategory> = {
-  raw_object_text: "data",
-  template_leak: "content",
-  invalid_phone: "data",
-  invalid_email: "data",
-  unreadable_hours: "data",
-  no_contact_route: "conversion",
-  reviews_without_reviews: "content",
-  gallery_without_photos: "content",
-  generic_stock_phrase: "content",
-  repeated_filler_copy: "content",
-  nav_label_missing: "navigation",
-  nav_duplicate: "navigation",
-  nav_too_long: "navigation",
-  empty_page: "technical",
-  no_conversion: "conversion",
-  duplicate_metadata: "seo",
-  missing_description: "seo",
-};
-
-/** The weight of each part of the score. They add up to 100. */
-export const CATEGORY_WEIGHTS: Record<QualityCategory, number> = {
+export const CATEGORY_WEIGHTS: Record<
+  QualityCategory,
+  number
+> = {
   data: 15,
   content: 10,
   visual: 15,
@@ -313,35 +246,88 @@ export const CATEGORY_WEIGHTS: Record<QualityCategory, number> = {
   technical: 5,
 };
 
-/** Findings from the rendered browser check, when one has been run. */
-const VISUAL_CATEGORY: Record<string, QualityCategory> = {
+/**
+ * Stored-content findings are mapped to the category they damage.
+ */
+const CATEGORY_OF: Record<
+  string,
+  QualityCategory
+> = {
+  raw_object_text: "data",
+  template_leak: "content",
+
+  invalid_phone: "data",
+  invalid_email: "data",
+  unreadable_hours: "data",
+
+  no_contact_route: "conversion",
+
+  reviews_without_reviews: "content",
+  gallery_without_photos: "content",
+
+  generic_stock_phrase: "content",
+  repeated_filler_copy: "content",
+
+  nav_label_missing: "navigation",
+  nav_duplicate: "navigation",
+  nav_too_long: "navigation",
+
+  empty_page: "technical",
+  missing_page_title: "technical",
+  duplicate_page_slug: "technical",
+  missing_homepage: "technical",
+
+  no_conversion: "conversion",
+
+  duplicate_metadata: "seo",
+  missing_description: "seo",
+  metadata_count_mismatch: "seo",
+
+  too_few_sections: "content",
+};
+
+/**
+ * Browser-measured findings are mapped to their appropriate category.
+ */
+const VISUAL_CATEGORY: Record<
+  string,
+  QualityCategory
+> = {
   horizontal_overflow: "responsive",
   element_overflow: "responsive",
   clipped_text: "responsive",
+
   small_tap_target: "accessibility",
   tiny_text: "accessibility",
-  broken_image: "visual",
-  menu_unusable: "navigation",
-  no_visible_cta: "conversion",
   unreachable_control: "accessibility",
-  not_measured: "visual",
-  page_not_measured: "visual",
-  widths_not_measured: "responsive",
-  dead_control: "conversion",
+
+  broken_image: "visual",
   distorted_image: "visual",
   overlapping_content: "visual",
   narrow_column: "visual",
+
+  menu_unusable: "navigation",
+
+  no_visible_cta: "conversion",
+  dead_control: "conversion",
+
+  not_measured: "visual",
+  page_not_measured: "visual",
+  widths_not_measured: "responsive",
+
   zoom_blocked: "accessibility",
   image_missing_alt: "accessibility",
   unlabeled_control: "accessibility",
   unlabeled_input: "accessibility",
   heading_order: "accessibility",
-  missing_h1: "seo",
-  multiple_h1: "seo",
   missing_main_landmark: "accessibility",
   missing_nav_landmark: "accessibility",
   keyboard_unreachable: "accessibility",
   low_contrast: "accessibility",
+
+  missing_h1: "seo",
+  multiple_h1: "seo",
+
   slow_main_content: "performance",
   layout_shift: "performance",
   slow_server_response: "performance",
@@ -350,87 +336,1210 @@ const VISUAL_CATEGORY: Record<string, QualityCategory> = {
   oversized_image: "performance",
 };
 
+/* -------------------------------------------------------------------------- */
+/* HELPERS                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const issue = (
+  key: string,
+  severity: QualitySeverity,
+  detail: string,
+  fix: string,
+): QualityIssue => ({
+  key,
+  severity,
+  detail,
+  fix,
+});
+
+const readable = (
+  value: unknown,
+): string | null => {
+  const text = safeText(value);
+
+  return text && text.trim()
+    ? text.trim()
+    : null;
+};
+
+const normalized = (
+  value: unknown,
+): string => {
+  return (
+    readable(value)
+      ?.replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase() ?? ""
+  );
+};
+
+const positiveInteger = (
+  value: unknown,
+): number => {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value)
+  ) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    Math.floor(value),
+  );
+};
+
 /**
- * Full audit. Layer 1 reads the stored content; Layer 2 (`visual`) reports what
- * a real browser measured. A website is only production-ready when BOTH layers
- * are clean and the weighted score is 95 or better — a score alone never proves
- * the pages look right, so an unmeasured site is never called ready.
+ * Adds a unique issue by key.
+ *
+ * Multiple occurrences of the same underlying problem should not create
+ * dozens of duplicate admin messages.
  */
-export function auditWebsite(input: QualityInput): QualityReport {
-  const issues = [
-    ...textIssues(input.texts),
-    ...contactIssues(input),
-    ...honestyIssues(input),
-    ...structureIssues(input),
-    ...genericityIssues(input.texts),
-  ];
-  const blockers = issues.filter((item) => item.severity === "blocker");
+function pushUnique(
+  list: QualityIssue[],
+  next: QualityIssue,
+): void {
+  if (
+    !list.some(
+      (existing) =>
+        existing.key === next.key,
+    )
+  ) {
+    list.push(next);
+  }
+}
 
-  // Each category starts whole; a blocker inside it wipes it out, advice dents it.
-  const damage: Record<string, number> = {};
+/* -------------------------------------------------------------------------- */
+/* CONTENT SAFETY                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Detect values that would accidentally render as raw JavaScript objects.
+ *
+ * Example of a dangerous value:
+ *
+ * { mon: "8am-6pm", tue: "8am-6pm" }
+ *
+ * That object should be normalized before reaching a text renderer.
+ */
+function textIssues(
+  texts: unknown[],
+): QualityIssue[] {
+  const found: QualityIssue[] = [];
+
+  let objects = 0;
+  let leaks = 0;
+
+  for (const value of texts) {
+    if (
+      value !== null &&
+      typeof value === "object"
+    ) {
+      objects += 1;
+      continue;
+    }
+
+    if (
+      typeof value === "string" &&
+      hasTemplateLeak(value)
+    ) {
+      leaks += 1;
+    }
+  }
+
+  if (objects > 0) {
+    found.push(
+      issue(
+        "raw_object_text",
+        "blocker",
+        `${objects} block${
+          objects === 1
+            ? ""
+            : "s"
+        } would print stored data instead of readable website copy.`,
+        "Normalize the stored value before rendering it, or rebuild the affected page.",
+      ),
+    );
+  }
+
+  if (leaks > 0) {
+    found.push(
+      issue(
+        "template_leak",
+        "blocker",
+        `${leaks} block${
+          leaks === 1
+            ? " contains"
+            : "s contain"
+        } unfinished template text.`,
+        "Replace unfinished template text with real business wording or remove the block.",
+      ),
+    );
+  }
+
+  return found;
+}
+
+/* -------------------------------------------------------------------------- */
+/* BUSINESS DATA                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Detect malformed business contact data.
+ *
+ * The normalized facts remain authoritative for rendering.
+ * Raw values are checked so bad data is not silently ignored.
+ */
+function contactIssues(
+  input: QualityInput,
+): QualityIssue[] {
+  const found: QualityIssue[] = [];
+
+  const rawPhone = safeText(
+    input.raw.phone,
+  );
+
+  const rawEmail = safeText(
+    input.raw.email,
+  );
+
+  if (
+    rawPhone &&
+    !isUsablePhone(input.raw.phone)
+  ) {
+    found.push(
+      issue(
+        "invalid_phone",
+        "blocker",
+        `“${rawPhone}” isn't a usable phone number, so visitors cannot reliably call it.`,
+        "Add a complete phone number including the area code.",
+      ),
+    );
+  }
+
+  if (
+    rawEmail &&
+    !isUsableEmail(input.raw.email)
+  ) {
+    found.push(
+      issue(
+        "invalid_email",
+        "blocker",
+        `“${rawEmail}” isn't a usable email address, so enquiries may not reach the business.`,
+        "Add the email address where customer enquiries should arrive.",
+      ),
+    );
+  }
+
+  /**
+   * Hours are allowed to be absent.
+   *
+   * But if a raw value exists and normalization rejected it, tell the owner.
+   */
+  if (
+    input.raw.hours &&
+    !input.facts.hours
+  ) {
+    found.push(
+      issue(
+        "unreadable_hours",
+        "advice",
+        "Opening hours were supplied but could not be safely displayed.",
+        "Enter opening hours as readable text, for example “Mon–Sat 8am–6pm”.",
+      ),
+    );
+  }
+
+  /**
+   * A website must have at least one meaningful conversion route.
+   *
+   * Email counts because a valid email can be used as the contact route.
+   */
+  if (
+    !input.facts.phone &&
+    !input.facts.email &&
+    !input.conversion.hasBooking &&
+    !input.conversion.hasQuote &&
+    !input.conversion.hasContact
+  ) {
+    found.push(
+      issue(
+        "no_contact_route",
+        "blocker",
+        "There is no valid way for a visitor to contact or convert with this business.",
+        "Add a phone number or email address, enable booking/quotes, or provide a contact page.",
+      ),
+    );
+  }
+
+  return found;
+}
+
+/* -------------------------------------------------------------------------- */
+/* HONESTY / TRUST                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Social proof and portfolio content must be supplied by the business.
+ *
+ * Revora never manufactures reviews, ratings, awards or portfolio work.
+ */
+function honestyIssues(
+  input: QualityInput,
+): QualityIssue[] {
+  const found: QualityIssue[] = [];
+
+  if (
+    input.showsReviews &&
+    positiveInteger(
+      input.reviewCount,
+    ) === 0
+  ) {
+    found.push(
+      issue(
+        "reviews_without_reviews",
+        "blocker",
+        "A reviews/testimonials section is enabled, but no real customer reviews were supplied.",
+        "Add verified customer reviews or hide the reviews section.",
+      ),
+    );
+  }
+
+  if (
+    input.showsGallery &&
+    positiveInteger(
+      input.galleryCount,
+    ) === 0
+  ) {
+    found.push(
+      issue(
+        "gallery_without_photos",
+        "blocker",
+        "A portfolio/work gallery is enabled, but no real business photos were supplied.",
+        "Upload real business/work photos or hide the gallery section.",
+      ),
+    );
+  }
+
+  return found;
+}
+
+/* -------------------------------------------------------------------------- */
+/* PAGE / NAVIGATION STRUCTURE                                                */
+/* -------------------------------------------------------------------------- */
+
+function structureIssues(
+  input: QualityInput,
+): QualityIssue[] {
+  const found: QualityIssue[] = [];
+
+  const labels = input.navLabels
+    .map((label) =>
+      readable(label),
+    )
+    .filter(
+      (
+        value,
+      ): value is string =>
+        !!value,
+    );
+
+  /**
+   * A missing label means the navigation cannot be understood.
+   */
+  if (
+    labels.length !==
+    input.navLabels.length
+  ) {
+    found.push(
+      issue(
+        "nav_label_missing",
+        "blocker",
+        "A navigation item has no readable label.",
+        "Give the page a clear navigation name.",
+      ),
+    );
+  }
+
+  /**
+   * Duplicate navigation labels are confusing but do not make the entire
+   * website unusable.
+   */
+  const seenLabels =
+    new Set<string>();
+
+  let duplicateLabel = false;
+
+  for (const label of labels) {
+    const key =
+      normalized(label);
+
+    if (
+      seenLabels.has(key)
+    ) {
+      duplicateLabel = true;
+      break;
+    }
+
+    seenLabels.add(key);
+  }
+
+  if (duplicateLabel) {
+    found.push(
+      issue(
+        "nav_duplicate",
+        "advice",
+        "The navigation contains duplicate page labels.",
+        "Remove duplicate navigation entries or give each page a distinct purpose.",
+      ),
+    );
+  }
+
+  /**
+   * Seven is a practical upper bound for the primary navigation.
+   */
+  if (labels.length > 7) {
+    found.push(
+      issue(
+        "nav_too_long",
+        "advice",
+        `${labels.length} primary navigation items may overwhelm visitors.`,
+        "Keep the main navigation focused and move secondary destinations into the footer or grouped menus.",
+      ),
+    );
+  }
+
+  /* ------------------------------- PAGES -------------------------------- */
+
+  const pages = Array.isArray(
+    input.pages,
+  )
+    ? input.pages
+    : [];
+
+  const emptyPages =
+    pages.filter(
+      (page) =>
+        positiveInteger(
+          page.sections,
+        ) === 0,
+    );
+
+  if (
+    emptyPages.length > 0
+  ) {
+    found.push(
+      issue(
+        "empty_page",
+        "blocker",
+        `${emptyPages.length} page${
+          emptyPages.length === 1
+            ? ""
+            : "s"
+        } would open without any content.`,
+        "Add meaningful sections to the page or remove it from the published site.",
+      ),
+    );
+  }
+
+  /**
+   * Every page needs a readable title.
+   */
+  const missingTitles =
+    pages.filter(
+      (page) =>
+        !readable(
+          page.title,
+        ),
+    );
+
+  if (
+    missingTitles.length > 0
+  ) {
+    found.push(
+      issue(
+        "missing_page_title",
+        "blocker",
+        `${missingTitles.length} page${
+          missingTitles.length === 1
+            ? ""
+            : "s"
+        } have no readable title.`,
+        "Give every visitor-visible page a clear title.",
+      ),
+    );
+  }
+
+  /**
+   * Duplicate slugs can create routing collisions.
+   */
+  const seenSlugs =
+    new Set<string>();
+
+  let duplicateSlug = false;
+
+  for (const page of pages) {
+    const slug =
+      normalized(page.slug);
+
+    if (!slug) {
+      continue;
+    }
+
+    if (
+      seenSlugs.has(slug)
+    ) {
+      duplicateSlug = true;
+      break;
+    }
+
+    seenSlugs.add(slug);
+  }
+
+  if (duplicateSlug) {
+    found.push(
+      issue(
+        "duplicate_page_slug",
+        "blocker",
+        "Two visitor-visible pages use the same URL slug.",
+        "Give each page a unique slug before publishing.",
+      ),
+    );
+  }
+
+  /**
+   * There should always be a homepage.
+   */
+  const hasHome =
+    pages.some(
+      (page) =>
+        normalized(
+          page.slug,
+        ) === "" ||
+        normalized(
+          page.slug,
+        ) === "home" ||
+        normalized(
+          page.slug,
+        ) === "/",
+    );
+
+  if (
+    pages.length > 0 &&
+    !hasHome
+  ) {
+    found.push(
+      issue(
+        "missing_homepage",
+        "blocker",
+        "The site has visitor-visible pages but no identifiable homepage.",
+        "Create or restore the homepage before publishing.",
+      ),
+    );
+  }
+
+  /**
+   * Very thin pages usually indicate an incomplete generation.
+   *
+   * One-section pages can be valid landing pages, so this remains advisory.
+   */
+  const thinPages =
+    pages.filter(
+      (page) =>
+        positiveInteger(
+          page.sections,
+        ) > 0 &&
+        positiveInteger(
+          page.sections,
+        ) < 2,
+    );
+
+  if (
+    thinPages.length > 0
+  ) {
+    found.push(
+      issue(
+        "too_few_sections",
+        "advice",
+        `${thinPages.length} page${
+          thinPages.length === 1
+            ? ""
+            : "s"
+        } contain only one section.`,
+        "Check whether the page needs supporting content, navigation context, a conversion path, or related information.",
+      ),
+    );
+  }
+
+  /* ---------------------------- CONVERSION ------------------------------ */
+
+  const {
+    hasPhone,
+    hasBooking,
+    hasQuote,
+    hasContact,
+  } = input.conversion;
+
+  if (
+    !hasPhone &&
+    !hasBooking &&
+    !hasQuote &&
+    !hasContact
+  ) {
+    found.push(
+      issue(
+        "no_conversion",
+        "blocker",
+        "No page provides a meaningful visitor action.",
+        "Add a contact route, booking flow, quote request, or valid phone number.",
+      ),
+    );
+  }
+
+  /* ----------------------------- METADATA -------------------------------- */
+
+  const metadata =
+    Array.isArray(
+      input.metadata,
+    )
+      ? input.metadata
+      : [];
+
+  const titles = metadata
+    .map((meta) =>
+      normalized(
+        meta.title,
+      ),
+    )
+    .filter(Boolean);
+
+  if (
+    titles.length > 0 &&
+    new Set(titles).size !==
+      titles.length
+  ) {
+    found.push(
+      issue(
+        "duplicate_metadata",
+        "advice",
+        "Multiple pages share the same search-result title.",
+        "Give important pages distinct SEO titles that describe their specific purpose.",
+      ),
+    );
+  }
+
+  const missingDescription =
+    metadata.filter(
+      (meta) =>
+        !readable(
+          meta.description,
+        ),
+    ).length;
+
+  if (
+    missingDescription > 0
+  ) {
+    found.push(
+      issue(
+        "missing_description",
+        "advice",
+        `${missingDescription} page${
+          missingDescription === 1
+            ? ""
+            : "s"
+        } have no search description.`,
+        "Add a concise, accurate meta description based on the actual page content.",
+      ),
+    );
+  }
+
+  /**
+   * Metadata should correspond to visitor-visible pages.
+   *
+   * Do not make this a blocker because some platforms intentionally omit
+   * metadata for special/private routes.
+   */
+  if (
+    metadata.length !==
+    pages.length
+  ) {
+    found.push(
+      issue(
+        "metadata_count_mismatch",
+        "advice",
+        "The number of SEO metadata records does not match the number of visitor-visible pages.",
+        "Verify that every public page has its intended SEO metadata and that private/system routes are excluded.",
+      ),
+    );
+  }
+
+  return found;
+}
+
+/* -------------------------------------------------------------------------- */
+/* VISUAL FINDING HELPERS                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Browser findings can be numerous.
+ *
+ * The quality report keeps the original detailed findings from VisualReport,
+ * while scoring each category with bounded damage.
+ */
+function visualDamage(
+  visual: VisualReport | null | undefined,
+): Record<
+  QualityCategory,
+  number
+> {
+  const damage: Record<
+    QualityCategory,
+    number
+  > = {
+    data: 0,
+    content: 0,
+    visual: 0,
+    responsive: 0,
+    conversion: 0,
+    accessibility: 0,
+    seo: 0,
+    performance: 0,
+    navigation: 0,
+    technical: 0,
+  };
+
+  for (const finding of
+    visual?.findings ?? []) {
+    const category =
+      VISUAL_CATEGORY[
+        finding.key
+      ] ?? "visual";
+
+    damage[category] +=
+      finding.severity === "p0"
+        ? 1
+        : 0.25;
+  }
+
+  return damage;
+}
+
+/* -------------------------------------------------------------------------- */
+/* CATEGORY SCORING                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Converts issue damage into a bounded category percentage.
+ *
+ * A category can never become negative.
+ */
+function categoryShare(
+  damage: number,
+): number {
+  return Math.max(
+    0,
+    1 - Math.min(1, damage),
+  );
+}
+
+/**
+ * Determine whether a category is actually proven.
+ *
+ * Accessibility and performance cannot receive full credit until the browser
+ * actually measured them.
+ */
+function categoryIsProven(
+  name: QualityCategory,
+  visual: VisualReport | null | undefined,
+): boolean {
+  const coverage =
+    visual?.coverage;
+
+  if (
+    name === "accessibility"
+  ) {
+    return !!coverage?.accessibility;
+  }
+
+  if (
+    name === "performance"
+  ) {
+    return !!coverage?.performance;
+  }
+
+  return true;
+}
+
+/* -------------------------------------------------------------------------- */
+/* MAIN AUDIT                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Performs the complete two-layer website audit.
+ *
+ * Layer 1:
+ *   Stored data/content/structure.
+ *
+ * Layer 2:
+ *   Real browser measurements.
+ *
+ * A site is never considered production-ready merely because its content
+ * looks correct.
+ */
+export function auditWebsite(
+  input: QualityInput,
+): QualityReport {
+  /* --------------------------- INPUT SAFETY ----------------------------- */
+
+  const safeInput: QualityInput = {
+    ...input,
+    pages: Array.isArray(
+      input.pages,
+    )
+      ? input.pages
+      : [],
+    texts: Array.isArray(
+      input.texts,
+    )
+      ? input.texts
+      : [],
+    navLabels:
+      Array.isArray(
+        input.navLabels,
+      )
+        ? input.navLabels
+        : [],
+    metadata:
+      Array.isArray(
+        input.metadata,
+      )
+        ? input.metadata
+        : [],
+    visual:
+      input.visual ?? null,
+  };
+
+  /* ----------------------------- FINDINGS -------------------------------- */
+
+  const issues: QualityIssue[] =
+    [
+      ...textIssues(
+        safeInput.texts,
+      ),
+
+      ...contactIssues(
+        safeInput,
+      ),
+
+      ...honestyIssues(
+        safeInput,
+      ),
+
+      ...structureIssues(
+        safeInput,
+      ),
+
+      ...genericityIssues(
+        safeInput.texts,
+      ),
+    ];
+
+  /**
+   * De-duplicate identical quality keys while preserving the first detailed
+   * explanation. This keeps the admin dashboard readable.
+   */
+  const uniqueIssues: QualityIssue[] =
+    [];
+
   for (const item of issues) {
-    const category = CATEGORY_OF[item.key] ?? "technical";
-    damage[category] = (damage[category] ?? 0) + (item.severity === "blocker" ? 1 : 0.25);
-  }
-  for (const finding of input.visual?.findings ?? []) {
-    const category = VISUAL_CATEGORY[finding.key] ?? "visual";
-    damage[category] = (damage[category] ?? 0) + (finding.severity === "p0" ? 1 : 0.25);
+    pushUnique(
+      uniqueIssues,
+      item,
+    );
   }
 
-  const measured = !!input.visual && input.visual.widths.length > 0;
-  const coverage = input.visual?.coverage;
-  const categories = (Object.keys(CATEGORY_WEIGHTS) as QualityCategory[]).map((name) => {
-    const weight = CATEGORY_WEIGHTS[name];
-    // Visual and responsive can only ever be earned by measurement.
-    if (!measured && (name === "visual" || name === "responsive"))
-      return { name, weight, earned: 0 };
-    const share = Math.max(0, 1 - (damage[name] ?? 0));
-    // Accessibility and performance are only PROVEN when the browser actually
-    // reported them. Unmeasured is provisional — half credit at most, never a
-    // clean sheet, so nothing can reach 95 on an assumption.
-    const proven =
-      name === "accessibility"
-        ? !!coverage?.accessibility
-        : name === "performance"
-          ? !!coverage?.performance
-          : true;
-    const earned = proven ? weight * share : weight * Math.min(share, 0.5);
-    return { name, weight, earned: Math.round(earned * 10) / 10 };
-  });
+  const blockers =
+    uniqueIssues.filter(
+      (item) =>
+        item.severity ===
+        "blocker",
+    );
 
-  const score = Math.round(categories.reduce((total, item) => total + item.earned, 0));
-  // Publishing is judged on the parts that can be judged from the content alone,
-  // so a site is never held back for a browser check that hasn't run yet.
-  // Anything that needs a browser to prove it is left out of the content score,
-  // so a site is never held back for a check that hasn't run yet.
-  const provable = categories.filter(
-    (item) =>
-      item.name !== "visual" &&
-      item.name !== "responsive" &&
-      !(item.name === "accessibility" && !coverage?.accessibility) &&
-      !(item.name === "performance" && !coverage?.performance),
+  /* ------------------------------ DAMAGE --------------------------------- */
+
+  const damage: Record<
+    QualityCategory,
+    number
+  > = {
+    data: 0,
+    content: 0,
+    visual: 0,
+    responsive: 0,
+    conversion: 0,
+    accessibility: 0,
+    seo: 0,
+    performance: 0,
+    navigation: 0,
+    technical: 0,
+  };
+
+  for (const item of
+    uniqueIssues) {
+    const category =
+      CATEGORY_OF[
+        item.key
+      ] ?? "technical";
+
+    damage[category] +=
+      item.severity === "blocker"
+        ? 1
+        : 0.25;
+  }
+
+  const browserDamage =
+    visualDamage(
+      safeInput.visual,
+    );
+
+  for (const category of
+    Object.keys(
+      CATEGORY_WEIGHTS,
+    ) as QualityCategory[]) {
+    damage[category] +=
+      browserDamage[
+        category
+      ];
+  }
+
+  /* ---------------------------- MEASUREMENT ------------------------------ */
+
+  /**
+   * A browser report counts as measured only when it contains actual viewport
+   * measurements.
+   */
+  const measured =
+    !!safeInput.visual &&
+    safeInput.visual.widths.length >
+      0;
+
+  /* ---------------------------- CATEGORIES ------------------------------- */
+
+  const categories: QualityCategoryScore[] =
+    (
+      Object.keys(
+        CATEGORY_WEIGHTS,
+      ) as QualityCategory[]
+    ).map((name) => {
+      const weight =
+        CATEGORY_WEIGHTS[
+          name
+        ];
+
+      /**
+       * Visual and responsive scores require actual browser measurement.
+       */
+      if (
+        !measured &&
+        (
+          name ===
+            "visual" ||
+          name ===
+            "responsive"
+        )
+      ) {
+        return {
+          name,
+          weight,
+          earned: 0,
+        };
+      }
+
+      const share =
+        categoryShare(
+          damage[name],
+        );
+
+      /**
+       * Accessibility and performance receive at most half credit without
+       * explicit browser evidence.
+       *
+       * This preserves the important rule:
+       * "Unmeasured is not proven."
+       */
+      const proven =
+        categoryIsProven(
+          name,
+          safeInput.visual,
+        );
+
+      const earned =
+        proven
+          ? weight * share
+          : weight *
+            Math.min(
+              share,
+              0.5,
+            );
+
+      return {
+        name,
+        weight,
+        earned:
+          Math.round(
+            earned * 10,
+          ) / 10,
+      };
+    });
+
+  /* ------------------------------ SCORE ---------------------------------- */
+
+  const rawScore =
+    categories.reduce(
+      (
+        total,
+        category,
+      ) =>
+        total +
+        category.earned,
+      0,
+    );
+
+  const score = Math.round(
+    Math.max(
+      0,
+      Math.min(
+        100,
+        rawScore,
+      ),
+    ),
   );
-  const provableWeight = provable.reduce((total, item) => total + item.weight, 0);
-  const contentScore = Math.round(
-    (provable.reduce((total, item) => total + item.earned, 0) / provableWeight) * 100,
-  );
-  const contentReady = blockers.length === 0;
+
+  /* -------------------------- CONTENT SCORE ------------------------------ */
+
+  /**
+   * ContentScore deliberately excludes:
+   * - visual
+   * - responsive
+   * - unproven accessibility
+   * - unproven performance
+   *
+   * This allows the builder to determine whether the generated CONTENT is
+   * ready while still preventing an unmeasured website from being called
+   * production-ready.
+   */
+  const provable =
+    categories.filter(
+      (category) => {
+        if (
+          category.name ===
+            "visual" ||
+          category.name ===
+            "responsive"
+        ) {
+          return false;
+        }
+
+        if (
+          category.name ===
+            "accessibility" &&
+          !safeInput.visual
+            ?.coverage
+            ?.accessibility
+        ) {
+          return false;
+        }
+
+        if (
+          category.name ===
+            "performance" &&
+          !safeInput.visual
+            ?.coverage
+            ?.performance
+        ) {
+          return false;
+        }
+
+        return true;
+      },
+    );
+
+  const provableWeight =
+    provable.reduce(
+      (
+        total,
+        category,
+      ) =>
+        total +
+        category.weight,
+      0,
+    );
+
+  const provableEarned =
+    provable.reduce(
+      (
+        total,
+        category,
+      ) =>
+        total +
+        category.earned,
+      0,
+    );
+
+  /**
+   * Guard against division by zero.
+   */
+  const contentScore =
+    provableWeight > 0
+      ? Math.round(
+          (
+            provableEarned /
+            provableWeight
+          ) *
+            100,
+        )
+      : 0;
+
+  /* ---------------------------- READINESS -------------------------------- */
+
+  /**
+   * Content-ready means:
+   * - no blockers
+   * - content-only score >= 90
+   *
+   * Browser measurement is intentionally not required for this intermediate
+   * state.
+   */
+  const contentReady =
+    blockers.length === 0 &&
+    contentScore >= 90;
+
+  /**
+   * Full production readiness is deliberately strict.
+   *
+   * Requirements:
+   * - no blockers
+   * - browser measurement
+   * - visual pass
+   * - accessibility evidence
+   * - performance evidence
+   * - overall score >= 95
+   */
+  const productionReady =
+    blockers.length === 0 &&
+    measured &&
+    !!safeInput.visual
+      ?.passed &&
+    !!safeInput.visual
+      ?.coverage
+      ?.accessibility &&
+    !!safeInput.visual
+      ?.coverage
+      ?.performance &&
+    score >= 95;
+
+  /* ------------------------------ RETURN --------------------------------- */
+
   return {
     score,
-    /** Content is sound enough to publish. */
-    ready: contentReady && contentScore >= 90,
-    /** Proven end-to-end: content clean, browser-measured, and 95+. */
-    productionReady:
-      contentReady &&
-      measured &&
-      !!input.visual?.passed &&
-      !!coverage?.accessibility &&
-      !!coverage?.performance &&
-      score >= 95,
+
+    ready:
+      contentReady,
+
+    productionReady,
+
     contentScore,
+
     measured,
+
     categories,
-    issues,
+
+    issues: uniqueIssues,
+
     blockers,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* CONVENIENCE HELPERS                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * True when the quality report contains no blockers.
+ *
+ * Useful for callers that only need the hard safety/publishing gate.
+ */
+export function hasQualityBlockers(
+  report: QualityReport,
+): boolean {
+  return report.blockers.length > 0;
+}
+
+/**
+ * True when the stored website content is ready for the next stage.
+ */
+export function isContentReady(
+  report: QualityReport,
+): boolean {
+  return report.ready;
+}
+
+/**
+ * True only for the strict production gate.
+ */
+export function isProductionReady(
+  report: QualityReport,
+): boolean {
+  return report.productionReady;
+}
+
+/**
+ * Returns the highest-priority issues first.
+ *
+ * Blockers come before advice. Within each severity, the original audit order
+ * is preserved so the UI remains deterministic.
+ */
+export function prioritizedIssues(
+  report: QualityReport,
+): QualityIssue[] {
+  return [
+    ...report.issues.filter(
+      (item) =>
+        item.severity ===
+        "blocker",
+    ),
+    ...report.issues.filter(
+      (item) =>
+        item.severity ===
+        "advice",
+    ),
+  ];
+}
+
+/**
+ * Returns a compact summary suitable for the builder's internal response.
+ */
+export function qualitySummary(
+  report: QualityReport,
+): string {
+  if (
+    report.productionReady
+  ) {
+    return `Quality check passed at ${report.score}/100.`;
+  }
+
+  if (
+    report.blockers.length > 0
+  ) {
+    return `Quality check found ${report.blockers.length} blocker${
+      report.blockers.length === 1
+        ? ""
+        : "s"
+    }.`;
+  }
+
+  if (!report.measured) {
+    return `Content quality is ${report.contentScore}/100. Browser measurement is still required before production readiness.`;
+  }
+
+  return `Quality check scored ${report.score}/100.`;
 }
