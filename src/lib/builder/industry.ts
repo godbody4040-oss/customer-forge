@@ -575,3 +575,37 @@ export function playbookFor(...hints: (string | null | undefined)[]): IndustryPl
 export function mentionsIndustry(text: string) {
   return playbookFor(text) !== GENERIC_PLAYBOOK || /\blocal business\b/i.test(text);
 }
+
+/**
+ * The schema.org LocalBusiness subtype each trade should publish in its JSON-LD,
+ * so search engines get the specific business category instead of the generic
+ * parent type. Google's structured-data guidance is explicit that the more
+ * specific subtype produces a stronger signal for local/map results. Only
+ * verified schema.org type names are used here — an invented type name would
+ * be silently ignored by search engines, so trades without a confirmed
+ * specific subtype fall back to the safe, always-valid "LocalBusiness".
+ */
+const SCHEMA_TYPE_BY_SLUG: Record<string, string> = {
+  plumbing: "Plumber",
+  hvac: "HVACBusiness",
+  roofing: "RoofingContractor",
+  electrical: "Electrician",
+  construction: "GeneralContractor",
+  remodeling: "GeneralContractor",
+  painting: "HousePainter",
+  automotive: "AutoRepair",
+  real_estate: "RealEstateAgent",
+  legal: "LegalService",
+  medical: "MedicalBusiness",
+  dental: "Dentist",
+  restaurant: "Restaurant",
+  beauty: "BeautySalon",
+  fitness: "SportsActivityLocation",
+  professional_services: "ProfessionalService",
+  home_services: "HomeAndConstructionBusiness",
+};
+
+/** Schema.org type for a playbook's JSON-LD `@type`. Defaults to "LocalBusiness". */
+export function schemaTypeFor(playbook: IndustryPlaybook): string {
+  return SCHEMA_TYPE_BY_SLUG[playbook.slug] ?? "LocalBusiness";
+}
