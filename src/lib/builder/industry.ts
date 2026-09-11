@@ -1,36 +1,16 @@
 /**
  * REVORA INDUSTRY INTELLIGENCE ENGINE
- * MASTER / BUILD-SAFE EDITION
+ * MASTER 10/10 EDITION
  *
- * PURPOSE
- * -------
- * Deterministic industry strategy for the free-first Revora builder.
+ * Deterministic, dependency-free industry intelligence for the
+ * Revora free-first website builder.
  *
- * GUARANTEES
- * ----------
- * - No imports
- * - No network
- * - No AI provider
- * - No browser APIs
- * - No Cloudflare APIs
- * - No dynamic code
- * - No external dependencies
- * - No fabricated business facts
- * - Safe for server and client execution
- * - Stable contracts for downstream builder modules
- *
- * IMPORTANT
- * ---------
- * This file provides STRATEGY ONLY.
- * It must never invent:
- * reviews, ratings, awards, licenses, certifications,
- * prices, guarantees, locations, hours, results,
- * years in business, staff credentials, or customer claims.
+ * IMPORTANT:
+ * This module provides strategy only.
+ * It must NEVER fabricate business facts, reviews, ratings,
+ * awards, licenses, certifications, guarantees, pricing,
+ * locations, hours, staff credentials, or customer results.
  */
-
-/* -------------------------------------------------------------------------- */
-/* Core types                                                                  */
-/* -------------------------------------------------------------------------- */
 
 export type PrimaryAction =
   | "call"
@@ -161,42 +141,10 @@ export type IndustryPlaybook = {
 };
 
 /* -------------------------------------------------------------------------- */
-/* Shared page architecture                                                   */
+/* Shared architecture                                                        */
 /* -------------------------------------------------------------------------- */
 
-const HOME_PAGE: IndustryPage = {
-  kind: "home",
-  title: "Home",
-  slug: "",
-  why: "Primary homepage and conversion destination.",
-  priority: 100,
-};
-
-const LOCAL_PAGES: IndustryPage[] = [
-  {
-    kind: "services",
-    title: "Services",
-    slug: "services",
-    why: "Explains the business's actual services.",
-    priority: 90,
-  },
-  {
-    kind: "about",
-    title: "About",
-    slug: "about",
-    why: "Explains who the business is and how it works.",
-    priority: 70,
-  },
-  {
-    kind: "contact",
-    title: "Contact",
-    slug: "contact",
-    why: "Provides a direct conversion destination.",
-    priority: 100,
-  },
-];
-
-const TRADE_HOME = [
+const URGENT_TRADE_HOME = [
   "hero",
   "trust_bar",
   "services",
@@ -210,7 +158,7 @@ const TRADE_HOME = [
   "contact",
 ];
 
-const TRADE_SERVICE = [
+const URGENT_TRADE_SERVICE = [
   "hero",
   "intro",
   "benefits",
@@ -221,24 +169,26 @@ const TRADE_SERVICE = [
   "contact",
 ];
 
-const VISUAL_HOME = [
+const CONSIDERED_HOME = [
   "hero",
   "intro",
   "services",
-  "gallery",
   "benefits",
+  "process",
+  "gallery",
   "reviews",
   "faq",
   "cta",
   "contact",
 ];
 
-const VISUAL_SERVICE = [
+const CONSIDERED_SERVICE = [
   "hero",
   "intro",
   "services",
-  "gallery",
   "benefits",
+  "gallery",
+  "process",
   "faq",
   "cta",
 ];
@@ -266,2699 +216,1661 @@ const PROFESSIONAL_SERVICE = [
   "cta",
 ];
 
+const VISUAL_HOME = [
+  "hero",
+  "intro",
+  "services",
+  "gallery",
+  "benefits",
+  "reviews",
+  "faq",
+  "cta",
+  "contact",
+];
+
+const VISUAL_SERVICE = [
+  "hero",
+  "intro",
+  "services",
+  "gallery",
+  "benefits",
+  "faq",
+  "cta",
+];
+
 /* -------------------------------------------------------------------------- */
-/* Shared conversion profiles                                                  */
+/* Shared pages                                                               */
 /* -------------------------------------------------------------------------- */
 
-const CONVERSIONS: Record<
-  PrimaryAction,
-  IndustryConversion
-> = {
-  call: {
-    intensity: "urgent",
-    primaryAction: "call",
-    secondaryActions: ["quote", "lead"],
-    placement: [
-      "hero",
-      "after_services",
-      "after_process",
-      "faq",
-      "sticky",
-      "footer",
-    ],
-    stickyMobile: true,
-    leadForm: true,
-  },
+const HOME_PAGE: IndustryPage = {
+  kind: "home",
+  title: "Home",
+  slug: "",
+  why: "Primary homepage and conversion destination.",
+  priority: 100,
+};
 
-  quote: {
-    intensity: "direct",
-    primaryAction: "quote",
-    secondaryActions: ["call", "lead"],
-    placement: [
-      "hero",
-      "after_services",
-      "after_gallery",
-      "faq",
-      "sticky",
-      "footer",
-    ],
-    stickyMobile: true,
-    leadForm: true,
+const LOCAL_PAGE_SET: IndustryPage[] = [
+  {
+    kind: "services",
+    title: "Services",
+    slug: "services",
+    why: "Creates a clear overview of the business's main work.",
+    priority: 90,
   },
+  {
+    kind: "about",
+    title: "About",
+    slug: "about",
+    why: "Explains who the business is and how it works.",
+    priority: 70,
+  },
+  {
+    kind: "contact",
+    title: "Contact",
+    slug: "contact",
+    why: "Provides a direct conversion destination.",
+    priority: 100,
+  },
+];
 
-  book: {
-    intensity: "direct",
-    primaryAction: "book",
-    secondaryActions: ["call", "lead"],
-    placement: [
-      "hero",
-      "after_services",
-      "after_process",
-      "faq",
-      "sticky",
-      "footer",
-    ],
-    stickyMobile: true,
-    leadForm: true,
-  },
+/* -------------------------------------------------------------------------- */
+/* Conversion profiles                                                        */
+/* -------------------------------------------------------------------------- */
 
-  consult: {
-    intensity: "considered",
-    primaryAction: "consult",
-    secondaryActions: ["lead", "call"],
-    placement: [
-      "hero",
-      "after_benefits",
-      "after_process",
-      "faq",
-      "footer",
-    ],
-    stickyMobile: false,
-    leadForm: true,
-  },
+const URGENT_CONVERSION: IndustryConversion = {
+  intensity: "urgent",
+  primaryAction: "call",
+  secondaryActions: ["quote", "lead"],
+  placement: [
+    "hero",
+    "after_services",
+    "after_process",
+    "faq",
+    "sticky",
+    "footer",
+  ],
+  stickyMobile: true,
+  leadForm: true,
+};
 
-  visit: {
-    intensity: "direct",
-    primaryAction: "visit",
-    secondaryActions: ["book", "call"],
-    placement: [
-      "hero",
-      "after_gallery",
-      "faq",
-      "footer",
-    ],
-    stickyMobile: true,
-    leadForm: false,
-  },
+const QUOTE_CONVERSION: IndustryConversion = {
+  intensity: "direct",
+  primaryAction: "quote",
+  secondaryActions: ["call", "lead"],
+  placement: [
+    "hero",
+    "after_services",
+    "after_gallery",
+    "faq",
+    "sticky",
+    "footer",
+  ],
+  stickyMobile: true,
+  leadForm: true,
+};
 
-  lead: {
-    intensity: "relationship",
-    primaryAction: "lead",
-    secondaryActions: ["call", "consult"],
-    placement: [
-      "hero",
-      "after_services",
-      "after_benefits",
-      "faq",
-      "footer",
-    ],
-    stickyMobile: true,
-    leadForm: true,
-  },
+const BOOKING_CONVERSION: IndustryConversion = {
+  intensity: "direct",
+  primaryAction: "book",
+  secondaryActions: ["call", "lead"],
+  placement: [
+    "hero",
+    "after_services",
+    "after_process",
+    "faq",
+    "sticky",
+    "footer",
+  ],
+  stickyMobile: true,
+  leadForm: true,
+};
+
+const CONSULTATION_CONVERSION: IndustryConversion = {
+  intensity: "considered",
+  primaryAction: "consult",
+  secondaryActions: ["lead", "call"],
+  placement: [
+    "hero",
+    "after_benefits",
+    "after_process",
+    "faq",
+    "footer",
+  ],
+  stickyMobile: false,
+  leadForm: true,
+};
+
+const VISIT_CONVERSION: IndustryConversion = {
+  intensity: "direct",
+  primaryAction: "visit",
+  secondaryActions: ["book", "call"],
+  placement: [
+    "hero",
+    "after_gallery",
+    "faq",
+    "footer",
+  ],
+  stickyMobile: true,
+  leadForm: false,
+};
+
+const LEAD_CONVERSION: IndustryConversion = {
+  intensity: "relationship",
+  primaryAction: "lead",
+  secondaryActions: ["call", "consult"],
+  placement: [
+    "hero",
+    "after_services",
+    "after_benefits",
+    "faq",
+    "footer",
+  ],
+  stickyMobile: true,
+  leadForm: true,
 };
 
 function conversionFor(
   action: PrimaryAction,
 ): IndustryConversion {
-  const source = CONVERSIONS[action];
+  switch (action) {
+    case "call":
+      return {
+        ...URGENT_CONVERSION,
+        secondaryActions: [
+          ...URGENT_CONVERSION.secondaryActions,
+        ],
+        placement: [
+          ...URGENT_CONVERSION.placement,
+        ],
+      };
 
-  return {
-    intensity: source.intensity,
-    primaryAction: source.primaryAction,
-    secondaryActions: [
-      ...source.secondaryActions,
-    ],
-    placement: [
-      ...source.placement,
-    ],
-    stickyMobile: source.stickyMobile,
-    leadForm: source.leadForm,
-  };
-}
+    case "quote":
+      return {
+        ...QUOTE_CONVERSION,
+        secondaryActions: [
+          ...QUOTE_CONVERSION.secondaryActions,
+        ],
+        placement: [
+          ...QUOTE_CONVERSION.placement,
+        ],
+      };
 
-/* -------------------------------------------------------------------------- */
-/* Page factories                                                              */
-/* -------------------------------------------------------------------------- */
+    case "book":
+      return {
+        ...BOOKING_CONVERSION,
+        secondaryActions: [
+          ...BOOKING_CONVERSION.secondaryActions,
+        ],
+        placement: [
+          ...BOOKING_CONVERSION.placement,
+        ],
+      };
 
-function pages(
-  extras: IndustryPage[] = [],
-): IndustryPage[] {
-  return [
-    HOME_PAGE,
-    ...LOCAL_PAGES,
-    ...extras,
-  ];
-}
+    case "consult":
+      return {
+        ...CONSULTATION_CONVERSION,
+        secondaryActions: [
+          ...CONSULTATION_CONVERSION.secondaryActions,
+        ],
+        placement: [
+          ...CONSULTATION_CONVERSION.placement,
+        ],
+      };
 
-function page(
-  kind: string,
-  title: string,
-  slug: string,
-  why: string,
-  priority = 60,
-): IndustryPage {
-  return {
-    kind,
-    title,
-    slug,
-    why,
-    priority,
-  };
-}
+    case "visit":
+      return {
+        ...VISIT_CONVERSION,
+        secondaryActions: [
+          ...VISIT_CONVERSION.secondaryActions,
+        ],
+        placement: [
+          ...VISIT_CONVERSION.placement,
+        ],
+      };
 
-/* -------------------------------------------------------------------------- */
-/* Playbook factory                                                            */
-/* -------------------------------------------------------------------------- */
-
-type PlaybookInput = Omit<
-  IndustryPlaybook,
-  "conversion"
-> & {
-  conversion?: IndustryConversion;
-};
-
-function playbook(
-  input: PlaybookInput,
-): IndustryPlaybook {
-  return {
-    ...input,
-    aliases: uniqueStrings(input.aliases),
-    homeSections: uniqueStrings(
-      input.homeSections,
-    ),
-    servicePageSections: uniqueStrings(
-      input.servicePageSections,
-    ),
-    terminology: uniqueStrings(
-      input.terminology,
-    ),
-    trust: uniqueStrings(
-      input.trust,
-    ),
-    faqSeeds: uniqueStrings(
-      input.faqSeeds,
-    ),
-    servicePageExamples: uniqueStrings(
-      input.servicePageExamples,
-    ),
-    objections: uniqueStrings(
-      input.objections,
-    ),
-    contentAngles: uniqueStrings(
-      input.contentAngles,
-    ),
-    conversion:
-      input.conversion ??
-      conversionFor(input.action),
-  };
-}
-
-/* -------------------------------------------------------------------------- */
-/* Industry definitions                                                        */
-/* -------------------------------------------------------------------------- */
-
-const RAW_PLAYBOOKS: IndustryPlaybook[] = [
-  playbook({
-    slug: "plumbing",
-    label: "Plumbing",
-    aliases: [
-      "plumber",
-      "plumbers",
-      "plumbing",
-      "drain",
-      "drains",
-      "drain cleaning",
-      "leak",
-      "leak repair",
-      "pipe",
-      "pipes",
-      "pipework",
-      "water heater",
-      "water heaters",
-      "boiler",
-      "boilers",
-      "sewer",
-      "sewer repair",
-      "faucet",
-      "toilet repair",
-    ],
-    pages: pages([
-      page(
-        "service",
-        "Emergency Plumbing",
-        "emergency-plumbing",
-        "Captures urgent plumbing intent when actually offered.",
-        100,
-      ),
-    ]),
-    homeSections: TRADE_HOME,
-    servicePageSections: TRADE_SERVICE,
-    action: "call",
-    ctaLabels: {
-      primary: "Call now",
-      secondary: "Get a quote",
-    },
-    terminology: [
-      "plumbing repairs",
-      "installations",
-      "drain clearing",
-      "leak detection",
-      "water heaters",
-      "emergency service",
-    ],
-    trust: [
-      "Licensing",
-      "Insurance",
-      "Availability",
-      "Upfront pricing",
-      "Local service",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "plumber near me",
-      patterns: [
-        "plumber",
-        "plumbing repair",
-        "emergency plumber",
-        "drain cleaning",
-        "water heater repair",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#0b6bcb",
-      secondary: "#0f172a",
-      accent: "#f59e0b",
-      font: "sans",
-      backdrop: "none",
-      style: "technical",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "bright",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "How quickly can you get here?",
-      "Do you offer emergency service?",
-      "Do you provide estimates before work begins?",
-      "What areas do you serve?",
-    ],
-    schemaType: "Plumber",
-    servicePageExamples: [
-      "Plumbing Repairs",
-      "Drain Cleaning",
-      "Leak Detection",
-      "Water Heater Services",
-      "Emergency Plumbing",
-    ],
-    objections: [
-      "How much will this cost?",
-      "How quickly can someone come?",
-      "Will I know the price before work starts?",
-    ],
-    contentAngles: [
-      "What to do when a pipe leaks",
-      "When a drain needs professional attention",
-      "How to prepare for a plumbing visit",
-    ],
-    visualProof: "medium",
-    urgency: "high",
-  }),
-
-  playbook({
-    slug: "hvac",
-    label: "Heating & Air Conditioning",
-    aliases: [
-      "hvac",
-      "heating",
-      "cooling",
-      "air conditioning",
-      "air conditioning repair",
-      "air con",
-      "aircon",
-      "ac",
-      "ac repair",
-      "furnace",
-      "furnace repair",
-      "heat pump",
-      "ductwork",
-      "duct cleaning",
-      "ventilation",
-    ],
-    pages: LOCAL_PAGES,
-    homeSections: TRADE_HOME,
-    servicePageSections: TRADE_SERVICE,
-    action: "book",
-    ctaLabels: {
-      primary: "Book a visit",
-      secondary: "Call now",
-    },
-    terminology: [
-      "repairs",
-      "installations",
-      "maintenance",
-      "tune-ups",
-      "system replacement",
-      "air conditioning",
-      "heating",
-    ],
-    trust: [
-      "Qualified technicians",
-      "Maintenance plans",
-      "Written estimates",
-      "Equipment knowledge",
-      "Local service",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "HVAC repair near me",
-      patterns: [
-        "HVAC repair",
-        "AC repair",
-        "heating repair",
-        "air conditioning service",
-        "HVAC installation",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#0891b2",
-      secondary: "#0b1220",
-      accent: "#f97316",
-      font: "sans",
-      backdrop: "none",
-      style: "technical",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "bright",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "How quickly can you schedule a visit?",
-      "Do you service my equipment?",
-      "Do you provide maintenance plans?",
-      "When should an HVAC system be replaced?",
-    ],
-    schemaType: "HVACBusiness",
-    servicePageExamples: [
-      "AC Repair",
-      "Heating Repair",
-      "HVAC Maintenance",
-      "Air Conditioning Installation",
-      "Heating Installation",
-    ],
-    objections: [
-      "How soon can someone inspect the system?",
-      "Should I repair or replace it?",
-      "How much will the work cost?",
-    ],
-    contentAngles: [
-      "Signs an HVAC system needs attention",
-      "Repair versus replacement considerations",
-      "How regular maintenance helps equipment",
-    ],
-    visualProof: "medium",
-    urgency: "high",
-  }),
-
-  playbook({
-    slug: "roofing",
-    label: "Roofing",
-    aliases: [
-      "roof",
-      "roofer",
-      "roofers",
-      "roofing",
-      "shingles",
-      "shingle",
-      "metal roofing",
-      "flat roof",
-      "roof leak",
-      "roof repair",
-      "storm damage",
-      "roof replacement",
-      "gutter",
-      "gutters",
-    ],
-    pages: pages([
-      page(
-        "projects",
-        "Projects",
-        "projects",
-        "Provides a visual project destination when genuine project material exists.",
-        80,
-      ),
-    ]),
-    homeSections: TRADE_HOME,
-    servicePageSections: TRADE_SERVICE,
-    action: "quote",
-    ctaLabels: {
-      primary: "Get a quote",
-      secondary: "See our work",
-    },
-    terminology: [
-      "roof repair",
-      "roof replacement",
-      "roof inspection",
-      "storm damage",
-      "shingles",
-      "gutters",
-    ],
-    trust: [
-      "Licensing",
-      "Insurance",
-      "Inspection",
-      "Written estimates",
-      "Workmanship information",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "roofing contractor near me",
-      patterns: [
-        "roof repair",
-        "roof replacement",
-        "roof inspection",
-        "storm damage roofing",
-        "roofing contractor",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#1d4ed8",
-      secondary: "#111827",
-      accent: "#eab308",
-      font: "sans",
-      backdrop: "none",
-      style: "bold",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "cinematic",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "How does a roof inspection work?",
-      "How long does a roof replacement usually take?",
-      "Do you provide written estimates?",
-      "Do you work with storm-damage projects?",
-    ],
-    schemaType: "RoofingContractor",
-    servicePageExamples: [
-      "Roof Repair",
-      "Roof Replacement",
-      "Roof Inspections",
-      "Storm Damage",
-      "Gutter Services",
-    ],
-    objections: [
-      "Is the inspection free?",
-      "How long will the project take?",
-      "How do I compare roofing quotes?",
-    ],
-    contentAngles: [
-      "Signs a roof may need repair",
-      "Repair versus replacement",
-      "Questions to ask before choosing a roofer",
-    ],
-    visualProof: "high",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "electrical",
-    label: "Electrical",
-    aliases: [
-      "electric",
-      "electrical",
-      "electrician",
-      "electricians",
-      "electrician service",
-      "wiring",
-      "rewiring",
-      "rewire",
-      "electrical panel",
-      "panel upgrade",
-      "breaker",
-      "outlet",
-      "lighting",
-      "ev charger",
-      "ev charging",
-      "electrical contractor",
-    ],
-    pages: pages([
-      page(
-        "service",
-        "Electrical Services",
-        "electrical-services",
-        "Groups electrical work into a clear service destination.",
-        95,
-      ),
-    ]),
-    homeSections: TRADE_HOME,
-    servicePageSections: TRADE_SERVICE,
-    action: "call",
-    ctaLabels: {
-      primary: "Call an electrician",
-      secondary: "Get a quote",
-    },
-    terminology: [
-      "repairs",
-      "rewiring",
-      "panel upgrades",
-      "lighting",
-      "safety inspections",
-      "EV chargers",
-    ],
-    trust: [
-      "Licensing",
-      "Insurance",
-      "Qualified electricians",
-      "Safety-focused work",
-      "Written estimates",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "electrician near me",
-      patterns: [
-        "electrician",
-        "electrical repair",
-        "electrical panel upgrade",
-        "rewiring",
-        "EV charger installation",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#f59e0b",
-      secondary: "#0f172a",
-      accent: "#22d3ee",
-      font: "sans",
-      backdrop: "none",
-      style: "technical",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "technical",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "Are you licensed for electrical work?",
-      "Can you inspect an electrical panel?",
-      "Can you install EV charging equipment?",
-      "How soon can you schedule service?",
-    ],
-    schemaType: "Electrician",
-    servicePageExamples: [
-      "Electrical Repairs",
-      "Panel Upgrades",
-      "Rewiring",
-      "Lighting",
-      "EV Charger Installation",
-    ],
-    objections: [
-      "Is the work safe and compliant?",
-      "How much will the repair cost?",
-      "How soon can an electrician come?",
-    ],
-    contentAngles: [
-      "Signs of an electrical problem",
-      "When an electrical panel may need attention",
-      "Preparing for an electrical inspection",
-    ],
-    visualProof: "medium",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "landscaping",
-    label: "Landscaping",
-    aliases: [
-      "landscape",
-      "landscaping",
-      "landscaper",
-      "lawn",
-      "lawn care",
-      "garden",
-      "gardening",
-      "yard",
-      "yards",
-      "turf",
-      "tree service",
-      "hardscape",
-      "hardscaping",
-      "mulch",
-      "irrigation",
-    ],
-    pages: pages([
-      page(
-        "gallery",
-        "Our Work",
-        "our-work",
-        "Provides a visual project destination when genuine imagery exists.",
-        90,
-      ),
-    ]),
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "quote",
-    ctaLabels: {
-      primary: "Get a quote",
-      secondary: "See our work",
-    },
-    terminology: [
-      "landscape design",
-      "lawn care",
-      "planting",
-      "hardscaping",
-      "maintenance",
-      "seasonal cleanups",
-      "irrigation",
-    ],
-    trust: [
-      "Insurance",
-      "Project planning",
-      "Maintenance plans",
-      "Local service",
-      "Portfolio",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "landscaping near me",
-      patterns: [
-        "landscaping",
-        "lawn care",
-        "landscape design",
-        "hardscaping",
-        "yard maintenance",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#15803d",
-      secondary: "#052e16",
-      accent: "#facc15",
-      font: "serif",
-      backdrop: "none",
-      style: "natural",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "natural",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "Do you offer ongoing maintenance?",
-      "Do you provide landscape design?",
-      "How does the quote process work?",
-      "What areas do you serve?",
-    ],
-    schemaType: "LandscapingBusiness",
-    servicePageExamples: [
-      "Lawn Care",
-      "Landscape Design",
-      "Planting",
-      "Hardscaping",
-      "Seasonal Cleanup",
-    ],
-    objections: [
-      "What will the project cost?",
-      "How long will the work take?",
-      "Can you maintain the property afterward?",
-    ],
-    contentAngles: [
-      "Planning a landscape project",
-      "Choosing between lawn and landscape services",
-      "Preparing an outdoor space for a project",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "cleaning",
-    label: "Cleaning",
-    aliases: [
-      "clean",
-      "cleaning",
-      "cleaner",
-      "cleaners",
-      "house cleaning",
-      "home cleaning",
-      "commercial cleaning",
-      "janitorial",
-      "maid",
-      "housekeeping",
-      "deep clean",
-      "deep cleaning",
-      "move out cleaning",
-      "move-out cleaning",
-    ],
-    pages: LOCAL_PAGES,
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "book",
-    ctaLabels: {
-      primary: "Book a clean",
-      secondary: "Get a price",
-    },
-    terminology: [
-      "regular cleaning",
-      "deep cleaning",
-      "move-out cleaning",
-      "commercial cleaning",
-      "recurring service",
-    ],
-    trust: [
-      "Insurance",
-      "Staff information",
-      "Supplies",
-      "Flexible scheduling",
-      "Service standards",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "cleaning service near me",
-      patterns: [
-        "house cleaning",
-        "cleaning service",
-        "deep cleaning",
-        "commercial cleaning",
-        "move-out cleaning",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#0ea5e9",
-      secondary: "#0f172a",
-      accent: "#a3e635",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "bright",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "Do you bring cleaning supplies?",
-      "Can I schedule recurring cleaning?",
-      "What is included in a deep clean?",
-      "Do you clean commercial spaces?",
-    ],
-    schemaType: "CleaningService",
-    servicePageExamples: [
-      "House Cleaning",
-      "Deep Cleaning",
-      "Move-Out Cleaning",
-      "Commercial Cleaning",
-      "Recurring Cleaning",
-    ],
-    objections: [
-      "What is included?",
-      "Do I need to provide supplies?",
-      "How does scheduling work?",
-    ],
-    contentAngles: [
-      "What to expect from a deep clean",
-      "Preparing a home for professional cleaning",
-      "Choosing recurring versus one-time cleaning",
-    ],
-    visualProof: "medium",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "construction",
-    label: "Construction",
-    aliases: [
-      "construction",
-      "builder",
-      "builders",
-      "building",
-      "general contractor",
-      "contractor",
-      "groundwork",
-      "groundworks",
-      "commercial construction",
-      "residential construction",
-      "construction company",
-    ],
-    pages: pages([
-      page(
-        "projects",
-        "Projects",
-        "projects",
-        "Provides project proof when genuine project material exists.",
-        100,
-      ),
-    ]),
-    homeSections: PROFESSIONAL_HOME,
-    servicePageSections: PROFESSIONAL_SERVICE,
-    action: "consult",
-    ctaLabels: {
-      primary: "Request a consultation",
-      secondary: "See projects",
-    },
-    terminology: [
-      "new builds",
-      "extensions",
-      "renovations",
-      "groundworks",
-      "project management",
-      "commercial projects",
-    ],
-    trust: [
-      "Licensing",
-      "Insurance",
-      "Project planning",
-      "Site safety",
-      "References",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "construction company near me",
-      patterns: [
-        "general contractor",
-        "construction company",
-        "building contractor",
-        "home construction",
-        "commercial construction",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#334155",
-      secondary: "#0b1220",
-      accent: "#f59e0b",
-      font: "sans",
-      backdrop: "none",
-      style: "bold",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "cinematic",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "How does the consultation process work?",
-      "How are projects estimated?",
-      "Who manages the project?",
-      "Can I see examples of completed work?",
-    ],
-    schemaType: "GeneralContractor",
-    servicePageExamples: [
-      "Residential Construction",
-      "Commercial Construction",
-      "Renovations",
-      "Extensions",
-      "Project Management",
-    ],
-    objections: [
-      "What will the project cost?",
-      "How long will construction take?",
-      "Who manages the project?",
-    ],
-    contentAngles: [
-      "How construction projects are planned",
-      "What to ask before hiring a contractor",
-      "Understanding project stages",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "remodeling",
-    label: "Remodeling",
-    aliases: [
-      "remodel",
-      "remodeling",
-      "remodelling",
-      "renovation",
-      "renovations",
-      "home renovation",
-      "kitchen remodeling",
-      "kitchen remodel",
-      "bathroom remodeling",
-      "bathroom remodel",
-      "home improvement",
-    ],
-    pages: pages([
-      page(
-        "projects",
-        "Projects",
-        "projects",
-        "Provides visual proof when genuine project imagery exists.",
-        100,
-      ),
-    ]),
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "consult",
-    ctaLabels: {
-      primary: "Book a design call",
-      secondary: "See our work",
-    },
-    terminology: [
-      "kitchen remodeling",
-      "bathroom remodeling",
-      "whole-home renovation",
-      "design and build",
-      "renovation",
-    ],
-    trust: [
-      "Insurance",
-      "Project planning",
-      "Design process",
-      "Portfolio",
-      "Written estimates",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "home remodeling near me",
-      patterns: [
-        "kitchen remodeling",
-        "bathroom remodeling",
-        "home renovation",
-        "home remodeling",
-        "renovation contractor",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#7c3aed",
-      secondary: "#160f2e",
-      accent: "#f5d0a9",
-      font: "serif",
-      backdrop: "none",
-      style: "luxury",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "editorial",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How does the remodeling process work?",
-      "Do you provide design assistance?",
-      "How are remodeling projects estimated?",
-      "Can I see completed projects?",
-    ],
-    schemaType: "GeneralContractor",
-    servicePageExamples: [
-      "Kitchen Remodeling",
-      "Bathroom Remodeling",
-      "Whole-Home Remodeling",
-      "Home Renovations",
-      "Design & Build",
-    ],
-    objections: [
-      "How long will the project take?",
-      "How disruptive will the work be?",
-      "How do I plan a remodeling budget?",
-    ],
-    contentAngles: [
-      "Planning a kitchen remodel",
-      "How to prepare for a renovation",
-      "Questions to ask before starting a remodel",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "painting",
-    label: "Painting & Decorating",
-    aliases: [
-      "paint",
-      "painting",
-      "painter",
-      "painters",
-      "house painter",
-      "commercial painter",
-      "decorating",
-      "decorator",
-      "interior painting",
-      "exterior painting",
-      "wallpaper",
-      "wallpapering",
-    ],
-    pages: pages([
-      page(
-        "gallery",
-        "Our Work",
-        "our-work",
-        "Provides visual proof when genuine imagery exists.",
-        90,
-      ),
-    ]),
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "quote",
-    ctaLabels: {
-      primary: "Get a quote",
-      secondary: "See our work",
-    },
-    terminology: [
-      "interior painting",
-      "exterior painting",
-      "surface preparation",
-      "commercial painting",
-      "decorating",
-    ],
-    trust: [
-      "Insurance",
-      "Preparation",
-      "Clean finish",
-      "Colour guidance",
-      "Portfolio",
-    ],
-    seo: {
-      qualifier: "professional",
-      intent: "painters near me",
-      patterns: [
-        "house painters",
-        "interior painters",
-        "exterior painters",
-        "commercial painting",
-        "painting contractor",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#2563eb",
-      secondary: "#0f172a",
-      accent: "#fb7185",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "bright",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How is the surface prepared?",
-      "How many coats are normally needed?",
-      "Do you handle interior and exterior work?",
-      "How long does a painting project take?",
-    ],
-    schemaType: "HousePainter",
-    servicePageExamples: [
-      "Interior Painting",
-      "Exterior Painting",
-      "Commercial Painting",
-      "Colour Consultation",
-      "Decorating",
-    ],
-    objections: [
-      "Will the preparation be thorough?",
-      "How long will the project take?",
-      "How will furniture and surfaces be protected?",
-    ],
-    contentAngles: [
-      "How professional painting is prepared",
-      "Choosing interior versus exterior finishes",
-      "Preparing a property for painters",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "automotive",
-    label: "Automotive",
-    aliases: [
-      "auto",
-      "automotive",
-      "mechanic",
-      "mechanics",
-      "garage",
-      "auto repair",
-      "car repair",
-      "vehicle repair",
-      "detailing",
-      "car detailing",
-      "tire",
-      "tyre",
-      "brakes",
-      "oil change",
-      "diagnostics",
-      "vehicle service",
-    ],
-    pages: pages([
-      page(
-        "service",
-        "Auto Services",
-        "auto-services",
-        "Groups high-intent vehicle services.",
-        95,
-      ),
-    ]),
-    homeSections: TRADE_HOME,
-    servicePageSections: TRADE_SERVICE,
-    action: "book",
-    ctaLabels: {
-      primary: "Book my car in",
-      secondary: "Call the garage",
-    },
-    terminology: [
-      "servicing",
-      "diagnostics",
-      "repairs",
-      "maintenance",
-      "brakes",
-      "detailing",
-      "tires",
-    ],
-    trust: [
-      "Qualified technicians",
-      "Transparent pricing",
-      "Parts information",
-      "Service updates",
-      "Appointment scheduling",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "auto repair near me",
-      patterns: [
-        "auto repair",
-        "mechanic",
-        "car service",
-        "brake repair",
-        "auto diagnostics",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#dc2626",
-      secondary: "#0b0f19",
-      accent: "#f8fafc",
-      font: "sans",
-      backdrop: "none",
-      style: "bold",
-      density: "dense",
-      radius: "soft",
-      imageTreatment: "cinematic",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "How do I book a service?",
-      "How long will the work take?",
-      "Do you provide diagnostics?",
-      "Can I get an estimate before repairs begin?",
-    ],
-    schemaType: "AutoRepair",
-    servicePageExamples: [
-      "Auto Repair",
-      "Vehicle Diagnostics",
-      "Brake Service",
-      "Car Maintenance",
-      "Auto Detailing",
-    ],
-    objections: [
-      "How much will the repair cost?",
-      "How long will my vehicle be unavailable?",
-      "Will I receive an estimate first?",
-    ],
-    contentAngles: [
-      "Signs your vehicle needs attention",
-      "Preparing for a vehicle service",
-      "Questions to ask before approving repairs",
-    ],
-    visualProof: "medium",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "real_estate",
-    label: "Real Estate",
-    aliases: [
-      "real estate",
-      "realtor",
-      "realtors",
-      "realty",
-      "estate agent",
-      "property",
-      "property agent",
-      "property management",
-      "lettings",
-      "homes for sale",
-      "real estate agent",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Services",
-        "services",
-        "Explains the actual services offered.",
-        90,
-      ),
-      page(
-        "portfolio",
-        "Properties",
-        "properties",
-        "Provides a property destination when actual property data exists.",
-        95,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Explains the business and its approach.",
-        70,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides an inquiry destination.",
-        100,
-      ),
-    ],
-    homeSections: PROFESSIONAL_HOME,
-    servicePageSections: PROFESSIONAL_SERVICE,
-    action: "consult",
-    ctaLabels: {
-      primary: "Request a consultation",
-      secondary: "View properties",
-    },
-    terminology: [
-      "buying",
-      "selling",
-      "valuation",
-      "property search",
-      "property marketing",
-      "management",
-    ],
-    trust: [
-      "Local market knowledge",
-      "Clear communication",
-      "Property marketing",
-      "Regular updates",
-      "Transparent fees",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "real estate agent near me",
-      patterns: [
-        "real estate agent",
-        "realtor",
-        "homes for sale",
-        "property agent",
-        "property management",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#0f766e",
-      secondary: "#04211f",
-      accent: "#d4af37",
-      font: "serif",
-      backdrop: "none",
-      style: "editorial",
-      density: "airy",
-      radius: "soft",
-      imageTreatment: "editorial",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How does the consultation process work?",
-      "What services do you offer?",
-      "How are fees structured?",
-      "How do you market properties?",
-    ],
-    schemaType: "RealEstateAgent",
-    servicePageExamples: [
-      "Buying",
-      "Selling",
-      "Property Valuation",
-      "Property Management",
-      "Property Marketing",
-    ],
-    objections: [
-      "How much are the fees?",
-      "How will my property be marketed?",
-      "Who will be my main contact?",
-    ],
-    contentAngles: [
-      "Preparing a property for sale",
-      "Questions to ask a real estate professional",
-      "Understanding the property-selling process",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "legal",
-    label: "Legal",
-    aliases: [
-      "law",
-      "legal",
-      "lawyer",
-      "lawyers",
-      "attorney",
-      "attorneys",
-      "solicitor",
-      "solicitors",
-      "law firm",
-      "legal firm",
-      "legal services",
-      "conveyancing",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Practice Areas",
-        "practice-areas",
-        "Helps visitors identify relevant legal services.",
-        100,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Provides verified practice information.",
-        80,
-      ),
-      page(
-        "faq",
-        "FAQ",
-        "faq",
-        "Answers general process questions.",
-        60,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides a consultation route.",
-        100,
-      ),
-    ],
-    homeSections: PROFESSIONAL_HOME,
-    servicePageSections: PROFESSIONAL_SERVICE,
-    action: "consult",
-    ctaLabels: {
-      primary: "Request a consultation",
-      secondary: "View practice areas",
-    },
-    terminology: [
-      "practice areas",
-      "consultation",
-      "representation",
-      "legal services",
-      "case evaluation",
-    ],
-    trust: [
-      "Professional credentials",
-      "Confidentiality",
-      "Clear communication",
-      "Fee information",
-      "Practice experience",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "lawyer near me",
-      patterns: [
-        "law firm",
-        "lawyer",
-        "attorney",
-        "legal services",
-        "legal consultation",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#1e3a8a",
-      secondary: "#0b1220",
-      accent: "#d4af37",
-      font: "serif",
-      backdrop: "none",
-      style: "luxury",
-      density: "airy",
-      radius: "soft",
-      imageTreatment: "editorial",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How does an initial consultation work?",
-      "How are legal fees structured?",
-      "What information should I bring?",
-      "How do I contact the practice?",
-    ],
-    schemaType: "LegalService",
-    servicePageExamples: [
-      "Practice Areas",
-      "Consultations",
-      "Legal Representation",
-      "Legal Advice",
-    ],
-    objections: [
-      "How much will this cost?",
-      "What happens during the first consultation?",
-      "Will my information remain confidential?",
-    ],
-    contentAngles: [
-      "Preparing for a legal consultation",
-      "Questions to ask before choosing legal representation",
-      "Understanding the first steps in a legal matter",
-    ],
-    visualProof: "low",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "medical",
-    label: "Medical",
-    aliases: [
-      "medical",
-      "clinic",
-      "doctor",
-      "doctors",
-      "physician",
-      "physiotherapy",
-      "physio",
-      "chiropractor",
-      "health clinic",
-      "healthcare",
-      "wellness clinic",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Services",
-        "services",
-        "Explains the actual services supplied.",
-        100,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Provides verified clinic information.",
-        75,
-      ),
-      page(
-        "faq",
-        "FAQ",
-        "faq",
-        "Answers administrative questions.",
-        65,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides appointment access.",
-        100,
-      ),
-    ],
-    homeSections: PROFESSIONAL_HOME,
-    servicePageSections: PROFESSIONAL_SERVICE,
-    action: "book",
-    ctaLabels: {
-      primary: "Book an appointment",
-      secondary: "Call the clinic",
-    },
-    terminology: [
-      "appointments",
-      "consultations",
-      "assessments",
-      "treatments",
-      "follow-up",
-      "care",
-    ],
-    trust: [
-      "Professional credentials",
-      "Clinic information",
-      "Appointment availability",
-      "Clear pricing",
-      "Patient information",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "clinic near me",
-      patterns: [
-        "clinic",
-        "doctor",
-        "medical clinic",
-        "physiotherapy",
-        "chiropractor",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#0d9488",
-      secondary: "#08201f",
-      accent: "#60a5fa",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "bright",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How do I book an appointment?",
-      "What should I bring to an appointment?",
-      "What are your opening hours?",
-      "How do I contact the clinic?",
-    ],
-    schemaType: "MedicalBusiness",
-    servicePageExamples: [
-      "Consultations",
-      "Assessments",
-      "Treatments",
-      "Follow-Up Care",
-    ],
-    objections: [
-      "How do I book?",
-      "What happens during an appointment?",
-      "What information should I bring?",
-    ],
-    contentAngles: [
-      "What to expect from an appointment",
-      "Preparing for a first visit",
-      "Understanding the clinic's services",
-    ],
-    visualProof: "low",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "dental",
-    label: "Dental",
-    aliases: [
-      "dental",
-      "dentist",
-      "dentists",
-      "dental practice",
-      "orthodontist",
-      "orthodontic",
-      "implants",
-      "dental implants",
-      "hygienist",
-      "teeth whitening",
-      "cosmetic dentistry",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Dental Services",
-        "services",
-        "Lets visitors identify relevant treatments.",
-        100,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Provides verified practice information.",
-        70,
-      ),
-      page(
-        "faq",
-        "FAQ",
-        "faq",
-        "Answers general administrative questions.",
-        60,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides appointment access.",
-        100,
-      ),
-    ],
-    homeSections: PROFESSIONAL_HOME,
-    servicePageSections: PROFESSIONAL_SERVICE,
-    action: "book",
-    ctaLabels: {
-      primary: "Book an appointment",
-      secondary: "Call the practice",
-    },
-    terminology: [
-      "check-ups",
-      "hygiene",
-      "cosmetic dentistry",
-      "implants",
-      "orthodontics",
-      "emergency appointments",
-    ],
-    trust: [
-      "Professional credentials",
-      "Patient information",
-      "Clear pricing",
-      "Appointment availability",
-      "Practice information",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "dentist near me",
-      patterns: [
-        "dentist",
-        "dental practice",
-        "dental implants",
-        "teeth whitening",
-        "emergency dentist",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#0284c7",
-      secondary: "#0b1b2b",
-      accent: "#f472b6",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "bright",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "Are you accepting new patients?",
-      "How do I book an appointment?",
-      "What services do you provide?",
-      "What should I expect at a first appointment?",
-    ],
-    schemaType: "Dentist",
-    servicePageExamples: [
-      "Dental Check-Ups",
-      "Dental Hygiene",
-      "Cosmetic Dentistry",
-      "Dental Implants",
-      "Orthodontics",
-    ],
-    objections: [
-      "How much does treatment cost?",
-      "How do I book?",
-      "What happens at the first appointment?",
-    ],
-    contentAngles: [
-      "Preparing for a dental appointment",
-      "Understanding different dental services",
-      "Questions to ask before treatment",
-    ],
-    visualProof: "medium",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "restaurant",
-    label: "Restaurant & Food",
-    aliases: [
-      "restaurant",
-      "restaurants",
-      "cafe",
-      "coffee shop",
-      "coffee",
-      "bakery",
-      "food",
-      "catering",
-      "bar",
-      "takeaway",
-      "takeout",
-      "pizzeria",
-      "pizza",
-      "diner",
-      "bistro",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "menu",
-        "Menu",
-        "menu",
-        "Provides menu information.",
-        100,
-      ),
-      page(
-        "visit",
-        "Visit Us",
-        "visit",
-        "Combines visit information.",
-        90,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Adds business personality and context.",
-        65,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides inquiry information.",
-        70,
-      ),
-    ],
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "visit",
-    ctaLabels: {
-      primary: "Book a table",
-      secondary: "View the menu",
-    },
-    terminology: [
-      "menu",
-      "reservations",
-      "opening hours",
-      "takeout",
-      "catering",
-      "private events",
-    ],
-    trust: [
-      "Menu information",
-      "Opening hours",
-      "Dietary information",
-      "Location",
-      "Booking information",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "restaurant near me",
-      patterns: [
-        "restaurant",
-        "cafe",
-        "coffee shop",
-        "bakery",
-        "catering",
-      ],
-      localIntent: true,
-      servicePageStrategy: "moderate",
-    },
-    visual: {
-      primary: "#b91c1c",
-      secondary: "#1c0a0a",
-      accent: "#f5d0a9",
-      font: "serif",
-      backdrop: "none",
-      style: "editorial",
-      density: "airy",
-      radius: "soft",
-      imageTreatment: "cinematic",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "Do you take reservations?",
-      "Where are you located?",
-      "What are your opening hours?",
-      "Do you accommodate dietary requirements?",
-    ],
-    schemaType: "Restaurant",
-    servicePageExamples: [
-      "Menu",
-      "Catering",
-      "Private Events",
-      "Reservations",
-    ],
-    objections: [
-      "What is on the menu?",
-      "Do I need a reservation?",
-      "Where are you located?",
-    ],
-    contentAngles: [
-      "What to expect when visiting",
-      "How reservations work",
-      "Menu and dietary information",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "beauty",
-    label: "Beauty & Salon",
-    aliases: [
-      "beauty",
-      "salon",
-      "hair salon",
-      "hairdresser",
-      "barber",
-      "barbershop",
-      "nails",
-      "nail salon",
-      "spa",
-      "lashes",
-      "eyelashes",
-      "aesthetics",
-      "skincare",
-      "beautician",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Treatments",
-        "treatments",
-        "Explains available treatments.",
-        100,
-      ),
-      page(
-        "gallery",
-        "Our Work",
-        "our-work",
-        "Provides visual proof when genuine imagery exists.",
-        90,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides booking information.",
-        90,
-      ),
-    ],
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "book",
-    ctaLabels: {
-      primary: "Book now",
-      secondary: "See treatments",
-    },
-    terminology: [
-      "treatments",
-      "appointments",
-      "packages",
-      "aftercare",
-      "gift vouchers",
-    ],
-    trust: [
-      "Training",
-      "Hygiene",
-      "Patch testing",
-      "Aftercare",
-      "Treatment information",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "salon near me",
-      patterns: [
-        "salon",
-        "hair salon",
-        "barber",
-        "beauty salon",
-        "spa",
-        "nail salon",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#be185d",
-      secondary: "#1b0713",
-      accent: "#f5d0a9",
-      font: "serif",
-      backdrop: "none",
-      style: "luxury",
-      density: "airy",
-      radius: "rounded",
-      imageTreatment: "editorial",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How do I book?",
-      "How long does a treatment take?",
-      "Do you offer gift vouchers?",
-      "Do I need a patch test?",
-    ],
-    schemaType: "BeautySalon",
-    servicePageExamples: [
-      "Hair Services",
-      "Beauty Treatments",
-      "Nail Services",
-      "Spa Treatments",
-      "Aesthetics",
-    ],
-    objections: [
-      "How do I book?",
-      "What should I expect?",
-      "How long does the appointment take?",
-    ],
-    contentAngles: [
-      "Preparing for an appointment",
-      "Choosing the right treatment",
-      "Aftercare information",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "fitness",
-    label: "Fitness",
-    aliases: [
-      "gym",
-      "fitness",
-      "personal trainer",
-      "personal training",
-      "training",
-      "coach",
-      "coaching",
-      "yoga",
-      "pilates",
-      "crossfit",
-      "strength training",
-      "fitness studio",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Programs",
-        "programs",
-        "Explains memberships, classes and training options.",
-        100,
-      ),
-      page(
-        "schedule",
-        "Schedule",
-        "schedule",
-        "Useful when actual schedules are supplied.",
-        80,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Explains the training approach.",
-        65,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides an inquiry route.",
-        80,
-      ),
-    ],
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "lead",
-    ctaLabels: {
-      primary: "Get started",
-      secondary: "See programs",
-    },
-    terminology: [
-      "memberships",
-      "classes",
-      "personal training",
-      "programs",
-      "coaching",
-      "training plans",
-    ],
-    trust: [
-      "Coach credentials",
-      "Class information",
-      "Membership details",
-      "Facility information",
-      "Beginner guidance",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "gym near me",
-      patterns: [
-        "gym",
-        "fitness studio",
-        "personal trainer",
-        "yoga",
-        "pilates",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#ea580c",
-      secondary: "#0b0f19",
-      accent: "#22d3ee",
-      font: "sans",
-      backdrop: "none",
-      style: "energetic",
-      density: "dense",
-      radius: "soft",
-      imageTreatment: "cinematic",
-      motion: "energetic",
-    },
-    faqSeeds: [
-      "Do you offer beginner programs?",
-      "How do memberships work?",
-      "Can I book a class?",
-      "Do you offer personal training?",
-    ],
-    schemaType: "SportsActivityLocation",
-    servicePageExamples: [
-      "Memberships",
-      "Personal Training",
-      "Group Classes",
-      "Training Programs",
-    ],
-    objections: [
-      "Is this suitable for beginners?",
-      "How much does membership cost?",
-      "How do I get started?",
-    ],
-    contentAngles: [
-      "How to choose a training program",
-      "What beginners can expect",
-      "How memberships and classes work",
-    ],
-    visualProof: "high",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "professional_services",
-    label: "Professional Services",
-    aliases: [
-      "professional services",
-      "accountant",
-      "accounting",
-      "bookkeeper",
-      "bookkeeping",
-      "consultant",
-      "consulting",
-      "marketing agency",
-      "agency",
-      "it support",
-      "insurance",
-      "financial advisor",
-      "business consultant",
-      "business services",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Services",
-        "services",
-        "Makes the actual service scope understandable.",
-        100,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Adds business and process context.",
-        80,
-      ),
-      page(
-        "faq",
-        "FAQ",
-        "faq",
-        "Reduces uncertainty around engagement.",
-        60,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Creates a consultation route.",
-        100,
-      ),
-    ],
-    homeSections: PROFESSIONAL_HOME,
-    servicePageSections: PROFESSIONAL_SERVICE,
-    action: "consult",
-    ctaLabels: {
-      primary: "Book a call",
-      secondary: "See services",
-    },
-    terminology: [
-      "services",
-      "consultation",
-      "onboarding",
-      "strategy",
-      "reporting",
-      "support",
-    ],
-    trust: [
-      "Credentials",
-      "Experience",
-      "Process",
-      "Clear pricing",
-      "Direct communication",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "professional services near me",
-      patterns: [
-        "accountant",
-        "bookkeeper",
-        "consultant",
-        "business consultant",
-        "professional services",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#1d4ed8",
-      secondary: "#0b1220",
-      accent: "#22c55e",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "editorial",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "How does onboarding work?",
-      "How are fees structured?",
-      "Who will be my main contact?",
-      "How do I get started?",
-    ],
-    schemaType: "ProfessionalService",
-    servicePageExamples: [
-      "Consulting",
-      "Accounting",
-      "Bookkeeping",
-      "Business Support",
-      "Strategy",
-    ],
-    objections: [
-      "What will this cost?",
-      "How does the engagement work?",
-      "What happens after the first call?",
-    ],
-    contentAngles: [
-      "What to prepare for a consultation",
-      "How professional service engagements work",
-      "Questions to ask before hiring a consultant",
-    ],
-    visualProof: "medium",
-    urgency: "none",
-  }),
-
-  playbook({
-    slug: "home_services",
-    label: "Home Services",
-    aliases: [
-      "home service",
-      "home services",
-      "handyman",
-      "handyman services",
-      "pest control",
-      "pest",
-      "locksmith",
-      "flooring",
-      "flooring contractor",
-      "windows",
-      "window installation",
-      "fencing",
-      "fence",
-      "pressure washing",
-      "gutter cleaning",
-      "appliance repair",
-      "moving",
-      "movers",
-      "removals",
-    ],
-    pages: LOCAL_PAGES,
-    homeSections: TRADE_HOME,
-    servicePageSections: TRADE_SERVICE,
-    action: "quote",
-    ctaLabels: {
-      primary: "Get a quote",
-      secondary: "Call now",
-    },
-    terminology: [
-      "repairs",
-      "installations",
-      "maintenance",
-      "callouts",
-      "home services",
-    ],
-    trust: [
-      "Insurance",
-      "Service areas",
-      "Written estimates",
-      "Scheduling",
-      "Local service",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "home services near me",
-      patterns: [
-        "handyman",
-        "home services",
-        "pressure washing",
-        "pest control",
-        "home repair",
-      ],
-      localIntent: true,
-      servicePageStrategy: "strong",
-    },
-    visual: {
-      primary: "#2563eb",
-      secondary: "#0f172a",
-      accent: "#f59e0b",
-      font: "sans",
-      backdrop: "none",
-      style: "bold",
-      density: "balanced",
-      radius: "soft",
-      imageTreatment: "bright",
-      motion: "moderate",
-    },
-    faqSeeds: [
-      "How soon can you schedule service?",
-      "Is the estimate free?",
-      "What areas do you serve?",
-      "What should I expect during the visit?",
-    ],
-    schemaType: "HomeAndConstructionBusiness",
-    servicePageExamples: [
-      "Home Repairs",
-      "Maintenance",
-      "Installations",
-      "Pressure Washing",
-      "Handyman Services",
-    ],
-    objections: [
-      "How much will it cost?",
-      "How quickly can you come?",
-      "Do you serve my area?",
-    ],
-    contentAngles: [
-      "Preparing for a home-service visit",
-      "When to call a professional",
-      "How to compare service estimates",
-    ],
-    visualProof: "medium",
-    urgency: "situational",
-  }),
-
-  playbook({
-    slug: "local_business",
-    label: "Local Business",
-    aliases: [
-      "local business",
-      "small business",
-      "shop",
-      "store",
-      "retail",
-      "photography",
-      "photographer",
-      "pet",
-      "pet services",
-      "tutoring",
-      "education",
-      "events",
-      "event services",
-      "business",
-    ],
-    pages: [
-      HOME_PAGE,
-      page(
-        "services",
-        "Services",
-        "services",
-        "Explains the actual services or products.",
-        90,
-      ),
-      page(
-        "about",
-        "About",
-        "about",
-        "Explains the business.",
-        70,
-      ),
-      page(
-        "contact",
-        "Contact",
-        "contact",
-        "Provides a direct contact route.",
-        100,
-      ),
-      page(
-        "gallery",
-        "Gallery",
-        "gallery",
-        "Provides a visual destination when genuine imagery exists.",
-        60,
-      ),
-    ],
-    homeSections: VISUAL_HOME,
-    servicePageSections: VISUAL_SERVICE,
-    action: "lead",
-    ctaLabels: {
-      primary: "Get in touch",
-      secondary: "See what we do",
-    },
-    terminology: [
-      "services",
-      "products",
-      "how it works",
-      "getting started",
-      "contact",
-    ],
-    trust: [
-      "Local service",
-      "Business information",
-      "Availability",
-      "Clear communication",
-      "Customer support",
-    ],
-    seo: {
-      qualifier: "local",
-      intent: "near me",
-      patterns: [
-        "local business",
-        "services near me",
-        "local services",
-      ],
-      localIntent: true,
-      servicePageStrategy: "moderate",
-    },
-    visual: {
-      primary: "#4f46e5",
-      secondary: "#0f172a",
-      accent: "#f59e0b",
-      font: "sans",
-      backdrop: "none",
-      style: "clean",
-      density: "balanced",
-      radius: "rounded",
-      imageTreatment: "natural",
-      motion: "subtle",
-    },
-    faqSeeds: [
-      "Where are you located?",
-      "What services do you offer?",
-      "What are your hours?",
-      "How do I get started?",
-    ],
-    schemaType: "LocalBusiness",
-    servicePageExamples: [
-      "Services",
-      "Products",
-      "What We Do",
-      "Getting Started",
-    ],
-    objections: [
-      "Where are you located?",
-      "How do I contact you?",
-      "What exactly do you offer?",
-    ],
-    contentAngles: [
-      "How the business works",
-      "What new customers should know",
-      "How to get started",
-    ],
-    visualProof: "medium",
-    urgency: "none",
-  }),
-];
-
-/* -------------------------------------------------------------------------- */
-/* Immutable-ish exported library                                              */
-/* -------------------------------------------------------------------------- */
-
-export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] =
-  RAW_PLAYBOOKS.map((item) => ({
-    ...item,
-    aliases: [...item.aliases],
-    pages: item.pages.map((p) => ({ ...p })),
-    homeSections: [...item.homeSections],
-    servicePageSections: [
-      ...item.servicePageSections,
-    ],
-    terminology: [...item.terminology],
-    trust: [...item.trust],
-    faqSeeds: [...item.faqSeeds],
-    servicePageExamples: [
-      ...item.servicePageExamples,
-    ],
-    objections: [...item.objections],
-    contentAngles: [...item.contentAngles],
-    seo: {
-      ...item.seo,
-      patterns: item.seo.patterns
-        ? [...item.seo.patterns]
-        : [],
-    },
-    visual: { ...item.visual },
-    conversion: {
-      ...item.conversion,
-      secondaryActions: [
-        ...item.conversion.secondaryActions,
-      ],
-      placement: [
-        ...item.conversion.placement,
-      ],
-    },
-  }));
-
-export const GENERIC_PLAYBOOK: IndustryPlaybook =
-  INDUSTRY_PLAYBOOKS.find(
-    (item) => item.slug === "local_business",
-  ) ?? INDUSTRY_PLAYBOOKS[0]!;
-
-/* -------------------------------------------------------------------------- */
-/* Safe normalization                                                          */
-/* -------------------------------------------------------------------------- */
-
-function normalizeText(
-  value: string | null | undefined,
-): string {
-  if (typeof value !== "string") {
-    return "";
+    case "lead":
+    default:
+      return {
+        ...LEAD_CONVERSION,
+        secondaryActions: [
+          ...LEAD_CONVERSION.secondaryActions,
+        ],
+        placement: [
+          ...LEAD_CONVERSION.placement,
+        ],
+      };
   }
+}
 
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+/* -------------------------------------------------------------------------- */
+/* Utilities                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function clean(value: unknown): string {
+  return typeof value === "string"
+    ? value.trim()
+    : "";
+}
+
+function normalize(value: unknown): string {
+  return clean(value)
     .toLowerCase()
+    .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function tokenize(
-  value: string,
-): string[] {
-  const normalized = normalizeText(value);
-
-  if (!normalized) {
-    return [];
-  }
-
-  return normalized
-    .split(" ")
-    .filter(Boolean);
+function normalizedSlug(value: unknown): string {
+  return normalize(value).replace(/\s+/g, "-");
 }
 
 function uniqueStrings(
-  values: string[],
+  values: readonly unknown[],
 ): string[] {
-  const result: string[] = [];
   const seen = new Set<string>();
+  const output: string[] = [];
 
   for (const value of values) {
-    if (typeof value !== "string") {
-      continue;
-    }
+    const item = clean(value);
 
-    const clean = value.trim();
+    if (!item) continue;
 
-    if (!clean) {
-      continue;
-    }
+    const key = normalize(item);
 
-    const key = normalizeText(clean);
-
-    if (!key || seen.has(key)) {
-      continue;
-    }
+    if (seen.has(key)) continue;
 
     seen.add(key);
-    result.push(clean);
+    output.push(item);
   }
 
-  return result;
+  return output;
 }
 
-function containsPhrase(
-  haystack: string,
-  needle: string,
-): boolean {
-  if (!haystack || !needle) {
-    return false;
-  }
-
-  return (
-    haystack === needle ||
-    haystack.includes(` ${needle} `) ||
-    haystack.startsWith(`${needle} `) ||
-    haystack.endsWith(` ${needle}`)
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Matching                                                                    */
-/* -------------------------------------------------------------------------- */
-
-function scoreAlias(
-  haystack: string,
-  tokens: Set<string>,
-  alias: string,
-): number {
-  const normalizedAlias =
-    normalizeText(alias);
-
-  if (!normalizedAlias) {
-    return 0;
-  }
-
-  const aliasTokens =
-    tokenize(normalizedAlias);
-
-  if (!aliasTokens.length) {
-    return 0;
-  }
-
-  if (
-    containsPhrase(
-      haystack,
-      normalizedAlias,
-    )
-  ) {
-    return (
-      120 +
-      Math.min(
-        normalizedAlias.length,
-        60,
-      )
-    );
-  }
-
-  if (
-    aliasTokens.length === 1 &&
-    tokens.has(aliasTokens[0]!)
-  ) {
-    return (
-      55 +
-      Math.min(
-        normalizedAlias.length,
-        20,
-      )
-    );
-  }
-
-  if (aliasTokens.length > 1) {
-    let overlap = 0;
-
-    for (const token of aliasTokens) {
-      if (tokens.has(token)) {
-        overlap += 1;
-      }
-    }
-
-    const ratio =
-      overlap / aliasTokens.length;
-
-    if (ratio === 1) {
-      return (
-        90 +
-        Math.min(
-          normalizedAlias.length,
-          40,
-        )
-      );
-    }
-
-    if (ratio >= 0.66) {
-      return 45 + overlap * 12;
-    }
-
-    if (ratio >= 0.5) {
-      return 25 + overlap * 8;
-    }
-  }
-
-  return 0;
-}
-
-function scoreCandidate(
-  candidate: IndustryPlaybook,
-  haystack: string,
-  tokens: Set<string>,
-): {
-  score: number;
-  strongestAliasLength: number;
-} {
-  const aliases = uniqueStrings([
-    candidate.label,
-    candidate.slug.replace(
-      /_/g,
-      " ",
-    ),
-    ...candidate.aliases,
-  ]);
-
-  let score = 0;
-  let strongestAliasLength = 0;
-  let supportingHits = 0;
-
-  for (const alias of aliases) {
-    const aliasScore =
-      scoreAlias(
-        haystack,
-        tokens,
-        alias,
-      );
-
-    if (aliasScore > score) {
-      score = aliasScore;
-    }
-
-    if (aliasScore >= 45) {
-      supportingHits += 1;
-    }
-
-    if (aliasScore > 0) {
-      strongestAliasLength =
-        Math.max(
-          strongestAliasLength,
-          normalizeText(alias).length,
-        );
-    }
-  }
-
-  score += Math.min(
-    supportingHits * 4,
-    20,
-  );
-
-  if (
-    candidate.slug !==
-    "local_business"
-  ) {
-    score += 2;
-  }
-
+function clonePage(
+  page: IndustryPage,
+): IndustryPage {
   return {
-    score,
-    strongestAliasLength,
+    ...page,
+  };
+}
+
+function clonePages(
+  pages: readonly IndustryPage[],
+): IndustryPage[] {
+  return pages.map(clonePage);
+}
+
+function cloneConversion(
+  conversion: IndustryConversion,
+): IndustryConversion {
+  return {
+    ...conversion,
+    secondaryActions: [
+      ...conversion.secondaryActions,
+    ],
+    placement: [
+      ...conversion.placement,
+    ],
+  };
+}
+
+function clonePlaybook(
+  industry: IndustryPlaybook,
+): IndustryPlaybook {
+  return {
+    ...industry,
+    aliases: [
+      ...industry.aliases,
+    ],
+    pages: clonePages(industry.pages),
+    homeSections: [
+      ...industry.homeSections,
+    ],
+    servicePageSections: [
+      ...industry.servicePageSections,
+    ],
+    ctaLabels: {
+      ...industry.ctaLabels,
+    },
+    terminology: [
+      ...industry.terminology,
+    ],
+    trust: [
+      ...industry.trust,
+    ],
+    seo: {
+      ...industry.seo,
+      patterns: industry.seo.patterns
+        ? [...industry.seo.patterns]
+        : [],
+    },
+    visual: {
+      ...industry.visual,
+    },
+    faqSeeds: [
+      ...industry.faqSeeds,
+    ],
+    conversion: cloneConversion(
+      industry.conversion,
+    ),
+    servicePageExamples: [
+      ...industry.servicePageExamples,
+    ],
+    objections: [
+      ...industry.objections,
+    ],
+    contentAngles: [
+      ...industry.contentAngles,
+    ],
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* Primary industry detection                                                  */
+/* Industry factory                                                           */
 /* -------------------------------------------------------------------------- */
 
+type PlaybookOptions = {
+  slug: string;
+  label: string;
+  aliases: string[];
+  action?: PrimaryAction;
+  pages?: IndustryPage[];
+  homeSections?: string[];
+  servicePageSections?: string[];
+  ctaPrimary?: string;
+  ctaSecondary?: string;
+  terminology?: string[];
+  trust?: string[];
+  qualifier?: string;
+  intent?: string;
+  patterns?: string[];
+  localIntent?: boolean;
+  servicePageStrategy?: "strong" | "moderate" | "limited";
+  primary?: string;
+  secondary?: string;
+  accent?: string;
+  font?: string;
+  backdrop?: string;
+  style?: VisualStyle;
+  density?: "airy" | "balanced" | "dense";
+  radius?: "sharp" | "soft" | "rounded";
+  imageTreatment?:
+    | "natural"
+    | "editorial"
+    | "cinematic"
+    | "bright"
+    | "technical";
+  motion?: "subtle" | "moderate" | "energetic";
+  faqSeeds?: string[];
+  schemaType?: string;
+  servicePageExamples?: string[];
+  objections?: string[];
+  contentAngles?: string[];
+  visualProof?: "low" | "medium" | "high";
+  urgency?: "none" | "situational" | "high";
+};
+
+function createPlaybook(
+  options: PlaybookOptions,
+): IndustryPlaybook {
+  const action =
+    options.action ?? "lead";
+
+  const conversion =
+    conversionFor(action);
+
+  const pages =
+    options.pages?.length
+      ? clonePages(options.pages)
+      : [
+          clonePage(HOME_PAGE),
+          ...clonePages(LOCAL_PAGE_SET),
+        ];
+
+  return {
+    slug: options.slug,
+    label: options.label,
+    aliases: uniqueStrings([
+      options.label,
+      ...options.aliases,
+    ]),
+    pages,
+    homeSections: uniqueStrings(
+      options.homeSections ??
+        PROFESSIONAL_HOME,
+    ),
+    servicePageSections: uniqueStrings(
+      options.servicePageSections ??
+        PROFESSIONAL_SERVICE,
+    ),
+    action,
+    ctaLabels: {
+      primary:
+        options.ctaPrimary ??
+        "Get Started",
+      secondary:
+        options.ctaSecondary ??
+        "Learn More",
+    },
+    terminology: uniqueStrings(
+      options.terminology ?? [],
+    ),
+    trust: uniqueStrings(
+      options.trust ?? [],
+    ),
+    seo: {
+      qualifier:
+        options.qualifier ??
+        "",
+      intent:
+        options.intent ??
+        "commercial",
+      patterns: uniqueStrings(
+        options.patterns ?? [],
+      ),
+      localIntent:
+        options.localIntent ?? true,
+      servicePageStrategy:
+        options.servicePageStrategy ??
+        "strong",
+    },
+    visual: {
+      primary:
+        options.primary ??
+        "neutral",
+      secondary:
+        options.secondary ??
+        "surface",
+      accent:
+        options.accent ??
+        "accent",
+      font:
+        options.font ??
+        "modern sans",
+      backdrop:
+        options.backdrop ??
+        "soft",
+      style:
+        options.style ??
+        "clean",
+      density:
+        options.density ??
+        "balanced",
+      radius:
+        options.radius ??
+        "soft",
+      imageTreatment:
+        options.imageTreatment ??
+        "natural",
+      motion:
+        options.motion ??
+        "subtle",
+    },
+    faqSeeds: uniqueStrings(
+      options.faqSeeds ?? [],
+    ),
+    conversion,
+    schemaType:
+      options.schemaType ??
+      "LocalBusiness",
+    servicePageExamples:
+      uniqueStrings(
+        options.servicePageExamples ??
+          [],
+      ),
+    objections: uniqueStrings(
+      options.objections ?? [],
+    ),
+    contentAngles: uniqueStrings(
+      options.contentAngles ?? [],
+    ),
+    visualProof:
+      options.visualProof ??
+      "medium",
+    urgency:
+      options.urgency ??
+      "situational",
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Master industry library                                                    */
+/* -------------------------------------------------------------------------- */
+
+const GENERIC_PLAYBOOK =
+  createPlaybook({
+    slug: "local_business",
+    label: "Local Business",
+    aliases: [
+      "business",
+      "small business",
+      "local business",
+      "company",
+      "service business",
+    ],
+    action: "lead",
+    homeSections: PROFESSIONAL_HOME,
+    servicePageSections: PROFESSIONAL_SERVICE,
+    ctaPrimary: "Get Started",
+    ctaSecondary: "Learn More",
+    terminology: [
+      "services",
+      "solutions",
+      "local",
+      "customers",
+      "contact",
+      "consultation",
+    ],
+    trust: [
+      "clear information",
+      "easy contact",
+      "professional presentation",
+    ],
+    qualifier:
+      "local",
+    intent:
+      "commercial local",
+    patterns: [
+      "[service] near me",
+      "[service] in [city]",
+      "[business type] near me",
+      "[service] [city]",
+    ],
+    localIntent: true,
+    servicePageStrategy: "strong",
+    primary: "neutral",
+    secondary: "surface",
+    accent: "brand",
+    font: "modern sans",
+    backdrop: "soft",
+    style: "clean",
+    density: "balanced",
+    radius: "soft",
+    imageTreatment: "natural",
+    motion: "subtle",
+    faqSeeds: [
+      "What services do you offer?",
+      "How can I get started?",
+      "How do I contact you?",
+      "What areas do you serve?",
+    ],
+    schemaType: "LocalBusiness",
+    servicePageExamples: [
+      "Primary Service",
+      "Featured Service",
+      "Service Area",
+    ],
+    objections: [
+      "What does the process look like?",
+      "How do I know which service is right for me?",
+      "How do I get started?",
+    ],
+    contentAngles: [
+      "services",
+      "process",
+      "service area",
+      "frequently asked questions",
+    ],
+    visualProof: "medium",
+    urgency: "situational",
+  });
+
+const PLUMBER = createPlaybook({
+  slug: "plumber",
+  label: "Plumber",
+  aliases: [
+    "plumbing",
+    "plumbers",
+    "plumbing company",
+    "plumbing contractor",
+  ],
+  action: "call",
+  homeSections: URGENT_TRADE_HOME,
+  servicePageSections: URGENT_TRADE_SERVICE,
+  ctaPrimary: "Request Service",
+  ctaSecondary: "View Services",
+  terminology: [
+    "plumbing",
+    "repairs",
+    "leaks",
+    "drains",
+    "water heaters",
+    "fixtures",
+  ],
+  trust: [
+    "clear service information",
+    "easy contact",
+    "service-area clarity",
+  ],
+  qualifier: "plumbing",
+  intent: "local plumbing service",
+  patterns: [
+    "plumber near me",
+    "plumbing repair [city]",
+    "emergency plumber [city]",
+    "water heater repair [city]",
+    "drain cleaning [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "deep blue",
+  secondary: "cool gray",
+  accent: "high visibility",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "technical",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "technical",
+  motion: "moderate",
+  faqSeeds: [
+    "What plumbing services do you offer?",
+    "How do I request plumbing service?",
+    "What areas do you serve?",
+    "How should I handle a water leak?",
+    "Do you work on water heaters?",
+  ],
+  schemaType: "Plumber",
+  servicePageExamples: [
+    "Plumbing Repair",
+    "Drain Cleaning",
+    "Water Heater Service",
+    "Leak Detection",
+  ],
+  objections: [
+    "How quickly can I request service?",
+    "What should I do before the plumber arrives?",
+    "Which plumbing service do I need?",
+  ],
+  contentAngles: [
+    "common plumbing problems",
+    "service areas",
+    "repair guidance",
+    "maintenance",
+  ],
+  visualProof: "medium",
+  urgency: "high",
+});
+
+const ELECTRICIAN = createPlaybook({
+  slug: "electrician",
+  label: "Electrician",
+  aliases: [
+    "electrical",
+    "electricians",
+    "electrical contractor",
+    "electrical company",
+  ],
+  action: "quote",
+  homeSections: URGENT_TRADE_HOME,
+  servicePageSections: URGENT_TRADE_SERVICE,
+  ctaPrimary: "Request a Quote",
+  ctaSecondary: "View Electrical Services",
+  terminology: [
+    "electrical",
+    "wiring",
+    "lighting",
+    "panels",
+    "outlets",
+    "installations",
+  ],
+  trust: [
+    "clear service information",
+    "professional presentation",
+    "easy quote request",
+  ],
+  qualifier: "electrical",
+  intent: "local electrical service",
+  patterns: [
+    "electrician near me",
+    "electrician [city]",
+    "electrical repair [city]",
+    "electrical contractor [city]",
+    "panel upgrade [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "charcoal",
+  secondary: "warm white",
+  accent: "electric accent",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "technical",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "technical",
+  motion: "moderate",
+  faqSeeds: [
+    "What electrical services do you offer?",
+    "How can I request a quote?",
+    "What areas do you serve?",
+    "What electrical projects do you handle?",
+    "When should I call an electrician?",
+  ],
+  schemaType: "Electrician",
+  servicePageExamples: [
+    "Electrical Repair",
+    "Lighting Installation",
+    "Panel Services",
+    "Outlet and Switch Services",
+  ],
+  objections: [
+    "How do I know which electrical service I need?",
+    "How can I request a quote?",
+    "What information should I provide?",
+  ],
+  contentAngles: [
+    "electrical safety",
+    "common electrical problems",
+    "lighting",
+    "upgrades",
+    "service areas",
+  ],
+  visualProof: "medium",
+  urgency: "high",
+});
+
+const HVAC = createPlaybook({
+  slug: "hvac",
+  label: "HVAC",
+  aliases: [
+    "heating and cooling",
+    "air conditioning",
+    "air conditioner",
+    "ac company",
+    "heating company",
+    "hvac contractor",
+  ],
+  action: "call",
+  homeSections: URGENT_TRADE_HOME,
+  servicePageSections: URGENT_TRADE_SERVICE,
+  ctaPrimary: "Request HVAC Service",
+  ctaSecondary: "Explore Services",
+  terminology: [
+    "heating",
+    "cooling",
+    "air conditioning",
+    "maintenance",
+    "indoor comfort",
+    "HVAC",
+  ],
+  trust: [
+    "service clarity",
+    "easy contact",
+    "clear service areas",
+  ],
+  qualifier: "HVAC",
+  intent: "local heating and cooling service",
+  patterns: [
+    "hvac near me",
+    "ac repair [city]",
+    "heating repair [city]",
+    "hvac service [city]",
+    "air conditioning repair [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "cool blue",
+  secondary: "light neutral",
+  accent: "comfort accent",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "technical",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "technical",
+  motion: "moderate",
+  faqSeeds: [
+    "What HVAC services do you offer?",
+    "How can I request service?",
+    "What areas do you serve?",
+    "How often should HVAC equipment be maintained?",
+    "What are common heating and cooling issues?",
+  ],
+  schemaType: "HVACBusiness",
+  servicePageExamples: [
+    "AC Repair",
+    "Heating Service",
+    "HVAC Maintenance",
+    "Indoor Air Services",
+  ],
+  objections: [
+    "How do I know whether I need repair or maintenance?",
+    "How can I request service?",
+    "What information should I provide?",
+  ],
+  contentAngles: [
+    "seasonal maintenance",
+    "comfort",
+    "energy efficiency",
+    "common HVAC issues",
+  ],
+  visualProof: "medium",
+  urgency: "high",
+});
+
+const CLEANING = createPlaybook({
+  slug: "cleaning",
+  label: "Cleaning Service",
+  aliases: [
+    "cleaning",
+    "cleaners",
+    "cleaning company",
+    "house cleaning",
+    "commercial cleaning",
+    "maid service",
+  ],
+  action: "quote",
+  homeSections: CONSIDERED_HOME,
+  servicePageSections: CONSIDERED_SERVICE,
+  ctaPrimary: "Get a Cleaning Quote",
+  ctaSecondary: "View Cleaning Services",
+  terminology: [
+    "cleaning",
+    "home cleaning",
+    "commercial cleaning",
+    "deep cleaning",
+    "recurring cleaning",
+  ],
+  trust: [
+    "clear service descriptions",
+    "before-and-after proof when provided",
+    "easy quote request",
+  ],
+  qualifier: "cleaning",
+  intent: "local cleaning service",
+  patterns: [
+    "cleaning service near me",
+    "house cleaning [city]",
+    "commercial cleaning [city]",
+    "deep cleaning [city]",
+    "maid service [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "bright neutral",
+  secondary: "soft surface",
+  accent: "fresh accent",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "clean",
+  density: "airy",
+  radius: "rounded",
+  imageTreatment: "bright",
+  motion: "subtle",
+  faqSeeds: [
+    "What cleaning services do you offer?",
+    "How can I request a quote?",
+    "What areas do you serve?",
+    "Do you offer recurring cleaning?",
+    "What should I expect during the cleaning process?",
+  ],
+  schemaType: "LocalBusiness",
+  servicePageExamples: [
+    "Residential Cleaning",
+    "Deep Cleaning",
+    "Commercial Cleaning",
+    "Recurring Cleaning",
+  ],
+  objections: [
+    "How does the quote process work?",
+    "What is included?",
+    "How often can I schedule service?",
+  ],
+  contentAngles: [
+    "cleaning checklists",
+    "deep cleaning",
+    "recurring service",
+    "service areas",
+  ],
+  visualProof: "high",
+  urgency: "situational",
+});
+
+const LANDSCAPING = createPlaybook({
+  slug: "landscaping",
+  label: "Landscaping",
+  aliases: [
+    "landscaper",
+    "landscapers",
+    "lawn care",
+    "lawn service",
+    "landscape company",
+    "yard service",
+  ],
+  action: "quote",
+  homeSections: CONSIDERED_HOME,
+  servicePageSections: CONSIDERED_SERVICE,
+  ctaPrimary: "Request a Landscape Quote",
+  ctaSecondary: "View Landscaping Services",
+  terminology: [
+    "landscaping",
+    "lawn care",
+    "maintenance",
+    "planting",
+    "hardscaping",
+    "outdoor spaces",
+  ],
+  trust: [
+    "project photography when supplied",
+    "service-area clarity",
+    "clear quote path",
+  ],
+  qualifier: "landscaping",
+  intent: "local landscaping service",
+  patterns: [
+    "landscaper near me",
+    "landscaping [city]",
+    "lawn care [city]",
+    "lawn service [city]",
+    "landscape design [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "forest",
+  secondary: "earth",
+  accent: "natural accent",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "natural",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "natural",
+  motion: "subtle",
+  faqSeeds: [
+    "What landscaping services do you offer?",
+    "How can I request a quote?",
+    "What areas do you serve?",
+    "Do you provide ongoing lawn care?",
+    "Can you help plan an outdoor space?",
+  ],
+  schemaType: "LandscapingBusiness",
+  servicePageExamples: [
+    "Lawn Care",
+    "Landscape Design",
+    "Planting",
+    "Hardscaping",
+  ],
+  objections: [
+    "How does the quote process work?",
+    "Which services do I need?",
+    "Do you provide ongoing maintenance?",
+  ],
+  contentAngles: [
+    "seasonal lawn care",
+    "outdoor design",
+    "maintenance",
+    "project inspiration",
+  ],
+  visualProof: "high",
+  urgency: "situational",
+});
+
+const BARBER = createPlaybook({
+  slug: "barber",
+  label: "Barber",
+  aliases: [
+    "barbershop",
+    "barber shop",
+    "barbering",
+    "hair barber",
+  ],
+  action: "book",
+  homeSections: VISUAL_HOME,
+  servicePageSections: VISUAL_SERVICE,
+  ctaPrimary: "Book an Appointment",
+  ctaSecondary: "View Services",
+  terminology: [
+    "cuts",
+    "fades",
+    "beard services",
+    "appointments",
+    "barbering",
+    "grooming",
+  ],
+  trust: [
+    "real portfolio imagery when supplied",
+    "clear service menu",
+    "simple booking",
+  ],
+  qualifier: "barber",
+  intent: "local barber appointment",
+  patterns: [
+    "barber near me",
+    "barbershop [city]",
+    "fade haircut [city]",
+    "barber [city]",
+    "haircut [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "moderate",
+  primary: "charcoal",
+  secondary: "warm neutral",
+  accent: "brand accent",
+  font: "display sans",
+  backdrop: "dark",
+  style: "bold",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "cinematic",
+  motion: "moderate",
+  faqSeeds: [
+    "What services do you offer?",
+    "How can I book an appointment?",
+    "What should I choose for my next cut?",
+    "Where are you located?",
+  ],
+  schemaType: "BarberShop",
+  servicePageExamples: [
+    "Haircuts",
+    "Fades",
+    "Beard Services",
+    "Grooming",
+  ],
+  objections: [
+    "How do I book?",
+    "Which service should I choose?",
+    "What should I expect?",
+  ],
+  contentAngles: [
+    "style inspiration",
+    "haircut education",
+    "grooming",
+    "service menu",
+  ],
+  visualProof: "high",
+  urgency: "none",
+});
+
+const SALON = createPlaybook({
+  slug: "salon",
+  label: "Salon",
+  aliases: [
+    "hair salon",
+    "beauty salon",
+    "salon",
+    "stylist",
+    "hair stylist",
+  ],
+  action: "book",
+  homeSections: VISUAL_HOME,
+  servicePageSections: VISUAL_SERVICE,
+  ctaPrimary: "Book an Appointment",
+  ctaSecondary: "Explore Services",
+  terminology: [
+    "hair",
+    "styling",
+    "color",
+    "cuts",
+    "beauty",
+    "appointments",
+  ],
+  trust: [
+    "real portfolio imagery when supplied",
+    "clear service menu",
+    "simple booking",
+  ],
+  qualifier: "salon",
+  intent: "local salon appointment",
+  patterns: [
+    "hair salon near me",
+    "hair stylist [city]",
+    "salon [city]",
+    "hair color [city]",
+    "beauty salon [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "moderate",
+  primary: "warm neutral",
+  secondary: "soft surface",
+  accent: "brand accent",
+  font: "elegant sans",
+  backdrop: "soft",
+  style: "luxury",
+  density: "airy",
+  radius: "rounded",
+  imageTreatment: "editorial",
+  motion: "subtle",
+  faqSeeds: [
+    "What services do you offer?",
+    "How can I book?",
+    "How should I prepare for my appointment?",
+    "Where are you located?",
+  ],
+  schemaType: "HairSalon",
+  servicePageExamples: [
+    "Haircuts",
+    "Color",
+    "Styling",
+    "Treatments",
+  ],
+  objections: [
+    "Which service should I book?",
+    "How long does an appointment take?",
+    "How do I prepare?",
+  ],
+  contentAngles: [
+    "style inspiration",
+    "hair care",
+    "service education",
+    "appointment preparation",
+  ],
+  visualProof: "high",
+  urgency: "none",
+});
+
+const AUTO_DETAILING = createPlaybook({
+  slug: "auto_detailing",
+  label: "Auto Detailing",
+  aliases: [
+    "auto detailer",
+    "car detailing",
+    "auto detailing",
+    "detailing service",
+    "mobile detailing",
+  ],
+  action: "quote",
+  homeSections: VISUAL_HOME,
+  servicePageSections: VISUAL_SERVICE,
+  ctaPrimary: "Request a Detailing Quote",
+  ctaSecondary: "View Detailing Services",
+  terminology: [
+    "detailing",
+    "paint care",
+    "interior cleaning",
+    "exterior detailing",
+    "vehicle care",
+  ],
+  trust: [
+    "real vehicle photography when supplied",
+    "service clarity",
+    "quote path",
+  ],
+  qualifier: "auto detailing",
+  intent: "local auto detailing service",
+  patterns: [
+    "car detailing near me",
+    "auto detailing [city]",
+    "mobile detailing [city]",
+    "car detailer [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "black",
+  secondary: "graphite",
+  accent: "high contrast",
+  font: "modern sans",
+  backdrop: "dark",
+  style: "bold",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "cinematic",
+  motion: "moderate",
+  faqSeeds: [
+    "What detailing services do you offer?",
+    "How can I request a quote?",
+    "Do you offer mobile service?",
+    "What areas do you serve?",
+  ],
+  schemaType: "LocalBusiness",
+  servicePageExamples: [
+    "Interior Detailing",
+    "Exterior Detailing",
+    "Paint Care",
+    "Full Detail",
+  ],
+  objections: [
+    "Which package or service do I need?",
+    "How does the quote work?",
+    "Do you come to the customer?",
+  ],
+  contentAngles: [
+    "vehicle care",
+    "before-and-after imagery",
+    "detailing education",
+    "maintenance",
+  ],
+  visualProof: "high",
+  urgency: "none",
+});
+
+const ROOFER = createPlaybook({
+  slug: "roofer",
+  label: "Roofing",
+  aliases: [
+    "roofer",
+    "roofing company",
+    "roofing contractor",
+    "roof repair",
+  ],
+  action: "quote",
+  homeSections: URGENT_TRADE_HOME,
+  servicePageSections: URGENT_TRADE_SERVICE,
+  ctaPrimary: "Request a Roofing Quote",
+  ctaSecondary: "View Roofing Services",
+  terminology: [
+    "roofing",
+    "roof repair",
+    "roof replacement",
+    "inspection",
+    "roof maintenance",
+  ],
+  trust: [
+    "real project photography when supplied",
+    "clear service information",
+    "quote path",
+  ],
+  qualifier: "roofing",
+  intent: "local roofing service",
+  patterns: [
+    "roofer near me",
+    "roof repair [city]",
+    "roof replacement [city]",
+    "roofing contractor [city]",
+    "roof inspection [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "slate",
+  secondary: "warm neutral",
+  accent: "high visibility",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "technical",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "technical",
+  motion: "moderate",
+  faqSeeds: [
+    "What roofing services do you offer?",
+    "How can I request an estimate?",
+    "What areas do you serve?",
+    "When should a roof be inspected?",
+  ],
+  schemaType: "RoofingContractor",
+  servicePageExamples: [
+    "Roof Repair",
+    "Roof Replacement",
+    "Roof Inspection",
+    "Roof Maintenance",
+  ],
+  objections: [
+    "How do I know if my roof needs repair?",
+    "How does the estimate process work?",
+    "What information should I provide?",
+  ],
+  contentAngles: [
+    "roof maintenance",
+    "storm preparation",
+    "roof inspection",
+    "repair education",
+  ],
+  visualProof: "high",
+  urgency: "situational",
+});
+
+const PAINTER = createPlaybook({
+  slug: "painter",
+  label: "Painting Contractor",
+  aliases: [
+    "painter",
+    "painting company",
+    "painting contractor",
+    "house painter",
+  ],
+  action: "quote",
+  homeSections: CONSIDERED_HOME,
+  servicePageSections: CONSIDERED_SERVICE,
+  ctaPrimary: "Request a Painting Quote",
+  ctaSecondary: "View Painting Services",
+  terminology: [
+    "painting",
+    "interior painting",
+    "exterior painting",
+    "color",
+    "surface preparation",
+  ],
+  trust: [
+    "real project photography when supplied",
+    "clear project information",
+    "simple quote path",
+  ],
+  qualifier: "painting",
+  intent: "local painting service",
+  patterns: [
+    "painter near me",
+    "house painter [city]",
+    "painting contractor [city]",
+    "interior painter [city]",
+    "exterior painter [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "warm white",
+  secondary: "neutral",
+  accent: "brand accent",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "clean",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "bright",
+  motion: "subtle",
+  faqSeeds: [
+    "What painting services do you offer?",
+    "How can I request a quote?",
+    "Do you handle interior and exterior projects?",
+    "What areas do you serve?",
+  ],
+  schemaType: "HousePainter",
+  servicePageExamples: [
+    "Interior Painting",
+    "Exterior Painting",
+    "Cabinet Painting",
+    "Surface Preparation",
+  ],
+  objections: [
+    "How does the quote work?",
+    "Which service do I need?",
+    "How should I prepare the space?",
+  ],
+  contentAngles: [
+    "color selection",
+    "surface preparation",
+    "project planning",
+    "before-and-after proof",
+  ],
+  visualProof: "high",
+  urgency: "none",
+});
+
+const PRESSURE_WASHING = createPlaybook({
+  slug: "pressure_washing",
+  label: "Pressure Washing",
+  aliases: [
+    "pressure washing",
+    "power washing",
+    "power washer",
+    "pressure washer",
+  ],
+  action: "quote",
+  homeSections: CONSIDERED_HOME,
+  servicePageSections: CONSIDERED_SERVICE,
+  ctaPrimary: "Request a Quote",
+  ctaSecondary: "View Services",
+  terminology: [
+    "pressure washing",
+    "power washing",
+    "driveways",
+    "siding",
+    "decks",
+    "exterior cleaning",
+  ],
+  trust: [
+    "real project imagery when supplied",
+    "clear service descriptions",
+    "easy quote request",
+  ],
+  qualifier: "pressure washing",
+  intent: "local pressure washing service",
+  patterns: [
+    "pressure washing near me",
+    "power washing [city]",
+    "pressure washing [city]",
+    "driveway cleaning [city]",
+    "house washing [city]",
+  ],
+  localIntent: true,
+  servicePageStrategy: "strong",
+  primary: "deep blue",
+  secondary: "clean neutral",
+  accent: "fresh accent",
+  font: "modern sans",
+  backdrop: "soft",
+  style: "energetic",
+  density: "balanced",
+  radius: "soft",
+  imageTreatment: "bright",
+  motion: "moderate",
+  faqSeeds: [
+    "What pressure washing services do you offer?",
+    "How can I request a quote?",
+    "What areas do you serve?",
+    "Can you clean driveways and siding?",
+  ],
+  schemaType: "LocalBusiness",
+  servicePageExamples: [
+    "House Washing",
+    "Driveway Cleaning",
+    "Deck Cleaning",
+    "Exterior Cleaning",
+  ],
+  objections: [
+    "Which surfaces can be cleaned?",
+    "How does the quote process work?",
+    "What should I prepare?",
+  ],
+  contentAngles: [
+    "exterior maintenance",
+    "surface care",
+    "before-and-after proof",
+    "seasonal cleaning",
+  ],
+  visualProof: "high",
+  urgency: "none",
+});
+
+/* -------------------------------------------------------------------------- */
+/* Master registry                                                            */
+/* -------------------------------------------------------------------------- */
+
+export const INDUSTRY_PLAYBOOKS: IndustryPlaybook[] = [
+  GENERIC_PLAYBOOK,
+  PLUMBER,
+  ELECTRICIAN,
+  HVAC,
+  CLEANING,
+  LANDSCAPING,
+  BARBER,
+  SALON,
+  AUTO_DETAILING,
+  ROOFER,
+  PAINTER,
+  PRESSURE_WASHING,
+];
+
+/* -------------------------------------------------------------------------- */
+/* Detection                                                                  */
+/* -------------------------------------------------------------------------- */
+
+type IndustryMatch = {
+  playbook: IndustryPlaybook;
+  score: number;
+};
+
+function tokenSet(
+  input: string,
+): Set<string> {
+  return new Set(
+    normalize(input)
+      .split(" ")
+      .filter(Boolean),
+  );
+}
+
+function scoreAlias(
+  inputTokens: Set<string>,
+  alias: string,
+): number {
+  const aliasTokens =
+    tokenSet(alias);
+
+  if (!aliasTokens.size) {
+    return 0;
+  }
+
+  let matches = 0;
+
+  for (const token of aliasTokens) {
+    if (inputTokens.has(token)) {
+      matches += 1;
+    }
+  }
+
+  const coverage =
+    matches /
+    aliasTokens.size;
+
+  if (
+    normalize(alias).length >= 5 &&
+    normalize(
+      Array.from(inputTokens).join(" "),
+    ).includes(
+      normalize(alias),
+    )
+  ) {
+    return Math.max(
+      coverage,
+      0.95,
+    );
+  }
+
+  return coverage;
+}
+
+function rankIndustry(
+  input: string,
+  industry: IndustryPlaybook,
+): number {
+  const normalized =
+    normalize(input);
+
+  if (!normalized) {
+    return 0;
+  }
+
+  const tokens =
+    tokenSet(input);
+
+  let score = 0;
+
+  for (const alias of industry.aliases) {
+    const aliasScore =
+      scoreAlias(
+        tokens,
+        alias,
+      );
+
+    score = Math.max(
+      score,
+      aliasScore,
+    );
+  }
+
+  for (const pattern of industry.seo.patterns ?? []) {
+    const patternTokens =
+      normalize(pattern)
+        .split(" ")
+        .filter(
+          (token) =>
+            token !== "near" &&
+            token !== "me" &&
+            token !== "in",
+        );
+
+    if (!patternTokens.length) {
+      continue;
+    }
+
+    const matched =
+      patternTokens.filter(
+        (token) =>
+          tokens.has(token),
+      ).length;
+
+    score = Math.max(
+      score,
+      matched /
+        patternTokens.length *
+        0.85,
+    );
+  }
+
+  if (
+    normalized.includes(
+      normalize(industry.label),
+    )
+  ) {
+    score = Math.max(
+      score,
+      1,
+    );
+  }
+
+  return Math.min(
+    1,
+    score,
+  );
+}
+
+/**
+ * Returns the strongest industry match.
+ */
+export function matchIndustry(
+  ...hints: (
+    | string
+    | null
+    | undefined
+  )[]
+): IndustryMatch {
+  const input =
+    hints
+      .map(clean)
+      .filter(Boolean)
+      .join(" ");
+
+  let best: IndustryMatch = {
+    playbook:
+      GENERIC_PLAYBOOK,
+    score: 0,
+  };
+
+  for (const industry of INDUSTRY_PLAYBOOKS) {
+    if (
+      industry.slug ===
+      "local_business"
+    ) {
+      continue;
+    }
+
+    const score =
+      rankIndustry(
+        input,
+        industry,
+      );
+
+    if (
+      score >
+      best.score
+    ) {
+      best = {
+        playbook:
+          industry,
+        score,
+      };
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Returns an industry playbook.
+ *
+ * The generic fallback is used when the request is too vague.
+ */
 export function playbookFor(
   ...hints: (
     | string
@@ -2966,448 +1878,149 @@ export function playbookFor(
     | undefined
   )[]
 ): IndustryPlaybook {
-  const usable =
-    hints
-      .filter(
-        (
-          hint,
-        ): hint is string =>
-          typeof hint === "string" &&
-          Boolean(hint.trim()),
-      )
-      .map(normalizeText)
-      .filter(Boolean);
-
-  if (!usable.length) {
-    return GENERIC_PLAYBOOK;
-  }
-
-  const haystack =
-    usable.join(" ");
-
-  const tokens =
-    new Set(
-      tokenize(haystack),
+  const match =
+    matchIndustry(
+      ...hints,
     );
 
-  let best:
-    | {
-        playbook: IndustryPlaybook;
-        score: number;
-        aliasLength: number;
-      }
-    | undefined;
-
-  for (
-    const candidate of INDUSTRY_PLAYBOOKS
+  if (
+    match.score <
+    0.45
   ) {
-    const result =
-      scoreCandidate(
-        candidate,
-        haystack,
-        tokens,
-      );
-
-    if (result.score <= 0) {
-      continue;
-    }
-
-    if (
-      !best ||
-      result.score > best.score ||
-      (
-        result.score === best.score &&
-        result.strongestAliasLength >
-          best.aliasLength
-      ) ||
-      (
-        result.score === best.score &&
-        result.strongestAliasLength ===
-          best.aliasLength &&
-        candidate.slug <
-          best.playbook.slug
-      )
-    ) {
-      best = {
-        playbook: candidate,
-        score: result.score,
-        aliasLength:
-          result.strongestAliasLength,
-      };
-    }
+    return clonePlaybook(
+      GENERIC_PLAYBOOK,
+    );
   }
 
-  return (
-    best?.playbook ??
-    GENERIC_PLAYBOOK
+  return clonePlaybook(
+    match.playbook,
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Confidence                                                                  */
-/* -------------------------------------------------------------------------- */
-
-export function industryConfidence(
-  ...hints: (
-    | string
-    | null
-    | undefined
-  )[]
-): "high" | "medium" | "low" {
-  const usable =
-    hints.filter(
-      (
-        hint,
-      ): hint is string =>
-        typeof hint === "string" &&
-        Boolean(hint.trim()),
-    );
-
-  if (!usable.length) {
-    return "low";
-  }
-
-  const haystack =
-    usable
-      .map(normalizeText)
-      .filter(Boolean)
-      .join(" ");
-
-  if (!haystack) {
-    return "low";
-  }
-
-  const tokens =
-    new Set(
-      tokenize(haystack),
-    );
-
-  const best =
-    playbookFor(...usable);
-
-  if (
-    best ===
-    GENERIC_PLAYBOOK
-  ) {
-    return "low";
-  }
-
-  const result =
-    scoreCandidate(
-      best,
-      haystack,
-      tokens,
-    );
-
-  if (result.score >= 120) {
-    return "high";
-  }
-
-  if (result.score >= 60) {
-    return "medium";
-  }
-
-  return "low";
-}
-
-/* -------------------------------------------------------------------------- */
-/* Detection helpers                                                           */
-/* -------------------------------------------------------------------------- */
-
-export function mentionsIndustry(
-  text: string,
-): boolean {
-  if (
-    typeof text !== "string" ||
-    !text.trim()
-  ) {
-    return false;
-  }
-
-  return (
-    playbookFor(text) !==
-    GENERIC_PLAYBOOK
-  );
-}
-
-export function detectConfidentIndustry(
+/**
+ * Backward-compatible alias used by older builder integrations.
+ */
+export function getIndustryPlaybook(
   ...hints: (
     | string
     | null
     | undefined
   )[]
 ): IndustryPlaybook {
-  const detected =
-    playbookFor(...hints);
-
-  if (
-    detected ===
-    GENERIC_PLAYBOOK
-  ) {
-    return GENERIC_PLAYBOOK;
-  }
-
-  const confidence =
-    industryConfidence(...hints);
-
-  return confidence === "low"
-    ? GENERIC_PLAYBOOK
-    : detected;
+  return playbookFor(
+    ...hints,
+  );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Ranked matches                                                              */
-/* -------------------------------------------------------------------------- */
-
-export function rankIndustryMatches(
+/**
+ * Returns a confidence level for the detected industry.
+ */
+export function industryConfidence(
   ...hints: (
     | string
     | null
     | undefined
   )[]
-): IndustryPlaybook[] {
-  const haystack =
+): "low" | "medium" | "high" {
+  const match =
+    matchIndustry(
+      ...hints,
+    );
+
+  if (
+    match.score >=
+    0.85
+  ) {
+    return "high";
+  }
+
+  if (
+    match.score >=
+    0.6
+  ) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+/**
+ * Returns the top ranked industry candidates.
+ */
+export function rankIndustries(
+  hints: (
+    | string
+    | null
+    | undefined
+  )[],
+  limit = 5,
+): IndustryMatch[] {
+  const input =
     hints
-      .filter(
-        (
-          hint,
-        ): hint is string =>
-          typeof hint === "string" &&
-          Boolean(hint.trim()),
-      )
-      .map(normalizeText)
+      .map(clean)
       .filter(Boolean)
       .join(" ");
 
-  if (!haystack) {
-    return [GENERIC_PLAYBOOK];
-  }
+  const matches =
+    INDUSTRY_PLAYBOOKS
+      .filter(
+        (industry) =>
+          industry.slug !==
+          "local_business",
+      )
+      .map(
+        (industry) => ({
+          playbook:
+            clonePlaybook(
+              industry,
+            ),
+          score:
+            rankIndustry(
+              input,
+              industry,
+            ),
+        }),
+      )
+      .sort(
+        (a, b) =>
+          b.score -
+          a.score,
+      );
 
-  const tokens =
-    new Set(
-      tokenize(haystack),
-    );
+  const safeLimit =
+    Number.isFinite(limit)
+      ? Math.max(
+          1,
+          Math.min(
+            Math.floor(limit),
+            20,
+          ),
+        )
+      : 5;
 
-  return INDUSTRY_PLAYBOOKS
-    .map((candidate) => {
-      const result =
-        scoreCandidate(
-          candidate,
-          haystack,
-          tokens,
-        );
-
-      return {
-        candidate,
-        score: result.score,
-        aliasLength:
-          result.strongestAliasLength,
-      };
-    })
-    .filter(
-      (item) =>
-        item.score > 0 ||
-        item.candidate ===
-          GENERIC_PLAYBOOK,
-    )
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        b.aliasLength -
-          a.aliasLength ||
-        a.candidate.slug.localeCompare(
-          b.candidate.slug,
-        ),
-    )
-    .map(
-      (item) =>
-        item.candidate,
-    );
+  return matches.slice(
+    0,
+    safeLimit,
+  );
 }
 
 /* -------------------------------------------------------------------------- */
-/* CTA helpers                                                                 */
+/* Strategy helpers                                                           */
 /* -------------------------------------------------------------------------- */
 
-export function primaryCta(
-  industry: IndustryPlaybook,
-): string {
-  return (
-    industry.ctaLabels.primary.trim() ||
-    "Get started"
-  );
-}
-
-export function secondaryCta(
-  industry: IndustryPlaybook,
-): string {
-  return (
-    industry.ctaLabels.secondary.trim() ||
-    "Learn more"
-  );
-}
-
-export function fallbackActions(
-  industry: IndustryPlaybook,
-): PrimaryAction[] {
-  return uniqueStrings([
-    industry.conversion.primaryAction,
-    ...industry.conversion.secondaryActions,
-  ]) as PrimaryAction[];
-}
-
-export function conversionPathFor(
-  industry: IndustryPlaybook,
-): PrimaryAction[] {
-  return fallbackActions(industry);
-}
-
-export function conversionPlacementFor(
-  industry: IndustryPlaybook,
-): ConversionPlacement[] {
-  return Array.from(
-    new Set(
-      industry.conversion.placement,
-    ),
-  );
-}
-
-export function shouldUseStickyMobileCta(
-  industry: IndustryPlaybook,
-): boolean {
-  return Boolean(
-    industry.conversion.stickyMobile,
-  );
-}
-
-export function shouldUseLeadForm(
-  industry: IndustryPlaybook,
-): boolean {
-  return Boolean(
-    industry.conversion.leadForm,
-  );
-}
-
-export function shouldPrioritizeVisualProof(
-  industry: IndustryPlaybook,
-): boolean {
-  return (
-    industry.visualProof === "high" ||
-    industry.visualProof === "medium"
-  );
-}
-
-export function canUseUrgencyMessaging(
-  industry: IndustryPlaybook,
-): boolean {
-  return industry.urgency !== "none";
-}
-
-/* -------------------------------------------------------------------------- */
-/* Page helpers                                                                */
-/* -------------------------------------------------------------------------- */
-
-function normalizedSlug(
-  value: string,
-): string {
-  return normalizeText(
-    value.replace(/^\/+/, ""),
-  ).replace(
-    /\s+/g,
-    "-",
-  );
-}
-
-export function recommendedPages(
+export function pagesFor(
   industry: IndustryPlaybook,
 ): IndustryPage[] {
-  const map =
-    new Map<string, IndustryPage>();
-
-  for (
-    const current of [
-      HOME_PAGE,
-      ...industry.pages,
-    ]
-  ) {
-    const key =
-      normalizedSlug(
-        current.slug ||
-          current.title,
-      ) || "home";
-
-    if (!map.has(key)) {
-      map.set(
-        key,
-        {
-          ...current,
-          priority:
-            current.priority ??
-            (key === "home"
-              ? 100
-              : 50),
-        },
-      );
-    }
-  }
-
-  return Array.from(
-    map.values(),
+  return clonePages(
+    industry.pages,
   ).sort(
     (a, b) =>
       (b.priority ?? 0) -
-        (a.priority ?? 0) ||
-      a.title.localeCompare(
-        b.title,
-      ),
+      (a.priority ?? 0),
   );
 }
 
-export function recommendedServiceNames(
-  industry: IndustryPlaybook,
-  limit = 8,
-): string[] {
-  const safeLimit =
-    safeLimitNumber(
-      limit,
-      8,
-      1,
-      20,
-    );
-
-  return uniqueStrings(
-    industry.servicePageExamples,
-  ).slice(
-    0,
-    safeLimit,
-  );
-}
-
-export function recommendedFaqs(
-  industry: IndustryPlaybook,
-  limit = 6,
-): string[] {
-  const safeLimit =
-    safeLimitNumber(
-      limit,
-      6,
-      1,
-      20,
-    );
-
-  return uniqueStrings(
-    industry.faqSeeds,
-  ).slice(
-    0,
-    safeLimit,
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Strategy helpers                                                            */
-/* -------------------------------------------------------------------------- */
-
-export function homeSectionStrategy(
+export function homeSectionsFor(
   industry: IndustryPlaybook,
 ): string[] {
   return uniqueStrings(
@@ -3415,7 +2028,7 @@ export function homeSectionStrategy(
   );
 }
 
-export function serviceSectionStrategy(
+export function servicePageSectionsFor(
   industry: IndustryPlaybook,
 ): string[] {
   return uniqueStrings(
@@ -3425,35 +2038,63 @@ export function serviceSectionStrategy(
 
 export function terminologyFor(
   industry: IndustryPlaybook,
-  limit = 12,
 ): string[] {
   return uniqueStrings(
     industry.terminology,
-  ).slice(
-    0,
-    safeLimitNumber(
-      limit,
-      12,
-      1,
-      30,
-    ),
   );
 }
 
-export function trustThemesFor(
+export function trustSignalsFor(
   industry: IndustryPlaybook,
-  limit = 8,
 ): string[] {
   return uniqueStrings(
     industry.trust,
+  );
+}
+
+export function faqSeedsFor(
+  industry: IndustryPlaybook,
+  limit = 8,
+): string[] {
+  const safeLimit =
+    Number.isFinite(limit)
+      ? Math.max(
+          1,
+          Math.min(
+            Math.floor(limit),
+            20,
+          ),
+        )
+      : 8;
+
+  return uniqueStrings(
+    industry.faqSeeds,
   ).slice(
     0,
-    safeLimitNumber(
-      limit,
-      8,
-      1,
-      20,
-    ),
+    safeLimit,
+  );
+}
+
+export function servicePageExamplesFor(
+  industry: IndustryPlaybook,
+  limit = 8,
+): string[] {
+  const safeLimit =
+    Number.isFinite(limit)
+      ? Math.max(
+          1,
+          Math.min(
+            Math.floor(limit),
+            20,
+          ),
+        )
+      : 8;
+
+  return uniqueStrings(
+    industry.servicePageExamples,
+  ).slice(
+    0,
+    safeLimit,
   );
 }
 
@@ -3461,16 +2102,22 @@ export function objectionsFor(
   industry: IndustryPlaybook,
   limit = 8,
 ): string[] {
+  const safeLimit =
+    Number.isFinite(limit)
+      ? Math.max(
+          1,
+          Math.min(
+            Math.floor(limit),
+            20,
+          ),
+        )
+      : 8;
+
   return uniqueStrings(
     industry.objections,
   ).slice(
     0,
-    safeLimitNumber(
-      limit,
-      8,
-      1,
-      20,
-    ),
+    safeLimit,
   );
 }
 
@@ -3478,21 +2125,27 @@ export function contentAnglesFor(
   industry: IndustryPlaybook,
   limit = 8,
 ): string[] {
+  const safeLimit =
+    Number.isFinite(limit)
+      ? Math.max(
+          1,
+          Math.min(
+            Math.floor(limit),
+            20,
+          ),
+        )
+      : 8;
+
   return uniqueStrings(
     industry.contentAngles,
   ).slice(
     0,
-    safeLimitNumber(
-      limit,
-      8,
-      1,
-      20,
-    ),
+    safeLimit,
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Visual helpers                                                              */
+/* Visual strategy helpers                                                    */
 /* -------------------------------------------------------------------------- */
 
 export function visualDirectionFor(
@@ -3505,25 +2158,16 @@ export function visualDirectionFor(
 
 export function visualProofLevelFor(
   industry: IndustryPlaybook,
-): "low" | "medium" | "high" {
+):
+  | "low"
+  | "medium"
+  | "high" {
   return industry.visualProof;
 }
 
 /* -------------------------------------------------------------------------- */
-/* SEO helpers                                                                 */
+/* SEO helpers                                                                */
 /* -------------------------------------------------------------------------- */
-
-export function schemaTypeFor(
-  industry: IndustryPlaybook,
-): string {
-  const value =
-    typeof industry.schemaType ===
-    "string"
-      ? industry.schemaType.trim()
-      : "";
-
-  return value || "LocalBusiness";
-}
 
 export function seoStrategyFor(
   industry: IndustryPlaybook,
@@ -3532,7 +2176,9 @@ export function seoStrategyFor(
     ...industry.seo,
     patterns:
       industry.seo.patterns
-        ? [...industry.seo.patterns]
+        ? [
+            ...industry.seo.patterns,
+          ]
         : [],
   };
 }
@@ -3541,240 +2187,164 @@ export function searchPatternsFor(
   industry: IndustryPlaybook,
   limit = 10,
 ): string[] {
+  const patterns =
+    industry.seo.patterns ??
+    [];
+
+  const safeLimit =
+    Number.isFinite(limit)
+      ? Math.max(
+          1,
+          Math.min(
+            Math.floor(limit),
+            30,
+          ),
+        )
+      : 10;
+
   return uniqueStrings(
-    industry.seo.patterns ?? [],
+    patterns,
   ).slice(
     0,
-    safeLimitNumber(
-      limit,
-      10,
-      1,
-      30,
+    safeLimit,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Schema intelligence                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Safe schema.org type helper.
+ *
+ * Kept deterministic and string-based so the builder does not depend
+ * on a schema package at runtime.
+ */
+export function schemaTypeFor(
+  industry: IndustryPlaybook,
+): string {
+  const value =
+    clean(industry.schemaType);
+
+  return value ||
+    "LocalBusiness";
+}
+
+/**
+ * Backward-compatible schema helper that accepts either an industry
+ * playbook or an industry hint.
+ */
+export function schemaTypeForIndustry(
+  industryOrHint:
+    | IndustryPlaybook
+    | string
+    | null
+    | undefined,
+): string {
+  if (
+    typeof industryOrHint ===
+    "object" &&
+    industryOrHint !== null
+  ) {
+    return schemaTypeFor(
+      industryOrHint,
+    );
+  }
+
+  return schemaTypeFor(
+    playbookFor(
+      industryOrHint,
     ),
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Strategy snapshot                                                           */
+/* Action intelligence                                                        */
 /* -------------------------------------------------------------------------- */
 
-export function strategyFor(
+export function conversionPathFor(
   industry: IndustryPlaybook,
-) {
-  return {
-    industry: industry.slug,
-    label: industry.label,
-    action: industry.action,
+): PrimaryAction[] {
+  return uniqueStrings([
+    industry.conversion.primaryAction,
+    ...industry.conversion.secondaryActions,
+  ]) as PrimaryAction[];
+}
 
-    primaryCta:
-      primaryCta(industry),
+export function fallbackActions(
+  industry: IndustryPlaybook,
+): PrimaryAction[] {
+  return [
+    industry.conversion.primaryAction,
+    ...industry.conversion.secondaryActions,
+  ].filter(
+    (action, index, values) =>
+      values.indexOf(action) ===
+      index,
+  );
+}
 
-    secondaryCta:
-      secondaryCta(industry),
+export function conversionPlacementFor(
+  industry: IndustryPlaybook,
+): ConversionPlacement[] {
+  return Array.from(
+    new Set(
+      industry.conversion.placement,
+    ),
+  );
+}
 
-    pages:
-      recommendedPages(industry),
-
-    homeSections:
-      homeSectionStrategy(industry),
-
-    servicePageSections:
-      serviceSectionStrategy(industry),
-
-    serviceNames:
-      recommendedServiceNames(industry),
-
-    faqs:
-      recommendedFaqs(industry),
-
-    terminology:
-      terminologyFor(industry),
-
-    trustThemes:
-      trustThemesFor(industry),
-
-    objections:
-      objectionsFor(industry),
-
-    contentAngles:
-      contentAnglesFor(industry),
-
-    seo:
-      seoStrategyFor(industry),
-
-    conversion: {
-      ...industry.conversion,
-      secondaryActions: [
-        ...industry.conversion.secondaryActions,
-      ],
-      placement: [
-        ...industry.conversion.placement,
-      ],
-    },
-
-    visual:
-      visualDirectionFor(industry),
-
-    schemaType:
-      schemaTypeFor(industry),
-
-    visualProof:
-      industry.visualProof,
-
-    urgency:
-      industry.urgency,
-  };
+export function urgencyLevelFor(
+  industry: IndustryPlaybook,
+):
+  | "none"
+  | "situational"
+  | "high" {
+  return industry.urgency;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Slug lookup                                                                 */
+/* Safe industry detection                                                    */
 /* -------------------------------------------------------------------------- */
 
-export function industryBySlug(
-  slug:
+export function detectConfidentIndustry(
+  ...hints: (
     | string
     | null
-    | undefined,
+    | undefined
+  )[]
 ): IndustryPlaybook {
-  if (
-    typeof slug !== "string" ||
-    !slug.trim()
-  ) {
-    return GENERIC_PLAYBOOK;
-  }
-
-  const normalized =
-    normalizeText(
-      slug.replace(
-        /_/g,
-        " ",
-      ),
+  const confidence =
+    industryConfidence(
+      ...hints,
     );
 
-  if (!normalized) {
+  const result =
+    playbookFor(
+      ...hints,
+    );
+
+  if (
+    result ===
+    GENERIC_PLAYBOOK
+  ) {
     return GENERIC_PLAYBOOK;
   }
 
-  for (
-    const industry of INDUSTRY_PLAYBOOKS
-  ) {
-    const industrySlug =
-      normalizeText(
-        industry.slug.replace(
-          /_/g,
-          " ",
-        ),
-      );
-
-    if (
-      industrySlug ===
-      normalized
-    ) {
-      return industry;
-    }
-
-    if (
-      normalizeText(
-        industry.label,
-      ) === normalized
-    ) {
-      return industry;
-    }
-  }
-
-  for (
-    const industry of INDUSTRY_PLAYBOOKS
-  ) {
-    for (
-      const alias of industry.aliases
-    ) {
-      if (
-        normalizeText(alias) ===
-        normalized
-      ) {
-        return industry;
-      }
-    }
-  }
-
-  return GENERIC_PLAYBOOK;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Request-aware strategy                                                      */
-/* -------------------------------------------------------------------------- */
-
-export function strategyFromRequest(
-  request: string,
-  knownIndustry?: string | null,
-): {
-  industry: IndustryPlaybook;
-  strategy: ReturnType<
-    typeof strategyFor
-  >;
-  request: string;
-  confidence:
-    | "high"
-    | "medium"
-    | "low";
-} {
-  const detected =
-    playbookFor(request);
-
-  let industry =
-    detected;
-
   if (
-    typeof knownIndustry ===
-      "string" &&
-    knownIndustry.trim()
+    confidence ===
+    "low"
   ) {
-    const known =
-      industryBySlug(
-        knownIndustry,
-      );
-
-    if (
-      known !==
-      GENERIC_PLAYBOOK
-    ) {
-      industry = known;
-    }
+    return clonePlaybook(
+      GENERIC_PLAYBOOK,
+    );
   }
 
-  return {
-    industry,
-    strategy:
-      strategyFor(industry),
-    request,
-    confidence:
-      industryConfidence(
-        knownIndustry,
-        request,
-      ),
-  };
+  return result;
 }
 
 /* -------------------------------------------------------------------------- */
-/* Lists                                                                       */
-/* -------------------------------------------------------------------------- */
-
-export function allIndustrySlugs(): string[] {
-  return INDUSTRY_PLAYBOOKS.map(
-    (industry) =>
-      industry.slug,
-  );
-}
-
-export function allIndustryLabels(): string[] {
-  return INDUSTRY_PLAYBOOKS.map(
-    (industry) =>
-      industry.label,
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Validation                                                                  */
+/* Validation                                                                 */
 /* -------------------------------------------------------------------------- */
 
 export function validatePlaybook(
@@ -3785,13 +2355,17 @@ export function validatePlaybook(
   if (
     !industry.slug?.trim()
   ) {
-    issues.push("missing slug");
+    issues.push(
+      "missing slug",
+    );
   }
 
   if (
     !industry.label?.trim()
   ) {
-    issues.push("missing label");
+    issues.push(
+      "missing label",
+    );
   }
 
   if (
@@ -3800,7 +2374,9 @@ export function validatePlaybook(
     ) ||
     !industry.aliases.length
   ) {
-    issues.push("missing aliases");
+    issues.push(
+      "missing aliases",
+    );
   }
 
   if (
@@ -3809,7 +2385,9 @@ export function validatePlaybook(
     ) ||
     !industry.pages.length
   ) {
-    issues.push("missing pages");
+    issues.push(
+      "missing pages",
+    );
   }
 
   if (
@@ -3904,13 +2482,16 @@ export function validatePlaybook(
     );
   }
 
-  if (!industry.conversion) {
+  if (
+    !industry.conversion
+  ) {
     issues.push(
       "missing conversion strategy",
     );
   } else {
     if (
-      !industry.conversion.primaryAction
+      !industry.conversion
+        .primaryAction
     ) {
       issues.push(
         "missing conversion action",
@@ -3943,6 +2524,10 @@ export function validatePlaybook(
   return issues;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Database validation                                                        */
+/* -------------------------------------------------------------------------- */
+
 export function validateIndustryLibrary(): {
   valid: boolean;
   issues: string[];
@@ -3954,30 +2539,26 @@ export function validateIndustryLibrary(): {
   for (
     const industry of INDUSTRY_PLAYBOOKS
   ) {
+    const slug =
+      industry.slug.trim();
+
     if (
-      seenSlugs.has(
-        industry.slug,
-      )
+      seenSlugs.has(slug)
     ) {
       issues.push(
-        `duplicate industry slug: ${industry.slug}`,
+        `duplicate industry slug: ${slug}`,
       );
     }
 
-    seenSlugs.add(
-      industry.slug,
-    );
-
-    const playbookIssues =
-      validatePlaybook(
-        industry,
-      );
+    seenSlugs.add(slug);
 
     for (
-      const issue of playbookIssues
+      const issue of validatePlaybook(
+        industry,
+      )
     ) {
       issues.push(
-        `${industry.slug}: ${issue}`,
+        `${slug}: ${issue}`,
       );
     }
 
@@ -3985,19 +2566,19 @@ export function validateIndustryLibrary(): {
       new Set<string>();
 
     for (
-      const current of industry.pages
+      const page of industry.pages
     ) {
       const key =
         normalizedSlug(
-          current.slug ||
-            current.title,
+          page.slug ||
+            page.title,
         ) || "home";
 
       if (
         pageSlugs.has(key)
       ) {
         issues.push(
-          `${industry.slug}: duplicate page slug: ${key}`,
+          `${slug}: duplicate page slug: ${key}`,
         );
       }
 
@@ -4023,7 +2604,7 @@ export function validateIndustryLibrary(): {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Health snapshot                                                             */
+/* Diagnostics                                                                */
 /* -------------------------------------------------------------------------- */
 
 export function industryEngineHealth(): {
@@ -4033,8 +2614,8 @@ export function industryEngineHealth(): {
   invalidIndustries: string[];
   valid: boolean;
 } {
-  const duplicates: string[] = [];
-  const invalid: string[] = [];
+  const duplicateSlugs: string[] = [];
+  const invalidIndustries: string[] = [];
   const seen =
     new Set<string>();
 
@@ -4044,7 +2625,7 @@ export function industryEngineHealth(): {
     if (
       seen.has(industry.slug)
     ) {
-      duplicates.push(
+      duplicateSlugs.push(
         industry.slug,
       );
     }
@@ -4056,67 +2637,69 @@ export function industryEngineHealth(): {
     if (
       validatePlaybook(
         industry,
-      ).length > 0
+      ).length
     ) {
-      invalid.push(
+      invalidIndustries.push(
         industry.slug,
       );
     }
   }
 
-  const hasFallback =
-    INDUSTRY_PLAYBOOKS.some(
-      (industry) =>
-        industry.slug ===
-        "local_business",
+  const hasGenericFallback =
+    Boolean(
+      INDUSTRY_PLAYBOOKS.find(
+        (industry) =>
+          industry.slug ===
+          "local_business",
+      ),
     );
 
   return {
     industryCount:
       INDUSTRY_PLAYBOOKS.length,
-
-    hasGenericFallback:
-      hasFallback,
-
+    hasGenericFallback,
     duplicateSlugs:
       uniqueStrings(
-        duplicates,
+        duplicateSlugs,
       ),
-
     invalidIndustries:
       uniqueStrings(
-        invalid,
+        invalidIndustries,
       ),
-
     valid:
-      duplicates.length === 0 &&
-      invalid.length === 0 &&
-      hasFallback,
+      duplicateSlugs.length ===
+        0 &&
+      invalidIndustries.length ===
+        0 &&
+      hasGenericFallback,
   };
 }
 
 /* -------------------------------------------------------------------------- */
-/* Internal numeric safety                                                     */
+/* Public diagnostics                                                         */
 /* -------------------------------------------------------------------------- */
 
-function safeLimitNumber(
-  value: number,
-  fallback: number,
-  minimum: number,
-  maximum: number,
-): number {
-  if (
-    typeof value !== "number" ||
-    !Number.isFinite(value)
-  ) {
-    return fallback;
-  }
+export function industrySummary(): {
+  industryCount: number;
+  industries: string[];
+  healthy: boolean;
+} {
+  const health =
+    industryEngineHealth();
 
-  return Math.max(
-    minimum,
-    Math.min(
-      Math.floor(value),
-      maximum,
-    ),
-  );
+  return {
+    industryCount:
+      health.industryCount,
+    industries:
+      INDUSTRY_PLAYBOOKS.map(
+        (industry) =>
+          industry.slug,
+      ),
+    healthy:
+      health.valid,
+  };
 }
+
+/* -------------------------------------------------------------------------- */
+/* End                                                                        */
+/* -------------------------------------------------------------------------- */
