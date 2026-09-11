@@ -199,7 +199,12 @@ export function buildDeterministicPlan(
 
   /* --- design: one coordinated direction, never isolated tweaks --- */
   const wantsDesign = wholeSite || intent.verbs.includes("restyle") || intent.moods.length > 0;
-  const design = designDecision(playbook, intent.moods);
+    const design = designDecision(
+    playbook,
+    intent.moods,
+    `${context.business.name}|${context.business.city ?? ""}|${context.business.state ?? ""}`,
+  );
+
 
   if (wantsDesign) {
     task("Set the design direction", () => {
