@@ -1,74 +1,106 @@
-import { describe, expect, it } from "vitest";
-import { detectGenericPhrases, detectRepeatedFiller, genericityIssues, scoreGenericity } from "./genericity";
+/**
+ * GENERICITY CHECK — flags stock-agency phrasing and copy-pasted filler in
+ * generated site content. Every hit is advisory (never a publish blocker):
+ * generic phrasing hurts conversion and looks templated, but it never makes
+ * a page broken or unsafe the way a fabricated claim or a template leak
+ * does, so it should nudge the owner rather than stop a launch.
+ */
+import type { QualityIssue } from "./quality";
 
-describe("detectGenericPhrases", () => {
-  it("finds no hits in plain, specific copy", () => {
-    expect(detectGenericPhrases(["We re-roof homes in Round Rock, Texas.", "Call (512) 555-0100."])).toEqual([]);
-  });
+/** Common stock-agency phrases that make a site sound templated. */
+const STOCK_PHRASES = [
+  "welcome to our website",
+  "we are dedicated to providing",
+  "we are committed to providing",
+  "look no further",
+  "your one-stop shop",
+  "we pride ourselves on",
+  "customer satisfaction is our",
+  "quality you can trust",
+];
 
-  it("finds a stock phrase, case-insensitively, and counts repeats", () => {
-    const hits = detectGenericPhrases([
-      "Welcome to our website!",
-      "Read more: WELCOME TO OUR WEBSITE",
-      "We are dedicated to providing top service.",
-    ]);
-    expect(hits).toContainEqual({ phrase: "welcome to our website", count: 2 });
-    expect(hits).toContainEqual({ phrase: "we are dedicated to providing", count: 1 });
-  });
+/** Below this length, a repeated line is a normal CTA/label, not filler. */
+const FILLER_MIN_LENGTH = 40;
+/** A block needs to repeat at least this many times to count as filler. */
+const FILLER_MIN_COUNT = 3;
 
-  it("ignores non-string and empty values instead of throwing", () => {
-    expect(detectGenericPhrases([null, undefined, {}, 42, "  "])).toEqual([]);
-  });
-});
+const asText = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
 
-describe("detectRepeatedFiller", () => {
-  it("does not flag short, legitimately-repeated strings like a CTA label", () => {
-    expect(detectRepeatedFiller(["Book now", "Book now", "Book now", "Book now"])).toEqual([]);
-  });
+export type GenericPhraseHit = { phrase: string; count: number };
 
-  it("flags a long block copy-pasted three or more times", () => {
-    const block =
-      "We provide fast, reliable, affordable service to every customer in the area, every single time.";
-    const hits = detectRepeatedFiller([block, block, block, "unrelated short line"]);
-    expect(hits).toEqual([{ phrase: block.toLowerCase(), count: 3 }]);
-  });
+/** Finds stock-agency phrases in the given copy, case-insensitively. */
+export function detectGenericPhrases(values: unknown[]): GenericPhraseHit[] {
+  const texts = values.map(asText).filter((v): v is string => v !== null);
+  const lowered = texts.map((t) => t.toLowerCase());
 
-  it("does not flag a long block seen only once or twice", () => {
-    const block = "A".repeat(50);
-    expect(detectRepeatedFiller([block, block])).toEqual([]);
-  });
-});
+  const hits: GenericPhraseHit[] = [];
+  for (const phrase of STOCK_PHRASES) {
+    const count = lowered.filter((t) => t.includes(phrase)).length;
+    if (count > 0) hits.push({ phrase, count });
+  }
+  return hits;
+}
 
-describe("scoreGenericity", () => {
-  it("scores clean, specific copy at 100", () => {
-    expect(scoreGenericity(["We install standing-seam metal roofs in Austin."]).score).toBe(100);
-  });
+/** Finds long blocks of copy repeated verbatim across the site (copy-paste filler). */
+export function detectRepeatedFiller(values: unknown[]): GenericPhraseHit[] {
+  const texts = values.map(asText).filter((v): v is string => v !== null);
 
-  it("lowers the score for each stock phrase and repeated block found", () => {
-    const report = scoreGenericity(["Welcome to our website", "Look no further for quality you can trust"]);
-    expect(report.score).toBeLessThan(100);
-  });
+  const counts = new Map<string, number>();
+  for (const text of texts) {
+    if (text.length <= FILLER_MIN_LENGTH) continue;
+    const key = text.toLowerCase();
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
 
-  it("never goes below zero", () => {
-    const spam = Array(50).fill("welcome to our website, your one-stop shop, look no further");
-    expect(scoreGenericity(spam).score).toBe(0);
-  });
-});
+  return [...counts.entries()]
+    .filter(([, count]) => count >= FILLER_MIN_COUNT)
+    .map(([phrase, count]) => ({ phrase, count }));
+}
 
-describe("genericityIssues", () => {
-  it("returns no issues for specific, non-repeated copy", () => {
-    expect(genericityIssues(["We've re-roofed 400+ homes in the Austin metro since 2011."])).toEqual([]);
-  });
+export type GenericityReport = {
+  score: number;
+  genericPhrases: GenericPhraseHit[];
+  repeatedFiller: GenericPhraseHit[];
+};
 
-  it("returns an advice-severity issue for stock phrases, never a blocker", () => {
-    const issues = genericityIssues(["Welcome to our website", "We are committed to providing excellence"]);
-    expect(issues.length).toBeGreaterThan(0);
-    for (const found of issues) expect(found.severity).toBe("advice");
-  });
+/** Scores copy from 0 (heavily templated) to 100 (fully specific to this business). */
+export function scoreGenericity(values: unknown[]): GenericityReport {
+  const genericPhrases = detectGenericPhrases(values);
+  const repeatedFiller = detectRepeatedFiller(values);
 
-  it("labels the repeated-filler issue distinctly from the stock-phrase issue", () => {
-    const block = "Our team is here to help you with anything you need, day or night, rain or shine.";
-    const issues = genericityIssues([block, block, block]);
-    expect(issues.map((i) => i.key)).toContain("repeated_filler_copy");
-  });
-});
+  const penalty =
+    genericPhrases.reduce((sum, hit) => sum + hit.count * 12, 0) +
+    repeatedFiller.reduce((sum, hit) => sum + hit.count * 18, 0);
+
+  const score = Math.max(0, Math.min(100, 100 - penalty));
+  return { score, genericPhrases, repeatedFiller };
+}
+
+/** Advisory quality issues for the publish gate — stock phrasing never blocks a launch. */
+export function genericityIssues(values: unknown[]): QualityIssue[] {
+  const issues: QualityIssue[] = [];
+
+  for (const hit of detectGenericPhrases(values)) {
+    issues.push({
+      key: "generic_stock_phrase",
+      severity: "advice",
+      detail: `Sounds templated: "${hit.phrase}" appears ${hit.count}x.`,
+      fix: "Replace with specific details about this business — a neighborhood, a number, a real guarantee.",
+    });
+  }
+
+  for (const hit of detectRepeatedFiller(values)) {
+    issues.push({
+      key: "repeated_filler_copy",
+      severity: "advice",
+      detail: `The same long block of copy appears ${hit.count}x across the site.`,
+      fix: "Write distinct copy for each section instead of repeating the same paragraph.",
+    });
+  }
+
+  return issues;
+}
