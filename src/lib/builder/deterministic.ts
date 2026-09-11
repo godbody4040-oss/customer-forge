@@ -29,6 +29,22 @@ import { ctaTarget, faqQuestions, pageSeo, place, sectionCopy, type CopyFacts } 
 const HERO_LAYOUT = { full: "banner", standard: "split", compact: "stacked" } as const;
 
 /**
+ * Pairs each section the owner named with the verb(s) that actually apply to
+ * it, using the interpreter's per-clause breakdown when one exists. Falls
+ * back to the old whole-message pairing (every verb × every section) only
+ * when clause-splitting found nothing usable, so short single-idea requests
+ * behave exactly as before.
+ */
+function sectionOperations(intent: BuilderIntent): { kind: string; verbs: BuilderIntent["verbs"] }[] {
+  const fromClauses = intent.operations
+    .filter((op) => op.sectionKinds.length)
+    .flatMap((op) => op.sectionKinds.map((kind) => ({ kind, verbs: op.verbs })));
+
+  if (fromClauses.length) return fromClauses;
+  return intent.sectionKinds.map((kind) => ({ kind, verbs: intent.verbs }));
+}
+
+/**
  * What each kind of page needs to be a finished page rather than an empty
  * shell. Anything the workspace does not allow is dropped later.
  */
@@ -328,27 +344,34 @@ export function buildDeterministicPlan(
     });
   }
 
-  /* --- explicit section requests --- */
-  for (const kind of intent.sectionKinds) {
+  /* --- explicit section requests ---
+   * Each mentioned section is paired with the verb(s) from the *same clause*
+   * it was named in, not every verb anywhere in the message. Without this,
+   * "remove the pricing table and add a booking calendar" would also delete
+   * an already-existing booking section, because "remove" and "booking" both
+   * appear somewhere in the sentence. When a request has no clause structure
+   * worth trusting (a single idea, or clause-splitting found nothing useful),
+   * this falls back to the previous whole-message behaviour unchanged. */
+  for (const { kind, verbs: opVerbs } of sectionOperations(intent)) {
     if (!allowedSections.has(kind)) continue;
     const existing = findSection(page, kind);
 
-    if (intent.verbs.includes("remove") && existing) {
+    if (opVerbs.includes("remove") && existing) {
       push({ type: "delete_section", sectionId: existing.id });
       done.push("sections");
       continue;
     }
-    if (intent.verbs.includes("hide") && existing) {
+    if (opVerbs.includes("hide") && existing) {
       push({ type: "set_section_visibility", sectionId: existing.id, visible: false });
       done.push("sections");
       continue;
     }
-    if (intent.verbs.includes("show") && existing) {
+    if (opVerbs.includes("show") && existing) {
       push({ type: "set_section_visibility", sectionId: existing.id, visible: true });
       done.push("sections");
       continue;
     }
-    if (intent.verbs.includes("resize") && existing) {
+    if (opVerbs.includes("resize") && existing) {
       const bigger = /\b(bigger|larger|taller|full ?screen)\b/i.test(intent.original);
       if (existing.kind === "hero")
         push({
@@ -360,7 +383,7 @@ export function buildDeterministicPlan(
       done.push("sections");
       continue;
     }
-    if (intent.verbs.includes("rewrite") && existing) {
+    if (opVerbs.includes("rewrite") && existing) {
       const copy = sectionCopy(kind, facts, playbook);
       push({
         type: "set_section_text",
