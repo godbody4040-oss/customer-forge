@@ -182,6 +182,58 @@ function rotateHue(hex: string, degrees: number): string {
 function businessHueOffset(seedKey: string): number {
   return (seedFrom(seedKey) % 37) - 18;
 }
+/**
+ * Builds one coordinated direction from the trade playbook plus any mood words
+ * the owner used. With no mood words at all, the trade's own direction is used.
+ *
+ * `seedKey` — pass something stable and unique to the business (name + city +
+ * state) to nudge the palette's hue a fixed, deterministic amount. Without it,
+ * every business in the same trade asking for the same mood gets the exact
+ * same hex codes — the industry default is a single fixed point, not a range.
+ * The nudge is bounded (±18°) so it stays recognizably "this trade," it just
+ * stops being pixel-identical to every other client's site.
+ */
+export function designDecision(
+  playbook: IndustryPlaybook,
+  moods: StyleMood[],
+  seedKey?: string,
+): DesignDecision {
+  const decision: DesignDecision = {
+    theme: {
+      primary_color: playbook.visual.primary,
+      secondary_color: playbook.visual.secondary,
+      accent_color: playbook.visual.accent,
+      font_preference: playbook.visual.font,
+    },
+    backdrop: playbook.visual.backdrop as BackdropId,
+    heroEffect: "rise",
+    bodyEffect: "none",
+    density: "standard",
+    rationale: [`Started from the direction that suits ${playbook.label.toLowerCase()}.`],
+  };
+
+  for (const mood of moods) {
+    const rule = MOOD_RULES[mood];
+    if (!rule) continue;
+    Object.assign(decision.theme, rule.theme ?? {});
+    if (rule.backdrop) decision.backdrop = rule.backdrop;
+    if (rule.heroEffect) decision.heroEffect = rule.heroEffect;
+    if (rule.bodyEffect) decision.bodyEffect = rule.bodyEffect;
+    if (rule.density) decision.density = rule.density;
+    decision.rationale.push(rule.says);
+  }
+
+  if (seedKey) {
+    const offset = businessHueOffset(seedKey);
+    decision.theme.primary_color = rotateHue(decision.theme.primary_color, offset);
+    decision.theme.accent_color = rotateHue(decision.theme.accent_color, offset);
+    decision.rationale.push(
+      `Nudged the palette (${offset >= 0 ? "+" : ""}${offset}°) so this doesn't land on the exact same colors as every other ${playbook.label.toLowerCase()} site.`,
+    );
+  }
+
+  return decision;
+}
 
 export function designDecision(playbook: IndustryPlaybook, moods: StyleMood[]): DesignDecision {
   const decision: DesignDecision = {
