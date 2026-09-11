@@ -42,6 +42,26 @@ function Success({ title, body }: { title: string; body: string }) {
   );
 }
 
+/**
+ * Invisible to real visitors — hidden from sighted users, keyboard tab order
+ * and screen readers alike — but still a normal input in the DOM, so a script
+ * that blindly fills every field on the page fills this one too. A human
+ * never can, so any value here means the submission is bogus. Paired with a
+ * matching check in submitPublicLead's validator (see public-site.functions.ts).
+ */
+function Honeypot() {
+  return (
+    <input
+      type="text"
+      name="company_website"
+      tabIndex={-1}
+      autoComplete="off"
+      aria-hidden="true"
+      style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}
+    />
+  );
+}
+
 export function QuoteCalculator({ site }: { site: Site }) {
   const quote = site.quote;
   const submit = useServerFn(submitPublicLead);
@@ -211,6 +231,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
                 email: String(form.get("email") ?? ""),
                 phone: String(form.get("phone") ?? ""),
                 message: String(form.get("message") ?? ""),
+                companyWebsite: String(form.get("company_website") ?? ""),
                 serviceInterest: quote.form.name,
                 estimatedValue: Math.round((min + max) / 2),
                 ...(() => {
@@ -243,6 +264,7 @@ export function QuoteCalculator({ site }: { site: Site }) {
               .finally(() => setPending(false));
           }}
         >
+          <Honeypot />
           <p className="tnum text-[13px] text-muted-foreground">
             Your estimate:{" "}
             <span className="font-semibold text-primary">
@@ -332,6 +354,7 @@ export function BookingForm({ site }: { site: Site }) {
             phone: String(form.get("phone") ?? ""),
             message: String(form.get("message") ?? ""),
             city: String(form.get("city") ?? ""),
+            companyWebsite: String(form.get("company_website") ?? ""),
             serviceId: serviceId || null,
             serviceInterest: service?.name ?? null,
             estimatedValue: Number(service?.price ?? 0),
@@ -358,6 +381,7 @@ export function BookingForm({ site }: { site: Site }) {
         <h3 className="mt-1 font-display text-[19px] font-semibold">Request your appointment</h3>
       </div>
 
+      <Honeypot />
       <DirectContact profile={site.profile} businessName={site.org.name} />
 
       {bookable.length ? (
