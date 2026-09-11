@@ -7,6 +7,7 @@
  * lower the score without stopping a launch.
  */
 import { hasTemplateLeak, isUsableEmail, isUsablePhone, safeText } from "./presentation";
+import { genericityIssues } from "./genericity";
 import type { BusinessFacts } from "./facts";
 import type { VisualReport } from "./visual";
 
@@ -287,6 +288,8 @@ const CATEGORY_OF: Record<string, QualityCategory> = {
   no_contact_route: "conversion",
   reviews_without_reviews: "content",
   gallery_without_photos: "content",
+  generic_stock_phrase: "content",
+  repeated_filler_copy: "content",
   nav_label_missing: "navigation",
   nav_duplicate: "navigation",
   nav_too_long: "navigation",
@@ -359,6 +362,7 @@ export function auditWebsite(input: QualityInput): QualityReport {
     ...contactIssues(input),
     ...honestyIssues(input),
     ...structureIssues(input),
+    ...genericityIssues(input.texts),
   ];
   const blockers = issues.filter((item) => item.severity === "blocker");
 
