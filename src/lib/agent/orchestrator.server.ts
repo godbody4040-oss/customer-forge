@@ -300,6 +300,7 @@ export async function orchestrate(options: {
             improvementBrief(graded, understanding.goal, actions),
             [],
             [],
+            options.caller,
           );
           const extra = actionList(improved["actions"]);
           if (extra.length) {
