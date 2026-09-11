@@ -217,14 +217,28 @@ export async function designDirection(
     );
     const story = list(raw["story"], 160, 8);
     const avoid = list(raw["avoid"], 120, 6);
+    const goal = text(raw["goal"], 300);
+    const layout = text(raw["layout"], 400);
+    const typography = text(raw["typography"], 300);
+    const palette = text(raw["palette"], 300);
+    const motion = text(raw["motion"], 240);
     const fallback = designWithoutModel(industry);
+
+    // If the model returned nothing usable in any field, this is the fallback
+    // direction wearing a "model" label — say so honestly instead of reporting
+    // a bespoke design pass that never actually happened.
+    const usedModel = Boolean(
+      goal || layout || typography || palette || motion || story.length || avoid.length,
+    );
+    if (!usedModel) return fallback;
+
     return {
-      goal: text(raw["goal"], 300) || fallback.goal,
-      layout: text(raw["layout"], 400) || fallback.layout,
-      typography: text(raw["typography"], 300) || fallback.typography,
-      palette: text(raw["palette"], 300) || fallback.palette,
+      goal: goal || fallback.goal,
+      layout: layout || fallback.layout,
+      typography: typography || fallback.typography,
+      palette: palette || fallback.palette,
       story: story.length ? story : fallback.story,
-      motion: text(raw["motion"], 240) || fallback.motion,
+      motion: motion || fallback.motion,
       avoid: avoid.length ? avoid : fallback.avoid,
       source: "model",
     };
