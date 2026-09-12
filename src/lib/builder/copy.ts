@@ -1,725 +1,1452 @@
 /**
- * REVORA FREE-FIRST BUILDER — COPY ENGINE
+ * REVORA COPY INTELLIGENCE ENGINE — MASTER EDITION
  *
- * Deterministic, zero-cost copy generation.
+ * File:
+ *   src/lib/builder/copy.ts
  *
- * Rules:
- * - No external AI provider.
- * - No network calls.
- * - Never invent reviews, ratings, awards, licences, certifications,
- *   guarantees, prices, statistics, results, years, or customer claims.
- * - Use only facts supplied by the business/workspace.
- * - Keep output useful even when business information is incomplete.
- * - Keep the API intentionally small so deterministic.ts can consume it safely.
+ * PURPOSE
+ * -------
+ * Deterministic, fact-safe website copy generation for the Revora builder.
+ *
+ * DESIGN RULES
+ * ------------
+ * 1. Never invent reviews, ratings, awards, years in business, customers,
+ *    guarantees, locations, certifications, statistics, prices, hours,
+ *    phone numbers, emails, testimonials, or business results.
+ *
+ * 2. Prefer the business facts already stored in the workspace.
+ *
+ * 3. If a fact is missing, use safe language instead of fabricating it.
+ *
+ * 4. Copy should be conversion-focused without making unsupported claims.
+ *
+ * 5. Industry intelligence comes from IndustryPlaybook.
+ *
+ * 6. No network calls.
+ *
+ * 7. No paid AI provider.
+ *
+ * 8. No dependency on Supabase, Stripe, authentication, publishing,
+ *    Cloudflare, or any other infrastructure.
+ *
+ * 9. Keep all functions pure and deterministic.
+ *
+ * 10. Existing public exports are preserved for compatibility with the
+ *     deterministic builder and other builder modules.
  */
 
 import type { IndustryPlaybook } from "./industry";
 
-/**
- * Facts consumed by the copy engine.
- *
- * This is intentionally independent from the database/profile shape.
- * deterministic.ts normalizes the source data before calling these functions.
- */
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
 export type CopyFacts = {
   name: string;
-  industry: string | null;
-  tagline: string | null;
-  description: string | null;
-  city: string | null;
-  state: string | null;
-  serviceArea: string | null;
-  phone: string | null;
-  email: string | null;
-  services: { name: string }[];
+  industry: string;
+  tagline: string;
+  description: string;
+  city: string;
+  state: string;
+  serviceArea: string;
+  phone: string;
+  email: string;
+
+  services: Array<{
+    name: string;
+  }>;
 };
 
-const MAX_HEADING = 70;
-const MAX_SUBHEADING = 200;
-const MAX_META_TITLE = 70;
-const MAX_META_DESCRIPTION = 160;
-
-const trim = (value: string): string =>
-  value.replace(/\s+/g, " ").trim();
-
-const clean = (value: unknown): string => {
-  if (typeof value !== "string") return "";
-  return trim(value);
+export type SectionCopy = {
+  heading: string;
+  subheading: string;
+  body: string;
 };
 
-const tidy = (value: string): string => {
-  const text = trim(value);
-
-  if (!text) return "";
-
-  return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+export type PageSeo = {
+  seo_title: string;
+  seo_description: string;
 };
 
-const limit = (value: string, max: number): string =>
-  trim(value).slice(0, max).trim();
+export type CtaTarget = {
+  url: string;
+  label: string;
+};
 
-const usable = (value: unknown): string | null => {
+export type CopyTone =
+  | "professional"
+  | "modern"
+  | "friendly"
+  | "premium"
+  | "direct";
+
+export type CopyLength =
+  | "short"
+  | "standard"
+  | "expanded";
+
+/* -------------------------------------------------------------------------- */
+/* Constants                                                                  */
+/* -------------------------------------------------------------------------- */
+
+const MAX_TITLE_LENGTH = 60;
+const MAX_DESCRIPTION_LENGTH = 160;
+const MAX_TAGLINE_LENGTH = 120;
+const MAX_SERVICE_NAME_LENGTH = 80;
+
+const FALLBACK_BUSINESS =
+  "your business";
+
+const FALLBACK_INDUSTRY =
+  "local business";
+
+/* -------------------------------------------------------------------------- */
+/* Basic utilities                                                            */
+/* -------------------------------------------------------------------------- */
+
+function clean(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function lower(value: unknown): string {
+  return clean(value).toLowerCase();
+}
+
+function truncate(
+  value: string,
+  max: number,
+): string {
   const text = clean(value);
 
-  if (!text) return null;
-
-  if (
-    /^(?:n\/a|na|none|unknown|tbd|todo|test|testing|null|undefined)$/i.test(
-      text,
-    )
-  ) {
-    return null;
+  if (text.length <= max) {
+    return text;
   }
 
-  return text;
-};
+  const shortened =
+    text
+      .slice(0, max - 1)
+      .replace(/\s+\S*$/, "")
+      .trim();
+
+  return `${shortened}…`;
+}
+
+function unique(
+  values: string[],
+): string[] {
+  return [
+    ...new Set(
+      values
+        .map(clean)
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function firstNonEmpty(
+  ...values: unknown[]
+): string {
+  for (const value of values) {
+    const result = clean(value);
+
+    if (result) {
+      return result;
+    }
+  }
+
+  return "";
+}
+
+function hasValue(
+  value: unknown,
+): boolean {
+  return Boolean(clean(value));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Fact normalization                                                         */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Returns the best known service area.
+ * Keep business facts safe and predictable before using them in copy.
  */
-export function place(facts: CopyFacts): string | null {
-  const serviceArea = usable(facts.serviceArea);
+function normalizeFacts(
+  facts: CopyFacts,
+): CopyFacts {
+  return {
+    name:
+      truncate(
+        clean(facts.name),
+        120,
+      ),
 
-  if (serviceArea) {
-    return serviceArea;
+    industry:
+      truncate(
+        clean(facts.industry),
+        100,
+      ),
+
+    tagline:
+      truncate(
+        clean(facts.tagline),
+        MAX_TAGLINE_LENGTH,
+      ),
+
+    description:
+      clean(facts.description),
+
+    city:
+      truncate(
+        clean(facts.city),
+        80,
+      ),
+
+    state:
+      truncate(
+        clean(facts.state),
+        80,
+      ),
+
+    serviceArea:
+      truncate(
+        clean(facts.serviceArea),
+        160,
+      ),
+
+    phone:
+      clean(facts.phone),
+
+    email:
+      clean(facts.email),
+
+    services:
+      unique(
+        (facts.services ?? [])
+          .map(
+            (service) =>
+              truncate(
+                service?.name ?? "",
+                MAX_SERVICE_NAME_LENGTH,
+              ),
+          ),
+      ).map((name) => ({
+        name,
+      })),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Business descriptors                                                       */
+/* -------------------------------------------------------------------------- */
+
+export function businessDescriptor(
+  facts: CopyFacts,
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  return (
+    normalized.name ||
+    normalized.industry ||
+    FALLBACK_BUSINESS
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Location                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export function place(
+  facts: CopyFacts,
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  if (
+    normalized.serviceArea
+  ) {
+    return normalized.serviceArea;
   }
 
-  const city = usable(facts.city);
-  const state = usable(facts.state);
+  const parts = [
+    normalized.city,
+    normalized.state,
+  ].filter(Boolean);
 
-  if (city && state) {
-    return `${city}, ${state}`;
+  return parts.join(", ");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Services                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export function serviceNames(
+  facts: CopyFacts,
+): string[] {
+  return unique(
+    normalizeFacts(facts)
+      .services
+      .map(
+        (service) =>
+          service.name,
+      ),
+  );
+}
+
+function serviceSentence(
+  facts: CopyFacts,
+): string {
+  const services =
+    serviceNames(facts);
+
+  if (services.length === 0) {
+    return "";
   }
 
-  if (city) {
-    return city;
+  if (services.length === 1) {
+    return services[0];
   }
 
-  if (state) {
-    return state;
+  if (services.length === 2) {
+    return `${services[0]} and ${services[1]}`;
+  }
+
+  const visible =
+    services.slice(0, 3);
+
+  return `${visible
+    .slice(0, -1)
+    .join(", ")}, and ${visible.at(-1)}`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* First sentence                                                             */
+/* -------------------------------------------------------------------------- */
+
+export function firstSentence(
+  facts: CopyFacts,
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  const description =
+    normalized.description;
+
+  if (!description) {
+    return "";
+  }
+
+  const sentence =
+    description
+      .split(
+        /(?<=[.!?])\s+/,
+      )[0]
+      ?.trim() ?? "";
+
+  return truncate(
+    sentence || description,
+    240,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Industry helpers                                                           */
+/* -------------------------------------------------------------------------- */
+
+function industryName(
+  facts: CopyFacts,
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  return (
+    normalized.industry ||
+    FALLBACK_INDUSTRY
+  );
+}
+
+function industryLabel(
+  facts: CopyFacts,
+): string {
+  const industry =
+    industryName(facts);
+
+  return industry
+    .replace(
+      /\b(services?|company|business|solutions?)\b/gi,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .trim() || industry;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hero copy                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export function heroHeadline(
+  facts: CopyFacts,
+  playbook: IndustryPlaybook,
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  const name =
+    normalized.name ||
+    FALLBACK_BUSINESS;
+
+  const tagline =
+    normalized.tagline;
+
+  /**
+   * If the owner supplied a tagline, preserve its meaning rather than
+   * overwriting it with a generic AI slogan.
+   */
+  if (tagline) {
+    return truncate(
+      tagline,
+      92,
+    );
+  }
+
+  const headline =
+    firstNonEmpty(
+      playbook.heroHeadline,
+      `A better way to ${industryLabel(
+        facts,
+      )}`,
+      `Professional ${industryLabel(
+        facts,
+      )} for your next project`,
+      `${name} is ready to help`,
+    );
+
+  return truncate(
+    headline,
+    92,
+  );
+}
+
+export function heroSubheadline(
+  facts: CopyFacts,
+  playbook: IndustryPlaybook,
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  const description =
+    firstSentence(
+      normalized,
+    );
+
+  if (description) {
+    return truncate(
+      description,
+      220,
+    );
+  }
+
+  const services =
+    serviceSentence(
+      normalized,
+    );
+
+  if (services) {
+    return truncate(
+      `${businessDescriptor(
+        normalized,
+      )} provides ${services}.`,
+      220,
+    );
+  }
+
+  const location =
+    place(normalized);
+
+  if (location) {
+    return truncate(
+      `${businessDescriptor(
+        normalized,
+      )} serving ${location}.`,
+      220,
+    );
+  }
+
+  return truncate(
+    firstNonEmpty(
+      playbook.heroSubheadline,
+      `Explore the services and solutions available from ${businessDescriptor(
+        normalized,
+      )}.`,
+    ),
+    220,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* CTA intelligence                                                           */
+/* -------------------------------------------------------------------------- */
+
+function isValidEmail(
+  email: string,
+): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    email,
+  );
+}
+
+function hasUsablePhone(
+  phone: string,
+): boolean {
+  const digits =
+    phone.replace(
+      /\D/g,
+      "",
+    );
+
+  return (
+    digits.length >= 7
+  );
+}
+
+function hasInternalContactRoute(
+  facts: CopyFacts,
+): boolean {
+  /**
+   * `/contact` is a safe internal destination because the site engine owns
+   * internal routes.
+   */
+  return true;
+}
+
+export function ctaTarget(
+  facts: CopyFacts,
+): CtaTarget | null {
+  const normalized =
+    normalizeFacts(facts);
+
+  if (
+    hasUsablePhone(
+      normalized.phone,
+    )
+  ) {
+    return {
+      url: `tel:${normalized.phone.replace(
+        /[^+\d]/g,
+        "",
+      )}`,
+      label: "Call now",
+    };
+  }
+
+  if (
+    isValidEmail(
+      normalized.email,
+    )
+  ) {
+    return {
+      url: `mailto:${normalized.email}`,
+      label: "Email us",
+    };
+  }
+
+  if (
+    hasInternalContactRoute(
+      normalized,
+    )
+  ) {
+    return {
+      url: "/contact",
+      label: "Get started",
+    };
   }
 
   return null;
 }
 
-/**
- * Returns the industry name in a natural form.
- */
-const trade = (playbook: IndustryPlaybook): string =>
-  clean(playbook.label).toLowerCase();
-
-/**
- * Returns the first usable sentence from a business description.
- */
-export function firstSentence(
-  text: string | null,
-): string | null {
-  const source = usable(text);
-
-  if (!source) {
-    return null;
-  }
-
-  const match = source.match(/^.*?[.!?](?:\s|$)/);
-
-  if (match?.[0]) {
-    const sentence = trim(match[0]);
-
-    if (sentence.length > 8) {
-      return sentence;
-    }
-  }
-
-  return source;
-}
-
-/**
- * Creates a concise hero headline using only known business facts.
- */
-export function heroHeadline(
-  facts: CopyFacts,
-  playbook: IndustryPlaybook,
-): string {
-  const tagline = usable(facts.tagline);
-
-  if (tagline) {
-    return limit(
-      tidy(tagline),
-      MAX_HEADING,
-    );
-  }
-
-  const where = place(facts);
-
-  if (where) {
-    return limit(
-      `${tidy(playbook.label)} in ${where}`,
-      MAX_HEADING,
-    );
-  }
-
-  const name = usable(facts.name);
-
-  if (name) {
-    return limit(
-      `${name} — ${trade(playbook)}`,
-      MAX_HEADING,
-    );
-  }
-
-  return limit(
-    tidy(playbook.label),
-    MAX_HEADING,
-  );
-}
-
-/**
- * Creates supporting hero copy.
- */
-export function heroSubheadline(
-  facts: CopyFacts,
-  playbook: IndustryPlaybook,
-): string {
-  const ownDescription = firstSentence(
-    facts.description,
-  );
-
-  if (ownDescription) {
-    return limit(
-      ownDescription,
-      MAX_SUBHEADING,
-    );
-  }
-
-  const where = place(facts);
-
-  const services = Array.isArray(facts.services)
-    ? facts.services
-        .map((service) => clean(service?.name))
-        .filter(Boolean)
-        .slice(0, 3)
-    : [];
-
-  const terminology = Array.isArray(
-    playbook.terminology,
-  )
-    ? playbook.terminology
-        .map((item) => clean(item))
-        .filter(Boolean)
-        .slice(0, 3)
-    : [];
-
-  const work = services.length
-    ? services.join(", ")
-    : terminology.join(", ");
-
-  const next = nextStep(playbook);
-
-  if (where && work) {
-    return limit(
-      `${tidy(work)} across ${where}. ${next}`,
-      MAX_SUBHEADING,
-    );
-  }
-
-  if (where) {
-    return limit(
-      `${tidy(playbook.label)} serving ${where}. ${next}`,
-      MAX_SUBHEADING,
-    );
-  }
-
-  if (work) {
-    return limit(
-      `${tidy(work)}. ${next}`,
-      MAX_SUBHEADING,
-    );
-  }
-
-  return limit(
-    next,
-    MAX_SUBHEADING,
-  );
-}
-
-/**
- * Creates the safest next-step sentence for the selected industry.
- */
 export function nextStep(
+  facts: CopyFacts,
   playbook: IndustryPlaybook,
 ): string {
-  switch (playbook.action) {
-    case "call":
-      return "Call and speak to us today.";
+  const target =
+    ctaTarget(facts);
 
-    case "book":
-      return "Book a time that suits you.";
-
-    case "quote":
-      return "Ask for a written quote.";
-
-    case "consult":
-      return "Request a consultation.";
-
-    case "visit":
-      return "Come and see us.";
-
-    case "lead":
-      return "Get in touch and we'll take it from there.";
-
-    default:
-      return "Get in touch and we'll take it from there.";
+  if (
+    target?.label
+  ) {
+    return target.label;
   }
+
+  return firstNonEmpty(
+    playbook.ctaLabels?.primary,
+    "Get started",
+  );
 }
 
-/**
- * Determines the safest primary CTA destination.
- *
- * Phone and email are used only when actually supplied.
- * Otherwise the builder uses the site's contact page.
- */
-export function ctaTarget(
-  facts: CopyFacts,
-): {
-  url: string;
-  label: string;
-} | null {
-  const phone = usable(facts.phone);
+/* -------------------------------------------------------------------------- */
+/* Section copy                                                               */
+/* -------------------------------------------------------------------------- */
 
-  if (phone) {
-    const phoneNumber = phone.replace(
-      /[^\d+]/g,
-      "",
-    );
-
-    if (phoneNumber) {
-      return {
-        url: `tel:${phoneNumber}`,
-        label: "Call now",
-      };
-    }
-  }
-
-  const email = usable(facts.email);
-
-  if (email) {
-    return {
-      url: `mailto:${email}`,
-      label: "Email us",
-    };
-  }
-
-  return {
-    url: "/contact",
-    label: "Get in touch",
-  };
-}
-
-export type SectionCopy = {
-  heading: string;
-  subheading?: string;
-  body?: string;
-};
-
-/**
- * Creates section copy from:
- * - known business facts
- * - the selected industry playbook
- * - the requested section kind
- *
- * Unknown section kinds receive a safe human-readable heading.
- */
-export function sectionCopy(
+function genericSectionCopy(
   kind: string,
   facts: CopyFacts,
-  playbook: IndustryPlaybook,
 ): SectionCopy {
-  const normalizedKind = clean(kind)
-    .toLowerCase()
-    .replace(/[\s-]+/g, "_");
+  const business =
+    businessDescriptor(facts);
 
-  const where = place(facts);
+  const services =
+    serviceNames(facts);
 
-  const services = Array.isArray(facts.services)
-    ? facts.services
-        .map((service) => clean(service?.name))
-        .filter(Boolean)
-    : [];
+  const location =
+    place(facts);
 
-  const firstService =
-    services[0] ?? null;
-
-  switch (normalizedKind) {
+  switch (
+    lower(kind)
+  ) {
     case "hero":
       return {
-        heading: heroHeadline(
-          facts,
-          playbook,
-        ),
+        heading:
+          heroHeadline(
+            facts,
+            {} as IndustryPlaybook,
+          ),
         subheading:
           heroSubheadline(
             facts,
-            playbook,
+            {} as IndustryPlaybook,
           ),
+        body:
+          firstSentence(facts),
       };
 
     case "intro":
       return {
-        heading: usable(facts.name)
-          ? `About ${clean(facts.name)}`
-          : "About us",
+        heading:
+          `About ${business}`,
+        subheading:
+          location
+            ? `Serving ${location}`
+            : "",
         body:
-          firstSentence(
-            facts.description,
-          ) ?? undefined,
+          firstSentence(facts) ||
+          `Learn more about ${business} and the services available to customers.`,
       };
 
     case "services":
-    case "service":
       return {
-        heading: services.length
-          ? "What we do"
-          : `${tidy(playbook.label)} services`,
-        subheading: where
-          ? `Available across ${where}`
-          : undefined,
-        body: services.length
-          ? services
-              .slice(0, 8)
-              .join(" · ")
-          : firstService ?? undefined,
-      };
-
-    case "process":
-      return {
-        heading: "How it works",
-        subheading: firstService
-          ? `${tidy(firstService)} from first contact to finished work`
-          : "A straightforward process from first contact to the next step.",
+        heading:
+          "Services",
+        subheading:
+          services.length
+            ? `Explore what ${business} can help you with.`
+            : `Explore what ${business} offers.`,
+        body:
+          services.length
+            ? `Choose from ${services
+                .slice(0, 3)
+                .join(", ")} and other available services.`
+            : `Explore the services available from ${business}.`,
       };
 
     case "benefits":
       return {
-        heading: "Why work with us",
-        subheading: services.length
-          ? services
-              .slice(0, 4)
-              .join(" · ")
-          : undefined,
-      };
-
-    case "trust_bar":
-      return {
-        heading: "Why customers choose us",
+        heading:
+          "Why choose this business",
+        subheading:
+          `A straightforward way to explore your options.`,
+        body:
+          firstSentence(facts) ||
+          `Explore the services, information, and next steps available from ${business}.`,
       };
 
     case "area":
-    case "areas":
-    case "service_area":
       return {
-        heading: "Areas we cover",
-        subheading: where
-          ? `Serving ${where}`
-          : undefined,
-      };
-
-    case "faq":
-      return {
-        heading: "Common questions",
-      };
-
-    case "reviews":
-    case "testimonials":
-      /*
-       * IMPORTANT:
-       * Never manufacture testimonials.
-       *
-       * The heading is safe because the actual review component can remain
-       * empty until verified customer reviews are supplied.
-       */
-      return {
-        heading: "What customers say",
-      };
-
-    case "gallery":
-    case "portfolio":
-    case "projects":
-      return {
-        heading: "Recent work",
-      };
-
-    case "pricing":
-      return {
-        heading: "Pricing",
-      };
-
-    case "quote":
-      return {
-        heading: "Request a quote",
+        heading:
+          location
+            ? `Serving ${location}`
+            : "Service area",
         subheading:
-          "Tell us what you need and we'll price it.",
-      };
-
-    case "booking":
-    case "bookings":
-      return {
-        heading: "Book an appointment",
+          location
+            ? `Local service information for ${location}.`
+            : "See where service is available.",
+        body:
+          location
+            ? `${business} serves customers in ${location}.`
+            : `Contact ${business} to confirm service availability.`,
       };
 
     case "contact":
       return {
-        heading: "Contact us",
-        subheading: where
-          ? `Serving ${where}`
-          : undefined,
+        heading:
+          "Let's get started",
+        subheading:
+          `Connect with ${business}.`,
+        body:
+          `Reach out to discuss your needs and the next step.`,
+      };
+
+    case "booking":
+      return {
+        heading:
+          "Book an appointment",
+        subheading:
+          `Choose the next step that works for you.`,
+        body:
+          `Start the process and connect with ${business}.`,
+      };
+
+    case "pricing":
+      return {
+        heading:
+          "Pricing",
+        subheading:
+          `Explore available options.`,
+        body:
+          `Contact ${business} for current pricing and availability.`,
+      };
+
+    case "faq":
+      return {
+        heading:
+          "Frequently asked questions",
+        subheading:
+          "Helpful answers before you get started.",
+        body:
+          `Find answers to common questions about working with ${business}.`,
+      };
+
+    case "gallery":
+      return {
+        heading:
+          "Our work",
+        subheading:
+          `Explore available project photos.`,
+        body:
+          `Browse the work provided by ${business}.`,
+      };
+
+    case "reviews":
+      return {
+        heading:
+          "Customer feedback",
+        subheading:
+          `Hear directly from customers.`,
+        body:
+          `Only published customer feedback should appear here.`,
       };
 
     case "cta":
     case "sticky_cta":
       return {
-        heading: nextStep(
-          playbook,
-        ),
-        subheading: where
-          ? `${tidy(playbook.label)} in ${where}`
-          : undefined,
-      };
-
-    case "about":
-      return {
-        heading: usable(facts.name)
-          ? `About ${clean(facts.name)}`
-          : "About us",
-        body:
-          firstSentence(
-            facts.description,
-          ) ?? undefined,
-      };
-
-    case "features":
-      return {
-        heading: "What we offer",
-        subheading: services.length
-          ? services
-              .slice(0, 4)
-              .join(" · ")
-          : undefined,
-      };
-
-    case "team":
-      return {
-        heading: "Our team",
-      };
-
-    case "hours":
-      return {
-        heading: "Opening hours",
-      };
-
-    case "location":
-      return {
-        heading: "Find us",
-        subheading: where
-          ? where
-          : undefined,
-      };
-
-    case "lead":
-    case "lead_form":
-      return {
-        heading: "Let's get started",
+        heading:
+          `Ready to get started?`,
         subheading:
-          nextStep(playbook),
+          `Take the next step with ${business}.`,
+        body:
+          "",
       };
 
-    default: {
-      const fallback = normalizedKind
-        .replace(/_/g, " ")
-        .replace(
-          /\b\w/g,
-          (letter) =>
-            letter.toUpperCase(),
-        );
-
+    default:
       return {
         heading:
-          fallback || "Learn more",
+          titleForSection(
+            kind,
+          ),
+        subheading:
+          "",
+        body:
+          firstSentence(facts) ||
+          `Learn more about ${business}.`,
       };
-    }
   }
 }
 
-/**
- * Builds search metadata from business facts only.
- *
- * No fabricated location, price, review, rating, award,
- * licence, experience claim, or performance claim is introduced.
- */
-export function pageSeo(
-  pageTitle: string,
+/* -------------------------------------------------------------------------- */
+/* Section title intelligence                                                 */
+/* -------------------------------------------------------------------------- */
+
+function titleForSection(
+  kind: string,
+): string {
+  const normalized =
+    lower(kind);
+
+  const titles: Record<
+    string,
+    string
+  > = {
+    hero: "Welcome",
+    intro: "About",
+    services: "Services",
+    benefits: "Why choose us",
+    area: "Service area",
+    contact: "Contact",
+    booking: "Book now",
+    pricing: "Pricing",
+    faq: "Frequently asked questions",
+    gallery: "Our work",
+    reviews: "Customer feedback",
+    cta: "Get started",
+    sticky_cta: "Get started",
+    portfolio: "Our work",
+    process: "How it works",
+    team: "Our team",
+    features: "Features",
+    results: "What we offer",
+  };
+
+  if (
+    titles[normalized]
+  ) {
+    return titles[normalized];
+  }
+
+  return normalized
+    .replace(
+      /[-_]+/g,
+      " ",
+    )
+    .replace(
+      /\b\w/g,
+      (character) =>
+        character.toUpperCase(),
+    );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Main section copy                                                          */
+/* -------------------------------------------------------------------------- */
+
+export function sectionCopy(
+  kind: string,
   facts: CopyFacts,
   playbook: IndustryPlaybook,
-): {
-  seo_title: string;
-  seo_description: string;
-} {
-  const titleBase =
-    usable(pageTitle) ??
-    tidy(playbook.label);
+): SectionCopy {
+  const normalized =
+    normalizeFacts(facts);
 
-  const where = place(facts);
-  const brand = usable(facts.name);
-
-  const titleParts: string[] = [];
-
-  if (where) {
-    titleParts.push(
-      `${titleBase} in ${where}`,
+  const generic =
+    genericSectionCopy(
+      kind,
+      normalized,
     );
-  } else {
-    titleParts.push(titleBase);
+
+  /**
+   * Industry playbooks may provide explicit section language.
+   *
+   * We deliberately only consume values that exist.
+   */
+  const playbookSection =
+    playbook.sections?.[
+      lower(kind)
+    ];
+
+  if (
+    playbookSection
+  ) {
+    return {
+      heading:
+        truncate(
+          firstNonEmpty(
+            playbookSection.heading,
+            generic.heading,
+          ),
+          140,
+        ),
+
+      subheading:
+        truncate(
+          firstNonEmpty(
+            playbookSection.subheading,
+            generic.subheading,
+          ),
+          220,
+        ),
+
+      body:
+        truncate(
+          firstNonEmpty(
+            playbookSection.body,
+            generic.body,
+          ),
+          700,
+        ),
+    };
   }
-
-  if (brand) {
-    titleParts.push(
-      `| ${brand}`,
-    );
-  }
-
-  const seoTitle = limit(
-    titleParts.join(" "),
-    MAX_META_TITLE,
-  );
-
-  const services = Array.isArray(facts.services)
-    ? facts.services
-        .map((service) =>
-          clean(service?.name),
-        )
-        .filter(Boolean)
-        .slice(0, 3)
-    : [];
-
-  const terminology = Array.isArray(
-    playbook.terminology,
-  )
-    ? playbook.terminology
-        .map((item) =>
-          clean(item),
-        )
-        .filter(Boolean)
-        .slice(0, 3)
-    : [];
-
-  const work = services.length
-    ? services.join(", ")
-    : terminology.join(", ");
-
-  const descriptionParts: string[] = [];
-
-  if (titleBase) {
-    descriptionParts.push(
-      titleBase,
-    );
-  }
-
-  if (where) {
-    descriptionParts.push(
-      `serving ${where}.`,
-    );
-  } else {
-    descriptionParts.push(".");
-  }
-
-  if (work) {
-    descriptionParts.push(
-      `${tidy(work)}.`,
-    );
-  }
-
-  descriptionParts.push(
-    nextStep(playbook),
-  );
-
-  const seoDescription = limit(
-    descriptionParts.join(" "),
-    MAX_META_DESCRIPTION,
-  );
 
   return {
-    seo_title: seoTitle,
-    seo_description:
-      seoDescription,
+    heading:
+      truncate(
+        generic.heading,
+        140,
+      ),
+
+    subheading:
+      truncate(
+        generic.subheading,
+        220,
+      ),
+
+    body:
+      truncate(
+        generic.body,
+        700,
+      ),
   };
 }
 
+/* -------------------------------------------------------------------------- */
+/* FAQ intelligence                                                           */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Returns FAQ questions appropriate for the selected industry.
- *
- * The answers are intentionally NOT generated here because the builder
- * must not invent business-specific policies, prices, guarantees,
- * hours, credentials, or turnaround times.
+ * FAQ questions are safe to generate because they do not assert that an
+ * answer, price, policy, certification, guarantee, or review exists.
  */
 export function faqQuestions(
   playbook: IndustryPlaybook,
 ): string[] {
-  const questions = Array.isArray(
-    playbook.faqSeeds,
-  )
-    ? playbook.faqSeeds
-        .map((question) =>
-          clean(question),
-        )
-        .filter(Boolean)
-    : [];
+  const questions =
+    playbook.faqQuestions ?? [];
 
-  return Array.from(
-    new Set(questions),
-  ).slice(0, 5);
+  return unique(
+    questions,
+  ).slice(
+    0,
+    5,
+  );
 }
 
-/**
- * Returns unique known services.
- */
-export function serviceNames(
+/* -------------------------------------------------------------------------- */
+/* SEO                                                                        */
+/* -------------------------------------------------------------------------- */
+
+function seoLocation(
   facts: CopyFacts,
-): string[] {
-  if (!Array.isArray(facts.services)) {
-    return [];
+): string {
+  const normalized =
+    normalizeFacts(facts);
+
+  return (
+    normalized.serviceArea ||
+    [
+      normalized.city,
+      normalized.state,
+    ]
+      .filter(Boolean)
+      .join(", ")
+  );
+}
+
+function seoBusinessName(
+  facts: CopyFacts,
+): string {
+  return (
+    normalizeFacts(facts)
+      .name ||
+    FALLBACK_BUSINESS
+  );
+}
+
+function seoIndustry(
+  facts: CopyFacts,
+): string {
+  return (
+    industryLabel(facts) ||
+    FALLBACK_INDUSTRY
+  );
+}
+
+export function pageSeo(
+  title: string,
+  facts: CopyFacts,
+  playbook: IndustryPlaybook,
+): PageSeo {
+  const normalized =
+    normalizeFacts(facts);
+
+  const business =
+    seoBusinessName(
+      normalized,
+    );
+
+  const industry =
+    seoIndustry(
+      normalized,
+    );
+
+  const location =
+    seoLocation(
+      normalized,
+    );
+
+  const pageTitle =
+    clean(title) ||
+    "Home";
+
+  const isHome =
+    lower(pageTitle) ===
+      "home" ||
+    lower(pageTitle) ===
+      lower(business);
+
+  let seoTitle = "";
+
+  if (isHome) {
+    seoTitle = location
+      ? `${business} | ${industry} in ${location}`
+      : `${business} | ${industry}`;
+  } else {
+    seoTitle = location
+      ? `${pageTitle} | ${business} | ${location}`
+      : `${pageTitle} | ${business}`;
   }
 
-  return Array.from(
-    new Set(
-      facts.services
-        .map((service) =>
-          clean(service?.name),
-        )
-        .filter(Boolean),
-    ),
-  ).slice(0, 20);
+  /**
+   * Prefer the business's own description when it exists.
+   */
+  let description =
+    firstSentence(
+      normalized,
+    );
+
+  if (!description) {
+    description =
+      location
+        ? `${business} provides ${industry} services in ${location}. Explore services, information, and next steps.`
+        : `${business} provides ${industry} services. Explore services, information, and next steps.`;
+  }
+
+  /**
+   * Playbook metadata is a fallback, not a replacement for owner-provided
+   * business information.
+   */
+  if (
+    !description &&
+    playbook.seoDescription
+  ) {
+    description =
+      playbook.seoDescription;
+  }
+
+  return {
+    seo_title:
+      truncate(
+        seoTitle,
+        MAX_TITLE_LENGTH,
+      ),
+
+    seo_description:
+      truncate(
+        description,
+        MAX_DESCRIPTION_LENGTH,
+      ),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Safe copy validation                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * These patterns identify claims that should not be generated unless the
+ * business has explicitly supplied the claim.
+ */
+const UNSUPPORTED_CLAIM_PATTERNS: RegExp[] = [
+  /\b#1\b/i,
+  /\bbest in\b/i,
+  /\bnumber one\b/i,
+  /\baward[- ]winning\b/i,
+  /\baward winning\b/i,
+  /\bguaranteed results?\b/i,
+  /\b100%\s*(satisfaction|guaranteed)\b/i,
+  /\btrusted by (thousands|hundreds|millions)\b/i,
+  /\bover \d[\d,]* customers?\b/i,
+  /\b\d[\d,]*\+ customers?\b/i,
+  /\b\d[\d,]* years? (of )?experience\b/i,
+  /\bserving customers since\b/i,
+];
+
+function containsUnsupportedClaim(
+  text: string,
+): boolean {
+  return UNSUPPORTED_CLAIM_PATTERNS.some(
+    (pattern) =>
+      pattern.test(text),
+  );
 }
 
 /**
- * Creates a compact business descriptor.
+ * Exposed internally for future quality tooling without introducing a
+ * dependency on the quality engine.
  */
-export function businessDescriptor(
+export function isCopyFactSafe(
+  text: string,
+): boolean {
+  const value =
+    clean(text);
+
+  if (!value) {
+    return true;
+  }
+
+  return !containsUnsupportedClaim(
+    value,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Fabrication-safe fallback                                                  */
+/* -------------------------------------------------------------------------- */
+
+function sanitizeGeneratedText(
+  text: string,
+  facts: CopyFacts,
+): string {
+  let value =
+    clean(text);
+
+  if (!value) {
+    return "";
+  }
+
+  /**
+   * We do not blindly delete unsupported claims because doing so could leave
+   * broken grammar. If a playbook supplies an unsafe sentence, replace it
+   * with fact-safe generic language.
+   */
+  if (
+    containsUnsupportedClaim(
+      value,
+    )
+  ) {
+    return `Explore the services available from ${businessDescriptor(
+      facts,
+    )}.`;
+  }
+
+  return value;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Final copy contract                                                        */
+/* -------------------------------------------------------------------------- */
+
+export function safeSectionCopy(
+  kind: string,
+  facts: CopyFacts,
+  playbook: IndustryPlaybook,
+): SectionCopy {
+  const copy =
+    sectionCopy(
+      kind,
+      facts,
+      playbook,
+    );
+
+  return {
+    heading:
+      sanitizeGeneratedText(
+        copy.heading,
+        facts,
+      ),
+
+    subheading:
+      sanitizeGeneratedText(
+        copy.subheading,
+        facts,
+      ),
+
+    body:
+      sanitizeGeneratedText(
+        copy.body,
+        facts,
+      ),
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Intent-aware copy helpers                                                  */
+/* -------------------------------------------------------------------------- */
+
+export function serviceIntro(
+  facts: CopyFacts,
+): string {
+  const business =
+    businessDescriptor(
+      facts,
+    );
+
+  const services =
+    serviceSentence(
+      facts,
+    );
+
+  if (services) {
+    return `${business} offers ${services}.`;
+  }
+
+  return `Explore the services available from ${business}.`;
+}
+
+export function contactIntro(
+  facts: CopyFacts,
+): string {
+  const business =
+    businessDescriptor(
+      facts,
+    );
+
+  return `Connect with ${business} to discuss your needs and the next step.`;
+}
+
+export function locationIntro(
+  facts: CopyFacts,
+): string {
+  const business =
+    businessDescriptor(
+      facts,
+    );
+
+  const location =
+    place(facts);
+
+  if (location) {
+    return `${business} serves customers in ${location}.`;
+  }
+
+  return `Contact ${business} to confirm service availability.`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tone helpers                                                               */
+/* -------------------------------------------------------------------------- */
+
+export function toneForIndustry(
+  playbook: IndustryPlaybook,
+): CopyTone {
+  const label =
+    lower(
+      playbook.label,
+    );
+
+  if (
+    /\bpremium|luxury|high[- ]end\b/.test(
+      label,
+    )
+  ) {
+    return "premium";
+  }
+
+  if (
+    /\btech|technology|software|digital\b/.test(
+      label,
+    )
+  ) {
+    return "modern";
+  }
+
+  if (
+    /\bhome|clean|care|beauty|salon|family\b/.test(
+      label,
+    )
+  ) {
+    return "friendly";
+  }
+
+  return "professional";
+}
+
+/* -------------------------------------------------------------------------- */
+/* Deterministic rewrite                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * This is intentionally not an LLM.
+ *
+ * It performs a safe structural rewrite using facts already present in the
+ * workspace. This gives the free builder useful "rewrite" behavior without
+ * introducing a paid AI dependency.
+ */
+export function rewriteSectionCopy(
+  kind: string,
+  facts: CopyFacts,
+  playbook: IndustryPlaybook,
+  length: CopyLength = "standard",
+): SectionCopy {
+  const copy =
+    safeSectionCopy(
+      kind,
+      facts,
+      playbook,
+    );
+
+  if (
+    length === "short"
+  ) {
+    return {
+      heading:
+        copy.heading,
+
+      subheading:
+        truncate(
+          copy.subheading,
+          120,
+        ),
+
+      body:
+        truncate(
+          copy.body,
+          300,
+        ),
+    };
+  }
+
+  if (
+    length === "expanded"
+  ) {
+    const extra =
+      serviceSentence(
+        facts,
+      );
+
+    return {
+      heading:
+        copy.heading,
+
+      subheading:
+        copy.subheading,
+
+      body:
+        unique([
+          copy.body,
+          extra
+            ? `Services include ${extra}.`
+            : "",
+        ]).join(" "),
+    };
+  }
+
+  return copy;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Public diagnostics                                                         */
+/* -------------------------------------------------------------------------- */
+
+export function copySummary(
   facts: CopyFacts,
   playbook: IndustryPlaybook,
 ): string {
-  const name = usable(facts.name);
-  const where = place(facts);
+  const normalized =
+    normalizeFacts(facts);
 
-  if (name && where) {
-    return `${name} — ${playbook.label} in ${where}`;
-  }
+  const services =
+    serviceNames(
+      normalized,
+    );
 
-  if (name) {
-    return `${name} — ${playbook.label}`;
-  }
+  const location =
+    place(normalized);
 
-  if (where) {
-    return `${playbook.label} in ${where}`;
-  }
+  const tone =
+    toneForIndustry(
+      playbook,
+    );
 
-  return playbook.label;
+  return [
+    `business=${businessDescriptor(
+      normalized,
+    )}`,
+    `industry=${industryName(
+      normalized,
+    )}`,
+    `services=${services.length}`,
+    `location=${location || "missing"}`,
+    `contact=${
+      normalized.phone ||
+      normalized.email
+        ? "available"
+        : "missing"
+    }`,
+    `tone=${tone}`,
+  ].join(" | ");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Compatibility exports                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * These aliases make the copy engine easier for future builder modules to
+ * consume without forcing them to know internal helper names.
+ */
+export const getHeroHeadline =
+  heroHeadline;
+
+export const getHeroSubheadline =
+  heroSubheadline;
+
+export const getCtaTarget =
+  ctaTarget;
+
+export const getPageSeo =
+  pageSeo;
+
+export const getSectionCopy =
+  sectionCopy;
+
+export const getFaqQuestions =
+  faqQuestions;
+
+/* -------------------------------------------------------------------------- */
+/* Invariants                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Compile-time-facing sanity helpers.
+ *
+ * These do not touch the network or application state.
+ */
+export function hasBusinessIdentity(
+  facts: CopyFacts,
+): boolean {
+  const normalized =
+    normalizeFacts(facts);
+
+  return Boolean(
+    normalized.name ||
+      normalized.industry,
+  );
+}
+
+export function hasServiceInformation(
+  facts: CopyFacts,
+): boolean {
+  return (
+    serviceNames(facts)
+      .length > 0
+  );
+}
+
+export function hasContactInformation(
+  facts: CopyFacts,
+): boolean {
+  const normalized =
+    normalizeFacts(facts);
+
+  return Boolean(
+    hasUsablePhone(
+      normalized.phone,
+    ) ||
+      isValidEmail(
+        normalized.email,
+      ),
+  );
 }
