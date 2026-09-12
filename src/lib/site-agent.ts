@@ -2,16 +2,6 @@
 /* QUICK COMMANDS + MULTIMODAL TEMPLATES                                     */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Fast commands exposed by SiteChatbot.
- *
- * These are intentionally plain data objects so the chatbot can render
- * them without depending on the builder implementation.
- *
- * IMPORTANT:
- * These commands describe user intent only.
- * They do NOT execute actions directly.
- */
 export type QuickCommand = {
   id: string;
   label: string;
@@ -19,12 +9,6 @@ export type QuickCommand = {
   description?: string;
 };
 
-/**
- * High-value one-tap builder commands.
- *
- * Keep these aligned with capabilities already supported by the
- * deterministic builder and site-agent action contract.
- */
 export const QUICK_COMMANDS: QuickCommand[] = [
   {
     id: "make-premium",
@@ -34,7 +18,6 @@ export const QUICK_COMMANDS: QuickCommand[] = [
     description:
       "Upgrade visual hierarchy, spacing, composition, effects, and presentation.",
   },
-
   {
     id: "add-3d-depth",
     label: "Add 3D depth",
@@ -43,7 +26,6 @@ export const QUICK_COMMANDS: QuickCommand[] = [
     description:
       "Add depth without making the website distracting or slow.",
   },
-
   {
     id: "improve-homepage",
     label: "Improve homepage",
@@ -52,7 +34,6 @@ export const QUICK_COMMANDS: QuickCommand[] = [
     description:
       "Strengthen the complete homepage experience.",
   },
-
   {
     id: "fix-mobile",
     label: "Fix mobile",
@@ -61,7 +42,6 @@ export const QUICK_COMMANDS: QuickCommand[] = [
     description:
       "Make every important page work cleanly on phones and tablets.",
   },
-
   {
     id: "improve-seo",
     label: "Improve SEO",
@@ -72,12 +52,6 @@ export const QUICK_COMMANDS: QuickCommand[] = [
   },
 ];
 
-/**
- * Templates shown when the user attaches visual or media context.
- *
- * These templates are prompts only. They do not bypass validation,
- * authorization, RLS, or the AgentAction contract.
- */
 export type MultimodalTemplate = {
   id: string;
   label: string;
@@ -96,7 +70,6 @@ export const MULTIMODAL_TEMPLATES: MultimodalTemplate[] = [
     description:
       "Turn an uploaded business image into a strong hero visual.",
   },
-
   {
     id: "work-gallery",
     label: "Build a work gallery",
@@ -106,7 +79,6 @@ export const MULTIMODAL_TEMPLATES: MultimodalTemplate[] = [
     description:
       "Use real business media to strengthen portfolio presentation.",
   },
-
   {
     id: "brand-reference",
     label: "Match this brand",
@@ -116,7 +88,6 @@ export const MULTIMODAL_TEMPLATES: MultimodalTemplate[] = [
     description:
       "Use an uploaded reference to guide visual direction.",
   },
-
   {
     id: "site-review",
     label: "Review this design",
