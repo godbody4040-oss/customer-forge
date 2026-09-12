@@ -7,16 +7,53 @@ import {
   type SectionEffectId,
 } from "@/lib/site-effects";
 import { safeLinkUrl } from "@/lib/website-content";
+
 /**
- * Revora Site Agent — the shared vocabulary for "just tell it what you want".
+ * REVORA SITE AGENT — MASTER ACTION CONTRACT
+ * ===========================================
  *
- * The assistant answers with a plan made of small, checkable actions. This file
- * owns the action shapes, the validation that keeps a model from doing anything
- * outside the workspace, and the plain-English descriptions the client reads
- * before approving. Nothing here talks to the database or the model.
+ * This file is the shared vocabulary between:
+ *
+ * Human request
+ *      ↓
+ * Interpreter / AI planner
+ *      ↓
+ * AgentAction
+ *      ↓
+ * Executor
+ *      ↓
+ * Website
+ *
+ * IMPORTANT:
+ * This file does not write to the database.
+ * It defines safe, validated actions only.
+ *
+ * Visual intelligence is first-class here.
+ *
+ * The builder can now explicitly control:
+ * - section composition
+ * - image treatment
+ * - image position
+ * - focal point
+ * - image ratio
+ * - card geometry
+ * - spacing
+ * - density
+ * - max width
+ * - overlays
+ * - shadows
+ * - object fit
+ * - object position
+ *
+ * This keeps visual intent from being hidden inside arbitrary JSON.
  */
 
 export const PLAN_INSTRUCTION_LIMIT = 24_000;
+
+/**
+ * The executor currently supports a bounded action plan.
+ * Keep this synchronized with the executor.
+ */
 export const MAX_ACTIONS = 60;
 
 export type AgentField = "heading" | "subheading" | "body";
@@ -41,6 +78,138 @@ export type ComponentPatch = {
   is_visible?: boolean;
 };
 
+/* -------------------------------------------------------------------------- */
+/* VISUAL INTELLIGENCE                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Visual properties for a single media-bearing component.
+ *
+ * These are deliberately finite values rather than arbitrary CSS.
+ * This prevents the AI from injecting unsafe or unsupported styles.
+ */
+export type VisualComponentPatch = {
+  media_url?: string | null;
+
+  /**
+   * Accessibility text.
+   */
+  alt?: string;
+
+  /**
+   * CSS object-fit strategy.
+   */
+  object_fit?: "cover" | "contain";
+
+  /**
+   * Safe human-readable focal positioning.
+   *
+   * Examples:
+   * - center
+   * - center top
+   * - left center
+   * - right center
+   */
+  object_position?: string;
+
+  /**
+   * Visual overlay treatment.
+   */
+  overlay?: "none" | "soft" | "dark" | "brand" | "gradient";
+
+  /**
+   * Border-radius design token.
+   */
+  radius?: "none" | "small" | "medium" | "large" | "pill";
+
+  /**
+   * Shadow design token.
+   */
+  shadow?: "none" | "soft" | "medium" | "strong";
+
+  /**
+   * Preferred image composition ratio.
+   */
+  aspect_ratio?: "1:1" | "4:3" | "3:2" | "16:9" | "21:9";
+
+  /**
+   * Optional normalized focal point.
+   *
+   * Examples:
+   * - "0.5 0.5"
+   * - "0.8 0.4"
+   */
+  focal_point?: string;
+};
+
+/**
+ * Visual composition for an entire section.
+ *
+ * This is intentionally independent from copy.
+ *
+ * Copy says WHAT the section says.
+ * Visual composition says HOW the section looks.
+ */
+export type SectionVisualPatch = {
+  layout?:
+    | "split"
+    | "centered"
+    | "image_left"
+    | "image_right"
+    | "full_bleed"
+    | "editorial"
+    | "layered"
+    | "stacked";
+
+  density:
+    | "airy"
+    | "balanced"
+    | "dense";
+
+  image_position?:
+    | "left"
+    | "right"
+    | "center"
+    | "background";
+
+  image_treatment?:
+    | "natural"
+    | "rounded"
+    | "soft_shadow"
+    | "glass_frame"
+    | "duotone"
+    | "gradient_overlay"
+    | "cinematic"
+    | "cutout"
+    | "full_bleed";
+
+  spacing?:
+    | "tight"
+    | "standard"
+    | "generous";
+
+  max_width?:
+    | "narrow"
+    | "standard"
+    | "wide"
+    | "edge";
+
+  card_style?:
+    | "soft"
+    | "sharp"
+    | "pill"
+    | "glass"
+    | "editorial"
+    | "floating";
+
+  image_ratio?:
+    | "1:1"
+    | "4:3"
+    | "3:2"
+    | "16:9"
+    | "21:9";
+};
+
 export type { BackdropId, SectionEffectId };
 
 export type ThemePatch = {
@@ -62,26 +231,80 @@ export const BUSINESS_FACT_FIELDS = [
   "review_link",
   "website",
 ] as const;
-export type BusinessFactField = (typeof BUSINESS_FACT_FIELDS)[number];
+
+export type BusinessFactField =
+  (typeof BUSINESS_FACT_FIELDS)[number];
+
+/* -------------------------------------------------------------------------- */
+/* ACTION CONTRACT                                                            */
+/* -------------------------------------------------------------------------- */
 
 export type AgentAction =
-  | { type: "set_section_text"; sectionId: string; field: AgentField; value: string }
-  | { type: "set_section_visibility"; sectionId: string; visible: boolean }
-  | { type: "set_section_variant"; sectionId: string; variant: string }
+  | {
+      type: "set_section_text";
+      sectionId: string;
+      field: AgentField;
+      value: string;
+    }
+
+  | {
+      type: "set_section_visibility";
+      sectionId: string;
+      visible: boolean;
+    }
+
+  | {
+      type: "set_section_variant";
+      sectionId: string;
+      variant: string;
+    }
+
+  | {
+      type: "set_section_visual";
+      sectionId: string;
+      patch: SectionVisualPatch;
+    }
+
   | {
       type: "add_section";
       pageId: string;
-      /** Temporary name (`temp_*`) so later actions can target this new section. */
+
+      /**
+       * Temporary name (`temp_*`) so later actions can target
+       * this newly-created section.
+       */
       ref?: string | undefined;
+
       kind: string;
       heading?: string | undefined;
       subheading?: string | undefined;
       body?: string | undefined;
       position?: number | undefined;
     }
-  | { type: "delete_section"; sectionId: string }
-  | { type: "reorder_sections"; pageId: string; sectionIds: string[] }
-  | { type: "set_component"; componentId: string; patch: ComponentPatch }
+
+  | {
+      type: "delete_section";
+      sectionId: string;
+    }
+
+  | {
+      type: "reorder_sections";
+      pageId: string;
+      sectionIds: string[];
+    }
+
+  | {
+      type: "set_component";
+      componentId: string;
+      patch: ComponentPatch;
+    }
+
+  | {
+      type: "set_component_visual";
+      componentId: string;
+      patch: VisualComponentPatch;
+    }
+
   | {
       type: "add_component";
       sectionId: string;
@@ -91,290 +314,1626 @@ export type AgentAction =
       link_url?: string | undefined;
       link_label?: string | undefined;
     }
-  | { type: "delete_component"; componentId: string }
+
+  | {
+      type: "delete_component";
+      componentId: string;
+    }
+
   | {
       type: "add_page";
       kind: string;
       title: string;
       slug: string;
+
       /**
-       * Optional temporary name (e.g. "temp_page_1") that later actions in the
-       * same plan may use as their `pageId`. The executor swaps it for the real
-       * database id the moment the page is created, so one run can build a page
-       * AND everything on it.
+       * Temporary page reference.
+       *
+       * Example:
+       * temp_page_1
        */
       ref?: string | undefined;
     }
-  | { type: "set_page"; pageId: string; patch: PageSeoPatch }
-  | { type: "delete_page"; pageId: string }
-  | { type: "set_theme"; patch: ThemePatch }
-  | { type: "set_backdrop"; backdrop: BackdropId }
-  | { type: "set_section_effect"; sectionId: string; effect: SectionEffectId }
-  | { type: "set_business_fact"; field: BusinessFactField; value: string };
+
+  | {
+      type: "set_page";
+      pageId: string;
+      patch: PageSeoPatch;
+    }
+
+  | {
+      type: "delete_page";
+      pageId: string;
+    }
+
+  | {
+      type: "set_theme";
+      patch: ThemePatch;
+    }
+
+  | {
+      type: "set_backdrop";
+      backdrop: BackdropId;
+    }
+
+  | {
+      type: "set_section_effect";
+      sectionId: string;
+      effect: SectionEffectId;
+    }
+
+  | {
+      type: "set_business_fact";
+      field: BusinessFactField;
+      value: string;
+    };
+
+/* -------------------------------------------------------------------------- */
+/* PLAN TYPES                                                                 */
+/* -------------------------------------------------------------------------- */
 
 export type AgentStep = {
-  /** Stable index used by the UI to include or skip a step. */
+  /**
+   * Stable index used by the UI.
+   */
   key: string;
-  /** One line a business owner understands. */
+
+  /**
+   * Plain-English title.
+   */
   title: string;
-  /** Where the change lands, e.g. "Home → Hero". */
+
+  /**
+   * Human-readable location.
+   *
+   * Example:
+   * Home → Hero
+   */
   where: string;
-  /** Current value, when the step replaces text. */
+
+  /**
+   * Current value, when replacing content.
+   */
   before?: string;
-  /** New value, when the step writes text. */
+
+  /**
+   * New value.
+   */
   after?: string;
-  /** True when the step removes something, so the UI can warn. */
+
+  /**
+   * Whether this action removes/hides something.
+   */
   destructive: boolean;
+
   action: AgentAction;
 };
 
 export type AgentPlan = {
-  /** Conversational answer to the request. */
   reply: string;
-  /** What the whole plan achieves, in one or two sentences. */
   summary: string;
   steps: AgentStep[];
-  /** Anything the agent needs from the client before it can do more. */
   questions: string[];
-  /** Honest caveats: things it deliberately did not do. */
   notes: string[];
 };
 
-export type AgentTurn = { role: "user" | "assistant"; content: string };
+export type AgentTurn = {
+  role: "user" | "assistant";
+  content: string;
+};
 
-/* ------------------------------- validation ------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* VALIDATION                                                                 */
+/* -------------------------------------------------------------------------- */
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-/** A page that does not exist yet, named so later steps in the same plan can use it. */
-export const TEMP_REF = /^temp_[a-z0-9_]{1,30}$/i;
-const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const text = (value: unknown, max: number) => {
-  const out = typeof value === "string" ? value.trim() : "";
+/**
+ * A temporary reference is intentionally much more restricted than
+ * an arbitrary string.
+ */
+export const TEMP_REF =
+  /^temp_[a-z0-9_]{1,30}$/i;
+
+const HEX =
+  /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+const KIND =
+  /^[a-z][a-z0-9_]{1,32}$/;
+
+/**
+ * Only allow human-readable CSS position tokens.
+ *
+ * Valid:
+ * - center
+ * - center top
+ * - right center
+ * - left bottom
+ */
+const CSS_POSITION =
+  /^(?:left|center|right|top|bottom)(?:\s+(?:left|center|right|top|bottom))?$/i;
+
+/**
+ * Normalized focal coordinates.
+ *
+ * Valid:
+ * - 0
+ * - 0.5
+ * - 1
+ * - 0.5 0.8
+ */
+const SAFE_FOCAL_POINT =
+  /^(?:0|0\.[0-9]+|1)(?:\s+(?:0|0\.[0-9]+|1))?$/;
+
+/**
+ * Finite visual vocabularies.
+ *
+ * The planner can be creative about WHICH value it chooses,
+ * but it cannot invent arbitrary CSS.
+ */
+const VISUAL_VALUES = {
+  object_fit: new Set([
+    "cover",
+    "contain",
+  ]),
+
+  overlay: new Set([
+    "none",
+    "soft",
+    "dark",
+    "brand",
+    "gradient",
+  ]),
+
+  radius: new Set([
+    "none",
+    "small",
+    "medium",
+    "large",
+    "pill",
+  ]),
+
+  shadow: new Set([
+    "none",
+    "soft",
+    "medium",
+    "strong",
+  ]),
+
+  aspect_ratio: new Set([
+    "1:1",
+    "4:3",
+    "3:2",
+    "16:9",
+    "21:9",
+  ]),
+
+  layout: new Set([
+    "split",
+    "centered",
+    "image_left",
+    "image_right",
+    "full_bleed",
+    "editorial",
+    "layered",
+    "stacked",
+  ]),
+
+  density: new Set([
+    "airy",
+    "balanced",
+    "dense",
+  ]),
+
+  image_position: new Set([
+    "left",
+    "right",
+    "center",
+    "background",
+  ]),
+
+  image_treatment: new Set([
+    "natural",
+    "rounded",
+    "soft_shadow",
+    "glass_frame",
+    "duotone",
+    "gradient_overlay",
+    "cinematic",
+    "cutout",
+    "full_bleed",
+  ]),
+
+  spacing: new Set([
+    "tight",
+    "standard",
+    "generous",
+  ]),
+
+  max_width: new Set([
+    "narrow",
+    "standard",
+    "wide",
+    "edge",
+  ]),
+
+  card_style: new Set([
+    "soft",
+    "sharp",
+    "pill",
+    "glass",
+    "editorial",
+    "floating",
+  ]),
+
+  image_ratio: new Set([
+    "1:1",
+    "4:3",
+    "3:2",
+    "16:9",
+    "21:9",
+  ]),
+} as const;
+
+/* -------------------------------------------------------------------------- */
+/* BASIC HELPERS                                                              */
+/* -------------------------------------------------------------------------- */
+
+const text = (
+  value: unknown,
+  max: number,
+) => {
+  const out =
+    typeof value === "string"
+      ? value.trim()
+      : "";
+
   return out.slice(0, max);
 };
 
-const bool = (value: unknown) => value === true || value === "true";
+const bool = (
+  value: unknown,
+) =>
+  value === true ||
+  value === "true";
 
-const isField = (value: unknown): value is AgentField =>
-  value === "heading" || value === "subheading" || value === "body";
+const isField = (
+  value: unknown,
+): value is AgentField =>
+  value === "heading" ||
+  value === "subheading" ||
+  value === "body";
 
-const KIND = /^[a-z][a-z0-9_]{1,32}$/;
-
-export const slugifyPath = (value: string) =>
+/**
+ * Convert a page title or requested URL into a safe path.
+ */
+export const slugifyPath = (
+  value: string,
+) =>
   value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
 
+/* -------------------------------------------------------------------------- */
+/* SAFE VISUAL INPUT                                                          */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Turns whatever the model returned into actions we are willing to run. Unknown
- * types, unknown ids and out-of-range values are dropped rather than guessed at,
- * so a sloppy response can never write junk into a client's website.
+ * Image URLs have stricter rules than normal action links.
+ *
+ * Allowed:
+ * - relative paths
+ * - http
+ * - https
+ *
+ * Rejected:
+ * - javascript:
+ * - data:
+ * - mailto:
+ * - tel:
+ * - protocol-relative //
+ * - credentials in URLs
+ */
+const safeVisualUrl = (
+  value: unknown,
+): string | null | undefined => {
+  if (value === null) {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const candidate =
+    value.trim().slice(0, 2000);
+
+  if (!candidate) {
+    return undefined;
+  }
+
+  /**
+   * Local assets are valid.
+   */
+  if (candidate.startsWith("/")) {
+    if (candidate.startsWith("//")) {
+      return undefined;
+    }
+
+    return candidate;
+  }
+
+  const safe =
+    safeLinkUrl(candidate);
+
+  if (!safe) {
+    return undefined;
+  }
+
+  try {
+    const url =
+      new URL(safe);
+
+    if (
+      url.username ||
+      url.password
+    ) {
+      return undefined;
+    }
+
+    if (
+      url.protocol !== "https:" &&
+      url.protocol !== "http:"
+    ) {
+      return undefined;
+    }
+  } catch {
+    return undefined;
+  }
+
+  return safe;
+};
+
+/* -------------------------------------------------------------------------- */
+/* VISUAL PATCH READERS                                                       */
+/* -------------------------------------------------------------------------- */
+
+const readVisualPatch = (
+  value: unknown,
+): VisualComponentPatch => {
+  if (
+    !value ||
+    typeof value !== "object"
+  ) {
+    return {};
+  }
+
+  const raw =
+    value as Record<string, unknown>;
+
+  const patch: VisualComponentPatch = {};
+
+  const media =
+    safeVisualUrl(
+      raw["media_url"],
+    );
+
+  if (media !== undefined) {
+    patch.media_url = media;
+  }
+
+  if (
+    typeof raw["alt"] ===
+    "string"
+  ) {
+    const alt =
+      text(raw["alt"], 160);
+
+    if (alt) {
+      patch.alt = alt;
+    }
+  }
+
+  if (
+    typeof raw["object_fit"] ===
+    "string" &&
+    VISUAL_VALUES.object_fit.has(
+      raw["object_fit"] as never,
+    )
+  ) {
+    patch.object_fit =
+      raw["object_fit"] as VisualComponentPatch["object_fit"];
+  }
+
+  if (
+    typeof raw["object_position"] ===
+    "string"
+  ) {
+    const position =
+      text(
+        raw["object_position"],
+        40,
+      );
+
+    if (
+      CSS_POSITION.test(position)
+    ) {
+      patch.object_position =
+        position.toLowerCase();
+    }
+  }
+
+  if (
+    typeof raw["overlay"] ===
+    "string" &&
+    VISUAL_VALUES.overlay.has(
+      raw["overlay"] as never,
+    )
+  ) {
+    patch.overlay =
+      raw["overlay"] as VisualComponentPatch["overlay"];
+  }
+
+  if (
+    typeof raw["radius"] ===
+    "string" &&
+    VISUAL_VALUES.radius.has(
+      raw["radius"] as never,
+    )
+  ) {
+    patch.radius =
+      raw["radius"] as VisualComponentPatch["radius"];
+  }
+
+  if (
+    typeof raw["shadow"] ===
+    "string" &&
+    VISUAL_VALUES.shadow.has(
+      raw["shadow"] as never,
+    )
+  ) {
+    patch.shadow =
+      raw["shadow"] as VisualComponentPatch["shadow"];
+  }
+
+  if (
+    typeof raw["aspect_ratio"] ===
+    "string" &&
+    VISUAL_VALUES.aspect_ratio.has(
+      raw["aspect_ratio"] as never,
+    )
+  ) {
+    patch.aspect_ratio =
+      raw["aspect_ratio"] as VisualComponentPatch["aspect_ratio"];
+  }
+
+  if (
+    typeof raw["focal_point"] ===
+    "string"
+  ) {
+    const focal =
+      text(
+        raw["focal_point"],
+        40,
+      );
+
+    if (
+      SAFE_FOCAL_POINT.test(focal)
+    ) {
+      patch.focal_point = focal;
+    }
+  }
+
+  return patch;
+};
+
+const readSectionVisualPatch = (
+  value: unknown,
+): SectionVisualPatch => {
+  if (
+    !value ||
+    typeof value !== "object"
+  ) {
+    return {};
+  }
+
+  const raw =
+    value as Record<string, unknown>;
+
+  const patch:
+    Partial<SectionVisualPatch> = {};
+
+  const values = [
+    "layout",
+    "density",
+    "image_position",
+    "image_treatment",
+    "spacing",
+    "max_width",
+    "card_style",
+    "image_ratio",
+  ] as const;
+
+  for (const key of values) {
+    const candidate =
+      text(
+        raw[key],
+        40,
+      );
+
+    if (
+      candidate &&
+      VISUAL_VALUES[key].has(
+        candidate as never,
+      )
+    ) {
+      patch[key] =
+        candidate as never;
+    }
+  }
+
+  return patch as SectionVisualPatch;
+};
+
+/* -------------------------------------------------------------------------- */
+/* ACTION READER                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Converts model output into actions Revora is actually willing to execute.
+ *
+ * Unknown actions are dropped.
+ * Unknown IDs are dropped.
+ * Invalid visual values are dropped.
+ * Unsafe links are dropped.
+ * Arbitrary CSS is never accepted.
  */
 export function readActions(
   value: unknown,
-  known: { pageIds: Set<string>; sectionIds: Set<string>; componentIds: Set<string> },
+  known: {
+    pageIds: Set<string>;
+    sectionIds: Set<string>;
+    componentIds: Set<string>;
+  },
 ): AgentAction[] {
-  if (!Array.isArray(value)) return [];
-  const out: AgentAction[] = [];
-  /** Temporary page names declared by an earlier add_page in this same plan. */
-  const refs = new Set<string>();
-  const knownPage = (id: string) => known.pageIds.has(id) || refs.has(id);
-  const knownSection = (id: string) => known.sectionIds.has(id) || refs.has(id);
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
-  for (const raw of value.slice(0, MAX_ACTIONS * 2)) {
-    if (!raw || typeof raw !== "object") continue;
-    const row = raw as Record<string, unknown>;
-    const type = text(row["type"], 40);
-    const sectionId = text(row["sectionId"], 40);
-    const pageId = text(row["pageId"], 40);
-    const componentId = text(row["componentId"], 40);
+  const out: AgentAction[] = [];
+
+  /**
+   * Page and section temporary references are separate namespaces.
+   * This prevents a temporary page from accidentally being treated
+   * as a temporary section.
+   */
+  const pageRefs =
+    new Set<string>();
+
+  const sectionRefs =
+    new Set<string>();
+
+  const knownPage = (
+    id: string,
+  ) =>
+    known.pageIds.has(id) ||
+    pageRefs.has(id);
+
+  const knownSection = (
+    id: string,
+  ) =>
+    known.sectionIds.has(id) ||
+    sectionRefs.has(id);
+
+  for (
+    const raw of value.slice(
+      0,
+      MAX_ACTIONS * 2,
+    )
+  ) {
+    if (
+      !raw ||
+      typeof raw !== "object"
+    ) {
+      continue;
+    }
+
+    const row =
+      raw as Record<string, unknown>;
+
+    const type =
+      text(
+        row["type"],
+        60,
+      );
+
+    const sectionId =
+      text(
+        row["sectionId"],
+        80,
+      );
+
+    const pageId =
+      text(
+        row["pageId"],
+        80,
+      );
+
+    const componentId =
+      text(
+        row["componentId"],
+        80,
+      );
 
     switch (type) {
+      /* ------------------------------------------------------------------ */
+      /* SECTION TEXT                                                       */
+      /* ------------------------------------------------------------------ */
+
       case "set_section_text": {
-        const field = row["field"];
-        const value2 = text(row["value"], 4000);
-        if (!UUID.test(sectionId) || !known.sectionIds.has(sectionId)) break;
-        if (!isField(field) || !value2) break;
-        out.push({ type, sectionId, field, value: value2 });
+        const field =
+          row["field"];
+
+        const value2 =
+          text(
+            row["value"],
+            4000,
+          );
+
+        if (
+          !UUID.test(sectionId) ||
+          !known.sectionIds.has(
+            sectionId,
+          )
+        ) {
+          break;
+        }
+
+        if (
+          !isField(field) ||
+          !value2
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          sectionId,
+          field,
+          value: value2,
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* SECTION VISIBILITY                                                 */
+      /* ------------------------------------------------------------------ */
+
       case "set_section_visibility": {
-        if (!known.sectionIds.has(sectionId)) break;
-        out.push({ type, sectionId, visible: bool(row["visible"]) });
+        if (
+          !known.sectionIds.has(
+            sectionId,
+          )
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          sectionId,
+          visible: bool(
+            row["visible"],
+          ),
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* SECTION VARIANT                                                    */
+      /* ------------------------------------------------------------------ */
+
       case "set_section_variant": {
-        const variant = text(row["variant"], 40);
-        if (!known.sectionIds.has(sectionId) || !KIND.test(variant)) break;
-        out.push({ type, sectionId, variant });
+        const variant =
+          text(
+            row["variant"],
+            40,
+          );
+
+        if (
+          !known.sectionIds.has(
+            sectionId,
+          ) ||
+          !KIND.test(variant)
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          sectionId,
+          variant,
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* SECTION VISUAL                                                     */
+      /* ------------------------------------------------------------------ */
+
+      case "set_section_visual": {
+        if (
+          !known.sectionIds.has(
+            sectionId,
+          )
+        ) {
+          break;
+        }
+
+        const patch =
+          readSectionVisualPatch(
+            row["patch"],
+          );
+
+        if (
+          Object.keys(patch)
+            .length === 0
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          sectionId,
+          patch,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* ADD SECTION                                                        */
+      /* ------------------------------------------------------------------ */
+
       case "add_section": {
-        const kind = text(row["kind"], 40).toLowerCase();
-        if (!knownPage(pageId) || !KIND.test(kind)) break;
-        const position = Number(row["position"]);
-        const sectionRef = text(row["ref"], 40);
-        const usableRef = TEMP_REF.test(sectionRef) && !refs.has(sectionRef) ? sectionRef : "";
-        if (usableRef) refs.add(usableRef);
+        const kind =
+          text(
+            row["kind"],
+            40,
+          ).toLowerCase();
+
+        if (
+          !knownPage(pageId) ||
+          !KIND.test(kind)
+        ) {
+          break;
+        }
+
+        const position =
+          Number(
+            row["position"],
+          );
+
+        const sectionRef =
+          text(
+            row["ref"],
+            40,
+          );
+
+        const usableRef =
+          TEMP_REF.test(
+            sectionRef,
+          ) &&
+          !sectionRefs.has(
+            sectionRef,
+          )
+            ? sectionRef
+            : "";
+
+        if (usableRef) {
+          sectionRefs.add(
+            usableRef,
+          );
+        }
+
         out.push({
           type,
           pageId,
-          ref: usableRef || undefined,
+          ref:
+            usableRef ||
+            undefined,
+
           kind,
-          heading: text(row["heading"], 200) || undefined,
-          subheading: text(row["subheading"], 400) || undefined,
-          body: text(row["body"], 4000) || undefined,
-          position: Number.isFinite(position) && position >= 0 ? Math.floor(position) : undefined,
+
+          heading:
+            text(
+              row["heading"],
+              200,
+            ) ||
+            undefined,
+
+          subheading:
+            text(
+              row["subheading"],
+              400,
+            ) ||
+            undefined,
+
+          body:
+            text(
+              row["body"],
+              4000,
+            ) ||
+            undefined,
+
+          position:
+            Number.isFinite(
+              position,
+            ) &&
+            position >= 0
+              ? Math.floor(
+                  position,
+                )
+              : undefined,
         });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* DELETE SECTION                                                     */
+      /* ------------------------------------------------------------------ */
+
       case "delete_section": {
-        if (!known.sectionIds.has(sectionId)) break;
-        out.push({ type, sectionId });
-        break;
-      }
-      case "reorder_sections": {
-        const ids = Array.isArray(row["sectionIds"])
-          ? (row["sectionIds"] as unknown[])
-              .map((id) => text(id, 40))
-              .filter((id) => known.sectionIds.has(id))
-          : [];
-        if (!knownPage(pageId) || ids.length < 2) break;
-        out.push({ type, pageId, sectionIds: [...new Set(ids)] });
-        break;
-      }
-      case "set_component": {
-        const patchRaw = (row["patch"] ?? {}) as Record<string, unknown>;
-        const patch: ComponentPatch = {};
-        if (typeof patchRaw["label"] === "string") patch.label = text(patchRaw["label"], 200);
-        if (typeof patchRaw["body"] === "string") patch.body = text(patchRaw["body"], 2000);
-        if (typeof patchRaw["link_url"] === "string") {
-          const safe = safeLinkUrl(text(patchRaw["link_url"], 400));
-          if (safe) patch.link_url = safe;
+        if (
+          !known.sectionIds.has(
+            sectionId,
+          )
+        ) {
+          break;
         }
-        if (typeof patchRaw["link_label"] === "string")
-          patch.link_label = text(patchRaw["link_label"], 120);
-        if ("is_visible" in patchRaw) patch.is_visible = bool(patchRaw["is_visible"]);
-        if (!known.componentIds.has(componentId) || Object.keys(patch).length === 0) break;
-        out.push({ type, componentId, patch });
+
+        out.push({
+          type,
+          sectionId,
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* REORDER SECTIONS                                                   */
+      /* ------------------------------------------------------------------ */
+
+      case "reorder_sections": {
+        const ids =
+          Array.isArray(
+            row["sectionIds"],
+          )
+            ? (
+                row[
+                  "sectionIds"
+                ] as unknown[]
+              )
+                .map((id) =>
+                  text(id, 80),
+                )
+                .filter((id) =>
+                  known.sectionIds.has(
+                    id,
+                  ),
+                )
+            : [];
+
+        if (
+          !knownPage(pageId) ||
+          ids.length < 2
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          pageId,
+          sectionIds: [
+            ...new Set(ids),
+          ],
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* SET COMPONENT                                                      */
+      /* ------------------------------------------------------------------ */
+
+      case "set_component": {
+        const patchRaw =
+          (row["patch"] ??
+            {}) as Record<
+            string,
+            unknown
+          >;
+
+        const patch:
+          ComponentPatch = {};
+
+        if (
+          typeof patchRaw[
+            "label"
+          ] === "string"
+        ) {
+          patch.label =
+            text(
+              patchRaw[
+                "label"
+              ],
+              200,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "body"
+          ] === "string"
+        ) {
+          patch.body =
+            text(
+              patchRaw[
+                "body"
+              ],
+              2000,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "link_url"
+          ] === "string"
+        ) {
+          const safe =
+            safeLinkUrl(
+              text(
+                patchRaw[
+                  "link_url"
+                ],
+                400,
+              ),
+            );
+
+          if (safe) {
+            patch.link_url =
+              safe;
+          }
+        }
+
+        if (
+          typeof patchRaw[
+            "link_label"
+          ] === "string"
+        ) {
+          patch.link_label =
+            text(
+              patchRaw[
+                "link_label"
+              ],
+              120,
+            );
+        }
+
+        if (
+          "is_visible" in
+          patchRaw
+        ) {
+          patch.is_visible =
+            bool(
+              patchRaw[
+                "is_visible"
+              ],
+            );
+        }
+
+        if (
+          !known.componentIds.has(
+            componentId,
+          ) ||
+          Object.keys(
+            patch,
+          ).length === 0
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          componentId,
+          patch,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* SET COMPONENT VISUAL                                               */
+      /* ------------------------------------------------------------------ */
+
+      case "set_component_visual": {
+        if (
+          !known.componentIds.has(
+            componentId,
+          )
+        ) {
+          break;
+        }
+
+        const patch =
+          readVisualPatch(
+            row["patch"],
+          );
+
+        if (
+          Object.keys(
+            patch,
+          ).length === 0
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          componentId,
+          patch,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* ADD COMPONENT                                                      */
+      /* ------------------------------------------------------------------ */
+
       case "add_component": {
-        const kind = text(row["kind"], 40).toLowerCase();
-        if (!knownSection(sectionId) || !KIND.test(kind)) break;
+        const kind =
+          text(
+            row["kind"],
+            40,
+          ).toLowerCase();
+
+        if (
+          !knownSection(
+            sectionId,
+          ) ||
+          !KIND.test(kind)
+        ) {
+          break;
+        }
+
         out.push({
           type,
           sectionId,
           kind,
-          label: text(row["label"], 200) || undefined,
-          body: text(row["body"], 2000) || undefined,
-          link_url: safeLinkUrl(text(row["link_url"], 400)) ?? undefined,
-          link_label: text(row["link_label"], 120) || undefined,
+
+          label:
+            text(
+              row["label"],
+              200,
+            ) ||
+            undefined,
+
+          body:
+            text(
+              row["body"],
+              2000,
+            ) ||
+            undefined,
+
+          link_url:
+            safeLinkUrl(
+              text(
+                row["link_url"],
+                400,
+              ),
+            ) ??
+            undefined,
+
+          link_label:
+            text(
+              row["link_label"],
+              120,
+            ) ||
+            undefined,
         });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* DELETE COMPONENT                                                   */
+      /* ------------------------------------------------------------------ */
+
       case "delete_component": {
-        if (!known.componentIds.has(componentId)) break;
-        out.push({ type, componentId });
-        break;
-      }
-      case "add_page": {
-        const kind = text(row["kind"], 40).toLowerCase();
-        const title = text(row["title"], 120);
-        const slug = slugifyPath(text(row["slug"], 80) || title);
-        if (!KIND.test(kind) || !title || !slug) break;
-        const ref = text(row["ref"], 40);
-        const usable = TEMP_REF.test(ref) && !refs.has(ref) ? ref : "";
-        if (usable) refs.add(usable);
-        out.push({ type, kind, title, slug, ref: usable || undefined });
-        break;
-      }
-      case "set_page": {
-        const patchRaw = (row["patch"] ?? {}) as Record<string, unknown>;
-        const patch: PageSeoPatch = {};
-        if (typeof patchRaw["title"] === "string") patch.title = text(patchRaw["title"], 120);
-        if (typeof patchRaw["slug"] === "string")
-          patch.slug = slugifyPath(text(patchRaw["slug"], 80));
-        if ("is_visible" in patchRaw) patch.is_visible = bool(patchRaw["is_visible"]);
-        if ("noindex" in patchRaw) patch.noindex = bool(patchRaw["noindex"]);
-        if (typeof patchRaw["seo_title"] === "string")
-          patch.seo_title = text(patchRaw["seo_title"], 70);
-        if (typeof patchRaw["seo_description"] === "string")
-          patch.seo_description = text(patchRaw["seo_description"], 165);
-        if (typeof patchRaw["seo_canonical"] === "string")
-          patch.seo_canonical = text(patchRaw["seo_canonical"], 300);
-        if (typeof patchRaw["og_title"] === "string")
-          patch.og_title = text(patchRaw["og_title"], 90);
-        if (typeof patchRaw["og_description"] === "string")
-          patch.og_description = text(patchRaw["og_description"], 200);
-        if (!knownPage(pageId) || Object.keys(patch).length === 0) break;
-        out.push({ type, pageId, patch });
-        break;
-      }
-      case "delete_page": {
-        if (!knownPage(pageId)) break;
-        out.push({ type, pageId });
-        break;
-      }
-      case "set_theme": {
-        const patchRaw = (row["patch"] ?? {}) as Record<string, unknown>;
-        const patch: ThemePatch = {};
-        for (const key of ["primary_color", "secondary_color", "accent_color"] as const) {
-          const colour = text(patchRaw[key], 9);
-          if (HEX.test(colour)) patch[key] = colour;
+        if (
+          !known.componentIds.has(
+            componentId,
+          )
+        ) {
+          break;
         }
-        const font = text(patchRaw["font_preference"], 60);
-        if (font) patch.font_preference = font;
-        if (Object.keys(patch).length === 0) break;
-        out.push({ type, patch });
+
+        out.push({
+          type,
+          componentId,
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* ADD PAGE                                                           */
+      /* ------------------------------------------------------------------ */
+
+      case "add_page": {
+        const kind =
+          text(
+            row["kind"],
+            40,
+          ).toLowerCase();
+
+        const title =
+          text(
+            row["title"],
+            120,
+          );
+
+        const slug =
+          slugifyPath(
+            text(
+              row["slug"],
+              80,
+            ) ||
+              title,
+          );
+
+        if (
+          !KIND.test(kind) ||
+          !title ||
+          !slug
+        ) {
+          break;
+        }
+
+        const ref =
+          text(
+            row["ref"],
+            40,
+          );
+
+        const usable =
+          TEMP_REF.test(ref) &&
+          !pageRefs.has(ref)
+            ? ref
+            : "";
+
+        if (usable) {
+          pageRefs.add(
+            usable,
+          );
+        }
+
+        out.push({
+          type,
+          kind,
+          title,
+          slug,
+          ref:
+            usable ||
+            undefined,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* SET PAGE                                                           */
+      /* ------------------------------------------------------------------ */
+
+      case "set_page": {
+        const patchRaw =
+          (row["patch"] ??
+            {}) as Record<
+            string,
+            unknown
+          >;
+
+        const patch:
+          PageSeoPatch = {};
+
+        if (
+          typeof patchRaw[
+            "title"
+          ] === "string"
+        ) {
+          patch.title =
+            text(
+              patchRaw[
+                "title"
+              ],
+              120,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "slug"
+          ] === "string"
+        ) {
+          patch.slug =
+            slugifyPath(
+              text(
+                patchRaw[
+                  "slug"
+                ],
+                80,
+              ),
+            );
+        }
+
+        if (
+          "is_visible" in
+          patchRaw
+        ) {
+          patch.is_visible =
+            bool(
+              patchRaw[
+                "is_visible"
+              ],
+            );
+        }
+
+        if (
+          "noindex" in
+          patchRaw
+        ) {
+          patch.noindex =
+            bool(
+              patchRaw[
+                "noindex"
+              ],
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "seo_title"
+          ] === "string"
+        ) {
+          patch.seo_title =
+            text(
+              patchRaw[
+                "seo_title"
+              ],
+              70,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "seo_description"
+          ] === "string"
+        ) {
+          patch.seo_description =
+            text(
+              patchRaw[
+                "seo_description"
+              ],
+              165,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "seo_canonical"
+          ] === "string"
+        ) {
+          patch.seo_canonical =
+            text(
+              patchRaw[
+                "seo_canonical"
+              ],
+              300,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "og_title"
+          ] === "string"
+        ) {
+          patch.og_title =
+            text(
+              patchRaw[
+                "og_title"
+              ],
+              90,
+            );
+        }
+
+        if (
+          typeof patchRaw[
+            "og_description"
+          ] === "string"
+        ) {
+          patch.og_description =
+            text(
+              patchRaw[
+                "og_description"
+              ],
+              200,
+            );
+        }
+
+        if (
+          !knownPage(pageId) ||
+          Object.keys(
+            patch,
+          ).length === 0
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          pageId,
+          patch,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* DELETE PAGE                                                        */
+      /* ------------------------------------------------------------------ */
+
+      case "delete_page": {
+        if (
+          !knownPage(pageId)
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          pageId,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* THEME                                                              */
+      /* ------------------------------------------------------------------ */
+
+      case "set_theme": {
+        const patchRaw =
+          (row["patch"] ??
+            {}) as Record<
+            string,
+            unknown
+          >;
+
+        const patch:
+          ThemePatch = {};
+
+        for (
+          const key of [
+            "primary_color",
+            "secondary_color",
+            "accent_color",
+          ] as const
+        ) {
+          const colour =
+            text(
+              patchRaw[key],
+              9,
+            );
+
+          if (
+            HEX.test(
+              colour,
+            )
+          ) {
+            patch[key] =
+              colour;
+          }
+        }
+
+        const font =
+          text(
+            patchRaw[
+              "font_preference"
+            ],
+            60,
+          );
+
+        if (font) {
+          patch.font_preference =
+            font;
+        }
+
+        if (
+          Object.keys(
+            patch,
+          ).length === 0
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          patch,
+        });
+
+        break;
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* BACKDROP                                                            */
+      /* ------------------------------------------------------------------ */
+
       case "set_backdrop": {
-        const backdrop = text(row["backdrop"], 30);
-        if (!isBackdropId(backdrop)) break;
-        out.push({ type, backdrop });
+        const backdrop =
+          text(
+            row["backdrop"],
+            30,
+          );
+
+        if (
+          !isBackdropId(
+            backdrop,
+          )
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          backdrop,
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* SECTION EFFECT                                                     */
+      /* ------------------------------------------------------------------ */
+
       case "set_section_effect": {
-        const effect = text(row["effect"], 30);
-        if (!known.sectionIds.has(sectionId) || !isSectionEffectId(effect)) break;
-        out.push({ type, sectionId, effect });
+        const effect =
+          text(
+            row["effect"],
+            30,
+          );
+
+        if (
+          !known.sectionIds.has(
+            sectionId,
+          ) ||
+          !isSectionEffectId(
+            effect,
+          )
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          sectionId,
+          effect,
+        });
+
         break;
       }
+
+      /* ------------------------------------------------------------------ */
+      /* BUSINESS FACT                                                      */
+      /* ------------------------------------------------------------------ */
+
       case "set_business_fact": {
-        const field = text(row["field"], 40) as BusinessFactField;
-        const value2 = text(row["value"], 1200);
-        if (!BUSINESS_FACT_FIELDS.includes(field) || !value2) break;
-        out.push({ type, field, value: value2 });
+        const field =
+          text(
+            row["field"],
+            40,
+          ) as BusinessFactField;
+
+        const value2 =
+          text(
+            row["value"],
+            1200,
+          );
+
+        if (
+          !BUSINESS_FACT_FIELDS.includes(
+            field,
+          ) ||
+          !value2
+        ) {
+          break;
+        }
+
+        out.push({
+          type,
+          field,
+          value: value2,
+        });
+
         break;
       }
+
       default:
+        /**
+         * Unknown actions are deliberately ignored.
+         */
         break;
     }
-    if (out.length >= MAX_ACTIONS) break;
+
+    if (
+      out.length >=
+      MAX_ACTIONS
+    ) {
+      break;
+    }
   }
 
   return out;
 }
 
-/* ------------------------------ descriptions ------------------------------ */
+/* -------------------------------------------------------------------------- */
+/* DESCRIPTIONS                                                               */
+/* -------------------------------------------------------------------------- */
 
-const FIELD_LABEL: Record<AgentField, string> = {
+const FIELD_LABEL: Record<
+  AgentField,
+  string
+> = {
   heading: "headline",
   subheading: "sub-headline",
   body: "text",
 };
 
 export type SiteIndex = {
-  pages: Map<string, { title: string; slug: string }>;
-  sections: Map<string, { pageId: string; label: string }>;
-  components: Map<string, { sectionId: string; label: string }>;
+  pages: Map<
+    string,
+    {
+      title: string;
+      slug: string;
+    }
+  >;
+
+  sections: Map<
+    string,
+    {
+      pageId: string;
+      label: string;
+    }
+  >;
+
+  components: Map<
+    string,
+    {
+      sectionId: string;
+      label: string;
+    }
+  >;
 };
 
-/** Human-readable "where" for a step, e.g. `Home → Hero`. */
+/**
+ * Human-readable location.
+ */
 function locate(
   index: SiteIndex,
   ids: {
@@ -384,383 +1943,694 @@ function locate(
   },
 ): string {
   if (ids.componentId) {
-    const component = index.components.get(ids.componentId);
+    const component =
+      index.components.get(
+        ids.componentId,
+      );
+
     if (component) {
-      const parent = locate(index, { sectionId: component.sectionId });
+      const parent =
+        locate(
+          index,
+          {
+            sectionId:
+              component.sectionId,
+          },
+        );
+
       return `${parent} → ${component.label}`;
     }
   }
+
   if (ids.sectionId) {
-    const section = index.sections.get(ids.sectionId);
+    const section =
+      index.sections.get(
+        ids.sectionId,
+      );
+
     if (section) {
-      const page = index.pages.get(section.pageId);
+      const page =
+        index.pages.get(
+          section.pageId,
+        );
+
       return `${page?.title ?? "Page"} → ${section.label}`;
     }
   }
-  if (ids.pageId) return index.pages.get(ids.pageId)?.title ?? "Page";
+
+  if (ids.pageId) {
+    return (
+      index.pages.get(
+        ids.pageId,
+      )?.title ??
+      "Page"
+    );
+  }
+
   return "Your website";
 }
 
-/** Turns each action into a line the business owner can approve or skip. */
+/**
+ * Convert actions into business-owner-friendly approval steps.
+ */
 export function describeActions(
   actions: AgentAction[],
   index: SiteIndex,
-  currentText: Map<string, string>,
+  currentText: Map<
+    string,
+    string
+  >,
 ): AgentStep[] {
-  return actions.map((action, i) => {
-    const key = `${i}-${action.type}`;
-    switch (action.type) {
-      case "set_section_text":
-        return {
-          key,
-          title: `Rewrite the ${FIELD_LABEL[action.field]}`,
-          where: locate(index, { sectionId: action.sectionId }),
-          before: currentText.get(`${action.sectionId}:${action.field}`) ?? "",
-          after: action.value,
-          destructive: false,
-          action,
-        };
-      case "set_section_visibility":
-        return {
-          key,
-          title: action.visible ? "Show this section" : "Hide this section",
-          where: locate(index, { sectionId: action.sectionId }),
-          destructive: !action.visible,
-          action,
-        };
-      case "set_section_variant":
-        return {
-          key,
-          title: `Change the layout style to "${action.variant}"`,
-          where: locate(index, { sectionId: action.sectionId }),
-          destructive: false,
-          action,
-        };
-      case "add_section":
-        return {
-          key,
-          title: `Add a new ${action.kind.replace(/_/g, " ")} section`,
-          where: locate(index, { pageId: action.pageId }),
-          after: action.heading ?? action.body ?? "",
-          destructive: false,
-          action,
-        };
-      case "delete_section":
-        return {
-          key,
-          title: "Remove this section",
-          where: locate(index, { sectionId: action.sectionId }),
-          destructive: true,
-          action,
-        };
-      case "reorder_sections":
-        return {
-          key,
-          title: "Reorder the sections on this page",
-          where: locate(index, { pageId: action.pageId }),
-          destructive: false,
-          action,
-        };
-      case "set_component":
-        return {
-          key,
-          title: "Update this item",
-          where: locate(index, { componentId: action.componentId }),
-          after:
-            action.patch.label ??
-            action.patch.body ??
-            action.patch.link_label ??
-            action.patch.link_url ??
-            "",
-          destructive: action.patch.is_visible === false,
-          action,
-        };
-      case "add_component":
-        return {
-          key,
-          title: `Add a new ${action.kind.replace(/_/g, " ")}`,
-          where: locate(index, { sectionId: action.sectionId }),
-          after: action.label ?? action.body ?? "",
-          destructive: false,
-          action,
-        };
-      case "delete_component":
-        return {
-          key,
-          title: "Remove this item",
-          where: locate(index, { componentId: action.componentId }),
-          destructive: true,
-          action,
-        };
-      case "add_page":
-        return {
-          key,
-          title: `Add a new page: ${action.title}`,
-          where: `/${action.slug}`,
-          destructive: false,
-          action,
-        };
-      case "set_page": {
-        const fields = Object.keys(action.patch)
-          .map((field) => field.replace(/_/g, " "))
-          .join(", ");
-        return {
-          key,
-          title: `Update page settings (${fields})`,
-          where: locate(index, { pageId: action.pageId }),
-          after: action.patch.title ?? action.patch.seo_title ?? action.patch.seo_description ?? "",
-          destructive: action.patch.is_visible === false,
-          action,
-        };
+  return actions.map(
+    (
+      action,
+      i,
+    ) => {
+      const key =
+        `${i}-${action.type}`;
+
+      switch (action.type) {
+        case "set_section_text":
+          return {
+            key,
+
+            title:
+              `Rewrite the ${FIELD_LABEL[action.field]}`,
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            before:
+              currentText.get(
+                `${action.sectionId}:${action.field}`,
+              ) ?? "",
+
+            after:
+              action.value,
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_section_visibility":
+          return {
+            key,
+
+            title:
+              action.visible
+                ? "Show this section"
+                : "Hide this section",
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            destructive:
+              !action.visible,
+
+            action,
+          };
+
+        case "set_section_variant":
+          return {
+            key,
+
+            title:
+              `Change the layout style to "${action.variant}"`,
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_section_visual":
+          return {
+            key,
+
+            title:
+              "Refine this section's visual composition",
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            after:
+              Object.values(
+                action.patch,
+              )
+                .filter(Boolean)
+                .join(" · "),
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "add_section":
+          return {
+            key,
+
+            title:
+              `Add a new ${action.kind.replace(
+                /_/g,
+                " ",
+              )} section`,
+
+            where:
+              locate(
+                index,
+                {
+                  pageId:
+                    action.pageId,
+                },
+              ),
+
+            after:
+              action.heading ??
+              action.body ??
+              "",
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "delete_section":
+          return {
+            key,
+
+            title:
+              "Remove this section",
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            destructive:
+              true,
+
+            action,
+          };
+
+        case "reorder_sections":
+          return {
+            key,
+
+            title:
+              "Reorder the sections on this page",
+
+            where:
+              locate(
+                index,
+                {
+                  pageId:
+                    action.pageId,
+                },
+              ),
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_component":
+          return {
+            key,
+
+            title:
+              "Update this item",
+
+            where:
+              locate(
+                index,
+                {
+                  componentId:
+                    action.componentId,
+                },
+              ),
+
+            after:
+              action.patch.label ??
+              action.patch.body ??
+              action.patch.link_label ??
+              action.patch.link_url ??
+              "",
+
+            destructive:
+              action.patch
+                .is_visible ===
+              false,
+
+            action,
+          };
+
+        case "set_component_visual":
+          return {
+            key,
+
+            title:
+              "Refine this image or visual treatment",
+
+            where:
+              locate(
+                index,
+                {
+                  componentId:
+                    action.componentId,
+                },
+              ),
+
+            after:
+              Object.values(
+                action.patch,
+              )
+                .filter(Boolean)
+                .join(" · "),
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "add_component":
+          return {
+            key,
+
+            title:
+              `Add a new ${action.kind.replace(
+                /_/g,
+                " ",
+              )}`,
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            after:
+              action.label ??
+              action.body ??
+              "",
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "delete_component":
+          return {
+            key,
+
+            title:
+              "Remove this item",
+
+            where:
+              locate(
+                index,
+                {
+                  componentId:
+                    action.componentId,
+                },
+              ),
+
+            destructive:
+              true,
+
+            action,
+          };
+
+        case "add_page":
+          return {
+            key,
+
+            title:
+              `Add a new page: ${action.title}`,
+
+            where:
+              `/${action.slug}`,
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_page": {
+          const fields =
+            Object.keys(
+              action.patch,
+            )
+              .map((field) =>
+                field.replace(
+                  /_/g,
+                  " ",
+                ),
+              )
+              .join(", ");
+
+          return {
+            key,
+
+            title:
+              `Update page settings (${fields})`,
+
+            where:
+              locate(
+                index,
+                {
+                  pageId:
+                    action.pageId,
+                },
+              ),
+
+            after:
+              action.patch.title ??
+              action.patch.seo_title ??
+              action.patch.seo_description ??
+              "",
+
+            destructive:
+              action.patch
+                .is_visible ===
+              false,
+
+            action,
+          };
+        }
+
+        case "delete_page":
+          return {
+            key,
+
+            title:
+              "Delete this page and everything on it",
+
+            where:
+              locate(
+                index,
+                {
+                  pageId:
+                    action.pageId,
+                },
+              ),
+
+            destructive:
+              true,
+
+            action,
+          };
+
+        case "set_theme":
+          return {
+            key,
+
+            title:
+              `Update the look (${Object.keys(
+                action.patch,
+              )
+                .map((field) =>
+                  field.replace(
+                    /_/g,
+                    " ",
+                  ),
+                )
+                .join(", ")})`,
+
+            where:
+              "Whole website",
+
+            after:
+              Object.values(
+                action.patch,
+              ).join("  "),
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_backdrop":
+          return {
+            key,
+
+            title:
+              `Install the "${backdropLabel(
+                action.backdrop,
+              )}" animated background`,
+
+            where:
+              "Whole website",
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_section_effect":
+          return {
+            key,
+
+            title:
+              `Add the "${sectionEffectLabel(
+                action.effect,
+              )}" effect to this section`,
+
+            where:
+              locate(
+                index,
+                {
+                  sectionId:
+                    action.sectionId,
+                },
+              ),
+
+            destructive:
+              false,
+
+            action,
+          };
+
+        case "set_business_fact":
+          return {
+            key,
+
+            title:
+              `Update your ${action.field.replace(
+                /_/g,
+                " ",
+              )}`,
+
+            where:
+              "Business details",
+
+            after:
+              action.value,
+
+            destructive:
+              false,
+
+            action,
+          };
       }
-      case "delete_page":
-        return {
-          key,
-          title: "Delete this page and everything on it",
-          where: locate(index, { pageId: action.pageId }),
-          destructive: true,
-          action,
-        };
-      case "set_theme":
-        return {
-          key,
-          title: `Update the look (${Object.keys(action.patch)
-            .map((f) => f.replace(/_/g, " "))
-            .join(", ")})`,
-          where: "Whole website",
-          after: Object.values(action.patch).join("  "),
-          destructive: false,
-          action,
-        };
-      case "set_backdrop":
-        return {
-          key,
-          title: `Install the "${backdropLabel(action.backdrop)}" animated background`,
-          where: "Whole website",
-          destructive: false,
-          action,
-        };
-      case "set_section_effect":
-        return {
-          key,
-          title: `Add the "${sectionEffectLabel(action.effect)}" effect to this section`,
-          where: locate(index, { sectionId: action.sectionId }),
-          destructive: false,
-          action,
-        };
-      case "set_business_fact":
-        return {
-          key,
-          title: `Update your ${action.field.replace(/_/g, " ")}`,
-          where: "Business details",
-          after: action.value,
-          destructive: false,
-          action,
-        };
-    }
-  });
+    },
+  );
 }
 
-/* ------------------------------- attachments ------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* ATTACHMENTS                                                                */
+/* -------------------------------------------------------------------------- */
 
 /**
- * The assistant accepts photos, video and voice as well as text. Attachments are
- * context only — the model reads them to understand what the owner is pointing
- * at ("match this van wrap", "this is the finished job", "write it like this
- * flyer") and never gains new abilities from them.
+ * The assistant accepts photos, video and voice as context.
+ *
+ * Attachments allow requests such as:
+ *
+ * "Use this truck photo."
+ * "Match the colors in this flyer."
+ * "Use the finished project in this video."
+ *
+ * They do not grant arbitrary execution abilities.
  */
 export const MAX_ATTACHMENTS = 4;
 
-export const ATTACHMENT_LIMITS: Record<AgentAttachmentKind, number> = {
-  image: 6 * 1024 * 1024,
-  video: 16 * 1024 * 1024,
-  audio: 8 * 1024 * 1024,
+export const ATTACHMENT_LIMITS: Record<
+  AgentAttachmentKind,
+  number
+> = {
+  image:
+    6 * 1024 * 1024,
+
+  video:
+    16 * 1024 * 1024,
+
+  audio:
+    8 * 1024 * 1024,
 };
 
-export type AgentAttachmentKind = "image" | "video" | "audio";
+export type AgentAttachmentKind =
+  | "image"
+  | "video"
+  | "audio";
 
 /**
- * One moment in an attached clip. Revora writes these automatically so the
- * owner can say "use the shot at 0:12" instead of describing it.
+ * One moment in an attached video.
  */
 export type AgentChapter = {
-  /** Display timestamp, e.g. "0:12". */
+  /**
+   * Example:
+   * "0:12"
+   */
   at: string;
+
   label: string;
+
   detail: string;
 };
 
 export type AgentAttachment = {
   kind: AgentAttachmentKind;
-  /** e.g. image/jpeg, video/mp4, audio/webm */
+
+  /**
+   * Example:
+   * image/jpeg
+   * video/mp4
+   * audio/webm
+   */
   mimeType: string;
+
   name: string;
-  /** `data:<mime>;base64,<payload>` */
+
+  /**
+   * data:<mime>;base64,<payload>
+   */
   dataUrl: string;
-  /** Auto-written moments for a video clip, so the owner can reference them. */
+
   chapters?: AgentChapter[];
 };
 
 export const MAX_CHAPTERS = 10;
 
-/** Sanitises model- or client-supplied chapter lists. */
-export function readChapters(value: unknown): AgentChapter[] {
-  if (!Array.isArray(value)) return [];
+/**
+ * Sanitize automatically generated video chapter information.
+ */
+export function readChapters(
+  value: unknown,
+): AgentChapter[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
   const out: AgentChapter[] = [];
-  for (const raw of value.slice(0, MAX_CHAPTERS)) {
-    if (!raw || typeof raw !== "object") continue;
-    const item = raw as Record<string, unknown>;
-    const at = typeof item["at"] === "string" ? item["at"].slice(0, 12) : "";
-    const label = typeof item["label"] === "string" ? item["label"].slice(0, 120) : "";
-    const detail = typeof item["detail"] === "string" ? item["detail"].slice(0, 400) : "";
-    if (!label && !detail) continue;
-    out.push({ at: at || "0:00", label: label || "Moment", detail });
+
+  for (
+    const raw of value.slice(
+      0,
+      MAX_CHAPTERS,
+    )
+  ) {
+    if (
+      !raw ||
+      typeof raw !== "object"
+    ) {
+      continue;
+    }
+
+    const item =
+      raw as Record<
+        string,
+        unknown
+      >;
+
+    const at =
+      typeof item["at"] ===
+      "string"
+        ? item["at"].slice(
+            0,
+            12,
+          )
+        : "";
+
+    const label =
+      typeof item["label"] ===
+      "string"
+        ? item["label"].slice(
+            0,
+            120,
+          )
+        : "";
+
+    const detail =
+      typeof item["detail"] ===
+      "string"
+        ? item["detail"].slice(
+            0,
+            400,
+          )
+        : "";
+
+    if (
+      !label &&
+      !detail
+    ) {
+      continue;
+    }
+
+    out.push({
+      at:
+        at ||
+        "0:00",
+
+      label:
+        label ||
+        "Moment",
+
+      detail,
+    });
   }
-  return out;
-}
 
-/**
- * One-tap starting points for the most common edits. Used for the quick voice
- * and click commands next to the assistant box — each one is a full, safe
- * instruction the owner can still edit before sending.
- */
-export const QUICK_COMMANDS: { label: string; instruction: string }[] = [
-  {
-    label: "Change hero text",
-    instruction:
-      "Rewrite the hero heading and subheading on the home page so the main benefit and service area are obvious in the first line, and make the main button copy action-led.",
-  },
-  {
-    label: "Add gallery",
-    instruction:
-      "Add a photo gallery section to the home page showing recent work, with a short introduction line, and link it from the menu if a gallery page makes more sense.",
-  },
-  {
-    label: "Update pricing section",
-    instruction:
-      "Update the pricing section so each package has a clear name, what's included and a starting price, and make the most popular option stand out. Ask me for any prices you don't already have.",
-  },
-  {
-    label: "Sharpen the call to action",
-    instruction:
-      "Make every call to action on the site consistent and specific — same wording, same promise, and a booking or quote button visible on every page.",
-  },
-  {
-    label: "Add customer reviews",
-    instruction:
-      "Add a reviews section high on the home page using the reviews already in my workspace, and move it above the services section.",
-  },
-  {
-    label: "Write my search text",
-    instruction:
-      "Write a page title and meta description for every page, plus social share text for the home page, using my real services and city.",
-  },
-];
-
-/**
- * Guided multimodal templates. Each one tells the owner exactly what to attach
- * and gives the assistant a consistent brief, so a before/after clip or a set
- * of job photos produces the same quality of update every time.
- */
-export const MULTIMODAL_TEMPLATES: {
-  key: string;
-  label: string;
-  attach: string;
-  instruction: string;
-}[] = [
-  {
-    key: "before-after",
-    label: "Before / after job",
-    attach: "A short before/after clip, or one before photo and one after photo",
-    instruction:
-      "I've attached a before/after of a recent job. Write a short case-study block for the home page: a headline about the transformation, two or three sentences describing what was done (only what you can actually see), and a button to book the same service. Add the photos to the gallery section, and tell me any detail you need from me instead of guessing prices or timings.",
-  },
-  {
-    key: "walkthrough",
-    label: "Walkthrough clip",
-    attach: "A 30–60 second clip talking through your business or a job",
-    instruction:
-      "I've attached a walkthrough clip. Use the chapters you wrote for it to update my website: pull the services mentioned into the services section, use my own words for the about section, and list anything I said that you can't verify as a question for me instead of publishing it.",
-  },
-  {
-    key: "photo-refresh",
-    label: "Photo refresh",
-    attach: "Two to four recent job photos",
-    instruction:
-      "I've attached recent job photos. Refresh the gallery section with them, write one short caption per photo describing only what's visible, and update the hero image guidance to match the style of these photos.",
-  },
-  {
-    key: "competitor-flyer",
-    label: "Match a flyer or design",
-    attach: "A photo or screenshot of the flyer, van wrap or page you like",
-    instruction:
-      "I've attached a design I like. Match its tone and structure on my home page — section order, heading style and colour feel — but keep every fact, price and service my own. Don't copy any wording or claims from the image.",
-  },
-];
-
-export const IMAGE_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/heic",
-  "image/heif",
-];
-export const VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v"];
-export const AUDIO_MIME_TYPES = [
-  "audio/webm",
-  "audio/mp4",
-  "audio/mpeg",
-  "audio/wav",
-  "audio/x-wav",
-  "audio/ogg",
-  "audio/m4a",
-  "audio/x-m4a",
-];
-
-export const ATTACHMENT_ACCEPT = [...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES].join(",");
-
-export function attachmentKindOf(mimeType: string): AgentAttachmentKind | null {
-  const mime = mimeType.toLowerCase().split(";")[0]?.trim() ?? "";
-  if (IMAGE_MIME_TYPES.includes(mime)) return "image";
-  if (VIDEO_MIME_TYPES.includes(mime)) return "video";
-  if (AUDIO_MIME_TYPES.includes(mime)) return "audio";
-  return null;
-}
-
-/** Roughly how many bytes a base64 payload decodes to. */
-export function base64Bytes(dataUrl: string) {
-  const payload = dataUrl.slice(dataUrl.indexOf(",") + 1);
-  return Math.floor((payload.length * 3) / 4);
-}
-
-/**
- * Server-side gate: only well-formed data URLs of an allowed type and size get
- * through, so a crafted request can't push arbitrary bytes at the model.
- */
-export function readAttachments(value: unknown): AgentAttachment[] {
-  if (!Array.isArray(value)) return [];
-  const out: AgentAttachment[] = [];
-  for (const raw of value.slice(0, MAX_ATTACHMENTS)) {
-    if (!raw || typeof raw !== "object") continue;
-    const item = raw as Record<string, unknown>;
-    const dataUrl = typeof item["dataUrl"] === "string" ? item["dataUrl"] : "";
-    // Browser recordings carry codec parameters (audio/webm;codecs=opus) — accept
-    // and drop them, since only the base media type decides what we allow.
-    const match = /^data:([a-z0-9.+/-]+)((?:;[a-z0-9.+=_-]+)*);base64,([A-Za-z0-9+/=\s]+)$/i.exec(
-      dataUrl,
-    );
-    if (!match) continue;
-    const mimeType = (match[1] ?? "").toLowerCase();
-
-    const kind = attachmentKindOf(mimeType);
-    if (!kind) continue;
-    const clean = `data:${mimeType};base64,${(match[3] ?? "").replace(/\s+/g, "")}`;
-    if (base64Bytes(clean) > ATTACHMENT_LIMITS[kind]) continue;
-    const name =
-      typeof item["name"] === "string" ? item["name"].slice(0, 120) : `${kind} attachment`;
-    const chapters = kind === "video" ? readChapters(item["chapters"]) : [];
-    out.push({ kind, mimeType, name, dataUrl: clean, ...(chapters.length ? { chapters } : {}) });
-  }
   return out;
 }
