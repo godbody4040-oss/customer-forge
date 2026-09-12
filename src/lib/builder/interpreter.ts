@@ -914,31 +914,15 @@ function visualIntensity(
   }
 
   if (
-    /\b(
-      3d|
-      three dimensional|
-      floating|
-      parallax|
-      glass|
-      glow|
-      animated|
-      animation|
-      motion|
-      depth|
-      cinematic|
-      immersive
-    )\b/ix.test(text)
+    /\b(3d|three dimensional|floating|parallax|glass|glow|animated|animation|motion|depth|cinematic|immersive)\b/i.test(
+      text,
+    )
   ) {
     score += 2;
   }
 
   if (
-    /\b(
-      subtle|
-      light motion|
-      tasteful|
-      restrained
-    )\b/ix.test(text)
+    /\b(subtle|light motion|tasteful|restrained)\b/i.test(text)
   ) {
     score = Math.max(0, score - 1);
   }
@@ -1085,32 +1069,14 @@ export function interpret(
    * as a targeted page request rather than destroying/rebuilding the site.
    */
   const explicitWholeSitePhrase =
-    /\b(
-      whole|
-      entire|
-      full|
-      everything|
-      all of it|
-      the whole site|
-      the entire site|
-      my whole site|
-      my entire site|
-      across the site|
-      sitewide|
-      site wide|
-      from scratch
-    )\b/ix.test(text);
+    /\b(whole|entire|full|everything|all of it|the whole site|the entire site|my whole site|my entire site|across the site|sitewide|site wide|from scratch)\b/i.test(
+      text,
+    );
 
   const explicitWebsiteCreation =
-    /\b(
-      build me a website|
-      build my website|
-      create my website|
-      create a website from scratch|
-      make me a website|
-      make my website from scratch|
-      start over
-    )\b/ix.test(text);
+    /\b(build me a website|build my website|create my website|create a website from scratch|make me a website|make my website from scratch|start over)\b/i.test(
+      text,
+    );
 
   const wholeSite =
     explicitWholeSitePhrase ||
@@ -1118,17 +1084,9 @@ export function interpret(
     goals.includes("redesign");
 
   const everyPage =
-    /\b(
-      on every page|
-      every page|
-      all pages|
-      across every page|
-      across all pages|
-      sitewide|
-      site wide|
-      throughout the site|
-      across the entire site
-    )\b/ix.test(text);
+    /\b(on every page|every page|all pages|across every page|across all pages|sitewide|site wide|throughout the site|across the entire site)\b/i.test(
+      text,
+    );
 
   /* ---------------------------------------------------------------------- */
   /* FACT SAFETY                                                             */
