@@ -2749,3 +2749,50 @@ export function readChapters(
 
   return out;
 }
+
+/* -------------------------------------------------------------------------- */
+/* ATTACHMENT VALIDATION                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const MAX_ATTACHMENT_NAME_LENGTH = 120;
+
+/**
+ * Validates and normalizes attachment inputs from the client into safe,
+ * storable attachments. Anything that isn't a recognised MIME type, a real
+ * `data:` payload, or within its kind's size limit is silently dropped
+ * rather than thrown — callers that require an attachment (voice, video)
+ * check the returned array themselves and raise their own message.
+ */
+export function readAttachments(value: unknown): AgentAttachment[] {
+  if (!Array.isArray(value)) return [];
+
+  const out: AgentAttachment[] = [];
+
+  for (const raw of value) {
+    if (out.length >= MAX_ATTACHMENTS) break;
+    if (!raw || typeof raw !== "object") continue;
+
+    const item = raw as Record<string, unknown>;
+
+    const mimeType = typeof item["mimeType"] === "string" ? item["mimeType"] : "";
+    const kind = mimeType ? attachmentKindOf(mimeType) : null;
+    if (!kind) continue;
+
+    const dataUrl = typeof item["dataUrl"] === "string" ? item["dataUrl"] : "";
+    if (!dataUrl.startsWith("data:") || !dataUrl.includes(",")) continue;
+    if (base64Bytes(dataUrl) > ATTACHMENT_LIMITS[kind]) continue;
+
+    const rawName = typeof item["name"] === "string" ? item["name"].trim() : "";
+    const name = (rawName || `${kind} attachment`).slice(0, MAX_ATTACHMENT_NAME_LENGTH);
+
+    const attachment: AgentAttachment = { kind, mimeType, name, dataUrl };
+    if (kind === "video") {
+      const chapters = readChapters(item["chapters"]);
+      if (chapters.length) attachment.chapters = chapters;
+    }
+
+    out.push(attachment);
+  }
+
+  return out;
+}
