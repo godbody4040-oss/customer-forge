@@ -3,9 +3,9 @@
  *
  * Code #6 — Production Quality Gate
  *
- * This is the deterministic quality gate for generated websites.
+ * Deterministic quality evaluation for generated websites.
  *
- * It evaluates:
+ * Evaluates:
  * - business data integrity
  * - content safety
  * - generic/template copy
@@ -21,8 +21,6 @@
  *
  * IMPORTANT:
  * A high score never overrides a blocker.
- *
- * The builder must:
  *
  * GENERATE
  *   ↓
@@ -84,13 +82,11 @@ export type QualityIssue = {
 export type QualityInput = {
   /**
    * Normalized business facts.
-   *
-   * These are already validated by facts.ts.
    */
   facts: BusinessFacts;
 
   /**
-   * Raw values are deliberately retained so malformed values can be detected
+   * Raw values are retained so malformed values can be detected
    * instead of silently disappearing.
    */
   raw: {
@@ -111,8 +107,8 @@ export type QualityInput = {
   /**
    * Every visitor-visible text value across the site.
    *
-   * Objects are deliberately accepted here because the quality gate needs to
-   * detect when an object accidentally reaches a text renderer.
+   * Objects are accepted because the quality gate needs to detect
+   * when an object accidentally reaches a text renderer.
    */
   texts: unknown[];
 
@@ -181,15 +177,11 @@ export type QualityCategoryScore = {
 export type QualityReport = {
   /**
    * Overall score, 0–100.
-   *
-   * This includes browser-measured categories when available.
    */
   score: number;
 
   /**
    * Content-only publish readiness.
-   *
-   * A website can be content-ready before browser measurement has run.
    */
   ready: boolean;
 
@@ -391,9 +383,6 @@ const positiveInteger = (
 
 /**
  * Adds a unique issue by key.
- *
- * Multiple occurrences of the same underlying problem should not create
- * dozens of duplicate admin messages.
  */
 function pushUnique(
   list: QualityIssue[],
@@ -413,15 +402,6 @@ function pushUnique(
 /* CONTENT SAFETY                                                             */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Detect values that would accidentally render as raw JavaScript objects.
- *
- * Example of a dangerous value:
- *
- * { mon: "8am-6pm", tue: "8am-6pm" }
- *
- * That object should be normalized before reaching a text renderer.
- */
 function textIssues(
   texts: unknown[],
 ): QualityIssue[] {
@@ -484,12 +464,6 @@ function textIssues(
 /* BUSINESS DATA                                                              */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Detect malformed business contact data.
- *
- * The normalized facts remain authoritative for rendering.
- * Raw values are checked so bad data is not silently ignored.
- */
 function contactIssues(
   input: QualityInput,
 ): QualityIssue[] {
@@ -532,9 +506,9 @@ function contactIssues(
   }
 
   /**
-   * Hours are allowed to be absent.
+   * Hours may be absent.
    *
-   * But if a raw value exists and normalization rejected it, tell the owner.
+   * If supplied but rejected during normalization, report it.
    */
   if (
     input.raw.hours &&
@@ -552,8 +526,6 @@ function contactIssues(
 
   /**
    * A website must have at least one meaningful conversion route.
-   *
-   * Email counts because a valid email can be used as the contact route.
    */
   if (
     !input.facts.phone &&
@@ -579,11 +551,6 @@ function contactIssues(
 /* HONESTY / TRUST                                                            */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Social proof and portfolio content must be supplied by the business.
- *
- * Revora never manufactures reviews, ratings, awards or portfolio work.
- */
 function honestyIssues(
   input: QualityInput,
 ): QualityIssue[] {
@@ -644,9 +611,6 @@ function structureIssues(
         !!value,
     );
 
-  /**
-   * A missing label means the navigation cannot be understood.
-   */
   if (
     labels.length !==
     input.navLabels.length
@@ -661,10 +625,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * Duplicate navigation labels are confusing but do not make the entire
-   * website unusable.
-   */
   const seenLabels =
     new Set<string>();
 
@@ -695,9 +655,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * Seven is a practical upper bound for the primary navigation.
-   */
   if (labels.length > 7) {
     found.push(
       issue(
@@ -742,9 +699,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * Every page needs a readable title.
-   */
   const missingTitles =
     pages.filter(
       (page) =>
@@ -770,9 +724,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * Duplicate slugs can create routing collisions.
-   */
   const seenSlugs =
     new Set<string>();
 
@@ -807,9 +758,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * There should always be a homepage.
-   */
   const hasHome =
     pages.some(
       (page) =>
@@ -838,11 +786,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * Very thin pages usually indicate an incomplete generation.
-   *
-   * One-section pages can be valid landing pages, so this remains advisory.
-   */
   const thinPages =
     pages.filter(
       (page) =>
@@ -953,12 +896,6 @@ function structureIssues(
     );
   }
 
-  /**
-   * Metadata should correspond to visitor-visible pages.
-   *
-   * Do not make this a blocker because some platforms intentionally omit
-   * metadata for special/private routes.
-   */
   if (
     metadata.length !==
     pages.length
@@ -980,12 +917,6 @@ function structureIssues(
 /* VISUAL FINDING HELPERS                                                     */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Browser findings can be numerous.
- *
- * The quality report keeps the original detailed findings from VisualReport,
- * while scoring each category with bounded damage.
- */
 function visualDamage(
   visual: VisualReport | null | undefined,
 ): Record<
@@ -1028,11 +959,6 @@ function visualDamage(
 /* CATEGORY SCORING                                                           */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Converts issue damage into a bounded category percentage.
- *
- * A category can never become negative.
- */
 function categoryShare(
   damage: number,
 ): number {
@@ -1074,18 +1000,6 @@ function categoryIsProven(
 /* MAIN AUDIT                                                                 */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Performs the complete two-layer website audit.
- *
- * Layer 1:
- *   Stored data/content/structure.
- *
- * Layer 2:
- *   Real browser measurements.
- *
- * A site is never considered production-ready merely because its content
- * looks correct.
- */
 export function auditWebsite(
   input: QualityInput,
 ): QualityReport {
@@ -1093,28 +1007,33 @@ export function auditWebsite(
 
   const safeInput: QualityInput = {
     ...input,
+
     pages: Array.isArray(
       input.pages,
     )
       ? input.pages
       : [],
+
     texts: Array.isArray(
       input.texts,
     )
       ? input.texts
       : [],
+
     navLabels:
       Array.isArray(
         input.navLabels,
       )
         ? input.navLabels
         : [],
+
     metadata:
       Array.isArray(
         input.metadata,
       )
         ? input.metadata
         : [],
+
     visual:
       input.visual ?? null,
   };
@@ -1144,10 +1063,6 @@ export function auditWebsite(
       ),
     ];
 
-  /**
-   * De-duplicate identical quality keys while preserving the first detailed
-   * explanation. This keeps the admin dashboard readable.
-   */
   const uniqueIssues: QualityIssue[] =
     [];
 
@@ -1213,10 +1128,6 @@ export function auditWebsite(
 
   /* ---------------------------- MEASUREMENT ------------------------------ */
 
-  /**
-   * A browser report counts as measured only when it contains actual viewport
-   * measurements.
-   */
   const measured =
     !!safeInput.visual &&
     safeInput.visual.widths.length >
@@ -1262,9 +1173,6 @@ export function auditWebsite(
       /**
        * Accessibility and performance receive at most half credit without
        * explicit browser evidence.
-       *
-       * This preserves the important rule:
-       * "Unmeasured is not proven."
        */
       const proven =
         categoryIsProven(
@@ -1316,17 +1224,6 @@ export function auditWebsite(
 
   /* -------------------------- CONTENT SCORE ------------------------------ */
 
-  /**
-   * ContentScore deliberately excludes:
-   * - visual
-   * - responsive
-   * - unproven accessibility
-   * - unproven performance
-   *
-   * This allows the builder to determine whether the generated CONTENT is
-   * ready while still preventing an unmeasured website from being called
-   * production-ready.
-   */
   const provable =
     categories.filter(
       (category) => {
@@ -1385,9 +1282,6 @@ export function auditWebsite(
       0,
     );
 
-  /**
-   * Guard against division by zero.
-   */
   const contentScore =
     provableWeight > 0
       ? Math.round(
@@ -1415,14 +1309,6 @@ export function auditWebsite(
 
   /**
    * Full production readiness is deliberately strict.
-   *
-   * Requirements:
-   * - no blockers
-   * - browser measurement
-   * - visual pass
-   * - accessibility evidence
-   * - performance evidence
-   * - overall score >= 95
    */
   const productionReady =
     blockers.length === 0 &&
@@ -1465,8 +1351,6 @@ export function auditWebsite(
 
 /**
  * True when the quality report contains no blockers.
- *
- * Useful for callers that only need the hard safety/publishing gate.
  */
 export function hasQualityBlockers(
   report: QualityReport,
@@ -1494,9 +1378,6 @@ export function isProductionReady(
 
 /**
  * Returns the highest-priority issues first.
- *
- * Blockers come before advice. Within each severity, the original audit order
- * is preserved so the UI remains deterministic.
  */
 export function prioritizedIssues(
   report: QualityReport,
