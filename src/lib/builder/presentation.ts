@@ -1,18 +1,27 @@
 /**
  * REVORA PRESENTATION INTELLIGENCE ENGINE
+ * MASTER CODE #8
  *
- * Single safety/presentation boundary for generated website content.
+ * This module is the final deterministic safety boundary between generated
+ * business/site data and visitor-facing presentation.
  *
- * Goals:
- * - Never render `[object Object]`, null, undefined, NaN, or template debris.
- * - Never turn fake/invalid contact data into clickable links.
- * - Never invent business facts.
- * - Preserve intentional multiline copy.
- * - Normalize places, hours, URLs, counts, and common display values.
- * - Stay deterministic, synchronous, dependency-free, and free-first.
- *
- * This file is intentionally framework-agnostic.
+ * DESIGN PRINCIPLES
+ * ─────────────────
+ * 1. Never fabricate business facts.
+ * 2. Never render null/undefined/NaN/object debris.
+ * 3. Never create clickable links from invalid contact data.
+ * 4. Preserve intentional multiline copy.
+ * 5. Normalize visitor-facing values consistently.
+ * 6. Reject unsafe protocols.
+ * 7. Remain synchronous, deterministic and dependency-free.
+ * 8. Never require paid AI.
+ * 9. Never silently turn machine IDs into marketing copy.
+ * 10. Prefer omission over an invented value.
  */
+
+/* -------------------------------------------------------------------------- */
+/* CONSTANTS                                                                  */
+/* -------------------------------------------------------------------------- */
 
 const DISPLAY_KEYS = [
   "label",
@@ -24,6 +33,8 @@ const DISPLAY_KEYS = [
   "display",
   "description",
   "content",
+  "heading",
+  "caption",
 ] as const;
 
 const LEAK_PATTERNS: RegExp[] = [
@@ -35,115 +46,288 @@ const LEAK_PATTERNS: RegExp[] = [
   /\bFIXME\b/i,
   /\blorem ipsum\b/i,
   /\bplaceholder\b/i,
+
   /\byour\s+(?:business|company|guarantee|logo|text|headline|tagline)\s+here\b/i,
-  /\b(?:add|write|insert|enter)\s+your\b/i,
+
+  /\b(?:add|write|insert|enter|replace|put)\s+your\b/i,
+
   /\b123\s+main\s+st\b/i,
   /\b555[-.\s]?01\d\d\b/i,
-  /\b(?:test|sample|example)@(test|example)\.(com|test)\b/i,
-  /\bexample\.com\b/i,
+
+  /\b(?:test|sample|example)@(test|example)\.(?:com|net|org|test)\b/i,
+
+  /\bexample\.(?:com|net|org)\b/i,
+
   /\{\{[^}]*\}\}/,
   /\$\{[^}]*\}/,
   /<%[^%]*%>/,
+
+  /\b(?:insert|replace)\s+(?:image|photo|logo|video)\b/i,
+
+  /\b(?:business|company)\s+name\s+goes\s+here\b/i,
+
+  /\b(?:headline|subheadline|description|cta)\s+goes\s+here\b/i,
 ];
 
-const CONTROL_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+const CONTROL_CHARACTERS =
+  /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 
-export function hasTemplateLeak(value: unknown): boolean {
-  if (typeof value !== "string") return false;
+const DANGEROUS_PROTOCOL =
+  /^(?:javascript|data|vbscript|file):/i;
 
-  const text = value.trim();
+const SAFE_PROTOCOL =
+  /^(?:https?|mailto|tel|sms):/i;
 
-  if (!text) return false;
+/* -------------------------------------------------------------------------- */
+/* BASIC STRING SAFETY                                                        */
+/* -------------------------------------------------------------------------- */
 
-  return LEAK_PATTERNS.some((pattern) => pattern.test(text));
+function cleanControlCharacters(value: string): string {
+  return value.replace(CONTROL_CHARACTERS, "");
 }
 
 function normalizeWhitespace(value: string): string {
-  return value
-    .replace(CONTROL_CHARACTERS, "")
+  return cleanControlCharacters(value)
     .replace(/[ \t]+/g, " ")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
     .replace(/\n[ \t]+/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
     .trim();
 }
 
+function collapseBlankLines(value: string): string {
+  return value.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value)
+  );
+}
+
+function recordOf(
+  value: unknown,
+): Record<string, unknown> | null {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value)
+  ) {
+    return null;
+  }
+
+  return value as Record<string, unknown>;
+}
+
+/* -------------------------------------------------------------------------- */
+/* TEMPLATE LEAK DETECTION                                                    */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Converts a safe primitive/object display value into visitor-facing text.
+ * Detects obvious placeholder/template debris.
  *
- * Objects are inspected through an allow-list of display fields.
- * They are NEVER stringified.
+ * This is deliberately conservative. It does not attempt to determine
+ * whether a business claim is true; it only catches obvious generated
+ * placeholders and machine/template artifacts.
  */
-export function safeText(value: unknown, depth = 0): string | null {
-  if (value === null || value === undefined) return null;
+export function hasTemplateLeak(
+  value: unknown,
+): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const text = value.trim();
+
+  if (!text) {
+    return false;
+  }
+
+  return LEAK_PATTERNS.some((pattern) =>
+    pattern.test(text),
+  );
+}
+
+/**
+ * Returns true when the value is clearly machine-generated debris.
+ */
+export function isPresentationLeak(
+  value: unknown,
+): boolean {
+  return hasTemplateLeak(value);
+}
+
+/* -------------------------------------------------------------------------- */
+/* SAFE TEXT                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Converts a value into visitor-facing text without ever stringifying an
+ * arbitrary object.
+ *
+ * Objects are inspected only through known display properties.
+ */
+export function safeText(
+  value: unknown,
+  depth = 0,
+): string | null {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return null;
+  }
 
   if (typeof value === "string") {
     const clean = normalizeWhitespace(value);
 
-    if (!clean || hasTemplateLeak(clean)) return null;
+    if (!clean) {
+      return null;
+    }
+
+    if (hasTemplateLeak(clean)) {
+      return null;
+    }
 
     return clean;
   }
 
   if (typeof value === "number") {
-    return Number.isFinite(value) ? String(value) : null;
+    return isFiniteNumber(value)
+      ? String(value)
+      : null;
   }
 
   if (typeof value === "bigint") {
     return String(value);
   }
 
+  /*
+   * Booleans should generally never appear as visitor-facing copy.
+   */
   if (typeof value === "boolean") {
     return null;
   }
 
-  if (depth > 2) return null;
+  /*
+   * Protect against recursive/cyclic structures and excessively deep data.
+   */
+  if (depth > 3) {
+    return null;
+  }
 
   if (Array.isArray(value)) {
     const parts = value
-      .map((item) => safeText(item, depth + 1))
-      .filter((item): item is string => Boolean(item));
+      .map((item) =>
+        safeText(item, depth + 1),
+      )
+      .filter(
+        (item): item is string =>
+          Boolean(item),
+      );
 
-    return parts.length ? parts.join(", ") : null;
+    return parts.length
+      ? parts.join(", ")
+      : null;
   }
 
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
+  const record = recordOf(value);
 
-    for (const key of DISPLAY_KEYS) {
-      const candidate = safeText(record[key], depth + 1);
-
-      if (candidate) return candidate;
-    }
-
+  if (!record) {
     return null;
+  }
+
+  for (const key of DISPLAY_KEYS) {
+    const candidate = safeText(
+      record[key],
+      depth + 1,
+    );
+
+    if (candidate) {
+      return candidate;
+    }
   }
 
   return null;
 }
 
+/* -------------------------------------------------------------------------- */
+/* PARAGRAPH SAFETY                                                            */
+/* -------------------------------------------------------------------------- */
+
 /**
- * Multiline visitor copy.
- *
- * Unlike safeText(), intentional line breaks are retained.
+ * Same safety boundary as safeText(), but intentionally preserves meaningful
+ * line breaks.
  */
-export function safeParagraph(value: unknown): string | null {
+export function safeParagraph(
+  value: unknown,
+): string | null {
   if (typeof value !== "string") {
     return safeText(value);
   }
 
-  const lines = value
-    .replace(CONTROL_CHARACTERS, "")
+  const lines = cleanControlCharacters(value)
     .split(/\r?\n/)
-    .map((line) => normalizeWhitespace(line))
-    .filter((line) => line && !hasTemplateLeak(line));
+    .map((line) =>
+      normalizeWhitespace(line),
+    )
+    .filter(
+      (line) =>
+        Boolean(line) &&
+        !hasTemplateLeak(line),
+    );
 
-  return lines.length ? lines.join("\n") : null;
+  if (!lines.length) {
+    return null;
+  }
+
+  return collapseBlankLines(
+    lines.join("\n"),
+  );
 }
 
 /**
- * Safely converts a list of values into display labels.
- *
- * Useful for services, benefits, navigation items, etc.
+ * Safely limits presentation text without breaking Unicode characters.
  */
+export function safeExcerpt(
+  value: unknown,
+  maxLength = 180,
+): string | null {
+  const text = safeText(value);
+
+  if (!text) {
+    return null;
+  }
+
+  const limit = Math.max(
+    20,
+    Math.min(
+      Math.floor(maxLength),
+      10000,
+    ),
+  );
+
+  if (text.length <= limit) {
+    return text;
+  }
+
+  const shortened =
+    text
+      .slice(0, limit + 1)
+      .replace(/\s+\S*$/, "")
+      .trim();
+
+  return shortened
+    ? `${shortened}…`
+    : `${text.slice(0, limit)}…`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* LISTS                                                                       */
+/* -------------------------------------------------------------------------- */
+
 export function safeList(
   value: unknown,
   options: {
@@ -151,22 +335,36 @@ export function safeList(
     separator?: string;
   } = {},
 ): string[] {
-  const maxItems = Math.max(1, Math.min(options.maxItems ?? 100, 1000));
+  const maxItems = Math.max(
+    1,
+    Math.min(
+      Math.floor(
+        options.maxItems ?? 100,
+      ),
+      1000,
+    ),
+  );
 
-  const source = Array.isArray(value) ? value : [value];
+  const source = Array.isArray(value)
+    ? value
+    : [value];
 
   const result: string[] = [];
 
   for (const item of source) {
     const text = safeText(item);
 
-    if (!text) continue;
+    if (!text) {
+      continue;
+    }
 
     if (!result.includes(text)) {
       result.push(text);
     }
 
-    if (result.length >= maxItems) break;
+    if (result.length >= maxItems) {
+      break;
+    }
   }
 
   return result;
@@ -177,78 +375,146 @@ export function joinSafe(
   separator = ", ",
 ): string | null {
   const items = values
-    .map((value) => safeText(value))
-    .filter((value): value is string => Boolean(value));
+    .map((value) =>
+      safeText(value),
+    )
+    .filter(
+      (value): value is string =>
+        Boolean(value),
+    );
 
-  return items.length ? items.join(separator) : null;
+  return items.length
+    ? items.join(separator)
+    : null;
 }
 
-/* ------------------------------------------------------------------ phone */
+/* -------------------------------------------------------------------------- */
+/* PHONE                                                                       */
+/* -------------------------------------------------------------------------- */
 
-const digitsOf = (value: string): string => value.replace(/\D/g, "");
+const digitsOf = (
+  value: string,
+): string =>
+  value.replace(/\D/g, "");
 
-function isRepeatedDigits(value: string): boolean {
-  return /^(\d)\1+$/.test(value);
+function isRepeatedDigits(
+  value: string,
+): boolean {
+  return (
+    value.length > 0 &&
+    /^(\d)\1+$/.test(value)
+  );
 }
 
-function isObviousFakePhone(digits: string): boolean {
-  if (isRepeatedDigits(digits)) return true;
+function isObviousFakePhone(
+  digits: string,
+): boolean {
+  if (!digits) {
+    return true;
+  }
+
+  if (isRepeatedDigits(digits)) {
+    return true;
+  }
+
+  if (/^0+$/.test(digits)) {
+    return true;
+  }
 
   /*
-   * NANP fictional/reserved 555-01xx range.
+   * NANP fictional 555-01xx range.
    */
-  if (/^\d{3}55501\d{2}$/.test(digits)) return true;
+  if (
+    /^\d{3}55501\d{2}$/.test(
+      digits,
+    )
+  ) {
+    return true;
+  }
 
   /*
-   * Common zero filler values.
+   * Common placeholder patterns.
    */
-  if (/^0+$/.test(digits)) return true;
+  if (
+    /^1234567890$/.test(digits) ||
+    /^0123456789$/.test(digits)
+  ) {
+    return true;
+  }
 
   return false;
 }
 
 /**
- * True when a stored phone number is plausible enough to expose publicly.
+ * Shape validation only.
  *
- * This validates shape, not ownership or existence.
+ * This does NOT claim that a number exists or belongs to a business.
  */
-export function isUsablePhone(value: unknown): boolean {
-  const raw = typeof value === "string" ? value.trim() : "";
+export function isUsablePhone(
+  value: unknown,
+): boolean {
+  const raw =
+    typeof value === "string"
+      ? value.trim()
+      : "";
 
-  if (!raw) return false;
+  if (!raw) {
+    return false;
+  }
 
-  if (/^[a-z\s]+$/i.test(raw)) return false;
+  if (hasTemplateLeak(raw)) {
+    return false;
+  }
 
-  if (hasTemplateLeak(raw)) return false;
+  if (
+    /^[a-z\s]+$/i.test(raw)
+  ) {
+    return false;
+  }
 
   const digits = digitsOf(raw);
 
-  if (isObviousFakePhone(digits)) return false;
-
-  /*
-   * International E.164-style numbers.
-   */
-  if (raw.startsWith("+")) {
-    return digits.length >= 11 && digits.length <= 15;
+  if (isObviousFakePhone(digits)) {
+    return false;
   }
 
   /*
-   * North American 11-digit representation.
+   * International E.164-style representation.
    */
-  if (digits.length === 11 && digits.startsWith("1")) {
+  if (raw.startsWith("+")) {
+    return (
+      digits.length >= 11 &&
+      digits.length <= 15
+    );
+  }
+
+  /*
+   * NANP 11-digit format.
+   */
+  if (
+    digits.length === 11 &&
+    digits.startsWith("1")
+  ) {
     return true;
   }
 
   /*
-   * North American 10-digit representation.
+   * NANP 10-digit format.
    */
   if (digits.length === 10) {
-    const areaCode = digits.slice(0, 3);
+    const areaCode =
+      digits.slice(0, 3);
 
-    /*
-     * NANP area codes cannot begin with 0 or 1.
-     */
-    if (/^[01]/.test(areaCode)) return false;
+    const exchange =
+      digits.slice(3, 6);
+
+    if (/^[01]/.test(areaCode)) {
+      return false;
+    }
+
+    if (/^[01]/.test(exchange)) {
+      return false;
+    }
 
     return true;
   }
@@ -256,8 +522,12 @@ export function isUsablePhone(value: unknown): boolean {
   return false;
 }
 
-export function phoneDisplay(value: unknown): string | null {
-  if (!isUsablePhone(value)) return null;
+export function phoneDisplay(
+  value: unknown,
+): string | null {
+  if (!isUsablePhone(value)) {
+    return null;
+  }
 
   const raw = String(value).trim();
   const digits = digitsOf(raw);
@@ -267,75 +537,165 @@ export function phoneDisplay(value: unknown): string | null {
   }
 
   const national =
-    digits.length === 11 && digits.startsWith("1")
+    digits.length === 11 &&
+    digits.startsWith("1")
       ? digits.slice(1)
       : digits;
 
   if (national.length === 10) {
-    return `(${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
+    return (
+      `(${national.slice(0, 3)}) ` +
+      `${national.slice(3, 6)}-${national.slice(6)}`
+    );
   }
 
   return raw;
 }
 
-export function phoneLink(value: unknown): string | null {
-  if (!isUsablePhone(value)) return null;
+export function phoneLink(
+  value: unknown,
+): string | null {
+  if (!isUsablePhone(value)) {
+    return null;
+  }
 
   const raw = String(value).trim();
   const digits = digitsOf(raw);
 
-  return `tel:${raw.startsWith("+") ? "+" : ""}${digits}`;
+  return raw.startsWith("+")
+    ? `tel:+${digits}`
+    : `tel:${digits}`;
 }
 
-/* ------------------------------------------------------------------ email */
+/* -------------------------------------------------------------------------- */
+/* EMAIL                                                                       */
+/* -------------------------------------------------------------------------- */
 
 const EMAIL =
-  /^[^\\s@<>\"'`]+@[^\\s@<>\"'`.]+(?:\\.[^\\s@<>\"'`.]+)+$/;
+  /^[^\s@<>"'`]+@[^\s@<>"'`.]+(?:\.[^\s@<>"'`.]+)+$/;
 
-const DISALLOWED_EMAIL_DOMAINS = new Set([
-  "example.com",
-  "example.org",
-  "example.net",
-  "test.com",
-  "test.test",
-  "localhost",
-]);
+const DISALLOWED_EMAIL_DOMAINS =
+  new Set([
+    "example.com",
+    "example.org",
+    "example.net",
+    "test.com",
+    "test.org",
+    "test.net",
+    "test.test",
+    "localhost",
+  ]);
 
-export function isUsableEmail(value: unknown): boolean {
-  const raw = typeof value === "string" ? value.trim() : "";
+function normalizedEmail(
+  value: unknown,
+): string | null {
+  if (
+    typeof value !== "string"
+  ) {
+    return null;
+  }
 
-  if (!raw) return false;
+  const email = value.trim().toLowerCase();
 
-  if (hasTemplateLeak(raw)) return false;
+  if (!email) {
+    return null;
+  }
 
-  if (!EMAIL.test(raw)) return false;
+  return email;
+}
 
-  const parts = raw.toLowerCase().split("@");
+export function isUsableEmail(
+  value: unknown,
+): boolean {
+  const email =
+    normalizedEmail(value);
 
-  if (parts.length !== 2) return false;
+  if (!email) {
+    return false;
+  }
 
-  const domain = parts[1];
+  if (hasTemplateLeak(email)) {
+    return false;
+  }
 
-  if (DISALLOWED_EMAIL_DOMAINS.has(domain)) return false;
+  if (!EMAIL.test(email)) {
+    return false;
+  }
 
-  if (!/\.[a-z]{2,}$/i.test(domain)) return false;
+  const parts = email.split("@");
+
+  if (parts.length !== 2) {
+    return false;
+  }
+
+  const [local, domain] = parts;
+
+  if (
+    local.length < 1 ||
+    local.length > 254 ||
+    domain.length < 3 ||
+    domain.length > 253
+  ) {
+    return false;
+  }
+
+  if (
+    DISALLOWED_EMAIL_DOMAINS.has(
+      domain,
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    !/^[a-z0-9.-]+$/i.test(domain)
+  ) {
+    return false;
+  }
+
+  if (
+    domain.startsWith(".") ||
+    domain.endsWith(".") ||
+    domain.includes("..")
+  ) {
+    return false;
+  }
+
+  if (
+    !/\.[a-z]{2,63}$/i.test(
+      domain,
+    )
+  ) {
+    return false;
+  }
 
   return true;
 }
 
-export function emailDisplay(value: unknown): string | null {
-  if (!isUsableEmail(value)) return null;
-
-  return String(value).trim().toLowerCase();
+export function emailDisplay(
+  value: unknown,
+): string | null {
+  return isUsableEmail(value)
+    ? normalizedEmail(value)
+    : null;
 }
 
-export function emailLink(value: unknown): string | null {
-  const email = emailDisplay(value);
+export function emailLink(
+  value: unknown,
+): string | null {
+  const email =
+    emailDisplay(value);
 
-  return email ? `mailto:${email}` : null;
+  if (!email) {
+    return null;
+  }
+
+  return `mailto:${encodeURIComponent(email)}`;
 }
 
-/* ------------------------------------------------------------------ places */
+/* -------------------------------------------------------------------------- */
+/* PLACE / ADDRESS                                                             */
+/* -------------------------------------------------------------------------- */
 
 const SMALL_WORDS = new Set([
   "a",
@@ -410,28 +770,46 @@ const US_STATE_CODES = new Set([
   "dc",
 ]);
 
-const titleWord = (word: string, index: number): string => {
-  const lower = word.toLowerCase();
+function titleWord(
+  word: string,
+  index: number,
+): string {
+  const lower =
+    word.toLowerCase();
 
-  if (US_STATE_CODES.has(lower) && word.length === 2) {
+  if (
+    word.length === 2 &&
+    US_STATE_CODES.has(lower)
+  ) {
     return lower.toUpperCase();
   }
 
-  if (index > 0 && SMALL_WORDS.has(lower)) {
+  if (
+    index > 0 &&
+    SMALL_WORDS.has(lower)
+  ) {
     return lower;
   }
 
   return lower.replace(
     /(^|[-'’])([a-z])/g,
-    (_match, separator: string, character: string) =>
+    (
+      _match,
+      separator: string,
+      character: string,
+    ) =>
       `${separator}${character.toUpperCase()}`,
   );
-};
+}
 
-export function placeDisplay(value: unknown): string | null {
+export function placeDisplay(
+  value: unknown,
+): string | null {
   const text = safeText(value);
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   return text
     .split(",")
@@ -452,19 +830,38 @@ export function addressDisplay(parts: {
   state?: unknown;
   zip?: unknown;
 }): string | null {
-  const street = safeText(parts.address);
-  const city = placeDisplay(parts.city);
-  const state = placeDisplay(parts.state);
-  const zip = safeText(parts.zip);
+  const street =
+    safeText(parts.address);
 
-  const region = [state, zip].filter(Boolean).join(" ").trim();
+  const city =
+    placeDisplay(parts.city);
 
-  const locality = [city, region]
+  const state =
+    placeDisplay(parts.state);
+
+  const zip =
+    safeText(parts.zip);
+
+  const region = [
+    state,
+    zip,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  const locality = [
+    city,
+    region,
+  ]
     .filter(Boolean)
     .join(", ")
     .trim();
 
-  const result = [street, locality]
+  const result = [
+    street,
+    locality,
+  ]
     .filter(Boolean)
     .join(", ")
     .trim();
@@ -472,7 +869,9 @@ export function addressDisplay(parts: {
   return result || null;
 }
 
-/* ------------------------------------------------------------------- hours */
+/* -------------------------------------------------------------------------- */
+/* HOURS                                                                       */
+/* -------------------------------------------------------------------------- */
 
 const DAY_ORDER = [
   "mon",
@@ -484,7 +883,10 @@ const DAY_ORDER = [
   "sun",
 ] as const;
 
-const DAY_LABEL: Record<string, string> = {
+const DAY_LABEL: Record<
+  string,
+  string
+> = {
   mon: "Monday",
   tue: "Tuesday",
   wed: "Wednesday",
@@ -494,10 +896,16 @@ const DAY_LABEL: Record<string, string> = {
   sun: "Sunday",
 };
 
-function dayKey(key: string): string | null {
-  const normalized = key.trim().toLowerCase();
+function dayKey(
+  key: string,
+): string | null {
+  const normalized =
+    key.trim().toLowerCase();
 
-  const aliases: Record<string, string> = {
+  const aliases: Record<
+    string,
+    string
+  > = {
     mon: "mon",
     monday: "mon",
     tue: "tue",
@@ -521,16 +929,19 @@ function dayKey(key: string): string | null {
   return aliases[normalized] ?? null;
 }
 
-function hoursEntry(value: unknown): string | null {
+function hoursEntry(
+  value: unknown,
+): string | null {
   if (typeof value === "string") {
     return safeText(value);
   }
 
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  const record =
+    recordOf(value);
+
+  if (!record) {
     return safeText(value);
   }
-
-  const record = value as Record<string, unknown>;
 
   return (
     safeText(record.hours) ??
@@ -542,18 +953,23 @@ function hoursEntry(value: unknown): string | null {
   );
 }
 
-export function hoursDisplay(value: unknown): string | null {
+export function hoursDisplay(
+  value: unknown,
+): string | null {
   if (typeof value === "string") {
     return safeText(value);
   }
 
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+  const record =
+    recordOf(value);
+
+  if (!record) {
     return safeText(value);
   }
 
-  const record = value as Record<string, unknown>;
-
-  const entries = Object.entries(record)
+  const entries = Object.entries(
+    record,
+  )
     .map(([key, rawHours]) => ({
       key: dayKey(key),
       hours: hoursEntry(rawHours),
@@ -564,12 +980,20 @@ export function hoursDisplay(value: unknown): string | null {
       ): entry is {
         key: string;
         hours: string;
-      } => Boolean(entry.key && entry.hours),
+      } =>
+        Boolean(
+          entry.key &&
+            entry.hours,
+        ),
     )
     .sort(
       (a, b) =>
-        DAY_ORDER.indexOf(a.key as (typeof DAY_ORDER)[number]) -
-        DAY_ORDER.indexOf(b.key as (typeof DAY_ORDER)[number]),
+        DAY_ORDER.indexOf(
+          a.key as (typeof DAY_ORDER)[number],
+        ) -
+        DAY_ORDER.indexOf(
+          b.key as (typeof DAY_ORDER)[number],
+        ),
     );
 
   if (entries.length) {
@@ -587,10 +1011,12 @@ export function hoursDisplay(value: unknown): string | null {
     safeText(record.label) ??
     safeText(record.description);
 
-  if (!summary) return null;
+  if (!summary) {
+    return null;
+  }
 
   /*
-   * A bare number such as "24" is almost certainly malformed data.
+   * Prevent obviously malformed numeric data from becoming hours.
    */
   if (/^\d{1,2}$/.test(summary)) {
     return null;
@@ -599,26 +1025,52 @@ export function hoursDisplay(value: unknown): string | null {
   return summary;
 }
 
-/* ------------------------------------------------------------------- links */
+/* -------------------------------------------------------------------------- */
+/* URL SAFETY                                                                  */
+/* -------------------------------------------------------------------------- */
 
-function hasDangerousProtocol(value: string): boolean {
-  return /^(?:javascript|data|vbscript|file|blob):/i.test(value);
+function hasDangerousProtocol(
+  value: string,
+): boolean {
+  return DANGEROUS_PROTOCOL.test(
+    value.trim(),
+  );
 }
 
 /**
- * Returns only absolute HTTP(S) URLs.
+ * Absolute HTTP(S) URL only.
  */
-export function externalUrl(value: unknown): string | null {
+export function externalUrl(
+  value: unknown,
+): string | null {
   const text = safeText(value);
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
-  if (hasDangerousProtocol(text)) return null;
+  if (hasDangerousProtocol(text)) {
+    return null;
+  }
 
   try {
     const url = new URL(text);
 
-    if (url.protocol !== "https:" && url.protocol !== "http:") {
+    if (
+      url.protocol !== "https:" &&
+      url.protocol !== "http:"
+    ) {
+      return null;
+    }
+
+    /*
+     * Credentials embedded in URLs are never appropriate for visitor-facing
+     * business links.
+     */
+    if (
+      url.username ||
+      url.password
+    ) {
       return null;
     }
 
@@ -629,83 +1081,153 @@ export function externalUrl(value: unknown): string | null {
 }
 
 /**
- * Normalizes an internal site path.
- *
- * Only local paths are accepted.
+ * Local website path only.
  */
-export function internalPath(value: unknown): string | null {
+export function internalPath(
+  value: unknown,
+): string | null {
   const text = safeText(value);
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
-  if (!text.startsWith("/")) return null;
+  if (
+    !text.startsWith("/") ||
+    text.startsWith("//")
+  ) {
+    return null;
+  }
 
-  if (text.startsWith("//")) return null;
-
-  if (hasDangerousProtocol(text)) return null;
+  if (hasDangerousProtocol(text)) {
+    return null;
+  }
 
   return text;
 }
 
 /**
- * Safe CTA destination.
- *
- * Supports:
- * - internal paths
- * - http(s) URLs
- * - tel:
- * - mailto:
+ * Safe visitor action target.
  */
-export function actionTarget(value: unknown): string | null {
+export function actionTarget(
+  value: unknown,
+): string | null {
   const text = safeText(value);
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
-  const local = internalPath(text);
+  const local =
+    internalPath(text);
 
-  if (local) return local;
+  if (local) {
+    return local;
+  }
 
-  const external = externalUrl(text);
+  const external =
+    externalUrl(text);
 
-  if (external) return external;
+  if (external) {
+    return external;
+  }
 
-  const phone = phoneLink(text);
+  const phone =
+    phoneLink(text);
 
-  if (phone) return phone;
+  if (phone) {
+    return phone;
+  }
 
-  const email = emailLink(text);
+  const email =
+    emailLink(text);
 
-  if (email) return email;
+  if (email) {
+    return email;
+  }
+
+  /*
+   * Explicitly allow safe SMS links only when supplied as such.
+   */
+  if (/^sms:/i.test(text)) {
+    return /^sms:[^<>\s]+$/i.test(
+      text,
+    )
+      ? text
+      : null;
+  }
 
   return null;
 }
 
-/* ------------------------------------------------------------------- counts */
+/**
+ * Useful for external navigation where a new tab is intended.
+ */
+export function safeTarget(
+  value: unknown,
+): string | null {
+  const target =
+    safeText(value);
 
-export function positiveCount(value: unknown): number | null {
+  if (
+    target === "_blank" ||
+    target === "_self" ||
+    target === "_parent" ||
+    target === "_top"
+  ) {
+    return target;
+  }
+
+  return null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* NUMBERS / COUNTS                                                            */
+/* -------------------------------------------------------------------------- */
+
+export function positiveCount(
+  value: unknown,
+): number | null {
   const number =
     typeof value === "number"
       ? value
-      : Number(safeText(value) ?? "");
+      : Number(
+          safeText(value) ?? "",
+        );
 
-  if (!Number.isFinite(number)) return null;
+  if (!Number.isFinite(number)) {
+    return null;
+  }
 
-  if (number <= 0) return null;
+  if (number <= 0) {
+    return null;
+  }
 
   return Math.floor(number);
 }
 
-export function yearsDisplay(value: unknown): string | null {
-  const years = positiveCount(value);
+export function yearsDisplay(
+  value: unknown,
+): string | null {
+  const years =
+    positiveCount(value);
 
-  if (!years) return null;
+  if (!years) {
+    return null;
+  }
 
   /*
-   * A calendar year such as 2022 must never become "2022 years".
+   * A calendar year or obviously corrupt value should never become
+   * "2026 years".
    */
-  if (years > 150) return null;
+  if (years > 150) {
+    return null;
+  }
 
-  return `${years} year${years === 1 ? "" : "s"}`;
+  return (
+    `${years} year` +
+    `${years === 1 ? "" : "s"}`
+  );
 }
 
 export function countDisplay(
@@ -713,14 +1235,35 @@ export function countDisplay(
   singular: string,
   plural = `${singular}s`,
 ): string | null {
-  const count = positiveCount(value);
+  const count =
+    positiveCount(value);
 
-  if (count === null) return null;
+  if (count === null) {
+    return null;
+  }
 
-  return `${count} ${count === 1 ? singular : plural}`;
+  const safeSingular =
+    safeText(singular);
+
+  const safePlural =
+    safeText(plural);
+
+  if (
+    !safeSingular ||
+    !safePlural
+  ) {
+    return null;
+  }
+
+  return (
+    `${count} ` +
+    `${count === 1 ? safeSingular : safePlural}`
+  );
 }
 
-/* ------------------------------------------------------------------ ratings */
+/* -------------------------------------------------------------------------- */
+/* RATINGS                                                                     */
+/* -------------------------------------------------------------------------- */
 
 export function ratingDisplay(
   value: unknown,
@@ -733,101 +1276,140 @@ export function ratingDisplay(
   const number =
     typeof value === "number"
       ? value
-      : Number(safeText(value) ?? "");
+      : Number(
+          safeText(value) ?? "",
+        );
 
-  if (!Number.isFinite(number)) return null;
+  if (!Number.isFinite(number)) {
+    return null;
+  }
 
-  const min = options.min ?? 0;
-  const max = options.max ?? 5;
+  const min =
+    Number.isFinite(options.min)
+      ? Number(options.min)
+      : 0;
 
-  if (number < min || number > max) return null;
+  const max =
+    Number.isFinite(options.max)
+      ? Number(options.max)
+      : 5;
+
+  if (
+    number < min ||
+    number > max
+  ) {
+    return null;
+  }
 
   const decimals = Math.max(
     0,
-    Math.min(2, Math.floor(options.decimals ?? 1)),
+    Math.min(
+      2,
+      Math.floor(
+        options.decimals ?? 1,
+      ),
+    ),
   );
 
-  return number.toFixed(decimals);
+  return number.toFixed(
+    decimals,
+  );
 }
 
-/* -------------------------------------------------------------------- dates */
+/* -------------------------------------------------------------------------- */
+/* DATES                                                                       */
+/* -------------------------------------------------------------------------- */
 
-/**
- * Converts a valid date-like value into a readable date without inventing
- * timezone-sensitive business facts.
- */
 export function dateDisplay(
   value: unknown,
   locale = "en-US",
 ): string | null {
-  const text = safeText(value);
+  const text =
+    safeText(value);
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
-  const date = new Date(text);
+  const date =
+    new Date(text);
 
-  if (Number.isNaN(date.getTime())) return null;
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
+    return null;
+  }
 
   try {
-    return new Intl.DateTimeFormat(locale, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
+    return new Intl.DateTimeFormat(
+      locale,
+      {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      },
+    ).format(date);
   } catch {
     return null;
   }
 }
 
-/* ------------------------------------------------------------------- media */
+/* -------------------------------------------------------------------------- */
+/* MEDIA                                                                       */
+/* -------------------------------------------------------------------------- */
 
-/**
- * Safe image URL.
- *
- * Data URLs and arbitrary executable protocols are rejected.
- */
-export function imageUrl(value: unknown): string | null {
+export function imageUrl(
+  value: unknown,
+): string | null {
   return externalUrl(value);
 }
 
-/**
- * Safe image alt text.
- *
- * Decorative images should explicitly pass an empty string elsewhere rather
- * than having this helper invent an accessibility label.
- */
-export function imageAlt(value: unknown): string | null {
+export function imageAlt(
+  value: unknown,
+): string | null {
   return safeText(value);
 }
 
-/* ------------------------------------------------------------------- labels */
-
 /**
- * Creates a readable fallback label from known text only.
- *
- * This function intentionally does NOT generate marketing claims.
+ * Determines whether a supplied image value is safe enough to render.
  */
+export function isUsableImageUrl(
+  value: unknown,
+): boolean {
+  return imageUrl(value) !== null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* LABELS                                                                      */
+/* -------------------------------------------------------------------------- */
+
 export function readableLabel(
   value: unknown,
   fallback: string | null = null,
 ): string | null {
-  return safeText(value) ?? safeText(fallback);
+  return (
+    safeText(value) ??
+    safeText(fallback)
+  );
 }
 
 /**
- * Prevents accidental rendering of raw IDs as visitor-facing labels.
+ * Prevents UUIDs, hashes and long machine identifiers from becoming visitor
+ * labels.
  */
 export function displayId(
   value: unknown,
   fallback: string | null = null,
 ): string | null {
-  const text = safeText(value);
+  const text =
+    safeText(value);
 
-  if (!text) return safeText(fallback);
+  if (!text) {
+    return safeText(fallback);
+  }
 
-  /*
-   * UUIDs and long machine identifiers are not useful visitor copy.
-   */
   if (
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       text,
@@ -836,14 +1418,78 @@ export function displayId(
     return safeText(fallback);
   }
 
-  if (/^[A-Za-z0-9_-]{24,}$/.test(text)) {
+  if (
+    /^[A-Za-z0-9_-]{24,}$/.test(
+      text,
+    )
+  ) {
     return safeText(fallback);
   }
 
   return text;
 }
 
-/* ------------------------------------------------------------------ generic */
+/* -------------------------------------------------------------------------- */
+/* CTA / CONVERSION PRESENTATION                                              */
+/* -------------------------------------------------------------------------- */
+
+const CTA_WORDS =
+  /\b(?:book|quote|contact|call|get started|start now|enquire|inquire|estimate|schedule|request|message|email|apply|hire|order|reserve|consult|learn more|shop|buy|discover|view|explore)\b/i;
+
+export function isActionLabel(
+  value: unknown,
+): boolean {
+  const text =
+    safeText(value);
+
+  return Boolean(
+    text && CTA_WORDS.test(text),
+  );
+}
+
+export function normalizeCtaLabel(
+  value: unknown,
+): string | null {
+  const text =
+    safeText(value);
+
+  if (!text) {
+    return null;
+  }
+
+  /*
+   * Avoid accidental sentence-sized "buttons".
+   */
+  if (text.length > 90) {
+    return safeExcerpt(
+      text,
+      80,
+    );
+  }
+
+  return text;
+}
+
+/**
+ * Returns whether a contact route is actually usable.
+ */
+export function hasContactRoute(
+  input: {
+    phone?: unknown;
+    email?: unknown;
+    url?: unknown;
+  },
+): boolean {
+  return Boolean(
+    isUsablePhone(input.phone) ||
+      isUsableEmail(input.email) ||
+      actionTarget(input.url),
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* BUSINESS PRESENTATION                                                       */
+/* -------------------------------------------------------------------------- */
 
 export interface PresentationContact {
   phone: string | null;
@@ -869,76 +1515,341 @@ export interface PresentationResult {
 }
 
 /**
- * Central normalization helper for generated business content.
+ * Central presentation normalizer.
  *
- * It is intentionally conservative: unknown values become null instead of
- * being guessed.
+ * It does not invent missing facts.
  */
-export function presentBusinessValue(input: {
-  text?: unknown;
-  paragraph?: unknown;
-  phone?: unknown;
-  email?: unknown;
-  address?: unknown;
-  city?: unknown;
-  state?: unknown;
-  zip?: unknown;
-  url?: unknown;
-}): PresentationResult {
-  const phone = phoneDisplay(input.phone);
-  const email = emailDisplay(input.email);
+export function presentBusinessValue(
+  input: {
+    text?: unknown;
+    paragraph?: unknown;
+    phone?: unknown;
+    email?: unknown;
+    address?: unknown;
+    city?: unknown;
+    state?: unknown;
+    zip?: unknown;
+    url?: unknown;
+  },
+): PresentationResult {
+  const phone =
+    phoneDisplay(input.phone);
 
-  const city = placeDisplay(input.city);
-  const state = placeDisplay(input.state);
-  const zip = safeText(input.zip);
+  const email =
+    emailDisplay(input.email);
+
+  const city =
+    placeDisplay(input.city);
+
+  const state =
+    placeDisplay(input.state);
+
+  const zip =
+    safeText(input.zip);
 
   return {
     text: safeText(input.text),
-    paragraph: safeParagraph(input.paragraph),
+
+    paragraph:
+      safeParagraph(
+        input.paragraph,
+      ),
+
     contact: {
       phone,
-      phoneLink: phone ? phoneLink(input.phone) : null,
+      phoneLink: phone
+        ? phoneLink(input.phone)
+        : null,
       email,
-      emailLink: email ? emailLink(input.email) : null,
+      emailLink: email
+        ? emailLink(input.email)
+        : null,
     },
+
     location: {
-      address: safeText(input.address),
+      address:
+        safeText(input.address),
       city,
       state,
       zip,
-      fullAddress: addressDisplay({
-        address: input.address,
-        city: input.city,
-        state: input.state,
-        zip: input.zip,
-      }),
+      fullAddress:
+        addressDisplay({
+          address:
+            input.address,
+          city: input.city,
+          state: input.state,
+          zip: input.zip,
+        }),
     },
-    url: externalUrl(input.url),
+
+    url:
+      externalUrl(input.url),
   };
 }
 
-/**
- * Final visitor-facing guard.
- *
- * Use immediately before rendering generated copy.
- */
+/* -------------------------------------------------------------------------- */
+/* VISITOR-FACING GUARDS                                                       */
+/* -------------------------------------------------------------------------- */
+
 export function visitorText(
   value: unknown,
   fallback: unknown = null,
 ): string | null {
-  return safeText(value) ?? safeText(fallback);
+  return (
+    safeText(value) ??
+    safeText(fallback)
+  );
+}
+
+export function isPresentableText(
+  value: unknown,
+): boolean {
+  return (
+    safeText(value) !== null
+  );
+}
+
+export function shouldHideValue(
+  value: unknown,
+): boolean {
+  return (
+    safeText(value) === null
+  );
 }
 
 /**
- * Returns true when a value is safe to render as ordinary visitor-facing text.
+ * Stronger final guard for content that should be visitor-facing.
  */
-export function isPresentableText(value: unknown): boolean {
-  return safeText(value) !== null;
+export function isVisitorSafe(
+  value: unknown,
+): boolean {
+  const text =
+    safeText(value);
+
+  if (!text) {
+    return false;
+  }
+
+  if (hasTemplateLeak(text)) {
+    return false;
+  }
+
+  return true;
+}
+
+/* -------------------------------------------------------------------------- */
+/* SEO / METADATA PRESENTATION                                                 */
+/* -------------------------------------------------------------------------- */
+
+export function metaTitle(
+  value: unknown,
+): string | null {
+  const text =
+    safeText(value);
+
+  if (!text) {
+    return null;
+  }
+
+  return safeExcerpt(
+    text,
+    65,
+  );
+}
+
+export function metaDescription(
+  value: unknown,
+): string | null {
+  const text =
+    safeParagraph(value);
+
+  if (!text) {
+    return null;
+  }
+
+  return safeExcerpt(
+    text.replace(/\n+/g, " "),
+    160,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* SAFE HTML-LIKE TEXT                                                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Removes obvious HTML tags from plain visitor copy.
+ *
+ * This is NOT an HTML sanitizer and should never replace a real HTML
+ * sanitization library when arbitrary HTML is intentionally supported.
+ */
+export function stripMarkup(
+  value: unknown,
+): string | null {
+  const text =
+    safeText(value);
+
+  if (!text) {
+    return null;
+  }
+
+  return normalizeWhitespace(
+    text
+      .replace(
+        /<script\b[^>]*>[\s\S]*?<\/script>/gi,
+        "",
+      )
+      .replace(
+        /<style\b[^>]*>[\s\S]*?<\/style>/gi,
+        "",
+      )
+      .replace(
+        /<[^>]*>/g,
+        " ",
+      ),
+  ) || null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* NORMALIZED CONTACT OBJECT                                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface NormalizedContact {
+  phone: string | null;
+  phoneLink: string | null;
+  email: string | null;
+  emailLink: string | null;
+  hasPhone: boolean;
+  hasEmail: boolean;
+  hasAnyRoute: boolean;
+}
+
+export function normalizeContact(
+  input: {
+    phone?: unknown;
+    email?: unknown;
+  },
+): NormalizedContact {
+  const phone =
+    phoneDisplay(input.phone);
+
+  const email =
+    emailDisplay(input.email);
+
+  return {
+    phone,
+    phoneLink: phone
+      ? phoneLink(input.phone)
+      : null,
+
+    email,
+    emailLink: email
+      ? emailLink(input.email)
+      : null,
+
+    hasPhone:
+      phone !== null,
+
+    hasEmail:
+      email !== null,
+
+    hasAnyRoute:
+      phone !== null ||
+      email !== null,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* PRESENTATION READINESS                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface PresentationReadiness {
+  ready: boolean;
+  textReady: boolean;
+  contactReady: boolean;
+  locationReady: boolean;
+  issues: string[];
 }
 
 /**
- * Returns true when a value should be hidden rather than rendered.
+ * Lightweight deterministic readiness check.
+ *
+ * This intentionally does NOT judge whether business claims are truthful.
+ * Truth must come from stored business facts.
  */
-export function shouldHideValue(value: unknown): boolean {
-  return safeText(value) === null;
+export function presentationReadiness(
+  input: {
+    text?: unknown;
+    phone?: unknown;
+    email?: unknown;
+    address?: unknown;
+    city?: unknown;
+    state?: unknown;
+  },
+): PresentationReadiness {
+  const issues: string[] = [];
+
+  const text =
+    safeText(input.text);
+
+  const contact =
+    normalizeContact({
+      phone: input.phone,
+      email: input.email,
+    });
+
+  const location =
+    addressDisplay({
+      address: input.address,
+      city: input.city,
+      state: input.state,
+    });
+
+  const textReady =
+    text !== null &&
+    !hasTemplateLeak(text);
+
+  const contactReady =
+    contact.hasAnyRoute;
+
+  const locationReady =
+    location !== null;
+
+  if (!textReady) {
+    issues.push(
+      "Visitor-facing text is missing or contains template debris.",
+    );
+  }
+
+  if (!contactReady) {
+    issues.push(
+      "No usable phone or email contact route is available.",
+    );
+  }
+
+  if (
+    input.address !== undefined ||
+    input.city !== undefined ||
+    input.state !== undefined
+  ) {
+    if (!locationReady) {
+      issues.push(
+        "Provided location data could not be normalized safely.",
+      );
+    }
+  }
+
+  return {
+    ready:
+      textReady &&
+      (
+        contactReady ||
+        locationReady
+      ),
+
+    textReady,
+    contactReady,
+    locationReady,
+    issues,
+  };
 }
