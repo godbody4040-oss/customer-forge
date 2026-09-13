@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { varyHue, varyIndustryVisual } from "./site-color-variation";
+import { varyHue, varyIndustryVisual } from "./color-variation";
 
 describe("varyHue", () => {
   it("is deterministic — same hex + seed + slot always returns the same result", () => {
