@@ -190,7 +190,7 @@ function archetypeFor(
     facts.name,
   );
 
-  if (moods.includes("luxury" as StyleMood) || moods.includes("premium")) {
+  if (moods.includes("premium")) {
     return "luxury";
   }
 
